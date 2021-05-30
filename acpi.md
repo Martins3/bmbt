@@ -5,3 +5,4 @@
 2. [acpica : acpi introduction](https://acpica.org/sites/acpica/files/ACPI-Introduction.pdf) :star:
 3. [ACPI Source Language (ASL) Tutorial](https://acpica.org/sites/acpica/files/asl_tutorial_v20190625.pdf)
 4. [ACPI: Design Principles and Concerns](https://www.ssi.gouv.fr/uploads/IMG/pdf/article_acpi.pdf)
+5. [Getting started with ACPI](https://dortania.github.io/Getting-Started-With-ACPI/#a-quick-explainer-on-acpi)
