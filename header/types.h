@@ -7,5 +7,4 @@
 typedef unsigned int size_t;
 
 #define EOF -1
-
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

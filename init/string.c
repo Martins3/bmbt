@@ -1,4 +1,5 @@
 #include "../header/types.h"
+#include "../header/addrspace.h"
 
 size_t strnlen(const char *s, size_t count) {
   const char *sc;
@@ -8,7 +9,10 @@ size_t strnlen(const char *s, size_t count) {
   return sc - s;
 }
 
-void prom_putchar(char c) { *(char *)(0x9000000000000000 + 0x1fe001e0) = c; }
+void prom_putchar(char c) { 
+#define LOONGSON_REG_BASE	0x1fe00000
+  *(char *)(TO_UNCAC(LOONGSON_REG_BASE + 0x1e0)) = c;
+}
 
 void early_console_write(const char *s, unsigned n)
 {
