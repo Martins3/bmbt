@@ -2,7 +2,25 @@
 #define LOONGARCHREGS_H_TJ8URLGY
 #include "./types.h"
 #include "./config.h"
-// for csr registers
+/* Loongson csr registers */
+
+/* Basic CSR registers */
+#define LOONGARCH_CSR_CRMD		0x0	/* Current mode info */
+#define  CSR_CRMD_DACM_SHIFT		7
+#define  CSR_CRMD_DACM_WIDTH		2
+#define  CSR_CRMD_DACM			(_ULCAST_(0x3) << CSR_CRMD_DACM_SHIFT)
+#define  CSR_CRMD_DACF_SHIFT		5
+#define  CSR_CRMD_DACF_WIDTH		2
+#define  CSR_CRMD_DACF			(_ULCAST_(0x3) << CSR_CRMD_DACF_SHIFT)
+#define  CSR_CRMD_PG_SHIFT		4
+#define  CSR_CRMD_PG			(_ULCAST_(0x1) << CSR_CRMD_PG_SHIFT)
+#define  CSR_CRMD_DA_SHIFT		3
+#define  CSR_CRMD_DA			(_ULCAST_(0x1) << CSR_CRMD_DA_SHIFT)
+#define  CSR_CRMD_IE_SHIFT		2
+#define  CSR_CRMD_IE			(_ULCAST_(0x1) << CSR_CRMD_IE_SHIFT)
+#define  CSR_CRMD_PLV_SHIFT		0
+#define  CSR_CRMD_PLV_WIDTH		2
+#define  CSR_CRMD_PLV			(_ULCAST_(0x3) << CSR_CRMD_PLV_SHIFT)
 
 /* Direct map windows registers */
 #define LOONGARCH_CSR_DMWIN0		0x180	/* 64 direct map win0: MEM & IF */

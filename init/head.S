@@ -1,13 +1,13 @@
 #include "../header/loongarchregs.h"
 #include "../header/regdef.h"
 #include "../header/config.h"
+#include "../header/asm.h"
 .section .text
 
-kernel_entry:
-
+ENTRY(kernel_entry)
 	la t0, __bss_start		# clear .bss
 	st.d		zero, t0, 0
-	la t1, __bss_stop - LONGSIZE
+	la.abs t1, __bss_stop - LONGSIZE
 1:
 	addi.d		t0, t0, LONGSIZE
 	st.d		zero, t0, 0
@@ -36,3 +36,4 @@ kernel_entry:
   // TODO define a array for tp and sp
 
   b start_kernel
+END(kernel_entry)
