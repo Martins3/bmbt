@@ -33,7 +33,13 @@ ENTRY(kernel_entry)
 	li	t0, 0xb0	# PLV=0, IE=0, PG
 	csrwr	t0, LOONGARCH_CSR_CRMD
 
-  // TODO define a array for tp and sp
+  # init sp
+	la	t0, kernel_stack
+	dli		sp, _THREAD_SIZE
+	add.d		sp, sp, t0
+	addi.d		sp, sp, -16		# init stack pointer
+  # init fp
+  dli fp, 0
 
   b start_kernel
 END(kernel_entry)

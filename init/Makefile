@@ -11,7 +11,7 @@ c_object_files := $(patsubst %.c, %.o, $(c_source_files))
 UNAME := $(shell uname -a)
 ifeq (,$(findstring loongson, $(UNAME)))
 ARCH_PREFIX=~/arch/LARCH_toolchain_root_newabi/bin/loongarch64-linux-gnu-
-QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson-
+QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
 endif
 
 $(info $(ARCH_PREFIX))
