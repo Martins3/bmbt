@@ -14,12 +14,10 @@ ARCH_PREFIX=~/arch/LARCH_toolchain_root_newabi/bin/loongarch64-linux-gnu-
 QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
 endif
 
-$(info $(ARCH_PREFIX))
-$(info $(UNAME))
-$(info $(findstring loongson, $(UNAME)))
-
 GCC=$(ARCH_PREFIX)gcc
 LD=$(ARCH_PREFIX)ld
+
+DEF = ../../qemu_bak/vmlinux
 
 .PHONY: all clean
 
@@ -38,6 +36,12 @@ gdb: $(kernel)
 
 run: $(kernel)
 	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+
+defgdb: $(kernel)
+	 gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
+
+defrun: $(kernel)
+	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel) $(DEF)
 
 # compile assembly files
 %.o: %.S
