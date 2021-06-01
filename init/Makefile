@@ -1,6 +1,6 @@
 kernel := kernel.bin
 
-CFLAGS := -static
+CFLAGS := -nostdlib
 linker_script := linker.ld
 assembly_source_files := head.S
 c_source_files := $(wildcard *.c)

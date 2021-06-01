@@ -1,6 +1,5 @@
 #ifndef LOONGARCHREGS_H_TJ8URLGY
 #define LOONGARCHREGS_H_TJ8URLGY
-#include "./types.h"
 #include "./config.h"
 /* Loongson csr registers */
 

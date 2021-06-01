@@ -7,5 +7,10 @@
 #define PAGESZ (1 << PAGE_SHIFT)
 #define _THREAD_SIZE (PAGESZ * 4)
 
+#ifdef __ASSEMBLY__
+#define _CONST64_
+#else
+#define _CONST64_(x) x##l
+#endif
 
 #endif /* end of include guard: CONFIG_H_80Q9AENS */
