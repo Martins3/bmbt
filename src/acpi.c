@@ -9,72 +9,8 @@
 
 int fw_argc;
 long *_fw_argv, *_fw_envp;
-#define COMMAND_LINE_SIZE 512
-
-char arcs_cmdline[COMMAND_LINE_SIZE];
-
-#define LOONGSON3_BOOT_MEM_MAP_MAX 128
-
-#define LOONGSON_DMA_MASK_BIT 64
-#define LOONGSON_MEM_LINKLIST "MEM"
-#define LOONGSON_VBIOS_LINKLIST "VBIOS"
-#define LOONGSON_EFIBOOT_SIGNATURE "BPI"
-#define LOONGSON_SCREENINFO_LINKLIST "SINFO"
-
-struct _extention_list_hdr {
-  u64 signature;
-  u32 length;
-  u8 revision;
-  u8 checksum;
-  struct _extention_list_hdr *next;
-} __attribute__((packed));
-
-struct bootparamsinterface {
-  u64 signature; /*{"B", "P", "I", "_", "0", "_", "1"}*/
-  void *systemtable;
-  struct _extention_list_hdr *extlist;
-} __attribute__((packed));
-
-struct loongsonlist_mem_map {
-  struct _extention_list_hdr header; /*{"M", "E", "M"}*/
-  u8 map_count;
-  struct _loongson_mem_map {
-    u32 mem_type;
-    u64 mem_start;
-    u64 mem_size;
-  } __attribute__((packed)) map[LOONGSON3_BOOT_MEM_MAP_MAX];
-} __attribute__((packed));
-
-struct loongson_system_configuration {
-  char *cpuname;
-  int nr_cpus;
-  int nr_nodes;
-  int cores_per_node;
-  int cores_per_package;
-  u16 boot_cpu_id;
-  u64 reserved_cpus_mask;
-  u64 ht_control_base;
-  u64 restart_addr;
-  u64 poweroff_addr;
-  u64 suspend_addr;
-  u64 vgabios_addr;
-  u32 dma_mask_bits;
-  u32 msi_address_lo;
-  u32 msi_address_hi;
-  u32 msi_base_irq;
-  u32 msi_last_irq;
-  u32 io_base_irq;
-  u32 io_last_irq;
-  u8 pcie_wake_enabled;
-};
-
-struct bootparamsinterface *efi_bp;
-struct loongsonlist_mem_map *loongson_mem_map;
-struct loongsonlist_vbios *pvbios;
-struct loongson_system_configuration loongson_sysconf;
 
 // TODO remove these supid global variable transfer
-// fw_argc _fw_argv and ...
 void fw_init_cmdline(void) {
   int i;
 
@@ -82,140 +18,220 @@ void fw_init_cmdline(void) {
   // a array of argv addr
   _fw_argv = (long *)fw_arg1;
   _fw_envp = (long *)fw_arg2;
-  // how to change this to me?
 }
 
-u8 ext_listhdr_checksum(u8 *buffer, u32 length) {
-  u8 sum = 0;
-  u8 *end = buffer + length;
+#define LOONGSON3_BOOT_MEM_MAP_MAX 128
+struct efi_memory_map_loongson {
+  u16 vers;     /* version of efi_memory_map */
+  u32 nr_map;   /* number of memory_maps */
+  u32 mem_freq; /* memory frequence */
+  struct mem_map {
+    u32 node_id;   /* node_id which memory attached to */
+    u32 mem_type;  /* system memory, pci memory, pci io, etc. */
+    u64 mem_start; /* memory map start address */
+    u32 mem_size;  /* each memory_map size, not the total size */
+  } map[LOONGSON3_BOOT_MEM_MAP_MAX];
+} __attribute__((packed));
 
-  while (buffer < end) {
-    sum = (u8)(sum + *(buffer++));
-  }
+enum loongson_cpu_type {
+  Legacy_2F = 0x0,
+  Legacy_2E = 0x1,
+  Legacy_3A = 0x2,
+  Legacy_3B = 0x3,
+  Legacy_1A = 0x4,
+  Legacy_1B = 0x5,
+  Legacy_2G = 0x6,
+  Legacy_2H = 0x7,
+  Loongson_1A = 0x100,
+  Loongson_1B = 0x101,
+  Loongson_2E = 0x200,
+  Loongson_2F = 0x201,
+  Loongson_2G = 0x202,
+  Loongson_2H = 0x203,
+  Loongson_3A = 0x300,
+  Loongson_3B = 0x301,
+  Loongson_3C_NUMA = 0x302,
+  Loongson_3C_SMP = 0x303
+};
 
-  return (sum);
-}
-
-int parse_mem(struct _extention_list_hdr *head) {
-  duck_printf("huxueshi:%s \n", __FUNCTION__);
-  loongson_mem_map = (struct loongsonlist_mem_map *)head;
-  if (ext_listhdr_checksum((u8 *)loongson_mem_map, head->length)) {
-    duck_printf("mem checksum error\n");
-    return -1;
-  }
-  return 0;
-}
-
-int parse_vbios(struct _extention_list_hdr *head) {
-  duck_printf("%s", __FUNCTION__);
-  // pvbios = (struct loongsonlist_vbios *)head;
-  //
-  // if (ext_listhdr_checksum((u8 *)pvbios, head->length)) {
-  // printk("vbios_addr checksum error\n");
-  // return -EPERM;
-  // } else {
-  // loongson_sysconf.vgabios_addr = pvbios->vbios_addr;
-  // }
-  return 0;
-}
-
-static int parse_screeninfo(struct _extention_list_hdr *head) {
-  struct loongsonlist_screeninfo *pscreeninfo;
-
-  pscreeninfo = (struct loongsonlist_screeninfo *)head;
-  if (ext_listhdr_checksum((u8 *)pscreeninfo, head->length)) {
-    duck_printf("screeninfo_addr checksum error\n");
-    return -1;
-  }
-
-  // TODO
-  // duck_memcpy(&screen_info, &pscreeninfo->si, sizeof(screen_info));
-  return 0;
-}
-
-static int list_find(struct _extention_list_hdr *head) {
-  struct _extention_list_hdr *fhead = head;
-
-  if (fhead == NULL) {
-    duck_printf("the link is empty!\n");
-    return -1;
-  }
-
-  while (fhead != NULL) {
-    duck_printf("huxueshi:%s %lx\n", __FUNCTION__, fhead);
-    if (duck_memcmp(&(fhead->signature), LOONGSON_MEM_LINKLIST, 3) == 0) {
-      if (parse_mem(fhead) != 0) {
-        duck_printf("parse mem failed\n");
-        return -1;
-      }
-    } else if (duck_memcmp(&(fhead->signature), LOONGSON_VBIOS_LINKLIST, 5) ==
-               0) {
-      if (parse_vbios(fhead) != 0) {
-        duck_printf("parse vbios failed\n");
-        return -1;
-      }
-    } else if (duck_memcmp(&(fhead->signature), LOONGSON_SCREENINFO_LINKLIST,
-                           5) == 0) {
-      if (parse_screeninfo(fhead) != 0) {
-        duck_printf("parse screeninfo failed\n");
-        return -1;
-      }
-    }
-    fhead = fhead->next;
-  }
-  return 0;
-}
+/*
+ * Capability and feature descriptor structure for MIPS CPU
+ */
+struct efi_cpuinfo_loongson {
+  u16 vers;                       /* version of efi_cpuinfo_loongson */
+  u32 processor_id;               /* PRID, e.g. 6305, 6306 */
+  enum loongson_cpu_type cputype; /* 3A, 3B, etc. */
+  u32 total_node;                 /* num of total numa nodes */
+  u16 cpu_startup_core_id;        /* Core id */
+  u64 reserved_cores_mask;
+  u32 cpu_clock_freq; /* cpu_clock */
+  u32 nr_cpus;
+  u8 cpuname[64]; /*cpu name*/
+} __attribute__((packed));
 
 struct loongson_params {
-    u64 memory_offset;	/* efi_memory_map_loongson struct offset */
-    u64 cpu_offset;		/* efi_cpuinfo_loongson struct offset */
-    u64 system_offset;	/* system_loongson struct offset */
-    u64 irq_offset; 	/* irq_source_routing_table struct offset */
-    u64 interface_offset;	/* interface_info struct offset */
-    u64 special_offset;	/* loongson_special_attribute struct offset */
-    u64 boarddev_table_offset;  /* board_devices offset */
+  u64 memory_offset;         /* efi_memory_map_loongson struct offset */
+  u64 cpu_offset;            /* efi_cpuinfo_loongson struct offset */
+  u64 system_offset;         /* system_loongson struct offset */
+  u64 irq_offset;            /* irq_source_routing_table struct offset */
+  u64 interface_offset;      /* interface_info struct offset */
+  u64 special_offset;        /* loongson_special_attribute struct offset */
+  u64 boarddev_table_offset; /* board_devices offset */
 };
+
+#define MAX_UARTS 64
+struct uart_device {
+  u32 iotype; /* see include/linux/serial_core.h */
+  u32 uartclk;
+  u32 int_offset;
+  u64 uart_base;
+} __attribute__((packed));
+
+#define MAX_SENSORS 64
+#define SENSOR_TEMPER 0x00000001
+#define SENSOR_VOLTAGE 0x00000002
+#define SENSOR_FAN 0x00000004
+struct sensor_device {
+  char name[32];  /* a formal name */
+  char label[64]; /* a flexible description */
+  u32 type;       /* SENSOR_* */
+  u32 id;         /* instance id of a sensor-class */
+  u32 fan_policy; /* see arch/mips/include/asm/mach-loongson/loongson_hwmon.h */
+  u32 fan_percent; /* only for constant speed policy */
+  u64 base_addr;   /* base address of device registers */
+} __attribute__((packed));
+
+struct system_loongson {
+  u16 vers;                /* version of system_loongson */
+  u32 ccnuma_smp;          /* 0: no numa; 1: has numa */
+  u32 sing_double_channel; /* 1:single; 2:double */
+  u32 nr_uarts;
+  struct uart_device uarts[MAX_UARTS];
+  u32 nr_sensors;
+  struct sensor_device sensors[MAX_SENSORS];
+  char has_ec;
+  char ec_name[32];
+  u64 ec_base_addr;
+  char has_tcm;
+  char tcm_name[32];
+  u64 tcm_base_addr;
+  u64 workarounds; /* see workarounds.h */
+} __attribute__((packed));
+
+struct irq_source_routing_table {
+    u16 vers;
+    u16 size;
+    u16 rtr_bus;
+    u16 rtr_devfn;
+    u32 vendor;
+    u32 device;
+    u32 PIC_type;   /* conform use HT or PCI to route to CPU-PIC */
+    u64 ht_int_bit; /* 3A: 1<<24; 3B: 1<<16 */
+    u64 ht_enable;  /* irqs used in this PIC */
+    u32 node_id;    /* node id: 0x0-0; 0x1-1; 0x10-2; 0x11-3 */
+    u64 pci_mem_start_addr;
+    u64 pci_mem_end_addr;
+    u64 pci_io_start_addr;
+    u64 pci_io_end_addr;
+    u64 pci_config_addr;
+    u16 dma_mask_bits;
+    u16 dma_noncoherent;/* 0:cache DMA ; 1:uncache DMA */
+} __attribute__((packed));
 
 struct smbios_tables {
-    u16 vers;     /* version of smbios */
-    u16 dummy[3]; /*dump make vga_bios align*/
-    u64 vga_bios; /* vga_bios address */
-    struct loongson_params lp;
+  u16 vers;     /* version of smbios */
+  u16 dummy[3]; /*dump make vga_bios align*/
+  u64 vga_bios; /* vga_bios address */
+  struct loongson_params lp;
 };
 
-struct efi_reset_system_t{
-    u64 ResetCold;
-    u64 ResetWarm;
-    u64 ResetType;
-    u64 Shutdown;
-    u64 DoSuspend; /* NULL if not support */
+struct efi_reset_system_t {
+  u64 ResetCold;
+  u64 ResetWarm;
+  u64 ResetType;
+  u64 Shutdown;
+  u64 DoSuspend; /* NULL if not support */
 };
 
 struct efi_loongson {
-    u64 mps;	/* MPS table */
-    u64 acpi;	/* ACPI table (IA64 ext 0.71) */
-    u64 acpi20;	/* ACPI table (ACPI 2.0) */
-    struct smbios_tables smbios;	/* SM BIOS table */
-    u64 sal_systab;	/* SAL system table */
-    u64 boot_info;	/* boot info table */
+  u64 mps;                     /* MPS table */
+  u64 acpi;                    /* ACPI table (IA64 ext 0.71) */
+  u64 acpi20;                  /* ACPI table (ACPI 2.0) */
+  struct smbios_tables smbios; /* SM BIOS table */
+  u64 sal_systab;              /* SAL system table */
+  u64 boot_info;               /* boot info table */
 };
 
-struct boot_params{
-    int magic;
-    struct efi_loongson efi;
-    struct efi_reset_system_t reset_system;
+struct boot_params {
+  int magic;
+  struct efi_loongson efi;
+  struct efi_reset_system_t reset_system;
 };
 
-struct boot_params * boot_params;
+struct interface_info {
+    u16 vers; /* version of the specificition */
+    u16 size;
+    u8  flag;
+    char description[64];
+} __attribute__((packed));
+
+#define MAX_RESOURCE_NUMBER 128
+struct resource_loongson {
+    u64 start; /* resource start address */
+    u64 end;   /* resource end address */
+    char name[64];
+    u32 flags;
+};
+
+struct archdev_data {};  /* arch specific additions */
+
+struct board_devices{
+    char name[64];    /* hold the device name */
+    u32 num_resources; /* number of device_resource */
+    struct resource_loongson resource[MAX_RESOURCE_NUMBER]; /* for each device's resource */
+    /* arch specific additions */
+    struct archdev_data archdata;
+};
+
+struct loongson_special_attribute{
+    u16 vers;                   /* version of this special */
+    char special_name[64];      /* special_atribute_name */
+    u32 loongson_special_type;  /* type of special device */
+    struct resource_loongson resource[MAX_RESOURCE_NUMBER]; /* for each device's resource */
+};
+
+void dump_loongson_params(struct loongson_params *lp) {
+  duck_printf("memory_offset = 0x%lx;cpu_offset = 0x%lx; system_offset = "
+              "0x%lx; irq_offset = 0x%lx; interface_offset = 0x%lx;\n",
+              lp->memory_offset, lp->cpu_offset, lp->system_offset,
+              lp->irq_offset, lp->interface_offset);
+}
+
+struct efi_memory_map_loongson *efi_memory_map_loongson;
+struct efi_cpuinfo_loongson *efi_cpuinfo_loongson;
+struct system_loongson *system_loongson;
+struct irq_source_routing_table *irq_source_routing_table;
+struct interface_info *interface_info;
+struct board_devices *board_devices;
+struct loongson_special_attribute *loongson_special_attribute;
+
 void prom_init_env(void) {
-  boot_params = (struct boot_params *)_fw_envp;
+  struct boot_params *boot_params = (struct boot_params *)_fw_envp;
+  struct loongson_params *lp = &boot_params->efi.smbios.lp;
+  void *base = _fw_envp;
 
-  duck_printf("signature [%lx]\n", boot_params);
-  // debug_signature(efi_bp->signature);
-  BUG_ON(1);
+  BUG_ON(boot_params->magic != 0x12345678);
+  dump_loongson_params(lp);
 
-  if (list_find(efi_bp->extlist))
-    duck_printf("Scan bootparm failed\n");
-  // A list of loongson_regaddr_set
-  // loongson_regaddr_set
+  efi_memory_map_loongson =
+      (struct efi_memory_map_loongson *)(base + lp->memory_offset);
+  efi_cpuinfo_loongson = (struct efi_cpuinfo_loongson *)(base + lp->cpu_offset);
+  system_loongson = (struct system_loongson *)(base + lp->system_offset);
+  irq_source_routing_table =
+      (struct irq_source_routing_table *)(base + lp->irq_offset);
+  interface_info = (struct interface_info *)(base + lp->interface_offset);
+  board_devices = (struct board_devices *)(base + lp->boarddev_table_offset);
+
+  loongson_special_attribute =
+      (struct loongson_special_attribute *)(base + lp->special_offset);
 }
