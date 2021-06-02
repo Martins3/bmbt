@@ -2,7 +2,9 @@
 *.o
 *.txt
 *.bin
+*.d
+build/
 
 .ccls-cache/
 
-init/.gdb_history
+*.gdb_history
