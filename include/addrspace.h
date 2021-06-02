@@ -11,17 +11,9 @@
 #define CAC_BASE		CSR_DMW1_BASE
 #endif
 
-#define DMW_PABITS	48
 #define TO_PHYS_MASK	((1ULL << DMW_PABITS) - 1)
 
 #define TO_PHYS(x)		(((x) & TO_PHYS_MASK))
 #define TO_CAC(x)		(CAC_BASE   | ((x) & TO_PHYS_MASK))
 #define TO_UNCAC(x)		(UNCAC_BASE | ((x) & TO_PHYS_MASK))
-
-#ifdef __ASSEMBLY__
-#define _CONST64_
-#else
-#define _CONST64_(x) x##l
-#endif
-
 #endif /* end of include guard: ADDRSPACE_H_JZKUY25P */

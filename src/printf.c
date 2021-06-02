@@ -15,8 +15,8 @@
  *
  */
 #include <stdarg.h>
-#include "../header/types.h"
-#include "../header/interface.h"
+#include "../include/types.h"
+#include "../include/interface.h"
 
 static inline int isdigit(int ch) { return (ch >= '0') && (ch <= '9'); }
 

@@ -1,7 +1,7 @@
-#include "../header/loongarchregs.h"
-#include "../header/regdef.h"
-#include "../header/config.h"
-#include "../header/asm.h"
+#include "../include/loongarchregs.h"
+#include "../include/regdef.h"
+#include "../include/config.h"
+#include "../include/asm.h"
 .section .text
 
 ENTRY(kernel_entry)

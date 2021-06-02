@@ -1,5 +1,5 @@
-#include "../header/config.h"
-#include "../header/interface.h"
+#include "../include/config.h"
+#include "../include/interface.h"
 
 unsigned long fw_arg0, fw_arg1, fw_arg2, fw_arg3;
 

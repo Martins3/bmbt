@@ -1,5 +1,5 @@
-#include "../header/types.h"
-#include "../header/addrspace.h"
+#include "../include/types.h"
+#include "../include/addrspace.h"
 
 size_t strnlen(const char *s, size_t count) {
   const char *sc;
