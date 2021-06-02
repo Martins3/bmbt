@@ -26,4 +26,7 @@ int duck_memcmp(const void *cs, const void *ct, size_t count);
 void fw_init_cmdline(void);
 void prom_init_env(void);
 
+// mem.c
+void mem_init(void);
+
 #endif /* end of include guard: INTERFACE_H_I5WZDPYD */

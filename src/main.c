@@ -16,6 +16,7 @@ void start_kernel() {
   duck_printf("%lx\n", fw_arg3);
 
   prom_init_env();
+  mem_init();
 
   duck_printf("over!");
   while (1)
