@@ -15,7 +15,6 @@ void start_kernel() {
   duck_printf("%lx\n", fw_arg2);
   duck_printf("%lx\n", fw_arg3);
 
-  fw_init_cmdline();
   prom_init_env();
 
   duck_printf("over!");

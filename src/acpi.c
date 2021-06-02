@@ -1,25 +1,5 @@
 #include "../include/interface.h"
 
-/*
- * Most firmware pass arguments and environment variables as 32-bit pointers.
- * These take care of sign extension.
- */
-#define fw_argv(index) ((char *)(long)_fw_argv[(index)])
-#define fw_envp(index) ((char *)(long)_fw_envp[(index)])
-
-int fw_argc;
-long *_fw_argv, *_fw_envp;
-
-// TODO remove these supid global variable transfer
-void fw_init_cmdline(void) {
-  int i;
-
-  fw_argc = fw_arg0;
-  // a array of argv addr
-  _fw_argv = (long *)fw_arg1;
-  _fw_envp = (long *)fw_arg2;
-}
-
 #define LOONGSON3_BOOT_MEM_MAP_MAX 128
 struct efi_memory_map_loongson {
   u16 vers;     /* version of efi_memory_map */
@@ -216,9 +196,9 @@ struct board_devices *board_devices;
 struct loongson_special_attribute *loongson_special_attribute;
 
 void prom_init_env(void) {
-  struct boot_params *boot_params = (struct boot_params *)_fw_envp;
+  struct boot_params *boot_params = (struct boot_params *)fw_arg2;
   struct loongson_params *lp = &boot_params->efi.smbios.lp;
-  void *base = _fw_envp;
+  void *base = (void *)fw_arg2;
 
   BUG_ON(boot_params->magic != 0x12345678);
   dump_loongson_params(lp);
