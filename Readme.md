@@ -1,8 +1,15 @@
 # DuckBuBi
 
 ## TODO
-- [x] create a multiboot kernel image
+- [x] create a multiboot kernel image : use `-kernel` is enough
 - [x] setup console
+
+- [ ] apci probe
+- [ ] cache init
+- [ ] interrupt init
+- [ ] TLB refill init
+- [ ] memory probe
+- [ ] probe pci devices
 
 - [ ] setup keyboard
 - [ ] extract tcg module from XQM

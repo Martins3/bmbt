@@ -209,7 +209,7 @@ int vsprintf(char *buf, const char *fmt, va_list args) {
 
     case 's':
       s = va_arg(args, char *);
-      len = strnlen(s, precision);
+      len = duck_strnlen(s, precision);
 
       if (!(flags & LEFT))
         while (len < field_width--)
@@ -294,7 +294,7 @@ int sprintf(char *buf, const char *fmt, ...) {
   return i;
 }
 
-int printf(const char *fmt, ...) {
+int duck_printf(const char *fmt, ...) {
   char printf_buf[1024];
   va_list args;
   int printed;

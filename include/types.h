@@ -11,6 +11,10 @@
 #else
 #define _CONST64_(x) x##l
 typedef unsigned int size_t;
+typedef unsigned long long u64;
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */
