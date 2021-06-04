@@ -1,5 +1,8 @@
 # DuckBuBi
 
+## Manual
+contect huxueshi@loongson.cn
+
 ## TODO
 - [x] create a multiboot kernel image : use `-kernel` is enough
 - [x] setup console
@@ -10,6 +13,7 @@
 - [ ] TLB refill init
 - [ ] memory probe
 - [ ] probe pci devices
+
 
 - [ ] setup keyboard
 - [ ] extract tcg module from XQM
