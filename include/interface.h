@@ -22,11 +22,13 @@ size_t duck_strnlen(const char *s, size_t count);
 size_t duck_strlcat(char *dest, const char *src, size_t count);
 int duck_memcmp(const void *cs, const void *ct, size_t count);
 
-// acpi.c
+// firmware.c
 void fw_init_cmdline(void);
 void prom_init_env(void);
 
 // mem.c
 void mem_init(void);
+
+void prom_init(void);
 
 #endif /* end of include guard: INTERFACE_H_I5WZDPYD */

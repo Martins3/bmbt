@@ -17,9 +17,10 @@ void start_kernel() {
 
   prom_init_env();
   mem_init();
+  // prom_init();
 
   duck_printf("over!");
+
   while (1)
     ;
-  // TODO extract acpi
 }

@@ -21,6 +21,8 @@ void prom_init_env(void) {
   struct loongson_params *lp = &boot_params->efi.smbios.lp;
   void *base = (void *)lp;
 
+  const struct efi_loongson * efi = &boot_params->efi;
+
   BUG_ON(boot_params->magic != 0x12345678);
   dump_loongson_params(lp);
 
