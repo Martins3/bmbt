@@ -92,8 +92,6 @@
     - setup_IRQ : 这里应该是建立了三个 IRQ 中断控制器的处理
       - loongarch_cpu_irq_init
       - liointc_init
-        - "Loongson Local I/O Interrupt Controller"
-        - [ ] 我现在不是很确定，第一个字母 l 这到底是 local  还是 legacy
       - extioi_vec_init
         - [ ] irq_domain_alloc_fwnode : domain handle 是怎么回事, 可以通过 domain handle 创建 irq domain
         - irq_domain_create_linear : 
@@ -101,11 +99,8 @@
         - irq_set_chained_handler_and_data : 将 `LOONGSON_BRIDGE_IRQ` 作为自己的 parent_irq 来传递到这里
           - [ ] 那么，上面一层的 irq_domain 是怎么知道其 handler 是这个，或者说，ip3_irqdispatch 向下调用的时候，其 irq_desc 的 handler 是怎么注册的
         - pch_msi_init
-      - [ ] of_setup_pch_irqs : 这个应该也是会创建一个 domain
+      - of_setup_pch_irqs : 在 extioi 下初始化 apic 
     - setup_vi_handler
-      - 将中断的入口进行初始化
-      - [ ] 为什么只有 ip0 /ip1 没有其他的，其他的中断入口也被屏蔽了
-      - [ ] 而且，只有这两个入口，那么多的中断号，怎么搞
 - timekeeping_init
 - time_init
 - [ ] perf_event_init
