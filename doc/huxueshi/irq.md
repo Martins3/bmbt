@@ -434,5 +434,4 @@ irq_set_chained_handler_and_data(parent_irq[i], liointc_chained_handle_irq, &pri
 [    0.288765] irq: irq_domain_set_mapping  hwirq=17 virq=17
 ```
 
-
 ## pch_pic 真的是 apic 吗 ?
