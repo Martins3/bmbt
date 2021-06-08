@@ -25,6 +25,8 @@ Ask Niugene:
 - [ ] xqm 还是支持 user mode 的吗?
 - [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch 是什么作用呀 ? 
 - [ ] 中断之前不是说和 信号 存在关联吗?
+- [ ] 连 translate_vmrun 都要运行，真的有必要在二进制翻译中间还支持模拟虚拟机吗，有进行过测试吗?
+  - [ ] 但是 translate_vmcall 又是支持的，真的让人迷惑啊
 
 ## flow 
 - qemu_tcg_rr_cpu_thread_fn
@@ -35,7 +37,7 @@ Ask Niugene:
       - tb_find
         - tb_lookup__cpu_state
         - tb_gen_code
-          - target_x86_to_mips_host : 原来的入口是 tcg_gen_code, 可惜换不得
+          - target_x86_to_mips_host : 原来的 tcg 入口是 tcg_gen_code, 现在移除了 tcg
             - tr_translate_tb
               - tr_ir2_generate
                 - ir1_translate
