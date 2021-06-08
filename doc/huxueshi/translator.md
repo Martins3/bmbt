@@ -1,23 +1,15 @@
-# port translator
+# accel/tcg/
 
-## 定位文件
+## 基本文件摸底
+| Filename           | desc                                                           |
+|--------------------|----------------------------------------------------------------|
+| tcg-runtime-gvec.c |                                                                |
+| translator.c       | 只有一个函数，但是其调用者是 gen_intermediate_code(deprecated) |
+| cpu-exec.c         | tb 的执行                                                      |
+| translate-all.c    | tb 的管理, tb 和 page 的关系 以及 @todo, 总之是核心函数        |
+| cpu-tlb.c          | softmmu 管理                                                   |
 
-- [ ] qemu_tcg_mttcg_enabled 支持吗
-- [ ] /home/maritns3/core/ld/x86-qemu-mips/accel/tcg : 那些是真正需要的文件
-  - /home/maritns3/core/ld/x86-qemu-mips/accel/tcg/tcg-runtime-gvec.c ? 应该是没用的
-  - [ ] translator.c
-  - cpu-exec.c
-  - translate-all.c
-
-- 实际上，在 qemu-mips/target/i386 的
-  - cpu.c : 包含了整个 cpu 的定义, 比如，最开始的 cpu 初始化之类的工作
-  - seg_helper.c 中需要模拟 exception 之类
-  - misc_helper.c
-  - int_helper.c : 例如 helper_daa 之类的会被 LATX 的函数调用
-
-
-Ask Niugene:
-
+## Ask Niugene:
 - [ ] 再问一次, ./tcg/ 下真的有作用吗?
   - [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/tcg.c : 这就是那个包含两个 in.c 的
     - [ ] 这个会被使用上吗 ?
@@ -27,6 +19,7 @@ Ask Niugene:
 - [ ] 中断之前不是说和 信号 存在关联吗?
 - [ ] 连 translate_vmrun 都要运行，真的有必要在二进制翻译中间还支持模拟虚拟机吗，有进行过测试吗?
   - [ ] 但是 translate_vmcall 又是支持的，真的让人迷惑啊
+- [ ] qemu_tcg_mttcg_enabled 支持吗
 
 ## flow 
 - qemu_tcg_rr_cpu_thread_fn
@@ -85,8 +78,10 @@ tb_lookup__cpu_state
           - cs_disasm : 这个就是 capstone 的代码了
 
 ## How softmmu works
-- [x] 访问存储也是隐藏的 load ?
-  - 这是一个脑残问题，因为指令的读取都是 tb 的事情
+Q: 其实，访问存储也是隐藏的 load，是如何被 softmmu 处理的?
+
+A: 指令的读取都是 tb 的事情
+
 
 - gen_ldst_softmmu_helper
   - `__gen_ldst_softmmu_helper_native`
