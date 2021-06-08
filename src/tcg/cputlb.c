@@ -1,4 +1,4 @@
-
+#include "../../include/exec/cpu-defs.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/types.h"
 

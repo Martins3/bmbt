@@ -3,6 +3,7 @@
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 #include "../../include/exec/tb-lookup.h"
+#include "../../include/exec/cpu-defs.h"
 #include <stdbool.h> // FIXME header for bool
 
 static inline void tb_add_jump(TranslationBlock *tb, int n,
