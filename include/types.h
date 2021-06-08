@@ -16,7 +16,24 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 
-typedef u64 target_ulong ;
+typedef int i32;
+
+
+typedef u64 tb_page_addr_t;
+typedef u32 tcg_insn_unit;
+
+typedef unsigned long int	uintptr_t;
+
+#ifndef likely
+#if __GNUC__ < 3
+#define __builtin_expect(x, n) (x)
+#endif
+
+#define likely(x)   __builtin_expect(!!(x), 1)
+#define unlikely(x)   __builtin_expect(!!(x), 0)
+#endif
+
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

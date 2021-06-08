@@ -6,7 +6,7 @@
 | tcg-runtime-gvec.c |                                                                |
 | translator.c       | 只有一个函数，但是其调用者是 gen_intermediate_code(deprecated) |
 | cpu-exec.c         | tb 的执行                                                      |
-| translate-all.c    | tb 的管理, tb 和 page 的关系 以及 @todo, 总之是核心函数        |
+| translate-all.c    | tb 的管理, tb 和 page 的关系 以及 ..., 总之是核心文件          |
 | cpu-tlb.c          | softmmu 管理                                                   |
 
 ## Ask Niugene:
