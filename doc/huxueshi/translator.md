@@ -8,7 +8,12 @@
   - [ ] translator.c
   - cpu-exec.c
   - translate-all.c
-- [ ] /home/maritns3/core/ld/x86-qemu-mips/hw/core/cpu.c : CPU 初始化之类的工作
+
+- 实际上，在 qemu-mips/target/i386 的
+  - cpu.c : 包含了整个 cpu 的定义, 比如，最开始的 cpu 初始化之类的工作
+  - seg_helper.c 中需要模拟 exception 之类
+  - misc_helper.c
+  - int_helper.c : 例如 helper_daa 之类的会被 LATX 的函数调用
 
 
 Ask Niugene:
@@ -19,7 +24,7 @@ Ask Niugene:
 - [ ] 是不是只是支持 x86 32 的指令，其实关系不大 ?
 - [ ] xqm 还是支持 user mode 的吗?
 - [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch 是什么作用呀 ? 
-
+- [ ] 中断之前不是说和 信号 存在关联吗?
 
 ## flow 
 - qemu_tcg_rr_cpu_thread_fn
@@ -40,15 +45,6 @@ Ask Niugene:
         - cpu_tb_exec
           - tcg_qemu_tb_exec
 
-
-This is original code flow(cited form Niugene):
-- `tb_gen_code` to translate TB
-  - call `gen_intermediate_code` to generate QEMU IR
-    - call `translator_loop` which is a standard process to translate
-      - call `ops->translate_insn` to translate one instruction
-      - `ops` was defined by the specific target such as MIPS
-      - for MIPS,  `ops->translate_insn` is `mips_tr_translate_insn`
-
 ## 重点分析
 tb_lookup__cpu_state
 - [ ] 第一级: `cpu->tb_jmp_cache`
@@ -58,7 +54,23 @@ tb_lookup__cpu_state
   - [ ] 这两个函数分别干什么 ?
       - cpu_handle_exception
       - cpu_handle_interrupt
-  - [ ] 是没执行完成一个 tb 就进行检查吗 ?
+  - [ ] 每次执行完成一个 tb 就进行检查吗?
+      - [ ] 对应的检查代码在哪里?
+      - [ ] 检查一下 tb 
+  - [ ] 为什么 cpu_handle_exception 是在内部的，cpu_handle_interrupt 在循环的外部
+    - [ ] 实际上，根本不知道再说什么
+
+## interrupt 机制
+- apic_local_deliver : 在 apic 中存在大量的模拟
+  - cpu_interrupt
+    - generic_handle_interrupt
+      - `cpu->interrupt_request |= mask;` 
+
+在 cpu_handle_interrupt 中，会处理几种特殊情况，默认是 `cc->cpu_exec_interrupt(cpu, interrupt_request)`
+也就是 x86_cpu_exec_interrupt, 在这里根据 idt 之类的中断处理需要的地址, 然后跳转过去执行的
+
+
+在 tr_gen_tb_start 生成了 icount 的检查代码，那个并不是 interrupt 的检查机制。
 
 ## 二进制文件的反汇编阶段
 - target_x86_to_mips_host
@@ -69,7 +81,6 @@ tb_lookup__cpu_state
           - cpu_ldub_code : x86-qemu-mips/include/exec/cpu_ldst_template.h 中间生成的
         - ir1_disasm
           - cs_disasm : 这个就是 capstone 的代码了
-
 
 ## How softmmu works
 - [x] 访问存储也是隐藏的 load ?
