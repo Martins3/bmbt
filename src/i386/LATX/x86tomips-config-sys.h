@@ -1,0 +1,9 @@
+#ifndef _X86toMIPS_CONFIG_SYS_H_
+#define _X86toMIPS_CONFIG_SYS_H_
+
+#include "qemu/option.h"
+
+void x86_to_mips_parse_options(QemuOpts *opts);
+void x86_to_mips_parse_tests(QemuOpts *opts);
+
+#endif
