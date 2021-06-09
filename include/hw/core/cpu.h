@@ -2,10 +2,18 @@
 #define CPU_H_5RAXENPS
 
 // FIXME can I include this in kernel mode?
+#include "../../qemu/queue.h"
 #include "../../types.h"
+#include "../../exec/memattrs.h"
 #include <setjmp.h>
 
 typedef struct CPUState CPUState;
+
+/**
+ * vaddr:
+ * Type wide enough to contain any #target_ulong virtual address.
+ */
+typedef uint64_t vaddr;
 
 typedef struct CPUClass {
 
@@ -13,6 +21,23 @@ typedef struct CPUClass {
   void (*cpu_exec_enter)(CPUState *cpu);
 
 } CPUClass;
+
+typedef struct CPUBreakpoint {
+  vaddr pc;
+  int flags; /* BP_* */
+  QTAILQ_ENTRY(CPUBreakpoint) entry;
+} CPUBreakpoint;
+
+struct CPUWatchpoint {
+  vaddr vaddr;
+  // FIXME  originally style warned by ccls
+  // I don't know why ccls doesn't warn me in QEMU source code tree
+  ::vaddr len;
+  ::vaddr hitaddr;
+  MemTxAttrs hitattrs;
+  int flags; /* BP_* */
+  QTAILQ_ENTRY(CPUWatchpoint) entry;
+};
 
 typedef struct CPUState {
   CPUClass *cc; // TODO init this
@@ -39,6 +64,12 @@ typedef struct CPUState {
   uint32_t halted;
   uint32_t can_do_io;
   int32_t exception_index;
+
+  /* ice debug support */
+  QTAILQ_HEAD(, CPUBreakpoint) breakpoints;
+
+  QTAILQ_HEAD(, CPUWatchpoint) watchpoints;
+  CPUWatchpoint *watchpoint_hit;
 
 } CPUState;
 
