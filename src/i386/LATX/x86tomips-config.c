@@ -814,8 +814,9 @@ void x86_to_mips_tb_set_jmp_target(TranslationBlock *tb, int n,
 
 #ifdef CONFIG_SOFTMMU
 
+// FIXME comment this, vregs defined in CPUX86State ?
 /* This is used in target/i386/fpu_helper.c */
-int xtm_get_top_bias_from_env(CPUX86State *env) { return (int)env->vregs[3]; }
+// int xtm_get_top_bias_from_env(CPUX86State *env) { return (int)env->vregs[3]; }
 
 void qm_flush_icache(ADDR s, ADDR e)
 {
@@ -886,12 +887,18 @@ void xtm_tb_relink(TranslationBlock *utb)
     }
 }
 
+// FIXME this is temporary fix
+#define CONFIG_LATX
+
 static
 void xtm_interrupt_signal_handler(
         int n, siginfo_t *siginfo, void *ctx)
 {
     if (!xtm_sigint_opt()) return;
 
+// FIXME comment the code related with signal handler
+// maybe we have a better way to handling this
+#if 0
     ucontext_t *uc = ctx;
 
 #if defined(CONFIG_LATX)
@@ -917,6 +924,7 @@ void xtm_interrupt_signal_handler(
         lsenv->sigint_data.tb_unlinked = ctb;
         xtm_tb_unlink(ctb);
     }
+#endif
 }
 
 // FIXME this is a temporary fix
