@@ -4,6 +4,7 @@
 #include "include/common.h"
 #include <string.h>
 
+#if 0
 int option_by_hand;
 int option_flag_pattern;
 int option_flag_reduction;
@@ -810,5 +811,6 @@ _OUT:
 
     return;
 }
+#endif
 
 #endif

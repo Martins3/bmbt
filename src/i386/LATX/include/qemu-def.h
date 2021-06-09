@@ -8,7 +8,7 @@
 // #include "../../../../include/disas/disas.h"
 #include "../../../../include/exec/exec-all.h"
 // #include "../../../../include/tcg-op.h"
-// #include "../../../../include/exec/memop.h"
+#include "../../../../include/exec/memop.h"
 // #include "../../../../include/exec/cpu_ldst.h"
 // #include "../../../../include/exec/helper-proto.h"
 // #include "../../../../include/exec/helper-gen.h"

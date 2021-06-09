@@ -32,6 +32,9 @@ typedef struct TCGContext {
 // FIXME tcg.h is being well included
 extern TCGContext *tcg_ctx;
 
+/* Combine the MemOp and mmu_idx parameters into a single value.  */
+typedef uint32_t TCGMemOpIdx;
+
 #ifndef TARGET_INSN_START_EXTRA_WORDS
 # define TARGET_INSN_START_WORDS 1
 #else
