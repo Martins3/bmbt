@@ -150,17 +150,18 @@ typedef enum X86Seg {
 #define xtm_fpu_need_fix(x) ((x)&XTM_FPU_NEED_FIX_MASK)
 
 //#define xtm_fpu_top_out_valid(x) (((x) & XTM_FPU_TB_TOP_OUT_V_MASK) >>
-//XTM_FPU_TB_TOP_OUT_V) #define xtm_fpu_top_in_valid(x)  (((x) &
-//XTM_FPU_TB_TOP_IN_V_MASK)  >> XTM_FPU_TB_TOP_IN_V) #define
-//xtm_fpu_get_top_out(x)   (((x) & XTM_FPU_TB_TOP_OUT_MASK) >>
-//XTM_FPU_TB_TOP_OUT) #define xtm_fpu_get_top_in(x)    (((x) &
-//XTM_FPU_TB_TOP_IN_MASK)  >> XTM_FPU_TB_TOP_IN) #define
-//xtm_fpu_set_top_out(x,o) (((x) & ~XTM_FPU_TB_TOP_OUT_MASK) | (((o) & 7) <<
-//XTM_FPU_TB_TOP_OUT) | XTM_FPU_TB_TOP_OUT_V_MASK) #define
-//xtm_fpu_set_top_in(x,i)  (((x) & ~XTM_FPU_TB_TOP_IN_MASK)  | (((i) & 7) <<
-//XTM_FPU_TB_TOP_IN)  | XTM_FPU_TB_TOP_IN_V_MASK) #define xtm_fpu_clr_top_out(x)
+// XTM_FPU_TB_TOP_OUT_V) #define xtm_fpu_top_in_valid(x)  (((x) &
+// XTM_FPU_TB_TOP_IN_V_MASK)  >> XTM_FPU_TB_TOP_IN_V) #define
+// xtm_fpu_get_top_out(x)   (((x) & XTM_FPU_TB_TOP_OUT_MASK) >>
+// XTM_FPU_TB_TOP_OUT) #define xtm_fpu_get_top_in(x)    (((x) &
+// XTM_FPU_TB_TOP_IN_MASK)  >> XTM_FPU_TB_TOP_IN) #define
+// xtm_fpu_set_top_out(x,o) (((x) & ~XTM_FPU_TB_TOP_OUT_MASK) | (((o) & 7) <<
+// XTM_FPU_TB_TOP_OUT) | XTM_FPU_TB_TOP_OUT_V_MASK) #define
+// xtm_fpu_set_top_in(x,i)  (((x) & ~XTM_FPU_TB_TOP_IN_MASK)  | (((i) & 7) <<
+// XTM_FPU_TB_TOP_IN)  | XTM_FPU_TB_TOP_IN_V_MASK) #define
+// xtm_fpu_clr_top_out(x)
 //((x) & ~XTM_FPU_TB_TOP_OUT_MASK & ~XTM_FPU_TB_TOP_OUT_V_MASK) #define
-//xtm_fpu_clr_top_in(x)    ((x) & ~XTM_FPU_TB_TOP_IN_MASK  &
+// xtm_fpu_clr_top_in(x)    ((x) & ~XTM_FPU_TB_TOP_IN_MASK  &
 //~XTM_FPU_TB_TOP_IN_V_MASK)
 
 #endif
@@ -1360,6 +1361,13 @@ typedef struct CPUX86State {
 
   void *cpt_ptr; /* Point to Code Page Table */
 
+  /* segments */
+  SegmentCache segs[6]; /* selector values */
+  SegmentCache ldt;
+  SegmentCache tr;
+  SegmentCache gdt; /* only base and limit are used */
+  SegmentCache idt; /* only base and limit are used */
+
 } CPUX86State;
 
 // TODO I don't know how X86CPU works
@@ -1373,8 +1381,8 @@ typedef struct CPUX86State {
  * An x86 CPU.
  */
 typedef struct X86CPU {
-    CPUNegativeOffsetState neg;
-    CPUX86State env;
+  CPUNegativeOffsetState neg;
+  CPUX86State env;
 
 } X86CPU;
 

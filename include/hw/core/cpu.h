@@ -42,6 +42,13 @@ typedef struct CPUState {
 
 } CPUState;
 
+// FIXME
+// 1. this is originally a per thread value
+// 2. haven't be defined yet
+/* current CPU in the current thread. It is only valid inside
+   cpu_exec() */
+extern CPUState *current_cpu;
+
 #include "../../../src/i386/cpu.h"
 
 #endif /* end of include guard: CPU_H_5RAXENPS */

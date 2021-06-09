@@ -16,6 +16,8 @@
 // #include "../../../../include/exec/log.h"
 // #include "../../../../include/qemu/qht.h"
 
+#include "../../../../include/qemu/queue.h"
+
 #include "../../../../include/todo.h"
 #include "../../../tcg/tcg.h"
 
