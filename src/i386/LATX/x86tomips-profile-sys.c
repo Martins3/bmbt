@@ -4,7 +4,6 @@
 #include "include/env.h"
 #include "ir2/ir2.h"
 #include "x86tomips-options.h"
-#include <capstone/capstone.h>
 
 /* QEMU headers */
 #include "include/qemu-def.h"

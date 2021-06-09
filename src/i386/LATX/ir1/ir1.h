@@ -1,7 +1,9 @@
 #ifndef _IR1_H_
 #define _IR1_H_
 
-#include <capstone/capstone.h>
+// FIXME just make ccls happy
+// #include <capstone/capstone.h>
+#include "../capstone/capstone.h"
 #include "../include/common.h"
 
 #define eax_index 0

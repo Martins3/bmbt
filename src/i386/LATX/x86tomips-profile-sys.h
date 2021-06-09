@@ -1,7 +1,9 @@
 #ifndef _X86toMIPS_PROFILE_SYS_H_
 #define _X86toMIPS_PROFILE_SYS_H_
 
-#include <capstone/capstone.h>
+// FIXME just make ccls happy
+// #include <capstone/capstone.h>
+#include "capstone/capstone.h"
 
 struct ps_entry {
     uintptr_t guest_pc;
