@@ -61,6 +61,8 @@ typedef struct TranslationBlock {
   u32 flags;  /* flags defining in which context the code was generated */
   u16 size;   /* size of target code for this block (1 <=
                       size <= TARGET_PAGE_SIZE) */
+  // FIXME What's icount, how to handle it?
+  uint16_t icount;
   u32 cflags; /* compile flags */
 
 #define CF_COUNT_MASK 0x00007fff

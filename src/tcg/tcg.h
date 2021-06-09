@@ -32,5 +32,11 @@ typedef struct TCGContext {
 // FIXME tcg.h is being well included
 extern TCGContext *tcg_ctx;
 
+#ifndef TARGET_INSN_START_EXTRA_WORDS
+# define TARGET_INSN_START_WORDS 1
+#else
+# define TARGET_INSN_START_WORDS (1 + TARGET_INSN_START_EXTRA_WORDS)
+#endif
+
 TranslationBlock *tcg_tb_alloc(TCGContext *s);
 #endif /* end of include guard: TCG_H_FXBBEZAS */

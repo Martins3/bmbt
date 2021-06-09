@@ -17,6 +17,7 @@
 // #include "../../../../include/qemu/qht.h"
 
 #include "../../../../include/todo.h"
+#include "../../../tcg/tcg.h"
 
 /*#include "exec/gen-icount.h"*/
 
