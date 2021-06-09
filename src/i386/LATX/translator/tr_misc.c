@@ -4,6 +4,7 @@
 #include "../include/env.h"
 #include "../x86tomips-options.h"
 #include "../include/flag_lbt.h"
+#include "../include/error.h"
 
 // IF (CF=1), AL=FF, ELSE, AL=0 (#UD in 64-bit mode)
 bool translate_salc(IR1_INST *pir1)

@@ -21,8 +21,6 @@
 
 /*#include "exec/gen-icount.h"*/
 
-#define CONFIG_SOFTMMU
-
 typedef struct TranslationBlock TB;
 typedef struct qht QHT;
 
