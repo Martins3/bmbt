@@ -1,6 +1,7 @@
 #ifndef _QEMU_DEF_H_
 #define _QEMU_DEF_H_
 
+// TODO oh my god, the junks
 #include "qemu/osdep.h"
 #include "qemu/host-utils.h"
 #include "cpu.h"

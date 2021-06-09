@@ -1,3 +1,4 @@
+#if 0
 #include "profile.h"
 #include "ir1/ir1.h"
 #include "etb.h"
@@ -277,3 +278,4 @@ void profile_dump(int top_n) {
 }
 
 void xtm_pf_inc_jc_clear(void *cpu) {}
+#endif

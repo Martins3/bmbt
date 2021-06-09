@@ -1,3 +1,4 @@
+#if 0
 /* X86toMIPS headers */
 #include "common.h"
 #include "reg_alloc.h"
@@ -1652,4 +1653,5 @@ void xtm_pf_step_gen_tb_start(void) {}
 void xtm_pf_inc_tbf_cs32(int oldv, int newv) {}
 void xtm_pf_inc_tbf_ss32(int oldv, int newv) {}
 
+#endif
 #endif
