@@ -149,4 +149,7 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr);
 /* vl.c */
 extern int singlestep;
 
+# define GETPC() \
+    ((uintptr_t)__builtin_extract_return_addr(__builtin_return_address(0)))
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
