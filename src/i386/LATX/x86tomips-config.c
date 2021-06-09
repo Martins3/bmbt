@@ -20,7 +20,8 @@
 void xtm_tb_unlink(TranslationBlock *ctb);
 void xtm_tb_relink(TranslationBlock *utb);
 
-#include "trace.h"
+// #include "trace.h" FIXME comment it temporary
+// it cause scrpit/change-latx-header.py
 int whether_print_cpu_info(int cpu_index)
 {
     return option_cpusinfo & (1<<cpu_index);

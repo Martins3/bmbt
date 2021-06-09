@@ -1,5 +1,5 @@
 #include "ibtc.h"
-#include "stdio.h"
+// #include "stdio.h"
 #include "xtm-qemu-config.h"
 
 ibtc_entry ibtc_table[IBTC_SIZE];
