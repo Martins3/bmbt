@@ -82,8 +82,9 @@ def change_header_style(abs_path):
                 print(c_header_locations[header])
             except Exception as e:
                 print("key not find!")
-                print(line)
-                print(filename)
+                print("key : " +  header)
+                print("line : " +  line)
+                print("filename : " + abs_path)
                 raise e
 
             new_header = ""
@@ -97,12 +98,13 @@ def change_header_style(abs_path):
             new_contents.append(new_header)
             print(line + " --> " + new_header)
     
-    target = open(abs_path, 'w')
-    target.writelines(new_contents)
-    target.close()
+    #  target = open(abs_path, 'w')
+    #  target.writelines(new_contents)
+    #  target.close()
 
 
 source_files = [latx_dir + f for f in c_files + c_headers]
+#  change_header_style("/home/maritns3/core/ld/DuckBuBi/src/i386/LATX/translator/tr_fldst.c")
 for filename in source_files:
     change_header_style(filename)
     #  break
