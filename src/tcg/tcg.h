@@ -29,5 +29,8 @@ typedef struct TCGContext {
 
 } TCGContext;
 
+// FIXME tcg.h is being well included
+extern TCGContext *tcg_ctx;
+
 TranslationBlock *tcg_tb_alloc(TCGContext *s);
 #endif /* end of include guard: TCG_H_FXBBEZAS */

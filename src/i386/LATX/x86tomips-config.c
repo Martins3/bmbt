@@ -90,6 +90,7 @@ int target_x86_to_mips_host(
 #endif
 
     if (!option_lsfpu) {
+        // TODO how etb works ?
         etb_check_top_in(tb->extra_tb, env->fpstt);
     }
 
@@ -353,6 +354,9 @@ void x86_to_mips_free_lsenv(void)
 
 void x86_to_mips_init_env(CPUX86State *env)
 {
+  // TODO this is a bug in original design
+  // all about cpu_state
+#if 0
     x86_to_mips_alloc_lsenv();
     lsenv->cpu_state = env;
     env->vregs[4] = (uint64_t)ss._ssi_current; 
@@ -368,6 +372,7 @@ void x86_to_mips_init_env(CPUX86State *env)
     env->xtm_fpu = XTM_FPU_RESET_VALUE;
 #ifdef CONFIG_SOFTMMU
     env->cpt_ptr = &lsenv->cpc_data.cpt;
+#endif
 #endif
 }
 
@@ -913,6 +918,9 @@ void xtm_interrupt_signal_handler(
         xtm_tb_unlink(ctb);
     }
 }
+
+// FIXME this is a temporary fix
+#include "../../tcg/tcg.h"
 
 void x86_to_mips_init_thread_signal(CPUState *cpu)
 {

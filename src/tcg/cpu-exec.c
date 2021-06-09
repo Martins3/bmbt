@@ -6,6 +6,11 @@
 #include "../../include/exec/cpu-defs.h"
 #include <stdbool.h> // FIXME header for bool
 
+
+void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr){
+
+}
+
 static inline void tb_add_jump(TranslationBlock *tb, int n,
                                TranslationBlock *tb_next)
 {

@@ -18,21 +18,27 @@ typedef unsigned int u32;
 
 typedef int i32;
 
-
 typedef u64 tb_page_addr_t;
 typedef u32 tcg_insn_unit;
 
-typedef unsigned long int	uintptr_t;
+typedef unsigned long int uintptr_t;
+
+typedef signed char int8_t;
+typedef unsigned char uint8_t;
+typedef signed short int int16_t;
+typedef unsigned short int uint16_t;
+typedef signed int int32_t;
+typedef unsigned int uint32_t;
+typedef signed long int int64_t;
+typedef unsigned long int uint64_t;
 
 #ifndef likely
 #if __GNUC__ < 3
 #define __builtin_expect(x, n) (x)
 #endif
-
-#define likely(x)   __builtin_expect(!!(x), 1)
-#define unlikely(x)   __builtin_expect(!!(x), 0)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
-
 
 #endif
 
