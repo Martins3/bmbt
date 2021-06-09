@@ -1,8 +1,8 @@
-#include "mem.h"
-#include "xtm-qemu-config.h"
+#include "include/mem.h"
+#include "include/xtm-qemu-config.h"
 
 #ifdef CONFIG_XTM_MEMWATCH
-#include "memwatch.h"
+#include "include/memwatch.h"
 #endif
 
 void *mm_malloc(int size)

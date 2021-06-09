@@ -1,7 +1,7 @@
-#include "common.h"
-#include "translate.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../translator/translate.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
 
 static inline
 bool translate_mov_byhand_8_16_32(IR1_INST *pir1)

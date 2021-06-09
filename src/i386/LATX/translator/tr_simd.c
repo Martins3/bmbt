@@ -1,8 +1,8 @@
-#include "common.h"
+#include "../include/common.h"
 /*#include "translate.h"*/
-#include "reg_alloc.h"
-#include "env.h"
-#include "x86tomips-options.h"
+#include "../include/reg_alloc.h"
+#include "../include/env.h"
+#include "../x86tomips-options.h"
 
 void translate_xxxps_helper(IR1_INST *pir1, bool is_xmm_hi,
                             IR2_OPCODE mips_opcode);

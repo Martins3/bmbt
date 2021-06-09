@@ -1,14 +1,14 @@
-#include "common.h"
+#include "include/common.h"
 #include "x86tomips-config.h"
 #include "ir1/ir1.h"
 #include "ir2/ir2.h"
-#include "env.h"
-#include "etb.h"
-#include "reg_alloc.h"
+#include "include/env.h"
+#include "include/etb.h"
+#include "include/reg_alloc.h"
 #include "x86tomips-options.h"
-#include "etb.h"
-#include "shadow_stack.h"
-#include "profile.h"
+#include "include/etb.h"
+#include "include/shadow_stack.h"
+#include "include/profile.h"
 #include <signal.h>
 #include <ucontext.h>
 

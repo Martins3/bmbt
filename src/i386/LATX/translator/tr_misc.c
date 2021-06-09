@@ -1,9 +1,9 @@
-#include "common.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
-#include "env.h"
-#include "x86tomips-options.h"
-#include "flag_lbt.h"
+#include "../include/common.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
+#include "../include/env.h"
+#include "../x86tomips-options.h"
+#include "../include/flag_lbt.h"
 
 // IF (CF=1), AL=FF, ELSE, AL=0 (#UD in 64-bit mode)
 bool translate_salc(IR1_INST *pir1)

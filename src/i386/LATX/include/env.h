@@ -1,17 +1,17 @@
 #ifndef _ENV_H_
 #define _ENV_H_
 
-#include "common.h"
-#include "flag_pattern.h"
-#include "translator/translate.h"
-#include "x86tomips-config.h"
-#include "shadow_stack.h"
+#include "../include/common.h"
+#include "../include/flag_pattern.h"
+#include "../translator/translate.h"
+#include "../x86tomips-config.h"
+#include "../include/shadow_stack.h"
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
-#include "x86tomips-profile-sys.h"
+#include "../x86tomips-profile-sys.h"
 #endif
 
-#include "cross-page-check.h"
+#include "../include/cross-page-check.h"
 
 typedef struct ENV {
     CPUX86State *cpu_state;     /* from QEMU,CPUArchState */

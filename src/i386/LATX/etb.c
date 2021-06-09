@@ -1,7 +1,7 @@
-#include "common.h"
-#include "mem.h"
-#include "env.h"
-#include "etb.h"
+#include "include/common.h"
+#include "include/mem.h"
+#include "include/env.h"
+#include "include/etb.h"
 #include "ir2/ir2.h"
 
 IR1_INST *etb_ir1_inst_first(ETB *etb)

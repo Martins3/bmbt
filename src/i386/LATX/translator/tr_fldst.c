@@ -1,8 +1,8 @@
 #include <math.h>
-#include "common.h"
-#include "reg_alloc.h"
-#include "env.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../include/reg_alloc.h"
+#include "../include/env.h"
+#include "../x86tomips-options.h"
 
 void temply_set_fcsr_rounding_mode_according_x86_cw(void);
 

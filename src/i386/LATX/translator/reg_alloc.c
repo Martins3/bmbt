@@ -1,11 +1,11 @@
-#include "common.h"
-#include "reg_alloc.h"
-#include "env.h"
+#include "../include/common.h"
+#include "../include/reg_alloc.h"
+#include "../include/env.h"
 #include <string.h>
-#include "x86tomips-options.h"
+#include "../x86tomips-options.h"
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
-#include "x86tomips-profile-sys.h"
+#include "../x86tomips-profile-sys.h"
 #endif
 
 TEMP_REG_STATUS itemp_status_default[itemp_status_num] = {

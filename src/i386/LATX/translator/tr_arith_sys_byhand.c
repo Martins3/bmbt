@@ -1,8 +1,8 @@
-#include "common.h"
-#include "translate.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
-#include "flag_lbt.h"
+#include "../include/common.h"
+#include "../translator/translate.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
+#include "../include/flag_lbt.h"
 
 static 
 void translate_cmp_byhand_gpr_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)

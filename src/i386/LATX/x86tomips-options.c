@@ -1,7 +1,7 @@
 #include "x86tomips-options.h"
-#include "error.h"
+#include "include/error.h"
 #include "ir1/ir1.h"
-#include "common.h"
+#include "include/common.h"
 #include <string.h>
 
 int option_by_hand;
@@ -452,9 +452,7 @@ void dump_xtm_options(void)
 
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
 
-#include "qemu-def.h"
-#include "qemu/option.h"
-#include "qemu/option_int.h"
+#include "include/qemu-def.h"
 
 /* these functions are used only in this file */
 void x86_to_mips_parse_options(QemuOpts *opts);

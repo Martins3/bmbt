@@ -1,9 +1,9 @@
 #ifndef _X86toMIPS_CONFIG_H_
 #define _X86toMIPS_CONFIG_H_
 
-#include "types.h"
-#include "qemu-def.h"
-#include "xtm-qemu-config.h"
+#include "include/types.h"
+#include "include/qemu-def.h"
+#include "include/xtm-qemu-config.h"
 
 int whether_print_cpu_info(int cpu_index);
 

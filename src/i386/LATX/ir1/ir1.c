@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "common.h"
-#include "ir1.h"
+#include "../include/common.h"
+#include "../ir1/ir1.h"
 
 IR1_OPND al_ir1_opnd;
 IR1_OPND ah_ir1_opnd;
@@ -194,7 +194,7 @@ static void __attribute__((__constructor__)) x86tomisp_ir1_init(void)
 void xtm_capstone_init(void);
 csh handle;
 #ifdef CONFIG_SOFTMMU
-#include "env.h"
+#include "../include/env.h"
 csh handle16;
 #endif
 void xtm_capstone_init(void)

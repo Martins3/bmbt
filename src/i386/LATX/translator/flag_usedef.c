@@ -1,8 +1,8 @@
-#include "common.h"
-#include "etb.h"
-#include "ir1/ir1.h"
-#include "translator/translate.h"
-#include "flag_usedef.h"
+#include "../include/common.h"
+#include "../include/etb.h"
+#include "../ir1/ir1.h"
+#include "../translator/translate.h"
+#include "../include/flag_usedef.h"
 
 IR1_EFLAG_USEDEF *ir1_opcode_to_eflag_usedef(IR1_INST *ir1)
 {

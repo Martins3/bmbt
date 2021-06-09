@@ -2,8 +2,8 @@
 #define _X86TOMIPS_PROFILE_H_
 #define ETB_ARRAY_SIZE (1<<19)
 
-#include "types.h"
-#include "qemu-def.h"
+#include "../include/types.h"
+#include "../include/qemu-def.h"
 
 void profile_generate(void);
 void profile_dump(int top_n);

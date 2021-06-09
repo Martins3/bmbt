@@ -1,7 +1,7 @@
 #ifndef _FLAG_USEDEF_H_
 #define _FLAG_USEDEF_H_
 
-#include "common.h"
+#include "../include/common.h"
 
 typedef struct {
     uint8 use;

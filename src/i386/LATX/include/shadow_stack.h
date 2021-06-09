@@ -1,8 +1,8 @@
 #ifndef _SHADOW_STACK_H_
 #define _SHADOW_STACK_H_
 
-#include "types.h"
-#include "qemu-def.h"
+#include "../include/types.h"
+#include "../include/qemu-def.h"
 
 typedef struct  {
     ADDRX x86_esp;    // the esp after pushing the return address

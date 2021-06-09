@@ -2,7 +2,7 @@
 #define _IR1_H_
 
 #include <capstone/capstone.h>
-#include "common.h"
+#include "../include/common.h"
 
 #define eax_index 0
 #define ecx_index 1

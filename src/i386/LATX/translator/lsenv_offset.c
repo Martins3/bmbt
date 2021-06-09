@@ -1,17 +1,17 @@
-#include "common.h"
-#include "x86tomips-config.h"
-#include "ir1/ir1.h"
-#include "ir2/ir2.h"
-#include "env.h"
-#include "etb.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
-#include "etb.h"
-#include "shadow_stack.h"
-#include "profile.h"
+#include "../include/common.h"
+#include "../x86tomips-config.h"
+#include "../ir1/ir1.h"
+#include "../ir2/ir2.h"
+#include "../include/env.h"
+#include "../include/etb.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
+#include "../include/etb.h"
+#include "../include/shadow_stack.h"
+#include "../include/profile.h"
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
-#include "x86tomips-profile-sys.h"
+#include "../x86tomips-profile-sys.h"
 
 #define XTM_PF_LSENV_OFFSET_FUNC(group, name) \
 int lsenv_offset_of_pf_data_ ## group ## _ ## name (ENV *lsenv) \

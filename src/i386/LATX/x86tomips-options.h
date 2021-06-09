@@ -1,7 +1,7 @@
 #ifndef _X86toMIPS_OPTIONS_H_
 #define _X86toMIPS_OPTIONS_H_
 
-#include "types.h"
+#include "include/types.h"
 
 #define XTM_OPT_by_hand          0
 #define XTM_OPT_flag_pattern     1

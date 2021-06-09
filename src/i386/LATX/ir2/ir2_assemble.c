@@ -1,6 +1,6 @@
-#include "ir2.h"
-#include "translator/translate.h"
-#include "ir2_la_assemble.h"
+#include "../ir2/ir2.h"
+#include "../translator/translate.h"
+#include "../ir2/ir2_la_assemble.h"
 
 uint32_t ir2_assemble(IR2_INST *pir2)
 {

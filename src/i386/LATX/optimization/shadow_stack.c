@@ -1,8 +1,8 @@
-#include "env.h"
-#include "mem.h"
-#include "reg_alloc.h"
-#include "shadow_stack.h"
-#include "x86tomips-options.h"
+#include "../include/env.h"
+#include "../include/mem.h"
+#include "../include/reg_alloc.h"
+#include "../include/shadow_stack.h"
+#include "../x86tomips-options.h"
 #include <string.h>
 
 SS_ITEM* ss_pop(SS* ss) 

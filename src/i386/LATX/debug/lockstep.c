@@ -29,8 +29,8 @@
 #include <sys/un.h>
 #include <stdio.h>
 #include <errno.h>
-#include "common.h"
-#include "lockstep.h"
+#include "../include/common.h"
+#include "../debug/lockstep.h"
 
 /* The execution state we compare 
  * More state information can be added here

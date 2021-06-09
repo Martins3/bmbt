@@ -1,7 +1,7 @@
-#include "common.h"
-#include "translate.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../translator/translate.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
 
 bool translate_movupd(IR1_INST *pir1)
 {

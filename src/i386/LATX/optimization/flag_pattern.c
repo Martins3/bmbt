@@ -1,9 +1,9 @@
-#include "common.h"
-#include "env.h"
-#include "etb.h"
-#include "reg_alloc.h"
-#include "flag_pattern.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../include/env.h"
+#include "../include/etb.h"
+#include "../include/reg_alloc.h"
+#include "../include/flag_pattern.h"
+#include "../x86tomips-options.h"
 #include <string.h>
 
 typedef enum {

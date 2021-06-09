@@ -1,9 +1,8 @@
 #if 0
-#include "profile.h"
+#include "include/profile.h"
 #include "ir1/ir1.h"
-#include "etb.h"
-#include "common.h"
-#include "disas/disas.h"
+#include "include/etb.h"
+#include "include/common.h"
 
 #define PROFILE_HELPER_NUM 7
 

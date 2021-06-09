@@ -1,7 +1,7 @@
 #ifndef _REG_ALLOC_H_
 #define _REG_ALLOC_H_
 
-#include "ir2/ir2.h"
+#include "../ir2/ir2.h"
 
 typedef struct {
     uint32 physical_id;

@@ -1,11 +1,11 @@
-#include "common.h"
-#include "reg_alloc.h"
-#include "env.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../include/reg_alloc.h"
+#include "../include/env.h"
+#include "../x86tomips-options.h"
 
 #ifndef CONFIG_SOFTMMU
 /* Apply flag pattern only in user-mode */
-#include "flag_pattern.h"
+#include "../include/flag_pattern.h"
 #endif
 
 extern void get_eflag_condition(IR2_OPND *value, IR1_INST *pir1);

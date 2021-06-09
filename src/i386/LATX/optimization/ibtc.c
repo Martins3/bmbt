@@ -1,6 +1,6 @@
-#include "ibtc.h"
+#include "../include/ibtc.h"
 // #include "stdio.h"
-#include "xtm-qemu-config.h"
+#include "../include/xtm-qemu-config.h"
 
 ibtc_entry ibtc_table[IBTC_SIZE];
 void update_ibtc(uint64_t pc, void *tb) {

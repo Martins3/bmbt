@@ -98,9 +98,9 @@ def change_header_style(abs_path):
             new_contents.append(new_header)
             print(line + " --> " + new_header)
     
-    #  target = open(abs_path, 'w')
-    #  target.writelines(new_contents)
-    #  target.close()
+    target = open(abs_path, 'w')
+    target.writelines(new_contents)
+    target.close()
 
 
 source_files = [latx_dir + f for f in c_files + c_headers]

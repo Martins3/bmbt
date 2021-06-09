@@ -1,12 +1,12 @@
 #ifndef _IR2_H_
 #define _IR2_H_
 
-#include "common.h"
+#include "../include/common.h"
 
 /* IR2_INS_TYPE: LISA_ADD_W ...
  * IR2_OPND_TYPE: IR2_OPND_GPR ...
  * IR2_OPND { _type, val } */
-#include "la_ir2.h"
+#include "../ir2/la_ir2.h"
 
 #define IR2_ITEMP_MAX 0x4000
 

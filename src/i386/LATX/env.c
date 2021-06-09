@@ -1,7 +1,7 @@
-#include "env.h"
-#include "shadow_stack.h"
+#include "include/env.h"
+#include "include/shadow_stack.h"
 #include "x86tomips-options.h"
-#include "profile.h"
+#include "include/profile.h"
 #include "debug/lockstep.h"
 
 __thread ENV *lsenv;

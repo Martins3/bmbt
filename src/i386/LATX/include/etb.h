@@ -1,9 +1,9 @@
 #ifndef _ETB_H_
 #define _ETB_H_
 
-#include "common.h"
-#include "x86tomips-config.h"
-#include "ir1/ir1.h"
+#include "../include/common.h"
+#include "../x86tomips-config.h"
+#include "../ir1/ir1.h"
 
 /* functions to access ETB items */
 IR1_INST *etb_ir1_inst_first(ETB *etb);

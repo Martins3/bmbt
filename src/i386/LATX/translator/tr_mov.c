@@ -1,8 +1,8 @@
-#include "common.h"
-#include "reg_alloc.h"
-#include "env.h"
-#include "flag_lbt.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../include/reg_alloc.h"
+#include "../include/env.h"
+#include "../include/flag_lbt.h"
+#include "../x86tomips-options.h"
 
 #ifndef CONFIG_SOFTMMU
 /* pop in user-mode */

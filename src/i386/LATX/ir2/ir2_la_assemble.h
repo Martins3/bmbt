@@ -1,7 +1,7 @@
 #ifndef __LISA_ASSEMBLE_H_
 #define __LISA_ASSEMBLE_H_
 
-#include "la_ir2.h"
+#include "../ir2/la_ir2.h"
 typedef enum {
     OPD_INVALID = 0,
     OPD_CA,

@@ -5,7 +5,7 @@
 #define IBTC_SIZE (1U << IBTC_BIT)
 #define IBTC_MASK (IBTC_SIZE - 1) 
 
-#include "types.h"
+#include "../include/types.h"
 
 typedef struct ibtc_entry {
     uint64_t pc; /* hash key */

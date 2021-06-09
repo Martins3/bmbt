@@ -1,9 +1,9 @@
 #ifndef _FLAG_LBT_H_
 #define _FLAG_LBT_H_
 
-#include "etb.h"
-#include "ir1/ir1.h"
-#include "ir2/ir2.h"
+#include "../include/etb.h"
+#include "../ir1/ir1.h"
+#include "../ir2/ir2.h"
 
 bool generate_eflag_by_lbt(IR2_OPND *dest, IR2_OPND *src0, IR2_OPND *src1, IR1_INST *pir1, bool is_sx);
 

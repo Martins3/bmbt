@@ -1,7 +1,7 @@
-#include "common.h"
-#include "env.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../include/env.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
 
 bool translate_add(IR1_INST *pir1)
 {

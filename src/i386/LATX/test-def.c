@@ -1,16 +1,16 @@
-#include "common.h"
+#include "include/common.h"
 #include "x86tomips-config.h"
 #include "x86tomips-options.h"
 #include "ir1/ir1.h"
 #include "ir2/ir2.h"
-#include "env.h"
-#include "etb.h"
-#include "reg_alloc.h"
-#include "flag_pattern.h"
-#include "flag_lbt.h"
+#include "include/env.h"
+#include "include/etb.h"
+#include "include/reg_alloc.h"
+#include "include/flag_pattern.h"
+#include "include/flag_lbt.h"
 #include <string.h>
 
-#include "test-def.h"
+#include "include/test-def.h"
 
 TESTCFG tt_cfg;
 TESTENV tt_env_reset;

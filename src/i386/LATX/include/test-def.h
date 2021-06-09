@@ -1,21 +1,19 @@
 #ifndef _XTM_TEST_DEF_H_
 #define _XTM_TEST_DEF_H_
 
-#include "common.h"
-#include "x86tomips-config.h"
-#include "x86tomips-options.h"
-#include "ir1/ir1.h"
-#include "ir2/ir2.h"
-#include "env.h"
-#include "etb.h"
-#include "reg_alloc.h"
-#include "flag_pattern.h"
-#include "flag_lbt.h"
+#include "../include/common.h"
+#include "../x86tomips-config.h"
+#include "../x86tomips-options.h"
+#include "../ir1/ir1.h"
+#include "../ir2/ir2.h"
+#include "../include/env.h"
+#include "../include/etb.h"
+#include "../include/reg_alloc.h"
+#include "../include/flag_pattern.h"
+#include "../include/flag_lbt.h"
 #include <string.h>
 
-#include "qemu-def.h"
-#include "qemu/option.h"
-#include "qemu/option_int.h"
+#include "../include/qemu-def.h"
 
 extern void  tt_reset_cpu(CPUState *cpu);
 extern void *tt_test(CPUState *cpu);

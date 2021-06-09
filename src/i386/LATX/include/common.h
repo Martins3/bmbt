@@ -1,13 +1,13 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include "types.h"
-#include "ds-set.h"
-#include "mem.h"
-#include "error.h"
+#include "../include/types.h"
+#include "../include/ds-set.h"
+#include "../include/mem.h"
+#include "../include/error.h"
 
 /* CONFIG_xxx from QEMU */
-#include "xtm-qemu-config.h"
+#include "../include/xtm-qemu-config.h"
 
 #define BITS_ARE_SET_ANY(value, bits) (((value) & (bits)) != 0)
 #define BITS_ARE_SET_ALL(value, bits) (((value) & (bits)) == (bits))

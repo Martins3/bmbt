@@ -1,9 +1,9 @@
-#include "common.h"
-#include "env.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
-#include "flag_lbt.h"
-#include "flag_pattern.h"
+#include "../include/common.h"
+#include "../include/env.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
+#include "../include/flag_lbt.h"
+#include "../include/flag_pattern.h"
 
 bool translate_cmpxchg_byhand_8_16_32(IR1_INST *pir1);
 

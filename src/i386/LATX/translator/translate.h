@@ -1,10 +1,10 @@
 #ifndef _TRANSLATE_H_
 #define _TAANSLATE_H_
 
-#include "common.h"
-#include "ir1/ir1.h"
-#include "ir2/ir2.h"
-#include "qemu-def.h"
+#include "../include/common.h"
+#include "../ir1/ir1.h"
+#include "../ir2/ir2.h"
+#include "../include/qemu-def.h"
 
 bool translate_clac(IR1_INST *pir1);
 bool translate_stac(IR1_INST *pir1);

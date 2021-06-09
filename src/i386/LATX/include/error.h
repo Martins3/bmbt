@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "xtm-qemu-config.h"
+#include "../include/xtm-qemu-config.h"
 
 void print_stack_trace(void);
 
@@ -32,7 +32,7 @@ void print_stack_trace(void);
 
 #ifdef CONFIG_SOFTMMU
 
-#include "types.h"
+#include "../include/types.h"
 
 /* generate exception directly */
 void tr_gen_excp_illegal_op_addr(ADDRX addr, int end);

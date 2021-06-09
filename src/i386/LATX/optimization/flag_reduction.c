@@ -1,8 +1,8 @@
-#include "common.h"
-#include "etb.h"
-#include "ir1/ir1.h"
-#include "translator/translate.h"
-#include "flag_usedef.h"
+#include "../include/common.h"
+#include "../include/etb.h"
+#include "../ir1/ir1.h"
+#include "../translator/translate.h"
+#include "../include/flag_usedef.h"
 
 uint8 pending_use_of_succ(ETB* etb, int max_depth)
 {

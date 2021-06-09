@@ -1,21 +1,19 @@
 /* X86toMIPS headers */
-#include "common.h"
-#include "reg_alloc.h"
-#include "env.h"
-#include "ir2/ir2.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../include/reg_alloc.h"
+#include "../include/env.h"
+#include "../ir2/ir2.h"
+#include "../x86tomips-options.h"
 
 /* QEMU headers */
-#include "qemu-def.h"
-#include "qemu/option.h"
-#include "qemu/option_int.h"
+#include "../include/qemu-def.h"
 
 #ifdef CONFIG_XTM_PROFILE
-#include "x86tomips-profile-sys.h"
+#include "../x86tomips-profile-sys.h"
 #endif
 
 /* Macro : Exception Check for specific instructions */
-#include "tr_excp.h"
+#include "../translator/tr_excp.h"
 
 /* Execute after every ir1_disasm to fix something
  *

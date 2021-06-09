@@ -1,7 +1,7 @@
 #ifndef _MEM_H_
 #define _MEM_H_
 
-#include "error.h"
+#include "../include/error.h"
 #include <stdlib.h>
 
 void *mm_malloc(int size);

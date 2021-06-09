@@ -1,7 +1,7 @@
-#include "common.h"
-#include "env.h"
-#include "reg_alloc.h"
-#include "x86tomips-options.h"
+#include "../include/common.h"
+#include "../include/env.h"
+#include "../include/reg_alloc.h"
+#include "../x86tomips-options.h"
 
 /* tr_arich.c in system mode
  *

@@ -1,6 +1,6 @@
-#include "common.h"
-#include "env.h"
-#include "etb.h"
+#include "../include/common.h"
+#include "../include/env.h"
+#include "../include/etb.h"
 
 //static void ir2_schedule(TranslationBlock *tb);
 //static void tri_separate_branch_from_ldst(TranslationBlock *tb);
