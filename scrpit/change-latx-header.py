@@ -1,6 +1,11 @@
 #!/bin/python3
 
 import os
+"""
+Apparently, using ccls to check the code firstly is convenient and efficient,
+but ccls depends on correct header path or compile_commands.json, as latter one
+rely on the code compiles.
+"""
 
 work_dir = "/home/maritns3/core/ld/DuckBuBi"
 latx_dir = work_dir + "/src/i386/LATX/"
@@ -64,7 +69,7 @@ def change_header_style(abs_path):
 
     external_dir = set(["qemu", "disas", "fpu", "exec"])
 
-    new_contents = [ ]
+    new_contents = []
     for line in content:
         if(not line.startswith(prefix)):
             new_contents.append(line)
@@ -77,13 +82,12 @@ def change_header_style(abs_path):
                 print("skip : " + line)
                 continue
 
-
             try:
                 print(c_header_locations[header])
             except Exception as e:
                 print("key not find!")
-                print("key : " +  header)
-                print("line : " +  line)
+                print("key : " + header)
+                print("line : " + line)
                 print("filename : " + abs_path)
                 raise e
 
@@ -97,7 +101,7 @@ def change_header_style(abs_path):
             new_header = prefix + new_header + header + suffix
             new_contents.append(new_header)
             print(line + " --> " + new_header)
-    
+
     target = open(abs_path, 'w')
     target.writelines(new_contents)
     target.close()
