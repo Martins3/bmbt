@@ -12,6 +12,7 @@
 #include "../include/profile.h"
 #include "../include/flag_pattern.h"
 #include "../include/shadow_stack.h"
+#include <assert.h>
 
 #ifdef CONFIG_SOFTMMU
 #include "../debug/lockstep.h"

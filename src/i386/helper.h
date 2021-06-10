@@ -43,19 +43,19 @@
 // DEF_HELPER_2(verw, void, env, tl)
 // DEF_HELPER_2(lldt, void, env, int)
 // DEF_HELPER_2(ltr, void, env, int)
-// DEF_HELPER_3(load_seg, void, env, int, int)
+DEF_HELPER_3(load_seg, void, env, int, int) // TODO begin
 // DEF_HELPER_4(ljmp_protected, void, env, int, tl, tl)
 // DEF_HELPER_5(lcall_real, void, env, int, tl, int, int)
 // DEF_HELPER_5(lcall_protected, void, env, int, tl, int, tl)
 // DEF_HELPER_2(iret_real, void, env, int)
 // DEF_HELPER_3(iret_protected, void, env, int, int)
 // DEF_HELPER_3(lret_protected, void, env, int, int)
-// DEF_HELPER_2(read_crN, tl, env, int)
-// DEF_HELPER_3(write_crN, void, env, int, tl)
+DEF_HELPER_2(read_crN, tl, env, int)
+DEF_HELPER_3(write_crN, void, env, int, tl)
 // DEF_HELPER_2(lmsw, void, env, tl)
 // DEF_HELPER_1(clts, void, env)
-// DEF_HELPER_FLAGS_3(set_dr, TCG_CALL_NO_WG, void, env, int, tl)
-// DEF_HELPER_FLAGS_2(get_dr, TCG_CALL_NO_WG, tl, env, int)
+DEF_HELPER_FLAGS_3(set_dr, TCG_CALL_NO_WG, void, env, int, tl)
+DEF_HELPER_FLAGS_2(get_dr, TCG_CALL_NO_WG, tl, env, int)
 // DEF_HELPER_2(invlpg, void, env, tl)
 // 
 // DEF_HELPER_1(sysenter, void, env)
@@ -71,8 +71,7 @@
 // DEF_HELPER_1(debug, void, env)
 // DEF_HELPER_1(reset_rf, void, env)
 // DEF_HELPER_3(raise_interrupt, void, env, int, int)
-// TODO add related functions
-DEF_HELPER_2(raise_exception, void, env, int)
+DEF_HELPER_2(raise_exception, void, env, int) // TODO end
 // DEF_HELPER_1(cli, void, env)
 // DEF_HELPER_1(sti, void, env)
 // DEF_HELPER_1(clac, void, env)
@@ -179,7 +178,7 @@ DEF_HELPER_1(fxam_ST0, void, env)
 // DEF_HELPER_2(fldcw, void, env, i32)
 // DEF_HELPER_1(fclex, void, env)
 DEF_HELPER_1(fwait, void, env)
-// DEF_HELPER_1(fninit, void, env)
+DEF_HELPER_1(fninit, void, env)
 // DEF_HELPER_2(fbld_ST0, void, env, tl)
 // DEF_HELPER_2(fbst_ST0, void, env, tl)
 DEF_HELPER_1(f2xm1, void, env)
@@ -238,5 +237,8 @@ DEF_HELPER_FLAGS_3(xsetbv, TCG_CALL_NO_WG, void, env, i32, i64)
 // #endif
 // 
 // DEF_HELPER_1(rdrand, tl, env)
+
+// FIXME copied from tcg-runtime.h
+DEF_HELPER_FLAGS_1(lookup_tb, TCG_CALL_NO_WG_SE, ptr, env)
 
 #endif /* end of include guard: HELPER_H_9BLYUHYU */

@@ -68,6 +68,8 @@ static inline bool cpu_handle_exception(CPUState *cpu, int *ret) {
 }
 
 int cpu_exec(CPUState *cpu) {
+  // FIXME how 
+  // CPUClass *cc = CPU_GET_CLASS(cpu);
   CPUClass *cc = cpu->cc;
 
   int ret;

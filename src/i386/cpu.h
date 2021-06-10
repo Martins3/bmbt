@@ -7,6 +7,7 @@
 
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/fpu/softfloat-types.h"
+#include "../../include/hw/core/cpu.h"
 #include "../../include/types.h"
 
 // FIXME copy a lot of macros without checking
@@ -1313,8 +1314,8 @@ typedef struct CPUX86State {
   ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
   // ldq,only 10bits offset
 #endif
-    ZMMReg xmm_t0;
-    MMXReg mmx_t0;
+  ZMMReg xmm_t0;
+  MMXReg mmx_t0;
 
   // FIXME
   // When copy code following three lines of code,
@@ -1364,6 +1365,11 @@ typedef struct CPUX86State {
   int exception_is_int;
   target_ulong exception_next_eip;
   target_ulong dr[8]; /* debug registers; note dr4 and dr5 are unused */
+  union {
+    struct CPUBreakpoint *cpu_breakpoint[4];
+    struct CPUWatchpoint *cpu_watchpoint[4];
+  };                 /* break/watchpoints for dr[0..3] */
+  int old_exception; /* exception in flight */
 
   void *cpt_ptr; /* Point to Code Page Table */
 
@@ -1384,11 +1390,11 @@ typedef struct CPUX86State {
   uint64_t xcr0;
 
   uint32_t mxcsr;
-    float_status sse_status;
+  float_status sse_status;
 
   uint32_t pkru;
 
-    FeatureWordArray features;
+  FeatureWordArray features;
 
 } CPUX86State;
 
@@ -1403,10 +1409,14 @@ typedef struct CPUX86State {
  * An x86 CPU.
  */
 typedef struct X86CPU {
+  CPUState parent_obj;
+
   CPUNegativeOffsetState neg;
   CPUX86State env;
 
 } X86CPU;
+
+#define X86_CPU(ptr) container_of(ptr, X86CPU, parent_obj)
 
 /* float macros */
 #define FT0 (env->ft0)
@@ -1442,9 +1452,6 @@ static inline void cpu_set_fpuc(CPUX86State *env, uint16_t fpuc) {
 /* mpx_helper.c */
 void cpu_sync_bndcs_hflags(CPUX86State *env);
 
-// This line is belongs to compiler.h
-#define QEMU_NORETURN __attribute__((__noreturn__))
-
 /* excp_helper.c */
 void QEMU_NORETURN raise_exception(CPUX86State *env, int exception_index);
 void QEMU_NORETURN raise_exception_ra(CPUX86State *env, int exception_index,
@@ -1463,8 +1470,15 @@ void QEMU_NORETURN raise_interrupt(CPUX86State *nenv, int intno, int is_int,
 
 // TODO i386/cpu.c  this is a really monster
 void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
-                   uint32_t *eax, uint32_t *ebx,
-                   uint32_t *ecx, uint32_t *edx);
+                   uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
+
+// TODO what do you mean by "will be suppressed"
+// FIXME functions in helper.c have not been ported yet
+/* will be suppressed */
+void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0);
+void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3);
+void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4);
+void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

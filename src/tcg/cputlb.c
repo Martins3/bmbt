@@ -10,7 +10,7 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr) {
  return 0;
 }
 
-// FIXME
+// FIXME __attribute__ is simplified, need more investigation
 static inline void  __attribute__((always_inline))
 store_helper(CPUArchState *env, target_ulong addr, uint64_t val,
              TCGMemOpIdx oi, uintptr_t retaddr, MemOp op)

@@ -48,6 +48,19 @@ typedef unsigned long int uint64_t;
 #define tostring(s)	#s
 #endif
 
+// FIXME copied from 
+// home/maritns3/core/ld/x86-qemu-mips/slirp/src/util.h
+#ifndef container_of
+#define container_of(ptr, type, member)              \
+    __extension__({                                  \
+        void *__mptr = (void *)(ptr);                \
+        ((type *)(__mptr - offsetof(type, member))); \
+    })
+#endif
+
+// FIXME This line is belongs to compiler.h
+#define QEMU_NORETURN __attribute__((__noreturn__))
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

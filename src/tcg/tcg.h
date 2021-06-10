@@ -2,6 +2,28 @@
 #define TCG_H_FXBBEZAS
 
 #include "../../include/exec/exec-all.h"
+#include "../../include/qemu/config-target.h"
+
+// FIXME
+// wow, it almost destoried me
+// tcg_target_reg_bits is defined at 
+// /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch/tcg-target.h
+// FIXME it here
+# define TCG_TARGET_REG_BITS 64
+
+#if tcg_target_reg_bits == 32
+typedef int32_t tcg_target_long;
+typedef uint32_t tcg_target_ulong;
+#define TCG_PRIlx PRIx32
+#define TCG_PRIld PRId32
+#elif TCG_TARGET_REG_BITS == 64
+typedef int64_t tcg_target_long;
+typedef uint64_t tcg_target_ulong;
+#define TCG_PRIlx PRIx64
+#define TCG_PRIld PRId64
+#else
+#error unsupported
+#endif
 
 typedef struct TCGContext {
 
@@ -41,38 +63,57 @@ typedef uint32_t TCGMemOpIdx;
 # define TARGET_INSN_START_WORDS (1 + TARGET_INSN_START_EXTRA_WORDS)
 #endif
 
-/* call flags */
-/* Helper does not read globals (either directly or through an exception). It
-   implies TCG_CALL_NO_WRITE_GLOBALS. */
-#define TCG_CALL_NO_READ_GLOBALS    0x0001
-/* Helper does not write globals */
-#define TCG_CALL_NO_WRITE_GLOBALS   0x0002
-/* Helper can be safely suppressed if the return value is not used. */
-#define TCG_CALL_NO_SIDE_EFFECTS    0x0004
-/* Helper is QEMU_NORETURN.  */
-#define TCG_CALL_NO_RETURN          0x0008
-
-/* convenience version of most used call flags */
-#define TCG_CALL_NO_RWG         TCG_CALL_NO_READ_GLOBALS
-#define TCG_CALL_NO_WG          TCG_CALL_NO_WRITE_GLOBALS
-#define TCG_CALL_NO_SE          TCG_CALL_NO_SIDE_EFFECTS
-#define TCG_CALL_NO_RWG_SE      (TCG_CALL_NO_RWG | TCG_CALL_NO_SE)
-#define TCG_CALL_NO_WG_SE       (TCG_CALL_NO_WG | TCG_CALL_NO_SE)
-
 TranslationBlock *tcg_tb_alloc(TCGContext *s);
 
+// FIXME I include too many prototype here
+// remove unnecessary ones later
+/*
+ * Memory helpers that will be used by TCG generated code.
+ */
+#ifdef CONFIG_SOFTMMU
+/* Value zero-extended to tcg register size.  */
+tcg_target_ulong helper_ret_ldub_mmu(CPUArchState *env, target_ulong addr,
+                                     TCGMemOpIdx oi, uintptr_t retaddr);
+tcg_target_ulong helper_le_lduw_mmu(CPUArchState *env, target_ulong addr,
+                                    TCGMemOpIdx oi, uintptr_t retaddr);
+tcg_target_ulong helper_le_ldul_mmu(CPUArchState *env, target_ulong addr,
+                                    TCGMemOpIdx oi, uintptr_t retaddr);
+uint64_t helper_le_ldq_mmu(CPUArchState *env, target_ulong addr,
+                           TCGMemOpIdx oi, uintptr_t retaddr);
+#ifdef CONFIG_X86toMIPS
+tcg_target_ulong xtm_helper_ret_ldub_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_lduw_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_ldul_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+uint64_t xtm_helper_le_ldq_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+#endif
+
+/* Value sign-extended to tcg register size.  */
+tcg_target_ulong helper_ret_ldsb_mmu(CPUArchState *env, target_ulong addr,
+                                     TCGMemOpIdx oi, uintptr_t retaddr);
+tcg_target_ulong helper_le_ldsw_mmu(CPUArchState *env, target_ulong addr,
+                                    TCGMemOpIdx oi, uintptr_t retaddr);
+tcg_target_ulong helper_le_ldsl_mmu(CPUArchState *env, target_ulong addr,
+                                    TCGMemOpIdx oi, uintptr_t retaddr);
+#ifdef CONFIG_X86toMIPS
+tcg_target_ulong xtm_helper_ret_ldsb_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_ldsw_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_ldsl_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+#endif
+
+void helper_ret_stb_mmu(CPUArchState *env, target_ulong addr, uint8_t val,
+                        TCGMemOpIdx oi, uintptr_t retaddr);
+void helper_le_stw_mmu(CPUArchState *env, target_ulong addr, uint16_t val,
+                       TCGMemOpIdx oi, uintptr_t retaddr);
+void helper_le_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
+                       TCGMemOpIdx oi, uintptr_t retaddr);
+void helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
+                       TCGMemOpIdx oi, uintptr_t retaddr);
 #ifdef CONFIG_X86toMIPS
 void xtm_helper_ret_stb_mmu(CPUArchState*, target_ulong, uint8_t, TCGMemOpIdx);
 void xtm_helper_le_stw_mmu(CPUArchState*, target_ulong, uint16_t, TCGMemOpIdx);
 void xtm_helper_le_stl_mmu(CPUArchState*, target_ulong, uint32_t, TCGMemOpIdx);
 void xtm_helper_le_stq_mmu(CPUArchState*, target_ulong, uint64_t, TCGMemOpIdx);
 #endif
-void helper_be_stw_mmu(CPUArchState *env, target_ulong addr, uint16_t val,
-                       TCGMemOpIdx oi, uintptr_t retaddr);
-void helper_be_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
-                       TCGMemOpIdx oi, uintptr_t retaddr);
-void helper_be_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
-                       TCGMemOpIdx oi, uintptr_t retaddr);
 
 uint8_t helper_ret_ldub_cmmu(CPUArchState *env, target_ulong addr,
                             TCGMemOpIdx oi, uintptr_t retaddr);
@@ -86,12 +127,6 @@ uint32_t helper_le_ldl_cmmu(CPUArchState *env, target_ulong addr,
                             TCGMemOpIdx oi, uintptr_t retaddr);
 uint64_t helper_le_ldq_cmmu(CPUArchState *env, target_ulong addr,
                             TCGMemOpIdx oi, uintptr_t retaddr);
-uint16_t helper_be_lduw_cmmu(CPUArchState *env, target_ulong addr,
-                             TCGMemOpIdx oi, uintptr_t retaddr);
-int16_t helper_be_ldsw_cmmu(CPUArchState *env, target_ulong addr,
-                             TCGMemOpIdx oi, uintptr_t retaddr);
-uint32_t helper_be_ldl_cmmu(CPUArchState *env, target_ulong addr,
-                            TCGMemOpIdx oi, uintptr_t retaddr);
-uint64_t helper_be_ldq_cmmu(CPUArchState *env, target_ulong addr,
-                            TCGMemOpIdx oi, uintptr_t retaddr);
 #endif /* end of include guard: TCG_H_FXBBEZAS */
+
+#endif

@@ -154,4 +154,7 @@ extern int singlestep;
 
 void tlb_flush(CPUState *cpu);
 
+// FIXME wanna cry
+void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
