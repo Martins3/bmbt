@@ -5,8 +5,10 @@
 #include "../../include/fpu/softfloat-helper.h"
 #include "../../include/qemu/bswap.h"
 #include "cpu.h"
+#include "svm.h"
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 
@@ -49,7 +51,7 @@ static int check_exception(CPUX86State *env, int intno, int *error_code,
 
         qemu_log_mask(CPU_LOG_RESET, "Triple fault\n");
 
-        // FIXME qemu system management
+        // FIXME qemu system management related code, fix later
         // qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
         return EXCP_HLT;
     }

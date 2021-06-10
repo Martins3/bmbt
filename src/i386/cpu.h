@@ -8,6 +8,7 @@
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/fpu/softfloat-types.h"
 #include "../../include/hw/core/cpu.h"
+#include "../../include/qemu/bitops.h"
 #include "../../include/types.h"
 
 // FIXME copy a lot of macros without checking
@@ -1396,6 +1397,20 @@ typedef struct CPUX86State {
 
   FeatureWordArray features;
 
+  uint64_t vm_vmcb;
+  uint64_t tsc_offset;
+  uint64_t intercept;
+  uint16_t intercept_cr_read;
+  uint16_t intercept_cr_write;
+  uint16_t intercept_dr_read;
+  uint16_t intercept_dr_write;
+  uint32_t intercept_exceptions;
+  uint64_t nested_cr3;
+  uint32_t nested_pg_mode;
+  uint8_t v_tpr;
+
+  uintptr_t retaddr;
+
 } CPUX86State;
 
 // TODO I don't know how X86CPU works
@@ -1480,6 +1495,25 @@ void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0);
 void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3);
 void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4);
 void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
+
+// FIXME it's really fuck tidious to handle bits of host and target bits.
+/* XXX: This value should match the one returned by CPUID
+ * and in exec.c */
+#if defined(TARGET_X86_64)
+#define TCG_PHYS_ADDR_BITS 40
+#else
+#define TCG_PHYS_ADDR_BITS 36
+#endif
+
+#define PHYS_ADDR_MASK MAKE_64BIT_MASK(0, TCG_PHYS_ADDR_BITS)
+
+/* MMU modes definitions */
+#define MMU_MODE0_SUFFIX _ksmap
+#define MMU_MODE1_SUFFIX _user
+#define MMU_MODE2_SUFFIX _knosmap /* SMAP disabled or CPL<3 && AC=1 */
+#define MMU_KSMAP_IDX   0
+#define MMU_USER_IDX    1
+#define MMU_KNOSMAP_IDX 2
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

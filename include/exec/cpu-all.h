@@ -23,4 +23,17 @@
 
 static inline CPUState *env_cpu(CPUArchState *env) { return env->cpu; }
 
+/* same as PROT_xxx */
+#define PAGE_READ      0x0001
+#define PAGE_WRITE     0x0002
+#define PAGE_EXEC      0x0004
+#define PAGE_BITS      (PAGE_READ | PAGE_WRITE | PAGE_EXEC)
+#define PAGE_VALID     0x0008
+/* original state of the write flag (used when tracking self-modifying
+   code */
+#define PAGE_WRITE_ORG 0x0010
+/* Invalidate the TLB entry immediately, helpful for s390x
+ * Low-Address-Protection. Used with PAGE_WRITE in tlb_set_page_with_attrs() */
+#define PAGE_WRITE_INV 0x0040
+
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */

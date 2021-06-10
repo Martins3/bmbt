@@ -61,6 +61,12 @@ typedef unsigned long int uint64_t;
 // FIXME This line is belongs to compiler.h
 #define QEMU_NORETURN __attribute__((__noreturn__))
 
+#ifndef offsetof
+#define offsetof(st, m) __builtin_offsetof(st, m)
+#endif
+
+# define QEMU_PACKED __attribute__((packed))
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

@@ -112,6 +112,13 @@ void cpu_check_watchpoint(CPUState *cpu, vaddr addr, vaddr len,
                           MemTxAttrs attrs, int flags, uintptr_t ra);
 int cpu_watchpoint_address_matches(CPUState *cpu, vaddr addr, vaddr len);
 
+typedef enum MMUAccessType {
+    MMU_DATA_LOAD  = 0,
+    MMU_DATA_STORE = 1,
+    MMU_INST_FETCH = 2
+} MMUAccessType;
+
+
 #include "../../../src/i386/cpu.h"
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
