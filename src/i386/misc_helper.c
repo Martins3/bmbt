@@ -4,6 +4,7 @@
 #include "../../include/fpu/softfloat-helper.h"
 #include "../../include/qemu/bswap.h"
 #include "cpu.h"
+#include "svm.h"
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
 #include <string.h>
@@ -14,8 +15,7 @@ target_ulong helper_read_crN(CPUX86State *env, int reg)
 {
     target_ulong val;
 
-    // FIXME support svm later
-    // cpu_svm_check_intercept_param(env, SVM_EXIT_READ_CR0 + reg, 0, GETPC());
+    cpu_svm_check_intercept_param(env, SVM_EXIT_READ_CR0 + reg, 0, GETPC());
     switch (reg) {
     default:
         val = env->cr[reg];
@@ -34,8 +34,7 @@ target_ulong helper_read_crN(CPUX86State *env, int reg)
 
 void helper_write_crN(CPUX86State *env, int reg, target_ulong t0)
 {
-    // FIXME support svm later
-    // cpu_svm_check_intercept_param(env, SVM_EXIT_WRITE_CR0 + reg, 0, GETPC());
+    cpu_svm_check_intercept_param(env, SVM_EXIT_WRITE_CR0 + reg, 0, GETPC());
     switch (reg) {
     case 0:
         cpu_x86_update_cr0(env, t0);

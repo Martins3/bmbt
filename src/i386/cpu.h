@@ -6,6 +6,7 @@
 // what does you include the data?
 
 #include "../../include/exec/cpu-defs.h"
+#include "../../include/exec/hwaddr.h"
 #include "../../include/fpu/softfloat-types.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/bitops.h"
@@ -1411,6 +1412,13 @@ typedef struct CPUX86State {
 
   uintptr_t retaddr;
 
+  uint64_t vm_hsave;
+
+  /* sysenter registers */
+  uint32_t sysenter_cs;
+  target_ulong sysenter_esp;
+  target_ulong sysenter_eip;
+  uint64_t star;
 } CPUX86State;
 
 // TODO I don't know how X86CPU works
@@ -1511,9 +1519,36 @@ void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
 #define MMU_MODE0_SUFFIX _ksmap
 #define MMU_MODE1_SUFFIX _user
 #define MMU_MODE2_SUFFIX _knosmap /* SMAP disabled or CPL<3 && AC=1 */
-#define MMU_KSMAP_IDX   0
-#define MMU_USER_IDX    1
+#define MMU_KSMAP_IDX 0
+#define MMU_USER_IDX 1
 #define MMU_KNOSMAP_IDX 2
+
+// FIXME these functions are define at helper.c
+uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr);
+uint32_t x86_lduw_phys(CPUState *cs, hwaddr addr);
+uint32_t x86_ldl_phys(CPUState *cs, hwaddr addr);
+uint64_t x86_ldq_phys(CPUState *cs, hwaddr addr);
+void x86_stb_phys(CPUState *cs, hwaddr addr, uint8_t val);
+void x86_stl_phys_notdirty(CPUState *cs, hwaddr addr, uint32_t val);
+void x86_stw_phys(CPUState *cs, hwaddr addr, uint32_t val);
+void x86_stl_phys(CPUState *cs, hwaddr addr, uint32_t val);
+void x86_stq_phys(CPUState *cs, hwaddr addr, uint64_t val);
+
+/* i386-specific interrupt pending bits.  */
+#define CPU_INTERRUPT_POLL CPU_INTERRUPT_TGT_EXT_1
+#define CPU_INTERRUPT_SMI CPU_INTERRUPT_TGT_EXT_2
+#define CPU_INTERRUPT_NMI CPU_INTERRUPT_TGT_EXT_3
+#define CPU_INTERRUPT_MCE CPU_INTERRUPT_TGT_EXT_4
+#define CPU_INTERRUPT_VIRQ CPU_INTERRUPT_TGT_INT_0
+#define CPU_INTERRUPT_SIPI CPU_INTERRUPT_TGT_INT_1
+#define CPU_INTERRUPT_TPR CPU_INTERRUPT_TGT_INT_2
+
+/* svm_helper.c */
+void cpu_svm_check_intercept_param(CPUX86State *env1, uint32_t type,
+                                   uint64_t param, uintptr_t retaddr);
+void QEMU_NORETURN cpu_vmexit(CPUX86State *nenv, uint32_t exit_code,
+                              uint64_t exit_info_1, uintptr_t retaddr);
+void do_vmexit(CPUX86State *env, uint32_t exit_code, uint64_t exit_info_1);
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

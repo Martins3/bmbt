@@ -12,10 +12,6 @@
 #include <string.h>
 #include <math.h>
 
-// FIXME make ccls happy
-void cpu_vmexit(CPUX86State *env, uint32_t exit_code, uint64_t exit_info_1,
-                uintptr_t retaddr);
-
 void helper_raise_interrupt(CPUX86State *env, int intno, int next_eip_addend)
 {
     raise_interrupt(env, intno, 1, 0, next_eip_addend);
