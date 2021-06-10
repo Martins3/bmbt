@@ -1313,6 +1313,8 @@ typedef struct CPUX86State {
   ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
   // ldq,only 10bits offset
 #endif
+    ZMMReg xmm_t0;
+    MMXReg mmx_t0;
 
   // FIXME
   // When copy code following three lines of code,
