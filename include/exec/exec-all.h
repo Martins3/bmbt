@@ -152,4 +152,6 @@ extern int singlestep;
 # define GETPC() \
     ((uintptr_t)__builtin_extract_return_addr(__builtin_return_address(0)))
 
+void tlb_flush(CPUState *cpu);
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

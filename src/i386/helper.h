@@ -202,6 +202,7 @@ DEF_HELPER_3(frstor, void, env, tl, int)
 DEF_HELPER_FLAGS_2(fxsave, TCG_CALL_NO_WG, void, env, tl)
 DEF_HELPER_FLAGS_2(fxrstor, TCG_CALL_NO_WG, void, env, tl)
 DEF_HELPER_FLAGS_3(xsave, TCG_CALL_NO_WG, void, env, tl, i64)
+// TODO xsaveopt is special
 DEF_HELPER_FLAGS_3(xsaveopt, TCG_CALL_NO_WG, void, env, tl, i64)
 DEF_HELPER_FLAGS_3(xrstor, TCG_CALL_NO_WG, void, env, tl, i64)
 DEF_HELPER_FLAGS_2(xgetbv, TCG_CALL_NO_WG, i64, env, i32)

@@ -57,6 +57,11 @@ static inline floatx80 floatx80_chs(floatx80 a)
     return a;
 }
 
+static inline int floatx80_is_zero(floatx80 a)
+{
+    return (a.high & 0x7fff) == 0 && a.low == 0;
+}
+
 #define floatx80_zero make_floatx80(0x0000, 0x0000000000000000LL)
 #define floatx80_one make_floatx80(0x3fff, 0x8000000000000000LL)
 #define floatx80_ln2 make_floatx80(0x3ffe, 0xb17217f7d1cf79acLL)

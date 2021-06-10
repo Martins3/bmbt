@@ -6,6 +6,7 @@
 #include "cpu.h"
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
+#include <string.h>
 
 #define FPU_RC_MASK         0xc00
 #define FPU_RC_NEAR         0x000
@@ -46,21 +47,29 @@ extern int xtm_lsfpu_opt(void);
 #endif
 
 // TODO wired, maybe unused code
-#if 0
 #if !defined(CONFIG_USER_ONLY)
+
+#if 0
 static qemu_irq ferr_irq;
 
 void x86_register_ferr_irq(qemu_irq irq)
 {
     ferr_irq = irq;
 }
+#endif
 
 static void cpu_clear_ignne(void)
 {
-    CPUX86State *env = &X86_CPU(first_cpu)->env;
-    env->hflags2 &= ~HF2_IGNNE_MASK;
+    // FIXME
+    // quick fix by comment the code
+    // 
+    // 1. X86_CPU ?
+    // 2. a list of cpu
+    // CPUX86State *env = &X86_CPU(first_cpu)->env;
+    // env->hflags2 &= ~HF2_IGNNE_MASK;
 }
 
+#if 0
 void cpu_set_ignne(void)
 {
     CPUX86State *env = &X86_CPU(first_cpu)->env;
@@ -137,7 +146,6 @@ static inline floatx80 double_to_floatx80(CPUX86State *env, double a)
     return float64_to_floatx80(u.f64, &env->fp_status);
 }
 
-#if 0
 static void fpu_set_exception(CPUX86State *env, int mask)
 {
     env->fpus |= mask;
@@ -145,8 +153,6 @@ static void fpu_set_exception(CPUX86State *env, int mask)
         env->fpus |= FPUS_SE | FPUS_B;
     }
 }
-
-#endif
 
 static inline floatx80 helper_fdiv(CPUX86State *env, floatx80 a, floatx80 b)
 {
@@ -635,6 +641,7 @@ void helper_fwait(CPUX86State *env)
         fpu_raise_exception(env, GETPC());
     }
 }
+#endif
 
 void helper_fninit(CPUX86State *env)
 {
@@ -650,7 +657,6 @@ void helper_fninit(CPUX86State *env)
     env->fptags[6] = 1;
     env->fptags[7] = 1;
 }
-#endif
 
 /* BCD ops */
 
@@ -1212,7 +1218,6 @@ static void do_xsave_fpu(CPUX86State *env, target_ulong ptr, uintptr_t ra)
     }
 }
 
-#if 0
 static void do_xsave_mxcsr(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     cpu_stl_data_ra(env, ptr + XO(legacy.mxcsr), env->mxcsr, ra);
@@ -1237,7 +1242,6 @@ static void do_xsave_sse(CPUX86State *env, target_ulong ptr, uintptr_t ra)
         addr += 16;
     }
 }
-#endif
 
 static void do_xsave_bndregs(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
@@ -1258,7 +1262,6 @@ static void do_xsave_bndcsr(CPUX86State *env, target_ulong ptr, uintptr_t ra)
                     env->bndcs_regs.sts, ra);
 }
 
-#if 0
 static void do_xsave_pkru(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     cpu_stq_data_ra(env, ptr, env->pkru, ra);
@@ -1285,7 +1288,6 @@ void helper_fxsave(CPUX86State *env, target_ulong ptr)
         }
     }
 }
-#endif
 
 static uint64_t get_xinuse(CPUX86State *env)
 {
@@ -1380,7 +1382,6 @@ static void do_xrstor_fpu(CPUX86State *env, target_ulong ptr, uintptr_t ra)
     }
 }
 
-#if 0
 static void do_xrstor_mxcsr(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     cpu_set_mxcsr(env, cpu_ldl_data_ra(env, ptr + XO(legacy.mxcsr), ra));
@@ -1429,7 +1430,6 @@ static void do_xrstor_pkru(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     env->pkru = cpu_ldq_data_ra(env, ptr, ra);
 }
-#endif
 
 void helper_fxrstor(CPUX86State *env, target_ulong ptr)
 {

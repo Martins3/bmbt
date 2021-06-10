@@ -1309,6 +1309,10 @@ struct CPUState;
 // FIXME target_ulong isn't highlighted by ccls
 typedef struct CPUX86State {
   CPUState *cpu;
+#if defined(CONFIG_X86toMIPS) || defined(CONFIG_LATX)
+  ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
+  // ldq,only 10bits offset
+#endif
 
   // FIXME
   // When copy code following three lines of code,
@@ -1377,6 +1381,13 @@ typedef struct CPUX86State {
 
   uint64_t xcr0;
 
+  uint32_t mxcsr;
+    float_status sse_status;
+
+  uint32_t pkru;
+
+    FeatureWordArray features;
+
 } CPUX86State;
 
 // TODO I don't know how X86CPU works
@@ -1407,6 +1418,15 @@ extern const uint8_t parity_table[256];
 uint32_t cpu_cc_compute_all(CPUX86State *env1, int op);
 
 void update_fp_status(CPUX86State *env);
+void update_mxcsr_status(CPUX86State *env);
+
+static inline void cpu_set_mxcsr(CPUX86State *env, uint32_t mxcsr) {
+  env->mxcsr = mxcsr;
+  // FIXME is tcg_enabled ?
+  // if (tcg_enabled()) {
+  update_mxcsr_status(env);
+  // }
+}
 
 static inline void cpu_set_fpuc(CPUX86State *env, uint16_t fpuc) {
   env->fpuc = fpuc;
@@ -1416,8 +1436,12 @@ static inline void cpu_set_fpuc(CPUX86State *env, uint16_t fpuc) {
   // }
 }
 
+// FIXME helper.c not handle yet, only define it
+/* mpx_helper.c */
+void cpu_sync_bndcs_hflags(CPUX86State *env);
+
 // This line is belongs to compiler.h
-#define QEMU_NORETURN __attribute__ ((__noreturn__))
+#define QEMU_NORETURN __attribute__((__noreturn__))
 
 /* excp_helper.c */
 void QEMU_NORETURN raise_exception(CPUX86State *env, int exception_index);
@@ -1434,6 +1458,11 @@ void QEMU_NORETURN raise_interrupt(CPUX86State *nenv, int intno, int is_int,
 #define CC_SRC (env->cc_src)
 #define CC_SRC2 (env->cc_src2)
 #define CC_OP (env->cc_op)
+
+// TODO i386/cpu.c  this is a really monster
+void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
+                   uint32_t *eax, uint32_t *ebx,
+                   uint32_t *ecx, uint32_t *edx);
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
