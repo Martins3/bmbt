@@ -1368,6 +1368,15 @@ typedef struct CPUX86State {
   SegmentCache gdt; /* only base and limit are used */
   SegmentCache idt; /* only base and limit are used */
 
+  target_ulong cr[5]; /* NOTE: cr1 is unused */
+
+  BNDReg bnd_regs[4];
+  BNDCSReg bndcs_regs;
+  uint64_t msr_bndcfgs;
+  uint64_t efer;
+
+  uint64_t xcr0;
+
 } CPUX86State;
 
 // TODO I don't know how X86CPU works
@@ -1387,20 +1396,44 @@ typedef struct X86CPU {
 } X86CPU;
 
 /* float macros */
-#define FT0    (env->ft0)
-#define ST0    (env->fpregs[env->fpstt].d)
-#define ST(n)  (env->fpregs[(env->fpstt + (n)) & 7].d)
-#define ST1    ST(1)
+#define FT0 (env->ft0)
+#define ST0 (env->fpregs[env->fpstt].d)
+#define ST(n) (env->fpregs[(env->fpstt + (n)) & 7].d)
+#define ST1 ST(1)
 
 // FIXME I don't what the fuck the cc helper doing
 /* cc_helper.c */
 extern const uint8_t parity_table[256];
 uint32_t cpu_cc_compute_all(CPUX86State *env1, int op);
 
-#define CC_DST  (env->cc_dst)
-#define CC_SRC  (env->cc_src)
+void update_fp_status(CPUX86State *env);
+
+static inline void cpu_set_fpuc(CPUX86State *env, uint16_t fpuc) {
+  env->fpuc = fpuc;
+  // FIXME is tcg_enabled, what does it mean?
+  // if (tcg_enabled()) {
+  update_fp_status(env);
+  // }
+}
+
+// This line is belongs to compiler.h
+#define QEMU_NORETURN __attribute__ ((__noreturn__))
+
+/* excp_helper.c */
+void QEMU_NORETURN raise_exception(CPUX86State *env, int exception_index);
+void QEMU_NORETURN raise_exception_ra(CPUX86State *env, int exception_index,
+                                      uintptr_t retaddr);
+void QEMU_NORETURN raise_exception_err(CPUX86State *env, int exception_index,
+                                       int error_code);
+void QEMU_NORETURN raise_exception_err_ra(CPUX86State *env, int exception_index,
+                                          int error_code, uintptr_t retaddr);
+void QEMU_NORETURN raise_interrupt(CPUX86State *nenv, int intno, int is_int,
+                                   int error_code, int next_eip_addend);
+
+#define CC_DST (env->cc_dst)
+#define CC_SRC (env->cc_src)
 #define CC_SRC2 (env->cc_src2)
-#define CC_OP   (env->cc_op)
+#define CC_OP (env->cc_op)
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

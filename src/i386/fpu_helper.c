@@ -1,5 +1,11 @@
 #include "../../include/exec/exec-all.h"
+#include "../../include/exec/cpu_lsdt.h"
 #include "../../include/fpu/softfloat.h"
+#include "../../include/fpu/softfloat-helper.h"
+#include "../../include/qemu/bswap.h"
+#include "cpu.h"
+#include "LATX/x86tomips-config.h"
+#include <stddef.h>
 
 #define FPU_RC_MASK         0xc00
 #define FPU_RC_NEAR         0x000
@@ -85,6 +91,8 @@ static inline void fpop(CPUX86State *env)
     env->fpstt = (env->fpstt + 1) & 7;
 }
 
+#endif
+
 static inline floatx80 helper_fldt(CPUX86State *env, target_ulong ptr,
                                    uintptr_t retaddr)
 {
@@ -106,7 +114,6 @@ static inline void helper_fstt(CPUX86State *env, floatx80 f, target_ulong ptr,
 }
 
 /* x87 FPU helpers */
-#endif
 
 static inline double floatx80_to_double(CPUX86State *env, floatx80 a)
 {
@@ -149,7 +156,7 @@ static inline floatx80 helper_fdiv(CPUX86State *env, floatx80 a, floatx80 b)
     return floatx80_div(a, b, &env->fp_status);
 }
 
-#if 0 
+#if 0
 static void fpu_raise_exception(CPUX86State *env, uintptr_t retaddr)
 {
     if (env->cr[0] & CR0_NE_MASK) {
@@ -611,6 +618,7 @@ void update_fp_status(CPUX86State *env)
     set_floatx80_rounding_precision(rnd_type, &env->fp_status);
 }
 
+#if 0
 void helper_fldcw(CPUX86State *env, uint32_t val)
 {
     cpu_set_fpuc(env, val);
@@ -642,9 +650,11 @@ void helper_fninit(CPUX86State *env)
     env->fptags[6] = 1;
     env->fptags[7] = 1;
 }
+#endif
 
 /* BCD ops */
 
+#if 0
 void helper_fbld_ST0(CPUX86State *env, target_ulong ptr)
 {
     floatx80 tmp;
@@ -997,6 +1007,8 @@ void helper_fxam_ST0(CPUX86State *env)
     }
 }
 
+#endif
+
 static void do_fstenv(CPUX86State *env, target_ulong ptr, int data32,
                       uintptr_t retaddr)
 {
@@ -1200,6 +1212,7 @@ static void do_xsave_fpu(CPUX86State *env, target_ulong ptr, uintptr_t ra)
     }
 }
 
+#if 0
 static void do_xsave_mxcsr(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     cpu_stl_data_ra(env, ptr + XO(legacy.mxcsr), env->mxcsr, ra);
@@ -1224,6 +1237,7 @@ static void do_xsave_sse(CPUX86State *env, target_ulong ptr, uintptr_t ra)
         addr += 16;
     }
 }
+#endif
 
 static void do_xsave_bndregs(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
@@ -1244,6 +1258,7 @@ static void do_xsave_bndcsr(CPUX86State *env, target_ulong ptr, uintptr_t ra)
                     env->bndcs_regs.sts, ra);
 }
 
+#if 0
 static void do_xsave_pkru(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     cpu_stq_data_ra(env, ptr, env->pkru, ra);
@@ -1270,6 +1285,7 @@ void helper_fxsave(CPUX86State *env, target_ulong ptr)
         }
     }
 }
+#endif
 
 static uint64_t get_xinuse(CPUX86State *env)
 {
@@ -1364,6 +1380,7 @@ static void do_xrstor_fpu(CPUX86State *env, target_ulong ptr, uintptr_t ra)
     }
 }
 
+#if 0
 static void do_xrstor_mxcsr(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     cpu_set_mxcsr(env, cpu_ldl_data_ra(env, ptr + XO(legacy.mxcsr), ra));
@@ -1412,6 +1429,7 @@ static void do_xrstor_pkru(CPUX86State *env, target_ulong ptr, uintptr_t ra)
 {
     env->pkru = cpu_ldq_data_ra(env, ptr, ra);
 }
+#endif
 
 void helper_fxrstor(CPUX86State *env, target_ulong ptr)
 {

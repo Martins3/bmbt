@@ -54,6 +54,20 @@ typedef struct float_status {
   flag snan_bit_is_one;
 } float_status;
 
+/*
+ *Software IEC/IEEE floating-point rounding mode.
+ */
+
+enum {
+    float_round_nearest_even = 0,
+    float_round_down         = 1,
+    float_round_up           = 2,
+    float_round_to_zero      = 3,
+    float_round_ties_away    = 4,
+    /* Not an IEEE rounding mode: round to the closest odd mantissa value */
+    float_round_to_odd       = 5,
+};
+
 // FIXME put this to ./softfloat.h, these function is defined at fpu/softfloat.c
 floatx80 float64_to_floatx80(float64, float_status *status);
 float64 floatx80_to_float64(floatx80, float_status *status);
