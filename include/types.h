@@ -48,22 +48,22 @@ typedef unsigned long int uint64_t;
 #define tostring(s)	#s
 #endif
 
-// FIXME copied from 
+#ifndef offsetof
+#define offsetof(st, m) __builtin_offsetof(st, m)
+#endif
+
+// FIXME originally, container_of copied from 
 // home/maritns3/core/ld/x86-qemu-mips/slirp/src/util.h
+// but it cause env_archcpu work abnormal, following version
+// is copied from linux kenrel
 #ifndef container_of
-#define container_of(ptr, type, member)              \
-    __extension__({                                  \
-        void *__mptr = (void *)(ptr);                \
-        ((type *)(__mptr - offsetof(type, member))); \
-    })
+#define container_of(ptr, type, member) ({                      \
+        const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+        (type *)( (char *)__mptr - offsetof(type,member) );})
 #endif
 
 // FIXME This line is belongs to compiler.h
 #define QEMU_NORETURN __attribute__((__noreturn__))
-
-#ifndef offsetof
-#define offsetof(st, m) __builtin_offsetof(st, m)
-#endif
 
 # define QEMU_PACKED __attribute__((packed))
 

@@ -8,6 +8,7 @@
 #include "svm.h"
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
+#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>

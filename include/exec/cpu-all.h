@@ -77,4 +77,15 @@ static inline CPUState *env_cpu(CPUArchState *env) { return env->cpu; }
 #define CPU_INTERRUPT_TGT_INT_1   0x0800
 #define CPU_INTERRUPT_TGT_INT_2   0x2000
 
+/**
+ * env_archcpu(env)
+ * @env: The architecture environment
+ *
+ * Return the ArchCPU associated with the environment.
+ */
+static inline ArchCPU *env_archcpu(CPUArchState *env)
+{
+   return container_of(env, ArchCPU, env);
+}
+
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */

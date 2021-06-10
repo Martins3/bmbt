@@ -1419,6 +1419,8 @@ typedef struct CPUX86State {
   target_ulong sysenter_esp;
   target_ulong sysenter_eip;
   uint64_t star;
+
+  int32_t a20_mask;
 } CPUX86State;
 
 // TODO I don't know how X86CPU works
@@ -1549,6 +1551,57 @@ void cpu_svm_check_intercept_param(CPUX86State *env1, uint32_t type,
 void QEMU_NORETURN cpu_vmexit(CPUX86State *nenv, uint32_t exit_code,
                               uint64_t exit_info_1, uintptr_t retaddr);
 void do_vmexit(CPUX86State *env, uint32_t exit_code, uint64_t exit_info_1);
+
+static inline int32_t x86_get_a20_mask(CPUX86State *env) {
+  if (env->hflags & HF_SMM_MASK) {
+    return -1;
+  } else {
+    return env->a20_mask;
+  }
+}
+
+static inline uint32_t cpu_compute_eflags(CPUX86State *env)
+{
+    uint32_t eflags = env->eflags;
+    // FIXME tcg_enabled ?
+    // if (tcg_enabled()) {
+        eflags |= cpu_cc_compute_all(env, CC_OP) | (env->df & DF_MASK);
+    // }
+    return eflags;
+}
+
+/* NOTE: the translator must set DisasContext.cc_op to CC_OP_EFLAGS
+ * after generating a call to a helper that uses this.
+ */
+static inline void cpu_load_eflags(CPUX86State *env, int eflags,
+                                   int update_mask)
+{
+    CC_SRC = eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+    CC_OP = CC_OP_EFLAGS;
+    env->df = 1 - (2 * ((eflags >> 10) & 1));
+    env->eflags = (env->eflags & ~update_mask) |
+        (eflags & update_mask) | 0x2;
+}
+
+/* load efer and update the corresponding hflags. XXX: do consistency
+   checks with cpuid bits? */
+static inline void cpu_load_efer(CPUX86State *env, uint64_t val)
+{
+    env->efer = val;
+    env->hflags &= ~(HF_LMA_MASK | HF_SVME_MASK);
+    if (env->efer & MSR_EFER_LMA) {
+        env->hflags |= HF_LMA_MASK;
+    }
+    if (env->efer & MSR_EFER_SVME) {
+        env->hflags |= HF_SVME_MASK;
+    }
+}
+
+static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
+{
+    return ((MemTxAttrs) { .secure = (env->hflags & HF_SMM_MASK) != 0 });
+}
+
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

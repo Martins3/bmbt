@@ -120,6 +120,12 @@ typedef enum MMUAccessType {
   MMU_INST_FETCH = 2
 } MMUAccessType;
 
+/* Since this macro is used a lot in hot code paths and in conjunction with
+ * FooCPU *foo_env_get_cpu(), we deviate from usual QOM practice by using
+ * an unchecked cast.
+ */
+#define CPU(obj) ((CPUState *)(obj))
+
 #include "../../../src/i386/cpu.h"
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
