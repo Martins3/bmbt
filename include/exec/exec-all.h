@@ -4,7 +4,6 @@
 #include "../types.h"
 #include "cpu-defs.h"
 
-
 // TODO it seems this is the hacking of xqm
 // copy here blindly
 // maybe mvoe ExtraBlock to LATX
@@ -12,32 +11,32 @@
 // 2. use by _top_in and _top_out
 
 /* extra attributes we need in TB */
-typedef struct ExtraBlock{
-    /* @pc: ID of a ETB.
-       It is equal to EIP + CS_BASE in system-mode  */
-    uint64_t pc;
-    struct IR1_INST *_ir1_instructions;
-    int16_t  _ir1_num;
-    /* which tb this etb belongs to */
-    struct TranslationBlock* tb;
-    /* record the last instruction if TB is too large */
-    struct IR1_INST *tb_too_large_pir1;
+typedef struct ExtraBlock {
+  /* @pc: ID of a ETB.
+     It is equal to EIP + CS_BASE in system-mode  */
+  uint64_t pc;
+  struct IR1_INST *_ir1_instructions;
+  int16_t _ir1_num;
+  /* which tb this etb belongs to */
+  struct TranslationBlock *tb;
+  /* record the last instruction if TB is too large */
+  struct IR1_INST *tb_too_large_pir1;
 
-    struct IR1_INST *sys_eob_pir1;
+  struct IR1_INST *sys_eob_pir1;
 
-    bool tb_need_cpc[2]; /* cross page check */
+  bool tb_need_cpc[2]; /* cross page check */
 
-    bool end_with_jcc;
-    uintptr_t mips_branch_inst_offset;
-    bool branch_to_target_direct_in_mips_branch;
-    uint32_t mips_branch_backup;
+  bool end_with_jcc;
+  uintptr_t mips_branch_inst_offset;
+  bool branch_to_target_direct_in_mips_branch;
+  uint32_t mips_branch_backup;
 
-    // TODO what do you mean by historical field
-    // FIXME change type from char to int8 back
-    /* historical field */
-    char _top_in;
-    char _top_out;
-    void *next_tb[2];
+  // TODO what do you mean by historical field
+  // FIXME change type from char to int8 back
+  /* historical field */
+  char _top_in;
+  char _top_out;
+  void *next_tb[2];
 } ETB;
 
 // TODO ???
@@ -58,9 +57,9 @@ typedef struct TranslationBlock {
   /* simulated PC corresponding to this block (EIP + CS base) */
   target_ulong pc;
   target_ulong cs_base; /* CS base for this block */
-  u32 flags;  /* flags defining in which context the code was generated */
-  u16 size;   /* size of target code for this block (1 <=
-                      size <= TARGET_PAGE_SIZE) */
+  u32 flags; /* flags defining in which context the code was generated */
+  u16 size;  /* size of target code for this block (1 <=
+                     size <= TARGET_PAGE_SIZE) */
   // FIXME What's icount, how to handle it?
   uint16_t icount;
   u32 cflags; /* compile flags */
@@ -149,12 +148,22 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr);
 /* vl.c */
 extern int singlestep;
 
-# define GETPC() \
-    ((uintptr_t)__builtin_extract_return_addr(__builtin_return_address(0)))
+#define GETPC()                                                                \
+  ((uintptr_t)__builtin_extract_return_addr(__builtin_return_address(0)))
 
 void tlb_flush(CPUState *cpu);
 
 // FIXME wanna cry
 void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
+
+// FIXME copied from log.h
+/* log only if a bit is set on the current loglevel mask:
+ * @mask: bit to check in the mask
+ * @fmt: printf-style format string
+ * @args: optional arguments for format string
+ */
+#define qemu_log_mask(MASK, FMT, ...)                                          \
+  do {                                                                         \
+  } while (0)
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

@@ -1452,6 +1452,7 @@ static inline void cpu_set_fpuc(CPUX86State *env, uint16_t fpuc) {
 /* mpx_helper.c */
 void cpu_sync_bndcs_hflags(CPUX86State *env);
 
+// FIXME out of control
 /* excp_helper.c */
 void QEMU_NORETURN raise_exception(CPUX86State *env, int exception_index);
 void QEMU_NORETURN raise_exception_ra(CPUX86State *env, int exception_index,

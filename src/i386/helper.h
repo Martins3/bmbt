@@ -43,7 +43,7 @@
 // DEF_HELPER_2(verw, void, env, tl)
 // DEF_HELPER_2(lldt, void, env, int)
 // DEF_HELPER_2(ltr, void, env, int)
-DEF_HELPER_3(load_seg, void, env, int, int) // TODO begin
+DEF_HELPER_3(load_seg, void, env, int, int) // TODO
 // DEF_HELPER_4(ljmp_protected, void, env, int, tl, tl)
 // DEF_HELPER_5(lcall_real, void, env, int, tl, int, int)
 // DEF_HELPER_5(lcall_protected, void, env, int, tl, int, tl)
@@ -71,7 +71,7 @@ DEF_HELPER_FLAGS_2(get_dr, TCG_CALL_NO_WG, tl, env, int)
 // DEF_HELPER_1(debug, void, env)
 // DEF_HELPER_1(reset_rf, void, env)
 // DEF_HELPER_3(raise_interrupt, void, env, int, int)
-DEF_HELPER_2(raise_exception, void, env, int) // TODO end
+DEF_HELPER_2(raise_exception, void, env, int) // TODO
 // DEF_HELPER_1(cli, void, env)
 // DEF_HELPER_1(sti, void, env)
 // DEF_HELPER_1(clac, void, env)
