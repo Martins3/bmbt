@@ -59,4 +59,6 @@ floatx80 float64_to_floatx80(float64, float_status *status);
 float64 floatx80_to_float64(floatx80, float_status *status);
 
 
+#define make_floatx80(exp, mant) ((floatx80) { mant, exp })
+
 #endif /* end of include guard: SOFTFLOAT_TYPES_H_OPERWT2C */

@@ -1,4 +1,5 @@
 #include "../../include/exec/exec-all.h"
+#include "../../include/fpu/softfloat.h"
 
 #define FPU_RC_MASK         0xc00
 #define FPU_RC_NEAR         0x000
@@ -33,10 +34,13 @@
 #define floatx80_l2t make_floatx80(0x4000, 0xd49a784bcd1b8afeLL)
 
 #if defined(CONFIG_X86toMIPS) && !defined(CONFIG_USER_ONLY)
-#include "x86tomips-config.h"
+// TODO why need to include this?
+// #include "x86tomips-config.h"
 extern int xtm_lsfpu_opt(void);
 #endif
 
+// TODO wired, maybe unused code
+#if 0
 #if !defined(CONFIG_USER_ONLY)
 static qemu_irq ferr_irq;
 
@@ -65,8 +69,10 @@ void cpu_set_ignne(void)
     qemu_irq_lower(ferr_irq);
 }
 #endif
+#endif
 
 
+#if 0
 static inline void fpush(CPUX86State *env)
 {
     env->fpstt = (env->fpstt - 1) & 7;
@@ -100,6 +106,7 @@ static inline void helper_fstt(CPUX86State *env, floatx80 f, target_ulong ptr,
 }
 
 /* x87 FPU helpers */
+#endif
 
 static inline double floatx80_to_double(CPUX86State *env, floatx80 a)
 {
@@ -123,6 +130,7 @@ static inline floatx80 double_to_floatx80(CPUX86State *env, double a)
     return float64_to_floatx80(u.f64, &env->fp_status);
 }
 
+#if 0
 static void fpu_set_exception(CPUX86State *env, int mask)
 {
     env->fpus |= mask;
@@ -130,6 +138,8 @@ static void fpu_set_exception(CPUX86State *env, int mask)
         env->fpus |= FPUS_SE | FPUS_B;
     }
 }
+
+#endif
 
 static inline floatx80 helper_fdiv(CPUX86State *env, floatx80 a, floatx80 b)
 {
@@ -139,6 +149,7 @@ static inline floatx80 helper_fdiv(CPUX86State *env, floatx80 a, floatx80 b)
     return floatx80_div(a, b, &env->fp_status);
 }
 
+#if 0 
 static void fpu_raise_exception(CPUX86State *env, uintptr_t retaddr)
 {
     if (env->cr[0] & CR0_NE_MASK) {
@@ -331,6 +342,7 @@ void helper_fstt_ST0(CPUX86State *env, target_ulong ptr)
     helper_fstt(env, ST0, ptr, GETPC());
 }
 
+
 void helper_fpush(CPUX86State *env)
 {
     fpush(env);
@@ -388,6 +400,7 @@ void helper_fxchg_ST0_STN(CPUX86State *env, int st_index)
     ST(st_index) = ST0;
     ST0 = tmp;
 }
+#endif
 
 /* FPU operations */
 

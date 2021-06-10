@@ -20,6 +20,7 @@
 
 #include "../../../../include/todo.h"
 #include "../../../tcg/tcg.h"
+#include "../../../i386/helper.h"
 
 /*#include "exec/gen-icount.h"*/
 

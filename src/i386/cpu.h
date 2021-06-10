@@ -1386,6 +1386,22 @@ typedef struct X86CPU {
 
 } X86CPU;
 
+/* float macros */
+#define FT0    (env->ft0)
+#define ST0    (env->fpregs[env->fpstt].d)
+#define ST(n)  (env->fpregs[(env->fpstt + (n)) & 7].d)
+#define ST1    ST(1)
+
+// FIXME I don't what the fuck the cc helper doing
+/* cc_helper.c */
+extern const uint8_t parity_table[256];
+uint32_t cpu_cc_compute_all(CPUX86State *env1, int op);
+
+#define CC_DST  (env->cc_dst)
+#define CC_SRC  (env->cc_src)
+#define CC_SRC2 (env->cc_src2)
+#define CC_OP   (env->cc_op)
+
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
 

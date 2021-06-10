@@ -2,6 +2,7 @@
 #define HELPER_H_9BLYUHYU
 
 #include "../../include/exec/helper-head.h"
+#include "../../src/i386/cpu.h" // CPUArchState
 
 // TODO uncomment if define the function
 // don't let linker complaint
@@ -194,17 +195,17 @@
 // DEF_HELPER_1(fscale, void, env)
 // DEF_HELPER_1(fsin, void, env)
 // DEF_HELPER_1(fcos, void, env)
-// DEF_HELPER_3(fstenv, void, env, tl, int)
-// DEF_HELPER_3(fldenv, void, env, tl, int)
-// DEF_HELPER_3(fsave, void, env, tl, int)
-// DEF_HELPER_3(frstor, void, env, tl, int)
-// DEF_HELPER_FLAGS_2(fxsave, TCG_CALL_NO_WG, void, env, tl)
-// DEF_HELPER_FLAGS_2(fxrstor, TCG_CALL_NO_WG, void, env, tl)
-// DEF_HELPER_FLAGS_3(xsave, TCG_CALL_NO_WG, void, env, tl, i64)
-// DEF_HELPER_FLAGS_3(xsaveopt, TCG_CALL_NO_WG, void, env, tl, i64)
-// DEF_HELPER_FLAGS_3(xrstor, TCG_CALL_NO_WG, void, env, tl, i64)
-// DEF_HELPER_FLAGS_2(xgetbv, TCG_CALL_NO_WG, i64, env, i32)
-// DEF_HELPER_FLAGS_3(xsetbv, TCG_CALL_NO_WG, void, env, i32, i64)
+DEF_HELPER_3(fstenv, void, env, tl, int)
+DEF_HELPER_3(fldenv, void, env, tl, int)
+DEF_HELPER_3(fsave, void, env, tl, int)
+DEF_HELPER_3(frstor, void, env, tl, int)
+DEF_HELPER_FLAGS_2(fxsave, TCG_CALL_NO_WG, void, env, tl)
+DEF_HELPER_FLAGS_2(fxrstor, TCG_CALL_NO_WG, void, env, tl)
+DEF_HELPER_FLAGS_3(xsave, TCG_CALL_NO_WG, void, env, tl, i64)
+DEF_HELPER_FLAGS_3(xsaveopt, TCG_CALL_NO_WG, void, env, tl, i64)
+DEF_HELPER_FLAGS_3(xrstor, TCG_CALL_NO_WG, void, env, tl, i64)
+DEF_HELPER_FLAGS_2(xgetbv, TCG_CALL_NO_WG, i64, env, i32)
+DEF_HELPER_FLAGS_3(xsetbv, TCG_CALL_NO_WG, void, env, i32, i64)
 // DEF_HELPER_FLAGS_2(rdpkru, TCG_CALL_NO_WG, i64, env, i32)
 // DEF_HELPER_FLAGS_3(wrpkru, TCG_CALL_NO_WG, void, env, i32, i64)
 // 
