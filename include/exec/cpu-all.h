@@ -88,4 +88,28 @@ static inline ArchCPU *env_archcpu(CPUArchState *env)
    return container_of(env, ArchCPU, env);
 }
 
+/**
+ * env_neg(env)
+ * @env: The architecture environment
+ *
+ * Return the CPUNegativeOffsetState associated with the environment.
+ */
+static inline CPUNegativeOffsetState *env_neg(CPUArchState *env)
+{
+    ArchCPU *arch_cpu = container_of(env, ArchCPU, env);
+    return &arch_cpu->neg;
+}
+
+/**
+ * env_tlb(env)
+ * @env: The architecture environment
+ *
+ * Return the CPUTLB state associated with the environment.
+ */
+static inline CPUTLB *env_tlb(CPUArchState *env)
+{
+    return &env_neg(env)->tlb;
+}
+
+
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */

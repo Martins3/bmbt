@@ -171,6 +171,26 @@ static inline void cpu_interrupt(CPUState *cpu, int mask)
 // GCC_FMT_ATTR(2, 3) ??
 void QEMU_NORETURN cpu_abort(CPUState *cpu, const char *fmt, ...);
 
+/* work queue */
+
+/* The union type allows passing of 64 bit target pointers on 32 bit
+ * hosts in a single parameter
+ */
+typedef union {
+    int           host_int;
+    unsigned long host_ulong;
+    void         *host_ptr;
+    vaddr         target_ptr;
+} run_on_cpu_data;
+
+#define RUN_ON_CPU_HOST_PTR(p)    ((run_on_cpu_data){.host_ptr = (p)})
+#define RUN_ON_CPU_HOST_INT(i)    ((run_on_cpu_data){.host_int = (i)})
+#define RUN_ON_CPU_HOST_ULONG(ul) ((run_on_cpu_data){.host_ulong = (ul)})
+#define RUN_ON_CPU_TARGET_PTR(v)  ((run_on_cpu_data){.target_ptr = (v)})
+#define RUN_ON_CPU_NULL           RUN_ON_CPU_HOST_PTR(NULL)
+
+typedef void (*run_on_cpu_func)(CPUState *cpu, run_on_cpu_data data);
+
 #include "../../../src/i386/cpu.h"
 
 #endif /* end of include guard: CPU_H_5RAXENPS */

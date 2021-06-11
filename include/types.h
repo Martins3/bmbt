@@ -67,7 +67,8 @@ typedef unsigned long int uint64_t;
 
 # define QEMU_PACKED __attribute__((packed))
 
-#define QEMU_BUILD_BUG_ON(x) (x)
+#define QEMU_BUILD_BUG_MSG(x, msg) _Static_assert(!(x), msg)
+#define QEMU_BUILD_BUG_ON(x) QEMU_BUILD_BUG_MSG(x, "not expecting: " #x)
 
 #endif
 

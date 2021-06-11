@@ -1,5 +1,6 @@
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/memop.h"
+#include "../../include/exec/cpu-all.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/types.h"
 #include "tcg.h"
@@ -31,6 +32,9 @@
         }                                                         \
     } while (0)
 
+target_ulong a;
+int g = sizeof(target_ulong);
+
 /* run_on_cpu_data.target_ptr should always be big enough for a
  * target_ulong even on 32 bit builds */
 QEMU_BUILD_BUG_ON(sizeof(target_ulong) > sizeof(run_on_cpu_data));
@@ -51,6 +55,9 @@ static void tlb_window_reset(CPUTLBDesc *desc, int64_t ns,
     desc->window_begin_ns = ns;
     desc->window_max_entries = max_entries;
 }
+
+// FIXME a quick fix
+static inline int64_t get_clock_realtime(void);
 
 static void tlb_dyn_init(CPUArchState *env)
 {
