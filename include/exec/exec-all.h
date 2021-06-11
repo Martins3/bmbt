@@ -379,4 +379,9 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr,
                   hwaddr paddr, int prot,
                   int mmu_idx, target_ulong size);
 
+// FIXME copied from /usr/include/glib-2.0/glib/gmem.h
+// of course, we will rewrite all the
+#define g_new(type, num) (type *)NULL
+#define g_free(type) {}
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

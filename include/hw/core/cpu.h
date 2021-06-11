@@ -73,6 +73,11 @@ typedef struct CPUState {
 
   uint32_t interrupt_request;
 
+  /* In order to avoid passing too many arguments to the MMIO helpers,
+   * we store some rarely used information in the CPU context.
+   */
+  uintptr_t mem_io_pc;
+
 } CPUState;
 
 // FIXME
@@ -133,10 +138,38 @@ typedef enum MMUAccessType {
  * @CPU_DUMP_CCOP: dump info about TCG QEMU's condition code optimization state
  */
 enum CPUDumpFlags {
-    CPU_DUMP_CODE = 0x00010000,
-    CPU_DUMP_FPU  = 0x00020000,
-    CPU_DUMP_CCOP = 0x00040000,
+  CPU_DUMP_CODE = 0x00010000,
+  CPU_DUMP_FPU = 0x00020000,
+  CPU_DUMP_CCOP = 0x00040000,
 };
+
+// FIXME implement later
+/**
+ * cpu_reset:
+ * @cpu: The CPU whose state is to be reset.
+ */
+void cpu_reset(CPUState *cpu);
+
+// FIXME initialize cpu_interrupt_handler
+// surely, we can simplify it.
+typedef void (*CPUInterruptHandler)(CPUState *, int);
+extern CPUInterruptHandler cpu_interrupt_handler;
+
+/**
+ * cpu_interrupt:
+ * @cpu: The CPU to set an interrupt on.
+ * @mask: The interrupts to set.
+ *
+ * Invokes the interrupt handler.
+ */
+static inline void cpu_interrupt(CPUState *cpu, int mask)
+{
+    cpu_interrupt_handler(cpu, mask);
+}
+
+// FIXME will redesing cpu_abort, 
+// GCC_FMT_ATTR(2, 3) ??
+void QEMU_NORETURN cpu_abort(CPUState *cpu, const char *fmt, ...);
 
 #include "../../../src/i386/cpu.h"
 

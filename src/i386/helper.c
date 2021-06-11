@@ -11,6 +11,12 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdbool.h>
+// FIXME
+// notes:
+// 1. remove dump related code
+// 2. remove mce related code
+//
+// it seems they are useless, but further investigation is needed
 
 void cpu_sync_bndcs_hflags(CPUX86State *env)
 {
@@ -296,190 +302,27 @@ out:
     return pte | page_offset;
 }
 
-typedef struct MCEInjectionParams {
-    Monitor *mon;
-    int bank;
-    uint64_t status;
-    uint64_t mcg_status;
-    uint64_t addr;
-    uint64_t misc;
-    int flags;
-} MCEInjectionParams;
-
-static void do_inject_x86_mce(CPUState *cs, run_on_cpu_data data)
-{
-    MCEInjectionParams *params = data.host_ptr;
-    X86CPU *cpu = X86_CPU(cs);
-    CPUX86State *cenv = &cpu->env;
-    uint64_t *banks = cenv->mce_banks + 4 * params->bank;
-
-    cpu_synchronize_state(cs);
-
-    /*
-     * If there is an MCE exception being processed, ignore this SRAO MCE
-     * unless unconditional injection was requested.
-     */
-    if (!(params->flags & MCE_INJECT_UNCOND_AO)
-        && !(params->status & MCI_STATUS_AR)
-        && (cenv->mcg_status & MCG_STATUS_MCIP)) {
-        return;
-    }
-
-    if (params->status & MCI_STATUS_UC) {
-        /*
-         * if MSR_MCG_CTL is not all 1s, the uncorrected error
-         * reporting is disabled
-         */
-        if ((cenv->mcg_cap & MCG_CTL_P) && cenv->mcg_ctl != ~(uint64_t)0) {
-            monitor_printf(params->mon,
-                           "CPU %d: Uncorrected error reporting disabled\n",
-                           cs->cpu_index);
-            return;
-        }
-
-        /*
-         * if MSR_MCi_CTL is not all 1s, the uncorrected error
-         * reporting is disabled for the bank
-         */
-        if (banks[0] != ~(uint64_t)0) {
-            monitor_printf(params->mon,
-                           "CPU %d: Uncorrected error reporting disabled for"
-                           " bank %d\n",
-                           cs->cpu_index, params->bank);
-            return;
-        }
-
-        if ((cenv->mcg_status & MCG_STATUS_MCIP) ||
-            !(cenv->cr[4] & CR4_MCE_MASK)) {
-            monitor_printf(params->mon,
-                           "CPU %d: Previous MCE still in progress, raising"
-                           " triple fault\n",
-                           cs->cpu_index);
-            qemu_log_mask(CPU_LOG_RESET, "Triple fault\n");
-            qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
-            return;
-        }
-        if (banks[1] & MCI_STATUS_VAL) {
-            params->status |= MCI_STATUS_OVER;
-        }
-        banks[2] = params->addr;
-        banks[3] = params->misc;
-        cenv->mcg_status = params->mcg_status;
-        banks[1] = params->status;
-        cpu_interrupt(cs, CPU_INTERRUPT_MCE);
-    } else if (!(banks[1] & MCI_STATUS_VAL)
-               || !(banks[1] & MCI_STATUS_UC)) {
-        if (banks[1] & MCI_STATUS_VAL) {
-            params->status |= MCI_STATUS_OVER;
-        }
-        banks[2] = params->addr;
-        banks[3] = params->misc;
-        banks[1] = params->status;
-    } else {
-        banks[1] |= MCI_STATUS_OVER;
-    }
-}
-
-void cpu_x86_inject_mce(Monitor *mon, X86CPU *cpu, int bank,
-                        uint64_t status, uint64_t mcg_status, uint64_t addr,
-                        uint64_t misc, int flags)
-{
-    CPUState *cs = CPU(cpu);
-    CPUX86State *cenv = &cpu->env;
-    MCEInjectionParams params = {
-        .mon = mon,
-        .bank = bank,
-        .status = status,
-        .mcg_status = mcg_status,
-        .addr = addr,
-        .misc = misc,
-        .flags = flags,
-    };
-    unsigned bank_num = cenv->mcg_cap & 0xff;
-
-    if (!cenv->mcg_cap) {
-        monitor_printf(mon, "MCE injection not supported\n");
-        return;
-    }
-    if (bank >= bank_num) {
-        monitor_printf(mon, "Invalid MCE bank number\n");
-        return;
-    }
-    if (!(status & MCI_STATUS_VAL)) {
-        monitor_printf(mon, "Invalid MCE status code\n");
-        return;
-    }
-    if ((flags & MCE_INJECT_BROADCAST)
-        && !cpu_x86_support_mca_broadcast(cenv)) {
-        monitor_printf(mon, "Guest CPU does not support MCA broadcast\n");
-        return;
-    }
-
-    run_on_cpu(cs, do_inject_x86_mce, RUN_ON_CPU_HOST_PTR(&params));
-    if (flags & MCE_INJECT_BROADCAST) {
-        CPUState *other_cs;
-
-        params.bank = 1;
-        params.status = MCI_STATUS_VAL | MCI_STATUS_UC;
-        params.mcg_status = MCG_STATUS_MCIP | MCG_STATUS_RIPV;
-        params.addr = 0;
-        params.misc = 0;
-        CPU_FOREACH(other_cs) {
-            if (other_cs == cs) {
-                continue;
-            }
-            run_on_cpu(other_cs, do_inject_x86_mce, RUN_ON_CPU_HOST_PTR(&params));
-        }
-    }
-}
-
 void cpu_report_tpr_access(CPUX86State *env, TPRAccess access)
 {
     X86CPU *cpu = env_archcpu(env);
     CPUState *cs = env_cpu(env);
 
-    if (kvm_enabled() || whpx_enabled()) {
-        env->tpr_access_type = access;
+    // FIXME is tcg_enabled ?
+    
+    // if (kvm_enabled() || whpx_enabled()) {
+        // env->tpr_access_type = access;
 
-        cpu_interrupt(cs, CPU_INTERRUPT_TPR);
-    } else if (tcg_enabled()) {
+        // cpu_interrupt(cs, CPU_INTERRUPT_TPR);
+    // } else if (tcg_enabled()) {
         cpu_restore_state(cs, cs->mem_io_pc, false);
 
         apic_handle_tpr_access_report(cpu->apic_state, env->eip, access);
-    }
+    // }
 }
 #endif /* !CONFIG_USER_ONLY */
 
-int cpu_x86_get_descr_debug(CPUX86State *env, unsigned int selector,
-                            target_ulong *base, unsigned int *limit,
-                            unsigned int *flags)
-{
-    CPUState *cs = env_cpu(env);
-    SegmentCache *dt;
-    target_ulong ptr;
-    uint32_t e1, e2;
-    int index;
 
-    if (selector & 0x4)
-        dt = &env->ldt;
-    else
-        dt = &env->gdt;
-    index = selector & ~7;
-    ptr = dt->base + index;
-    if ((index + 7) > dt->limit
-        || cpu_memory_rw_debug(cs, ptr, (uint8_t *)&e1, sizeof(e1), 0) != 0
-        || cpu_memory_rw_debug(cs, ptr+4, (uint8_t *)&e2, sizeof(e2), 0) != 0)
-        return 0;
-
-    *base = ((e1 >> 16) | ((e2 & 0xff) << 16) | (e2 & 0xff000000));
-    *limit = (e1 & 0xffff) | (e2 & 0x000f0000);
-    if (e2 & DESC_G_MASK)
-        *limit = (*limit << 12) | 0xfff;
-    *flags = e2;
-
-    return 1;
-}
-
+// FIXME this is called by cpu_handle_interrupt, it's impressive
 #if !defined(CONFIG_USER_ONLY)
 void do_cpu_init(X86CPU *cpu)
 {
@@ -497,9 +340,10 @@ void do_cpu_init(X86CPU *cpu)
            offsetof(CPUX86State, start_init_save));
     g_free(save);
 
-    if (kvm_enabled()) {
-        kvm_arch_do_init_vcpu(cpu);
-    }
+    // FIXME review later 
+    // if (kvm_enabled()) {
+        // kvm_arch_do_init_vcpu(cpu);
+    // }
     apic_init_reset(cpu->apic_state);
 }
 
@@ -537,7 +381,17 @@ void x86_cpu_exec_exit(CPUState *cs)
     env->eflags = cpu_compute_eflags(env);
 }
 
+// FIXME oh my god, it becames tricky, I hope this is
+// only place dealing with address space
+typedef struct AddressSpace {
+
+} AddressSpace;
+
+static inline AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs);
+
+// FIXME include/exec/memory_ldst.inc.h
 #ifndef CONFIG_USER_ONLY
+#if 0
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr)
 {
     X86CPU *cpu = X86_CPU(cs);
@@ -627,3 +481,5 @@ void x86_stq_phys(CPUState *cs, hwaddr addr, uint64_t val)
 
     address_space_stq(as, addr, val, attrs, NULL);
 }
+#endif
+#endif

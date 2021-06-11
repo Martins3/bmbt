@@ -1421,7 +1421,34 @@ typedef struct CPUX86State {
   uint64_t star;
 
   int32_t a20_mask;
+
+  // FIXME this is anchor, put here randomly, fix it later
+  /* Beginning of state preserved by INIT (dummy marker).  */
+  struct {
+  } start_init_save;
+
+  /* End of state preserved by INIT (dummy marker).  */
+  struct {
+  } end_init_save;
+
+
+    uint32_t smbase;
+    uint64_t msr_smi_count;
 } CPUX86State;
+
+// FIXME copied from
+// /home/maritns3/core/ld/x86-qemu-mips/include/hw/qdev-core.h
+// device related will be rethink later
+/**
+ * DeviceState:
+ * @realized: Indicates whether the device has been fully constructed.
+ *
+ * This structure should not be accessed directly.  We declare it here
+ * so that it can be embedded in individual device state structures.
+ */
+typedef struct DeviceState {
+
+}DeviceState;
 
 // TODO I don't know how X86CPU works
 /**
@@ -1495,21 +1522,23 @@ void QEMU_NORETURN raise_interrupt(CPUX86State *nenv, int intno, int is_int,
                                    int error_code, int next_eip_addend);
 
 /* MMU modes definitions */
-#define MMU_KSMAP_IDX   0
-#define MMU_USER_IDX    1
+#define MMU_KSMAP_IDX 0
+#define MMU_USER_IDX 1
 #define MMU_KNOSMAP_IDX 2
-static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
-{
-    return (env->hflags & HF_CPL_MASK) == 3 ? MMU_USER_IDX :
-        (!(env->hflags & HF_SMAP_MASK) || (env->eflags & AC_MASK))
-        ? MMU_KNOSMAP_IDX : MMU_KSMAP_IDX;
+static inline int cpu_mmu_index(CPUX86State *env, bool ifetch) {
+  return (env->hflags & HF_CPL_MASK) == 3
+             ? MMU_USER_IDX
+             : (!(env->hflags & HF_SMAP_MASK) || (env->eflags & AC_MASK))
+                   ? MMU_KNOSMAP_IDX
+                   : MMU_KSMAP_IDX;
 }
 
-static inline int cpu_mmu_index_kernel(CPUX86State *env)
-{
-    return !(env->hflags & HF_SMAP_MASK) ? MMU_KNOSMAP_IDX :
-        ((env->hflags & HF_CPL_MASK) < 3 && (env->eflags & AC_MASK))
-        ? MMU_KNOSMAP_IDX : MMU_KSMAP_IDX;
+static inline int cpu_mmu_index_kernel(CPUX86State *env) {
+  return !(env->hflags & HF_SMAP_MASK)
+             ? MMU_KNOSMAP_IDX
+             : ((env->hflags & HF_CPL_MASK) < 3 && (env->eflags & AC_MASK))
+                   ? MMU_KNOSMAP_IDX
+                   : MMU_KSMAP_IDX;
 }
 
 #define CC_DST (env->cc_dst)
@@ -1619,6 +1648,47 @@ static inline void cpu_load_efer(CPUX86State *env, uint64_t val) {
 static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env) {
   return ((MemTxAttrs){.secure = (env->hflags & HF_SMM_MASK) != 0});
 }
+
+typedef enum TPRAccess {
+  TPR_ACCESS_READ,
+  TPR_ACCESS_WRITE,
+} TPRAccess;
+
+// FIXME I don't know how to handle apic yet
+/* apic.c */
+void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
+void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
+                                   TPRAccess access);
+void apic_poll_irq(DeviceState *d);
+void apic_init_reset(DeviceState *s);
+void apic_sipi(DeviceState *s);
+
+
+/* smm_helper.c */
+void do_smm_enter(X86CPU *cpu);
+
+// FIXME implemented in cpu.c
+int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request);
+
+// FIXME do_cpu_init ?
+// what's sipi
+void do_cpu_init(X86CPU *cpu);
+void do_cpu_sipi(X86CPU *cpu);
+
+// FIXME the true honor
+// I even don't know what's happening in pc.c
+// defined in hw/i386/pc.c
+int cpu_get_pic_interrupt(CPUX86State *s);
+
+// FIXME this is a huge function but in line, 
+// I will copy it later
+/* this function must always be used to load data in the segment
+   cache: it synchronizes the hflags with the segment cache values */
+static inline void cpu_x86_load_seg_cache(CPUX86State *env,
+                                          int seg_reg, unsigned int selector,
+                                          target_ulong base,
+                                          unsigned int limit,
+                                          unsigned int flags);
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
