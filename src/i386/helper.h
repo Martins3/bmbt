@@ -3,9 +3,7 @@
 
 #include "../../include/exec/helper-head.h"
 #include "../../src/i386/cpu.h" // CPUArchState
-
-// TODO uncomment if define the function
-// don't let linker complaint
+// TODO maybe group this helper by name
 
 // DEF_HELPER_FLAGS_4(cc_compute_all, TCG_CALL_NO_RWG_SE, tl, tl, tl, tl, int)
 // DEF_HELPER_FLAGS_4(cc_compute_c, TCG_CALL_NO_RWG_SE, tl, tl, tl, tl, int)
@@ -30,12 +28,12 @@
 // DEF_HELPER_FLAGS_5(bndstx64, TCG_CALL_NO_WG, void, env, tl, tl, i64, i64)
 // DEF_HELPER_1(bnd_jmp, void, env)
 // 
-// DEF_HELPER_2(aam, void, env, int)
-// DEF_HELPER_2(aad, void, env, int)
-// DEF_HELPER_1(aaa, void, env)
-// DEF_HELPER_1(aas, void, env)
-// DEF_HELPER_1(daa, void, env)
-// DEF_HELPER_1(das, void, env)
+DEF_HELPER_2(aam, void, env, int)
+DEF_HELPER_2(aad, void, env, int)
+DEF_HELPER_1(aaa, void, env)
+DEF_HELPER_1(aas, void, env)
+DEF_HELPER_1(daa, void, env)
+DEF_HELPER_1(das, void, env)
 // 
 // DEF_HELPER_2(lsl, tl, env, tl)
 // DEF_HELPER_2(lar, tl, env, tl)
@@ -45,11 +43,11 @@ DEF_HELPER_2(lldt, void, env, int)
 DEF_HELPER_2(ltr, void, env, int)
 DEF_HELPER_3(load_seg, void, env, int, int) // TODO
 DEF_HELPER_4(ljmp_protected, void, env, int, tl, tl)
-// DEF_HELPER_5(lcall_real, void, env, int, tl, int, int)
-// DEF_HELPER_5(lcall_protected, void, env, int, tl, int, tl)
+DEF_HELPER_5(lcall_real, void, env, int, tl, int, int)
+DEF_HELPER_5(lcall_protected, void, env, int, tl, int, tl)
 DEF_HELPER_2(iret_real, void, env, int)
 DEF_HELPER_3(iret_protected, void, env, int, int)
-// DEF_HELPER_3(lret_protected, void, env, int, int)
+DEF_HELPER_3(lret_protected, void, env, int, int)
 DEF_HELPER_2(read_crN, tl, env, int)
 DEF_HELPER_3(write_crN, void, env, int, tl)
 // DEF_HELPER_2(lmsw, void, env, tl)
@@ -67,10 +65,10 @@ DEF_HELPER_FLAGS_2(get_dr, TCG_CALL_NO_WG, tl, env, int)
 // DEF_HELPER_2(hlt, void, env, int)
 // DEF_HELPER_2(monitor, void, env, tl)
 // DEF_HELPER_2(mwait, void, env, int)
-// DEF_HELPER_2(pause, void, env, int)
-// DEF_HELPER_1(debug, void, env)
+DEF_HELPER_2(pause, void, env, int)
+DEF_HELPER_1(debug, void, env)
 // DEF_HELPER_1(reset_rf, void, env)
-// DEF_HELPER_3(raise_interrupt, void, env, int, int)
+DEF_HELPER_3(raise_interrupt, void, env, int, int)
 DEF_HELPER_2(raise_exception, void, env, int) // TODO
 // DEF_HELPER_1(cli, void, env)
 // DEF_HELPER_1(sti, void, env)
@@ -79,7 +77,7 @@ DEF_HELPER_2(raise_exception, void, env, int) // TODO
 // DEF_HELPER_3(boundw, void, env, tl, int)
 // DEF_HELPER_3(boundl, void, env, tl, int)
 DEF_HELPER_1(rsm, void, env)
-// DEF_HELPER_2(into, void, env, int)
+DEF_HELPER_2(into, void, env, int)
 // DEF_HELPER_2(cmpxchg8b_unlocked, void, env, tl)
 // DEF_HELPER_2(cmpxchg8b, void, env, tl)
 // #ifdef TARGET_X86_64
@@ -104,7 +102,7 @@ DEF_HELPER_3(outw, void, env, i32, i32)
 DEF_HELPER_2(inw, tl, env, i32)
 DEF_HELPER_3(outl, void, env, i32, i32)
 DEF_HELPER_2(inl, tl, env, i32)
-// DEF_HELPER_FLAGS_4(bpt_io, TCG_CALL_NO_WG, void, env, i32, i32, tl)
+DEF_HELPER_FLAGS_4(bpt_io, TCG_CALL_NO_WG, void, env, i32, i32, tl)
 // 
 // DEF_HELPER_3(svm_check_intercept_param, void, env, i32, i64)
 // DEF_HELPER_4(svm_check_io, void, env, i32, i32, i32)
