@@ -1439,6 +1439,11 @@ typedef struct X86CPU {
   CPUNegativeOffsetState neg;
   CPUX86State env;
 
+  // FIXME wow device state
+  /* in order to simplify APIC support, we leave this pointer to the
+     user */
+  struct DeviceState *apic_state;
+
 } X86CPU;
 
 #define X86_CPU(ptr) container_of(ptr, X86CPU, parent_obj)
@@ -1488,6 +1493,24 @@ void QEMU_NORETURN raise_exception_err_ra(CPUX86State *env, int exception_index,
                                           int error_code, uintptr_t retaddr);
 void QEMU_NORETURN raise_interrupt(CPUX86State *nenv, int intno, int is_int,
                                    int error_code, int next_eip_addend);
+
+/* MMU modes definitions */
+#define MMU_KSMAP_IDX   0
+#define MMU_USER_IDX    1
+#define MMU_KNOSMAP_IDX 2
+static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
+{
+    return (env->hflags & HF_CPL_MASK) == 3 ? MMU_USER_IDX :
+        (!(env->hflags & HF_SMAP_MASK) || (env->eflags & AC_MASK))
+        ? MMU_KNOSMAP_IDX : MMU_KSMAP_IDX;
+}
+
+static inline int cpu_mmu_index_kernel(CPUX86State *env)
+{
+    return !(env->hflags & HF_SMAP_MASK) ? MMU_KNOSMAP_IDX :
+        ((env->hflags & HF_CPL_MASK) < 3 && (env->eflags & AC_MASK))
+        ? MMU_KNOSMAP_IDX : MMU_KSMAP_IDX;
+}
 
 #define CC_DST (env->cc_dst)
 #define CC_SRC (env->cc_src)
@@ -1560,48 +1583,42 @@ static inline int32_t x86_get_a20_mask(CPUX86State *env) {
   }
 }
 
-static inline uint32_t cpu_compute_eflags(CPUX86State *env)
-{
-    uint32_t eflags = env->eflags;
-    // FIXME tcg_enabled ?
-    // if (tcg_enabled()) {
-        eflags |= cpu_cc_compute_all(env, CC_OP) | (env->df & DF_MASK);
-    // }
-    return eflags;
+static inline uint32_t cpu_compute_eflags(CPUX86State *env) {
+  uint32_t eflags = env->eflags;
+  // FIXME tcg_enabled ?
+  // if (tcg_enabled()) {
+  eflags |= cpu_cc_compute_all(env, CC_OP) | (env->df & DF_MASK);
+  // }
+  return eflags;
 }
 
 /* NOTE: the translator must set DisasContext.cc_op to CC_OP_EFLAGS
  * after generating a call to a helper that uses this.
  */
 static inline void cpu_load_eflags(CPUX86State *env, int eflags,
-                                   int update_mask)
-{
-    CC_SRC = eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
-    CC_OP = CC_OP_EFLAGS;
-    env->df = 1 - (2 * ((eflags >> 10) & 1));
-    env->eflags = (env->eflags & ~update_mask) |
-        (eflags & update_mask) | 0x2;
+                                   int update_mask) {
+  CC_SRC = eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+  CC_OP = CC_OP_EFLAGS;
+  env->df = 1 - (2 * ((eflags >> 10) & 1));
+  env->eflags = (env->eflags & ~update_mask) | (eflags & update_mask) | 0x2;
 }
 
 /* load efer and update the corresponding hflags. XXX: do consistency
    checks with cpuid bits? */
-static inline void cpu_load_efer(CPUX86State *env, uint64_t val)
-{
-    env->efer = val;
-    env->hflags &= ~(HF_LMA_MASK | HF_SVME_MASK);
-    if (env->efer & MSR_EFER_LMA) {
-        env->hflags |= HF_LMA_MASK;
-    }
-    if (env->efer & MSR_EFER_SVME) {
-        env->hflags |= HF_SVME_MASK;
-    }
+static inline void cpu_load_efer(CPUX86State *env, uint64_t val) {
+  env->efer = val;
+  env->hflags &= ~(HF_LMA_MASK | HF_SVME_MASK);
+  if (env->efer & MSR_EFER_LMA) {
+    env->hflags |= HF_LMA_MASK;
+  }
+  if (env->efer & MSR_EFER_SVME) {
+    env->hflags |= HF_SVME_MASK;
+  }
 }
 
-static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
-{
-    return ((MemTxAttrs) { .secure = (env->hflags & HF_SMM_MASK) != 0 });
+static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env) {
+  return ((MemTxAttrs){.secure = (env->hflags & HF_SMM_MASK) != 0});
 }
-
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

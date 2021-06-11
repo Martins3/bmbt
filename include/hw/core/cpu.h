@@ -126,6 +126,18 @@ typedef enum MMUAccessType {
  */
 #define CPU(obj) ((CPUState *)(obj))
 
+/**
+ * CPUDumpFlags:
+ * @CPU_DUMP_CODE:
+ * @CPU_DUMP_FPU: dump FPU register state, not just integer
+ * @CPU_DUMP_CCOP: dump info about TCG QEMU's condition code optimization state
+ */
+enum CPUDumpFlags {
+    CPU_DUMP_CODE = 0x00010000,
+    CPU_DUMP_FPU  = 0x00020000,
+    CPU_DUMP_CCOP = 0x00040000,
+};
+
 #include "../../../src/i386/cpu.h"
 
 #endif /* end of include guard: CPU_H_5RAXENPS */

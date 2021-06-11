@@ -3,23 +3,14 @@
 #include "../../include/fpu/softfloat.h"
 #include "../../include/fpu/softfloat-helper.h"
 #include "../../include/qemu/bswap.h"
+#include "../../include/qemu/log-for-trace.h"
 #include "cpu.h"
 #include "svm.h"
+#include "seg_helper.h"
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
 #include <string.h>
-#include <math.h>
-
-//#define DEBUG_PCALL
-
-#ifdef DEBUG_PCALL
-# define LOG_PCALL(...) qemu_log_mask(CPU_LOG_PCALL, ## __VA_ARGS__)
-# define LOG_PCALL_STATE(cpu)                                  \
-    log_cpu_state_mask(CPU_LOG_PCALL, (cpu), CPU_DUMP_CCOP)
-#else
-# define LOG_PCALL(...) do { } while (0)
-# define LOG_PCALL_STATE(cpu) do { } while (0)
-#endif
+#include <stdbool.h>
 
 /* return non zero if error */
 static inline int load_segment_ra(CPUX86State *env, uint32_t *e1_ptr,
