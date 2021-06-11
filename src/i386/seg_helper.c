@@ -10,6 +10,7 @@
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
 #include <string.h>
+#include <assert.h>
 #include <stdbool.h>
 
 /* return non zero if error */

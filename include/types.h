@@ -67,6 +67,8 @@ typedef unsigned long int uint64_t;
 
 # define QEMU_PACKED __attribute__((packed))
 
+#define QEMU_BUILD_BUG_ON(x) (x)
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */
