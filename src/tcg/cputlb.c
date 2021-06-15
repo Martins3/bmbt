@@ -1,9 +1,33 @@
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/memop.h"
 #include "../../include/exec/cpu-all.h"
+#include "../../include/exec/memory.h"
+#include "../../include/exec/cpu-common.h"
 #include "../../include/hw/core/cpu.h"
+#include "../../include/qemu/atomic.h"
 #include "../../include/types.h"
 #include "tcg.h"
+
+#include <stdbool.h>
+#include <errno.h>
+#include <string.h>
+#include <assert.h>
+
+// FIXME defined in exec.c
+// I don't know what's happending in exec.c
+/* Note: start and end must be within the same ram block.  */
+bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
+                                              ram_addr_t length,
+                                              unsigned client);
+
+static inline void cpu_physical_memory_set_dirty_flag(ram_addr_t addr,
+                                                      unsigned client);
+
+#define DIRTY_MEMORY_VGA       0
+#define DIRTY_MEMORY_CODE      1
+#define DIRTY_MEMORY_MIGRATION 2
+#define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
+
 
 #ifdef DEBUG_TLB
 # define DEBUG_TLB_GATE 1
@@ -17,19 +41,12 @@
 # define DEBUG_TLB_LOG_GATE 0
 #endif
 
+// FIXME just remove the content to avoid error
 #define tlb_debug(fmt, ...) do { \
-    if (DEBUG_TLB_LOG_GATE) { \
-        qemu_log_mask(CPU_LOG_MMU, "%s: " fmt, __func__, \
-                      ## __VA_ARGS__); \
-    } else if (DEBUG_TLB_GATE) { \
-        fprintf(stderr, "%s: " fmt, __func__, ## __VA_ARGS__); \
-    } \
 } while (0)
 
+// FIXME just remove the content to avoid error
 #define assert_cpu_is_self(cpu) do {                              \
-        if (DEBUG_TLB_GATE) {                                     \
-            g_assert(!(cpu)->created || qemu_cpu_is_self(cpu));   \
-        }                                                         \
     } while (0)
 
 target_ulong a;
@@ -178,8 +195,8 @@ static void tlb_mmu_resize_locked(CPUArchState *env, int mmu_idx)
     while (env_tlb(env)->f[mmu_idx].table == NULL ||
            env_tlb(env)->d[mmu_idx].iotlb == NULL) {
         if (new_size == (1 << CPU_TLB_DYN_MIN_BITS)) {
-            error_report("%s: %s", __func__, strerror(errno));
-            abort();
+            // error_report("%s: %s", __func__, strerror(errno));
+            // abort();
         }
         new_size = MAX(new_size >> 1, 1 << CPU_TLB_DYN_MIN_BITS);
         env_tlb(env)->f[mmu_idx].mask = (new_size - 1) << CPU_TLB_ENTRY_BITS;
@@ -232,11 +249,12 @@ static void flush_all_helper(CPUState *src, run_on_cpu_func fn,
 {
     CPUState *cpu;
 
-    CPU_FOREACH(cpu) {
-        if (cpu != src) {
-            async_run_on_cpu(cpu, fn, d);
-        }
-    }
+    // FIXME
+    // CPU_FOREACH(cpu) {
+        // if (cpu != src) {
+            // async_run_on_cpu(cpu, fn, d);
+        // }
+    // }
 }
 
 void tlb_flush_counts(size_t *pfull, size_t *ppart, size_t *pelide)
@@ -244,13 +262,14 @@ void tlb_flush_counts(size_t *pfull, size_t *ppart, size_t *pelide)
     CPUState *cpu;
     size_t full = 0, part = 0, elide = 0;
 
-    CPU_FOREACH(cpu) {
-        CPUArchState *env = cpu->env_ptr;
-
-        full += atomic_read(&env_tlb(env)->c.full_flush_count);
-        part += atomic_read(&env_tlb(env)->c.part_flush_count);
-        elide += atomic_read(&env_tlb(env)->c.elide_flush_count);
-    }
+    // FIXME
+    // CPU_FOREACH(cpu) {
+        // CPUArchState *env = cpu->env_ptr;
+//
+        // full += atomic_read(&env_tlb(env)->c.full_flush_count);
+        // part += atomic_read(&env_tlb(env)->c.part_flush_count);
+        // elide += atomic_read(&env_tlb(env)->c.elide_flush_count);
+    // }
     *pfull = full;
     *ppart = part;
     *pelide = elide;
@@ -272,7 +291,8 @@ static void tlb_flush_by_mmuidx_async_work(CPUState *cpu, run_on_cpu_data data)
     uint16_t asked = data.host_int;
     uint16_t all_dirty, work, to_clean;
 
-    assert_cpu_is_self(cpu);
+    // FIXME
+    // assert_cpu_is_self(cpu);
 
     tlb_debug("mmu_idx:0x%04" PRIx16 "\n", asked);
 
@@ -310,12 +330,12 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
 {
     tlb_debug("mmu_idx: 0x%" PRIx16 "\n", idxmap);
 
-    if (cpu->created && !qemu_cpu_is_self(cpu)) {
-        async_run_on_cpu(cpu, tlb_flush_by_mmuidx_async_work,
-                         RUN_ON_CPU_HOST_INT(idxmap));
-    } else {
-        tlb_flush_by_mmuidx_async_work(cpu, RUN_ON_CPU_HOST_INT(idxmap));
-    }
+    // if (cpu->created && !qemu_cpu_is_self(cpu)) {
+        // async_run_on_cpu(cpu, tlb_flush_by_mmuidx_async_work,
+                         // RUN_ON_CPU_HOST_INT(idxmap));
+    // } else {
+        // tlb_flush_by_mmuidx_async_work(cpu, RUN_ON_CPU_HOST_INT(idxmap));
+    // }
 }
 
 void tlb_flush(CPUState *cpu)
@@ -708,6 +728,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
                              hwaddr paddr, MemTxAttrs attrs, int prot,
                              int mmu_idx, target_ulong size)
 {
+#if 0
     CPUArchState *env = cpu->env_ptr;
     CPUTLB *tlb = env_tlb(env);
     CPUTLBDesc *desc = &tlb->d[mmu_idx];
@@ -883,6 +904,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
     copy_tlb_helper_locked(te, &tn);
     tlb_n_used_entries_inc(env, mmu_idx);
     qemu_spin_unlock(&tlb->c.lock);
+#endif
 }
 
 /* Add a new TLB entry, but without specifying the memory

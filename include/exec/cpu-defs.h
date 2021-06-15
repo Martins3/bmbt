@@ -3,6 +3,7 @@
 
 #include "../qemu/config-host.h"
 #include "../qemu/config-target.h"
+#include "../qemu/thread.h"
 #include "../types.h"
 #include "cpu-para.h"
 #include "memattrs.h"
@@ -172,9 +173,8 @@ typedef struct CPUTLBDescFast {
  * Data elements that are shared between all MMU modes.
  */
 typedef struct CPUTLBCommon {
-  // FIXME I don't think we need lock, in fact.
   /* Serialize updates to f.table and d.vtable, and others as noted. */
-  // QemuSpin lock;
+  QemuSpin lock;
   /*
    * Within dirty, for each bit N, modifications have been made to
    * mmu_idx N since the last time that mmu_idx was flushed.

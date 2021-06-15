@@ -1431,9 +1431,30 @@ typedef struct CPUX86State {
   struct {
   } end_init_save;
 
+  uint32_t smbase;
+  uint64_t msr_smi_count;
 
-    uint32_t smbase;
-    uint64_t msr_smi_count;
+  uint64_t tsc_aux;
+
+  // FIXME what's mtrr ?
+    /* MTRRs */
+    uint64_t mtrr_fixed[11];
+    uint64_t mtrr_deftype;
+    MTRRVar mtrr_var[MSR_MTRRcap_VCNT];
+
+    uint64_t mcg_cap;
+    uint64_t mcg_ctl;
+    uint64_t mcg_ext_ctl;
+    uint64_t mce_banks[MCE_BANKS_DEF*4];
+    uint64_t xstate_bv;
+
+
+    uint64_t pat;
+
+    uint64_t mcg_status;
+
+    uint64_t msr_ia32_misc_enable;
+
 } CPUX86State;
 
 // FIXME copied from
@@ -1448,7 +1469,7 @@ typedef struct CPUX86State {
  */
 typedef struct DeviceState {
 
-}DeviceState;
+} DeviceState;
 
 // TODO I don't know how X86CPU works
 /**
@@ -1662,7 +1683,8 @@ void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
 void apic_poll_irq(DeviceState *d);
 void apic_init_reset(DeviceState *s);
 void apic_sipi(DeviceState *s);
-
+void cpu_set_apic_base(DeviceState *s, uint64_t val);
+uint64_t cpu_get_apic_base(DeviceState *s);
 
 /* smm_helper.c */
 void do_smm_enter(X86CPU *cpu);
@@ -1680,15 +1702,16 @@ void do_cpu_sipi(X86CPU *cpu);
 // defined in hw/i386/pc.c
 int cpu_get_pic_interrupt(CPUX86State *s);
 
-// FIXME this is a huge function but in line, 
+// FIXME this is a huge function but in line,
 // I will copy it later
 /* this function must always be used to load data in the segment
    cache: it synchronizes the hflags with the segment cache values */
-static inline void cpu_x86_load_seg_cache(CPUX86State *env,
-                                          int seg_reg, unsigned int selector,
-                                          target_ulong base,
-                                          unsigned int limit,
+static inline void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
+                                          unsigned int selector,
+                                          target_ulong base, unsigned int limit,
                                           unsigned int flags);
+/* hw/pc.c */
+uint64_t cpu_get_tsc(CPUX86State *env);
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

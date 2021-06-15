@@ -191,6 +191,9 @@ typedef union {
 
 typedef void (*run_on_cpu_func)(CPUState *cpu, run_on_cpu_data data);
 
+// FIXME take care of, it seems the highlight is misleading
+static inline void cpu_tb_jmp_cache_clear(CPUState *cpu);
+
 #include "../../../src/i386/cpu.h"
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
