@@ -5,7 +5,7 @@
 // this file has to be redesigned
 // currently, it's only stub for static linter
 
-#define atomic_read(ptr) ({})
+#define atomic_read(ptr) ({*ptr;})
 
 #define atomic_set(ptr, i)                                                     \
   do {                                                                         \

@@ -1713,6 +1713,12 @@ static inline void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
 /* hw/pc.c */
 uint64_t cpu_get_tsc(CPUX86State *env);
 
+/* helper.c */
+bool x86_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
+                      MMUAccessType access_type, int mmu_idx,
+                      bool probe, uintptr_t retaddr);
+void x86_cpu_set_a20(X86CPU *cpu, int a20_state);
+
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
 

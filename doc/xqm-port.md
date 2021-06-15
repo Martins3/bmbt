@@ -11,9 +11,9 @@
 
 
 x86_cpu_common_class_init 中注册的函数:
-| function         |
+| function         | 使用位置|
 |------------------|
-| x86_cpu_tlb_fill |
+| x86_cpu_tlb_fill | tlb_fill, tlb_vaddr_to_host|
 
 ## 注意
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
@@ -28,7 +28,7 @@ x86_cpu_common_class_init 中注册的函数:
 | `#include <stdbool>` | 如何让 acpi / kernel / tcg 使用同一个 header                       |
 | 清理 types 的定义    | target_ulong 和各种 u32 i32                                        |
 | 分析如何支持多核     | 虽然现在不考虑支持多核，但是也应该进行埋点，为之后支持多核进行分析 </br> 各种调用 CPU_FOREACH 之类的如何处理 |
-| 清理头文件的依赖 | 在 i386 下依赖的头文件</br> 两个 cpu.h 的依赖|
+| 清理头文件的依赖 | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h|
 
 2. 写一个脚本，自动比对出现出入地方
   1. 函数在文件的顺序保持一致

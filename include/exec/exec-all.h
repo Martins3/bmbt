@@ -384,8 +384,19 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr,
 #define g_new(type, num) (type *)NULL
 #define g_try_new(type, num) (type *)NULL
 #define g_free(type) {}
+#define g_assert(expr) {}
+#define g_assert_not_reached() {}
 
 #undef	MAX
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+
+/* The true return address will often point to a host insn that is part of
+   the next translated guest insn.  Adjust the address backward to point to
+   the middle of the call insn.  Subtracting one would do the job except for
+   several compressed mode architectures (arm, mips) which set the low bit
+   to indicate the compressed mode; subtracting two works around that.  It
+   is also the case that there are no host isas that contain a call insn
+   smaller than 4 bytes, so we don't worry about special-casing this.  */
+#define GETPC_ADJ   2
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

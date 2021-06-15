@@ -6,12 +6,15 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/types.h"
-#include "tcg.h"
+#include "../../include/exec/cpu-lsdt.h"
+#include "../i386/cpu.h"
 
 #include <stdbool.h>
 #include <errno.h>
 #include <string.h>
+#include "tcg.h"
 #include <assert.h>
+
 
 // FIXME defined in exec.c
 // I don't know what's happending in exec.c
@@ -23,10 +26,22 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
 static inline void cpu_physical_memory_set_dirty_flag(ram_addr_t addr,
                                                       unsigned client);
 
+
+
+static inline bool cpu_physical_memory_get_dirty_flag(ram_addr_t addr,
+                                                      unsigned client);
+
+
+static inline void cpu_physical_memory_set_dirty_range(ram_addr_t start,
+                                                       ram_addr_t length,
+                                                       uint8_t mask);
 #define DIRTY_MEMORY_VGA       0
 #define DIRTY_MEMORY_CODE      1
 #define DIRTY_MEMORY_MIGRATION 2
 #define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
+
+#define DIRTY_CLIENTS_ALL     ((1 << DIRTY_MEMORY_NUM) - 1)
+#define DIRTY_CLIENTS_NOCODE  (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
 
 
 #ifdef DEBUG_TLB
@@ -910,7 +925,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
 /* Add a new TLB entry, but without specifying the memory
  * transaction attributes to be used.
  */
-void tlb_set_page(CPUState *cpu, target_ulong vaddr,
+void tstore_helperlb_set_page(CPUState *cpu, target_ulong vaddr,
                   hwaddr paddr, int prot,
                   int mmu_idx, target_ulong size)
 {
@@ -921,12 +936,13 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr,
 static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr)
 {
     ram_addr_t ram_addr;
+    // FIXME try to understand ram_block
 
-    ram_addr = qemu_ram_addr_from_host(ptr);
-    if (ram_addr == RAM_ADDR_INVALID) {
-        error_report("Bad ram pointer %p", ptr);
-        abort();
-    }
+    // ram_addr = qemu_ram_addr_from_host(ptr);
+    // if (ram_addr == RAM_ADDR_INVALID) {
+        // error_report("Bad ram pointer %p", ptr);
+        // abort();
+    // }
     return ram_addr;
 }
 
@@ -938,93 +954,33 @@ static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr)
 static void tlb_fill(CPUState *cpu, target_ulong addr, int size,
                      MMUAccessType access_type, int mmu_idx, uintptr_t retaddr)
 {
-    CPUClass *cc = CPU_GET_CLASS(cpu);
+    // FIXME 
+  
+    // CPUClass *cc = CPU_GET_CLASS(cpu);
     bool ok;
 
-    /*
-     * This is not a probe, so only valid return is success; failure
-     * should result in exception + longjmp to the cpu loop.
-     */
-    ok = cc->tlb_fill(cpu, addr, size, access_type, mmu_idx, false, retaddr);
-    assert(ok);
+    // This is not a probe, so only valid return is success; failure
+    // should result in exception + longjmp to the cpu loop.
+    // ok = cc->tlb_fill(cpu, addr, size, access_type, mmu_idx, false, retaddr);
+
+    ok = x86_cpu_tlb_fill(cpu, addr, size, access_type, mmu_idx, false, retaddr);
+    
+    // assert(ok);
 }
 
 static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                          int mmu_idx, target_ulong addr, uintptr_t retaddr,
                          MMUAccessType access_type, MemOp op)
 {
-    CPUState *cpu = env_cpu(env);
-    hwaddr mr_offset;
-    MemoryRegionSection *section;
-    MemoryRegion *mr;
-    uint64_t val;
-    bool locked = false;
-    MemTxResult r;
-
-    section = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
-    mr = section->mr;
-    mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
-    cpu->mem_io_pc = retaddr;
-    if (!cpu->can_do_io) {
-        cpu_io_recompile(cpu, retaddr);
-    }
-
-    if (mr->global_locking && !qemu_mutex_iothread_locked()) {
-        qemu_mutex_lock_iothread();
-        locked = true;
-    }
-    r = memory_region_dispatch_read(mr, mr_offset, &val, op, iotlbentry->attrs);
-    if (r != MEMTX_OK) {
-        hwaddr physaddr = mr_offset +
-            section->offset_within_address_space -
-            section->offset_within_region;
-
-        cpu_transaction_failed(cpu, physaddr, addr, memop_size(op), access_type,
-                               mmu_idx, iotlbentry->attrs, r, retaddr);
-    }
-    if (locked) {
-        qemu_mutex_unlock_iothread();
-    }
-
-    return val;
+    // FIXME we will rewrite this
+    return 0;
 }
 
 static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                       int mmu_idx, uint64_t val, target_ulong addr,
                       uintptr_t retaddr, MemOp op)
 {
-    CPUState *cpu = env_cpu(env);
-    hwaddr mr_offset;
-    MemoryRegionSection *section;
-    MemoryRegion *mr;
-    bool locked = false;
-    MemTxResult r;
-
-    section = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
-    mr = section->mr;
-    mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
-    if (!cpu->can_do_io) {
-        cpu_io_recompile(cpu, retaddr);
-    }
-    cpu->mem_io_pc = retaddr;
-
-    if (mr->global_locking && !qemu_mutex_iothread_locked()) {
-        qemu_mutex_lock_iothread();
-        locked = true;
-    }
-    r = memory_region_dispatch_write(mr, mr_offset, val, op, iotlbentry->attrs);
-    if (r != MEMTX_OK) {
-        hwaddr physaddr = mr_offset +
-            section->offset_within_address_space -
-            section->offset_within_region;
-
-        cpu_transaction_failed(cpu, physaddr, addr, memop_size(op),
-                               MMU_DATA_STORE, mmu_idx, iotlbentry->attrs, r,
-                               retaddr);
-    }
-    if (locked) {
-        qemu_mutex_unlock_iothread();
-    }
+  // FIXME we will rewrite this
 }
 
 static inline target_ulong tlb_read_ofs(CPUTLBEntry *entry, size_t ofs)
@@ -1140,7 +1096,8 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
 {
     ram_addr_t ram_addr = mem_vaddr + iotlbentry->addr;
 
-    trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
+    // FIXME fix later
+    // trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
 
     if (!cpu_physical_memory_get_dirty_flag(ram_addr, DIRTY_MEMORY_CODE)) {
         struct page_collection *pages
@@ -1265,9 +1222,10 @@ void *tlb_vaddr_to_host(CPUArchState *env, abi_ptr addr,
 
         if (!victim_tlb_hit(env, mmu_idx, index, elt_ofs, page)) {
             CPUState *cs = env_cpu(env);
-            CPUClass *cc = CPU_GET_CLASS(cs);
+            // FIXME CPUClass anchor for later review
+            // CPUClass *cc = CPU_GET_CLASS(cs);
 
-            if (!cc->tlb_fill(cs, addr, 0, access_type, mmu_idx, true, 0)) {
+            if (!x86_cpu_tlb_fill(cs, addr, 0, access_type, mmu_idx, true, 0)) {
                 /* Non-faulting page table read failed.  */
                 return NULL;
             }

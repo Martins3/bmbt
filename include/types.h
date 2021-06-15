@@ -70,6 +70,8 @@ typedef unsigned long int uint64_t;
 #define QEMU_BUILD_BUG_MSG(x, msg) _Static_assert(!(x), msg)
 #define QEMU_BUILD_BUG_ON(x) QEMU_BUILD_BUG_MSG(x, "not expecting: " #x)
 
+#define QEMU_ALWAYS_INLINE  __attribute__((always_inline))
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

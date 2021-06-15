@@ -82,7 +82,6 @@ Q: 其实，访问存储也是隐藏的 load，是如何被 softmmu 处理的?
 
 A: 指令的读取都是 tb 的事情
 
-
 - gen_ldst_softmmu_helper
   - `__gen_ldst_softmmu_helper_native`
     - tr_gen_lookup_qemu_tlb : TLB 比较查询
