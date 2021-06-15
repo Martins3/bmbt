@@ -1,5 +1,6 @@
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/cpu-lsdt.h"
+#include "../../include/exec/memory.h"
 #include "../../include/fpu/softfloat.h"
 #include "../../include/fpu/softfloat-helper.h"
 #include "../../include/qemu/bswap.h"
@@ -380,12 +381,6 @@ void x86_cpu_exec_exit(CPUState *cs)
 
     env->eflags = cpu_compute_eflags(env);
 }
-
-// FIXME oh my god, it becames tricky, I hope this is
-// only place dealing with address space
-typedef struct AddressSpace {
-
-} AddressSpace;
 
 static inline AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs);
 

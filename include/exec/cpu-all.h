@@ -111,5 +111,16 @@ static inline CPUTLB *env_tlb(CPUArchState *env)
     return &env_neg(env)->tlb;
 }
 
+#define SUFFIX
+#define ARG1         as
+#define ARG1_DECL    AddressSpace *as
+#define TARGET_ENDIANNESS
+#include "memory_ldst.h.inc"
+
+#define SUFFIX
+#define ARG1         as
+#define ARG1_DECL    AddressSpace *as
+#include "memory_ldst.h.inc"
+
 
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */

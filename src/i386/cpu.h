@@ -1577,7 +1577,7 @@ void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
 #define MMU_USER_IDX 1
 #define MMU_KNOSMAP_IDX 2
 
-// FIXME these functions are define at helper.c
+// FIXME these functions are defined at helper.c
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr);
 uint32_t x86_lduw_phys(CPUState *cs, hwaddr addr);
 uint32_t x86_ldl_phys(CPUState *cs, hwaddr addr);
