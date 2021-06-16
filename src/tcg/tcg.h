@@ -238,4 +238,6 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
     ((uintptr_t (*)(void *, void *))tcg_ctx->code_gen_prologue)(env, tb_ptr)
 #endif
 
+void tcg_tb_remove(TranslationBlock *tb);
+
 #endif

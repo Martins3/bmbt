@@ -279,7 +279,34 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
 static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
                              TranslationBlock *orig_tb, bool ignore_icount)
 {
-  // TODO
+    TranslationBlock *tb;
+    uint32_t cflags = curr_cflags() | CF_NOCACHE;
+
+    if (ignore_icount) {
+        cflags &= ~CF_USE_ICOUNT;
+    }
+
+    /* Should never happen.
+       We only end up here when an existing TB is too long.  */
+    cflags |= MIN(max_cycles, CF_COUNT_MASK);
+
+    mmap_lock();
+    tb = tb_gen_code(cpu, orig_tb->pc, orig_tb->cs_base,
+                     orig_tb->flags, cflags);
+    tb->orig_tb = orig_tb;
+    mmap_unlock();
+
+    /* execute the generated code */
+    // FIXME trace it
+    // trace_exec_tb_nocache(tb, tb->pc);
+    cpu_tb_exec(cpu, tb);
+
+    mmap_lock();
+    // FIXME defined in translate-all.c
+    tb_phys_invalidate(tb, -1);
+    mmap_unlock();
+    // FIXME defined tcg.c
+    tcg_tb_remove(tb);
 }
 #endif
 
@@ -296,7 +323,7 @@ static inline void cpu_handle_debug_exception(CPUState *cpu)
         }
     }
 
-    // TODO maybe change a better name
+    // FIXME maybe change a better name, like x86_cpu_breakpoint_handler
     breakpoint_handler(cpu);
 
     // cc->debug_excp_handler(cpu);
@@ -463,7 +490,7 @@ int cpu_exec(CPUState *cpu) {
 
   int ret;
 
-  // TODO is user mode come to here too?
+  // FIXME is user mode come to here too?
   //
   // SyncClocks sc = { 0 };
 
@@ -485,7 +512,7 @@ int cpu_exec(CPUState *cpu) {
    */
   // init_delay_params(&sc, cpu);
 
-  // TODO find out from where the code flow jump to here
+  // FIXME find out from where the code flow jump to here
   if (sigsetjmp(cpu->jmp_env, 0) != 0) {
     // FIXME some checks about iothread here
   }
@@ -512,7 +539,7 @@ int cpu_exec(CPUState *cpu) {
 
       tb = tb_find(cpu, last_tb, tb_exit, cflags);
 
-      // TODO
+      // FIXME
       // defined at target/i386/LATX/x86tomips-config.c
       // trace_tb_execution(cpu, tb);
 
@@ -520,7 +547,7 @@ int cpu_exec(CPUState *cpu) {
 
       /* Try to align the host and virtual clocks
          if the guest is in advance */
-      // TODO icount related
+      // FIXME icount related
       // align_clocks(&sc, cpu);
     }
   }

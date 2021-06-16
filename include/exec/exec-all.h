@@ -485,4 +485,6 @@ hwaddr memory_region_section_get_iotlb(CPUState *cpu,
 #endif
 #endif
 
+void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr);
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
