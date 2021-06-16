@@ -384,9 +384,7 @@ void x86_cpu_exec_exit(CPUState *cs)
 
 static inline AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs);
 
-// FIXME include/exec/memory_ldst.inc.h
 #ifndef CONFIG_USER_ONLY
-#if 0
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr)
 {
     X86CPU *cpu = X86_CPU(cs);
@@ -476,5 +474,4 @@ void x86_stq_phys(CPUState *cs, hwaddr addr, uint64_t val)
 
     address_space_stq(as, addr, val, attrs, NULL);
 }
-#endif
 #endif

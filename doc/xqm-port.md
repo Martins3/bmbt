@@ -1,19 +1,25 @@
 # Divergence between qemu
 
+- 短期计划
+  - [ ] cpu-exec.c : 开始执行的入口
+  - [ ] translate-all.c
+  - [ ] tcg.c
+    - [ ] tcg_prologue_init
+
 ## 几个关键的结构体功能和移植差异说明
 | struct           |  | divergence                                                                              |
 |------------------|--|-----------------------------------------------------------------------------------------|
 | CPUState         |  |                                                                                         |
 | CPUClass         |  | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
-| TranslationBlock |  |
-| CPUX86State      |  |
-| X86CPU           |  |
+| TranslationBlock |  |                                                                                         |
+| CPUX86State      |  |                                                                                         |
+| X86CPU           |  |                                                                                         |
 
 
 x86_cpu_common_class_init 中注册的函数:
-| function         | 使用位置|
-|------------------|
-| x86_cpu_tlb_fill | tlb_fill, tlb_vaddr_to_host|
+| function         | 使用位置                    |
+|------------------|-----------------------------|
+| x86_cpu_tlb_fill | tlb_fill, tlb_vaddr_to_host |
 
 ## 注意
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
@@ -23,13 +29,13 @@ x86_cpu_common_class_init 中注册的函数:
 ## TODO
 1. 首先将所有 TODO 整理成为表格再说吧
 
-| TODO                 | 问题描述                                                              |
-|----------------------|--------------------------------------------------------------------|
-| `#include <stdbool>` | 如何让 acpi / kernel / tcg 使用同一个 header                       |
-| 清理 types 的定义    | target_ulong 和各种 u32 i32                                        |
-| 分析如何支持多核     | 虽然现在不考虑支持多核，但是也应该进行埋点，为之后支持多核进行分析 </br> 各种调用 CPU_FOREACH 之类的如何处理 |
-| 清理头文件的依赖 | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h|
-| NEED_CPU_H | 这个 macro 是干啥的，猜测真正的操作是，一个头文件 a.h，其中的一部分被 NEED_CPU_H 包围，a.h 被不同的 c 文件包含，b.c 和 c.c, 那么 b.c 和 c.c 看到的内容可以不同|
+| TODO                 | 问题描述                                                                                                                                                       |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `#include <stdbool>` | 如何让 acpi / kernel / tcg 使用同一个 header                                                                                                                   |
+| 清理 types 的定义    | target_ulong 和各种 u32 i32                                                                                                                                    |
+| 分析如何支持多核     | 虽然现在不考虑支持多核，但是也应该进行埋点，为之后支持多核进行分析 </br> 各种调用 CPU_FOREACH 之类的如何处理                                                   |
+| 清理头文件的依赖     | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h                                                                                                              |
+| NEED_CPU_H           | 这个 macro 是干啥的，猜测真正的操作是，一个头文件 a.h，其中的一部分被 NEED_CPU_H 包围，a.h 被不同的 c 文件包含，b.c 和 c.c, 那么 b.c 和 c.c 看到的内容可以不同 |
 
 2. 写一个脚本，自动比对出现出入地方
   1. 函数在文件的顺序保持一致
@@ -38,6 +44,14 @@ x86_cpu_common_class_init 中注册的函数:
   4. tcg 之后的设计一定会发生更多的演化，那么靠什么来实现两个
 
 3. 将 g_new 以及 MIN 之类的 macro 放到 exec-all.h 中间了
+4. 暂时将原来在 qemu 中放到顶层目录中的文件放到 qeum 下面了，为了防止破坏原来的一点点 firmware 的代码
+  - 而且，将大量文件放到顶层本来就不好
+
+5. 关键的接口和重构
+
+| TODO         | 描述 |
+|--------------|------|
+| apic         |      |
 
 ## 设计 
 - 移除掉 memory model
