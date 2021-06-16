@@ -56,12 +56,16 @@ typedef unsigned long int uint64_t;
 // home/maritns3/core/ld/x86-qemu-mips/slirp/src/util.h
 // but it cause env_archcpu work abnormal, following version
 // is copied from linux kenrel
+//
+// It's really disturbing that env_archcpu complaints again
+// I don't know what's happending
 #ifndef container_of
 #define container_of(ptr, type, member)                                        \
   ({                                                                           \
-    const typeof(((type *)0)->member) *__mptr = (ptr);                         \
-    (type *)((char *)__mptr - offsetof(type, member));                         \
+    void *__mptr = (void *)(ptr);                                              \
+    ((type *)(__mptr - offsetof(type, member)));                               \
   })
+
 #endif
 
 // FIXME This line is belongs to compiler.h
@@ -74,16 +78,15 @@ typedef unsigned long int uint64_t;
 
 #define QEMU_ALWAYS_INLINE __attribute__((always_inline))
 
-#define qemu_build_not_reached()  g_assert_not_reached()
+#define qemu_build_not_reached() g_assert_not_reached()
 
+#define QEMU_BUILD_BUG_ON_STRUCT(x)                                            \
+  struct {                                                                     \
+    int : (x) ? -1 : 1;                                                        \
+  }
 
-#define QEMU_BUILD_BUG_ON_STRUCT(x) \
-    struct { \
-        int:(x) ? -1 : 1; \
-    }
-
-#define QEMU_BUILD_BUG_ON_ZERO(x) (sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)) - \
-                                   sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)))
+#define QEMU_BUILD_BUG_ON_ZERO(x)                                              \
+  (sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)) - sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)))
 
 #endif
 

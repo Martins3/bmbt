@@ -6,9 +6,12 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/sysemu/replay.h"
+#include "../../include/sysemu/cpus.h"
 #include "../../include/types.h"
 #include "tcg.h"
 #include "../i386/LATX/x86tomips-config.h"
+#include "../i386/svm.h"
+#include "../i386/cpu.h"
 #include <assert.h>
 #include <stdbool.h> // FIXME header for bool
 #include <stdio.h>
@@ -17,6 +20,10 @@
 #define qemu_log_mask_and_addr(MASK, ADDR, FMT, ...)    \
     do {                                                \
     } while (0)
+
+// FIXME iothread lock need further investigation
+void qemu_mutex_lock_iothread();
+void qemu_mutex_unlock_iothread();
 
 target_ulong breakpoint_addrx = 0;
 int breakpoint_hit_count= 0;
@@ -99,8 +106,7 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
          * counter hit zero); we must restore the guest PC to the address
          * of the start of the TB.
          */
-        // FIXME
-        // 2. 增加注释文档
+        // FIXME anchor
         x86_cpu_synchronize_from_tb(cpu, last_tb);
         /**
         CPUClass *cc = CPU_GET_CLASS(cpu);
@@ -249,7 +255,7 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
   }
 
 #ifndef CONFIG_USER_ONLY
-  // FIXME deeper understanding of tb expanding two pages is needed
+  // FIXME deeper understanding how tb expands to second pages
   /* We don't take care of direct jumps when address mapping changes in
    * system emulation. So it's not safe to make a direct jump to a TB
    * spanning two pages because the mapping for the second page can change.
@@ -266,13 +272,188 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
   return tb;
 }
 
-static inline bool cpu_handle_interrupt(CPUState *cpu,
-                                        TranslationBlock **last_tb) {
+#ifndef CONFIG_USER_ONLY
+// FIXME why we want to recreate TB, why cache should be discarded?
+/* Execute the code without caching the generated code. An interpreter
+   could be used if available. */
+static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
+                             TranslationBlock *orig_tb, bool ignore_icount)
+{
   // TODO
 }
+#endif
 
-static inline bool cpu_handle_exception(CPUState *cpu, int *ret) {
-  // TODO
+
+static inline void cpu_handle_debug_exception(CPUState *cpu)
+{
+    // FIXME anchor
+    // CPUClass *cc = CPU_GET_CLASS(cpu);
+    CPUWatchpoint *wp;
+
+    if (!cpu->watchpoint_hit) {
+        QTAILQ_FOREACH(wp, &cpu->watchpoints, entry) {
+            wp->flags &= ~BP_WATCHPOINT_HIT;
+        }
+    }
+
+    // TODO maybe change a better name
+    breakpoint_handler(cpu);
+
+    // cc->debug_excp_handler(cpu);
+}
+
+
+
+// FIXME I don't know how cpu_handle_exception works,
+// it seems some thing important has happened somewhere else.
+static inline bool cpu_handle_exception(CPUState *cpu, int *ret){
+    if (cpu->exception_index < 0) {
+#ifndef CONFIG_USER_ONLY
+        if (replay_has_exception()
+            && cpu_neg(cpu)->icount_decr.u16.low + cpu->icount_extra == 0) {
+            /* try to cause an exception pending in the log */
+            cpu_exec_nocache(cpu, 1, tb_find(cpu, NULL, 0, curr_cflags()), true);
+        }
+#endif
+        if (cpu->exception_index < 0) {
+            return false;
+        }
+    }
+
+    if (cpu->exception_index >= EXCP_INTERRUPT) {
+        /* exit request from the cpu execution loop */
+        *ret = cpu->exception_index;
+        if (*ret == EXCP_DEBUG) {
+            cpu_handle_debug_exception(cpu);
+        }
+        cpu->exception_index = -1;
+        return true;
+    } else {
+#if defined(CONFIG_USER_ONLY)
+        /* if user mode only, we simulate a fake exception
+           which will be handled outside the cpu execution
+           loop */
+#if defined(TARGET_I386)
+        CPUClass *cc = CPU_GET_CLASS(cpu);
+        cc->do_interrupt(cpu);
+#endif
+        *ret = cpu->exception_index;
+        cpu->exception_index = -1;
+        return true;
+#else
+        // FIXME review this later, I skip icount and record replay
+#if 0
+        if (replay_exception()) {
+            CPUClass *cc = CPU_GET_CLASS(cpu);
+            qemu_mutex_lock_iothread();
+            cc->do_interrupt(cpu);
+            qemu_mutex_unlock_iothread();
+            cpu->exception_index = -1;
+        } else if (!replay_has_interrupt()) {
+            /* give a chance to iothread in replay mode */
+            *ret = EXCP_INTERRUPT;
+            return true;
+        }
+#endif
+#endif
+    }
+
+    return false;
+}
+
+static inline bool cpu_handle_interrupt(CPUState *cpu,
+                                        TranslationBlock **last_tb)
+{
+    // FIXME anchor
+    // CPUClass *cc = CPU_GET_CLASS(cpu);
+
+    /* Clear the interrupt flag now since we're processing
+     * cpu->interrupt_request and cpu->exit_request.
+     * Ensure zeroing happens before reading cpu->exit_request or
+     * cpu->interrupt_request (see also smp_wmb in cpu_exit())
+     */
+    atomic_mb_set(&cpu_neg(cpu)->icount_decr.u16.high, 0);
+
+    if (unlikely(atomic_read(&cpu->interrupt_request))) {
+        int interrupt_request;
+        qemu_mutex_lock_iothread();
+        interrupt_request = cpu->interrupt_request;
+        if (unlikely(cpu->singlestep_enabled & SSTEP_NOIRQ)) {
+            /* Mask out external interrupts for this step. */
+            interrupt_request &= ~CPU_INTERRUPT_SSTEP_MASK;
+        }
+        if (interrupt_request & CPU_INTERRUPT_DEBUG) {
+            cpu->interrupt_request &= ~CPU_INTERRUPT_DEBUG;
+            cpu->exception_index = EXCP_DEBUG;
+            qemu_mutex_unlock_iothread();
+            return true;
+        }
+        if (replay_mode == REPLAY_MODE_PLAY && !replay_has_interrupt()) {
+            /* Do nothing */
+        } else if (interrupt_request & CPU_INTERRUPT_HALT) {
+            replay_interrupt();
+            cpu->interrupt_request &= ~CPU_INTERRUPT_HALT;
+            cpu->halted = 1;
+            cpu->exception_index = EXCP_HLT;
+            qemu_mutex_unlock_iothread();
+            return true;
+        }
+#if defined(TARGET_I386)
+        else if (interrupt_request & CPU_INTERRUPT_INIT) {
+            X86CPU *x86_cpu = X86_CPU(cpu);
+            CPUArchState *env = &x86_cpu->env;
+            replay_interrupt();
+            cpu_svm_check_intercept_param(env, SVM_EXIT_INIT, 0, 0);
+            do_cpu_init(x86_cpu);
+            cpu->exception_index = EXCP_HALTED;
+            qemu_mutex_unlock_iothread();
+            return true;
+        }
+#else
+        else if (interrupt_request & CPU_INTERRUPT_RESET) {
+            replay_interrupt();
+            cpu_reset(cpu);
+            qemu_mutex_unlock_iothread();
+            return true;
+        }
+#endif
+        /* The target hook has 3 exit conditions:
+           False when the interrupt isn't processed,
+           True when it is, and we should restart on a new TB,
+           and via longjmp via cpu_loop_exit.  */
+        else {
+            if (x86_cpu_exec_interrupt(cpu, interrupt_request)) {
+                replay_interrupt();
+                cpu->exception_index = -1;
+                *last_tb = NULL;
+            }
+            /* The target hook may have updated the 'cpu->interrupt_request';
+             * reload the 'interrupt_request' value */
+            interrupt_request = cpu->interrupt_request;
+        }
+        if (interrupt_request & CPU_INTERRUPT_EXITTB) {
+            cpu->interrupt_request &= ~CPU_INTERRUPT_EXITTB;
+            /* ensure that no TB jump will be modified as
+               the program flow was changed */
+            *last_tb = NULL;
+        }
+
+        /* If we exit via cpu_loop_exit/longjmp it is reset in cpu_exec */
+        qemu_mutex_unlock_iothread();
+    }
+
+    /* Finally, check if we need to exit to the main loop.  */
+    if (unlikely(atomic_read(&cpu->exit_request))
+        || (use_icount
+            && cpu_neg(cpu)->icount_decr.u16.low + cpu->icount_extra == 0)) {
+        atomic_set(&cpu->exit_request, 0);
+        if (cpu->exception_index == -1) {
+            cpu->exception_index = EXCP_INTERRUPT;
+        }
+        return true;
+    }
+
+    return false;
 }
 
 int cpu_exec(CPUState *cpu) {

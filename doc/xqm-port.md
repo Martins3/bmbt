@@ -8,13 +8,13 @@
   - [ ] cpu.c
 
 ## 几个关键的结构体功能和移植差异说明
-| struct           |  | divergence                                                                              |
-|------------------|--|-----------------------------------------------------------------------------------------|
-| CPUState         |  |                                                                                         |
-| CPUClass         |  | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
-| TranslationBlock |  |                                                                                         |
-| CPUX86State      |  |                                                                                         |
-| X86CPU           |  |                                                                                         |
+| struct           | divergence                                                                              |
+|------------------|-----------------------------------------------------------------------------------------|
+| CPUState         |                                                                                         |
+| CPUClass         | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
+| TranslationBlock |                                                                                         |
+| CPUX86State      |                                                                                         |
+| X86CPU           |                                                                                         |
 
 
 x86_cpu_common_class_init 中注册的函数:
@@ -61,3 +61,8 @@ x86_cpu_common_class_init 中注册的函数:
 - 移除掉 memory model
   - 现在的模型没有必要搞得这么复杂, 因为其中支持了 memory migration, memory listener 之类
   - 关于各种地址空间相互覆盖，优先级等问题，可以参考 kvmtool
+
+- 到底是否保存 icount / record replay 机制
+  - [ ] 在此之前，首先深入理解一下这个是怎么工作的吧
+
+- 我希望，这些 port 的代码可以使用脚本自动生成，从而就可以保持和 mainline 的代码同步, 但是暂时不用太考虑，先把想法验证出来再说。

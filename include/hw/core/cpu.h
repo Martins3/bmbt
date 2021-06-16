@@ -84,6 +84,11 @@ typedef struct CPUState {
   /* Accessed in parallel; all accesses must be atomic */
   struct TranslationBlock *tb_jmp_cache[TB_JMP_CACHE_SIZE];
 
+  int64_t icount_budget;
+  int64_t icount_extra;
+
+    bool exit_request;
+
 } CPUState;
 
 // FIXME
@@ -218,6 +223,12 @@ typedef union IcountDecr {
 #endif
   } u16;
 } IcountDecr;
+
+typedef struct CPUWatchpoint CPUWatchpoint;
+
+#define SSTEP_ENABLE  0x1  /* Enable simulated HW single stepping */
+#define SSTEP_NOIRQ   0x2  /* Do not use IRQ while single stepping */
+#define SSTEP_NOTIMER 0x4  /* Do not Timers while single stepping */
 
 #include "../../../src/i386/cpu.h"
 

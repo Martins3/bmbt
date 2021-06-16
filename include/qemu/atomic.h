@@ -6,7 +6,7 @@
 // currently, it's only stub for static linter
 // Add a non-atominc version is enough and necessary
 
-#define atomic_read(ptr) ({*ptr;})
+#define atomic_read(ptr) (*ptr)
 
 #define atomic_set(ptr, i)                                                     \
   do {                                                                         \
@@ -15,5 +15,7 @@
 #define atomic_cmpxchg(ptr, old, new)    ({                             \
     (old);\
 })
+
+#define atomic_mb_set(ptr, i)  {}
 
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

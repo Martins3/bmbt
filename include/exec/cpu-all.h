@@ -1,6 +1,5 @@
 #ifndef CPU_ALL_H_9ZPFYTXB
 #define CPU_ALL_H_9ZPFYTXB
-#include "../types.h"
 #include "cpu-defs.h"
 #include "exec-all.h"
 
@@ -189,6 +188,15 @@ static inline CPUNegativeOffsetState *cpu_neg(CPUState *cpu)
     ArchCPU *arch_cpu = container_of(cpu, ArchCPU, parent_obj);
     return &arch_cpu->neg;
 }
+
+/* The set of all bits that should be masked when single-stepping.  */
+#define CPU_INTERRUPT_SSTEP_MASK \
+    (CPU_INTERRUPT_HARD          \
+     | CPU_INTERRUPT_TGT_EXT_0   \
+     | CPU_INTERRUPT_TGT_EXT_1   \
+     | CPU_INTERRUPT_TGT_EXT_2   \
+     | CPU_INTERRUPT_TGT_EXT_3   \
+     | CPU_INTERRUPT_TGT_EXT_4)
 
 
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */

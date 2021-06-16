@@ -1719,11 +1719,15 @@ bool x86_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
                       bool probe, uintptr_t retaddr);
 void x86_cpu_set_a20(X86CPU *cpu, int a20_state);
 
+// FIXME maybe, we should group cc functions together
+void breakpoint_handler(CPUState *cs);
+bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 
 // FIXME
 // this is function in cpu.h, and originally registered by 
 // x86_cpu_common_class_init, 
 void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb);
+
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
