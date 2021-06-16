@@ -42,35 +42,37 @@ typedef unsigned long int uint64_t;
 #endif
 
 #ifndef glue
-#define xglue(x, y) x ## y
+#define xglue(x, y) x##y
 #define glue(x, y) xglue(x, y)
-#define stringify(s)	tostring(s)
-#define tostring(s)	#s
+#define stringify(s) tostring(s)
+#define tostring(s) #s
 #endif
 
 #ifndef offsetof
 #define offsetof(st, m) __builtin_offsetof(st, m)
 #endif
 
-// FIXME originally, container_of copied from 
+// FIXME originally, container_of copied from
 // home/maritns3/core/ld/x86-qemu-mips/slirp/src/util.h
 // but it cause env_archcpu work abnormal, following version
 // is copied from linux kenrel
 #ifndef container_of
-#define container_of(ptr, type, member) ({                      \
-        const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-        (type *)( (char *)__mptr - offsetof(type,member) );})
+#define container_of(ptr, type, member)                                        \
+  ({                                                                           \
+    const typeof(((type *)0)->member) *__mptr = (ptr);                         \
+    (type *)((char *)__mptr - offsetof(type, member));                         \
+  })
 #endif
 
 // FIXME This line is belongs to compiler.h
 #define QEMU_NORETURN __attribute__((__noreturn__))
 
-# define QEMU_PACKED __attribute__((packed))
+#define QEMU_PACKED __attribute__((packed))
 
 #define QEMU_BUILD_BUG_MSG(x, msg) _Static_assert(!(x), msg)
 #define QEMU_BUILD_BUG_ON(x) QEMU_BUILD_BUG_MSG(x, "not expecting: " #x)
 
-#define QEMU_ALWAYS_INLINE  __attribute__((always_inline))
+#define QEMU_ALWAYS_INLINE __attribute__((always_inline))
 
 #endif
 

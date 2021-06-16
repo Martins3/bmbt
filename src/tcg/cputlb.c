@@ -3,10 +3,11 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/memory.h"
 #include "../../include/exec/cpu-common.h"
+#include "../../include/exec/cpu-ldst.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/types.h"
-#include "../../include/exec/cpu-lsdt.h"
+#include "../../include/exec/cpu-ldst.h"
 #include "../i386/cpu.h"
 
 #include <stdbool.h>

@@ -9,7 +9,7 @@
 #include "../../../../include/exec/exec-all.h"
 // #include "../../../../include/tcg-op.h"
 #include "../../../../include/exec/memop.h"
-#include "../../../../include/exec/cpu-lsdt.h"
+#include "../../../../include/exec/cpu-ldst.h"
 // #include "../../../../include/exec/helper-proto.h"
 // #include "../../../../include/exec/helper-gen.h"
 // #include "../../../../include/trace-tcg.h"
