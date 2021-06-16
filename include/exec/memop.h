@@ -2,6 +2,12 @@
 #define MEMOP_H_BRBWZAQH
 
 // TODO check the macros carefully
+// 1. NEED_CPU_H is defined temporarily, it should be passed by compile command line
+// 2. where is TARGET_WORDS_BIGENDIAN / HOST_WORDS_BIGENDIAN ?
+//    1. include the header, don't define them here manually
+
+#define NEED_CPU_H
+
 typedef enum MemOp {
     MO_8     = 0,
     MO_16    = 1,

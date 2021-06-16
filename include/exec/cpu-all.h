@@ -154,6 +154,29 @@ static inline CPUTLB *env_tlb(CPUArchState *env)
     (TLB_INVALID_MASK | TLB_NOTDIRTY | TLB_MMIO \
     | TLB_WATCHPOINT | TLB_BSWAP | TLB_DISCARD_WRITE)
 
+/**
+ * tlb_hit_page: return true if page aligned @addr is a hit against the
+ * TLB entry @tlb_addr
+ *
+ * @addr: virtual address to test (must be page aligned)
+ * @tlb_addr: TLB entry address (a CPUTLBEntry addr_read/write/code value)
+ */
+static inline bool tlb_hit_page(target_ulong tlb_addr, target_ulong addr)
+{
+    return addr == (tlb_addr & (TARGET_PAGE_MASK | TLB_INVALID_MASK));
+}
+
+/**
+ * tlb_hit: return true if @addr is a hit against the TLB entry @tlb_addr
+ *
+ * @addr: virtual address to test (need not be page aligned)
+ * @tlb_addr: TLB entry address (a CPUTLBEntry addr_read/write/code value)
+ */
+static inline bool tlb_hit(target_ulong tlb_addr, target_ulong addr)
+{
+    return tlb_hit_page(tlb_addr, addr & TARGET_PAGE_MASK);
+}
+
 
 
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */

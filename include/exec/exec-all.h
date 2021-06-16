@@ -390,6 +390,10 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr,
 #undef	MAX
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 
+#undef	MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+
+
 /* The true return address will often point to a host insn that is part of
    the next translated guest insn.  Adjust the address backward to point to
    the middle of the call insn.  Subtracting one would do the job except for
@@ -398,5 +402,8 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr,
    is also the case that there are no host isas that contain a call insn
    smaller than 4 bytes, so we don't worry about special-casing this.  */
 #define GETPC_ADJ   2
+
+/* exec.c */
+void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr);
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

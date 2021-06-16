@@ -6,6 +6,8 @@
 #include "../../include/exec/cpu-ldst.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/bswap.h"
+#include "../../include/qemu/host-utils.h"
 #include "../../include/types.h"
 #include "../../include/exec/cpu-ldst.h"
 #include "../i386/cpu.h"
@@ -385,7 +387,8 @@ void tlb_flush_by_mmuidx_all_cpus_synced(CPUState *src_cpu, uint16_t idxmap)
     tlb_debug("mmu_idx: 0x%"PRIx16"\n", idxmap);
 
     flush_all_helper(src_cpu, fn, RUN_ON_CPU_HOST_INT(idxmap));
-    async_safe_run_on_cpu(src_cpu, fn, RUN_ON_CPU_HOST_INT(idxmap));
+    // FIXME fix it later
+    // async_safe_run_on_cpu(src_cpu, fn, RUN_ON_CPU_HOST_INT(idxmap));
 }
 
 void tlb_flush_all_cpus_synced(CPUState *src_cpu)
@@ -508,13 +511,14 @@ void tlb_flush_page_by_mmuidx(CPUState *cpu, target_ulong addr, uint16_t idxmap)
     addr_and_mmu_idx = addr & TARGET_PAGE_MASK;
     addr_and_mmu_idx |= idxmap;
 
-    if (!qemu_cpu_is_self(cpu)) {
-        async_run_on_cpu(cpu, tlb_flush_page_by_mmuidx_async_work,
-                         RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
-    } else {
-        tlb_flush_page_by_mmuidx_async_work(
-            cpu, RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
-    }
+    // FIXME this later
+    // if (!qemu_cpu_is_self(cpu)) {
+        // async_run_on_cpu(cpu, tlb_flush_page_by_mmuidx_async_work,
+                         // RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
+    // } else {
+        // tlb_flush_page_by_mmuidx_async_work(
+            // cpu, RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
+    // }
 }
 
 void tlb_flush_page(CPUState *cpu, target_ulong addr)
@@ -1098,7 +1102,8 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
     ram_addr_t ram_addr = mem_vaddr + iotlbentry->addr;
 
     // FIXME fix later
-    // trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
+#if 0
+    trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
 
     if (!cpu_physical_memory_get_dirty_flag(ram_addr, DIRTY_MEMORY_CODE)) {
         struct page_collection *pages
@@ -1118,6 +1123,7 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
         trace_memory_notdirty_set_dirty(mem_vaddr);
         tlb_set_dirty(cpu, mem_vaddr);
     }
+#endif
 }
 
 /*

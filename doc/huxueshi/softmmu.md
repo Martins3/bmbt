@@ -26,4 +26,5 @@
 
 ## 问题
 - [ ] mmu_idx 是搞什么的
+  - 关键是这个东西老是和 async_run_on_cpu 有关
 - [ ] victim_tlb_hit : victim tlb 是做什么的 ?

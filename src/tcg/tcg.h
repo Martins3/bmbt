@@ -2,6 +2,7 @@
 #define TCG_H_FXBBEZAS
 
 #include "../../include/exec/exec-all.h"
+#include "../../include/exec/memop.h"
 #include "../../include/qemu/config-target.h"
 
 // FIXME
@@ -128,5 +129,55 @@ uint32_t helper_le_ldl_cmmu(CPUArchState *env, target_ulong addr,
 uint64_t helper_le_ldq_cmmu(CPUArchState *env, target_ulong addr,
                             TCGMemOpIdx oi, uintptr_t retaddr);
 #endif /* end of include guard: TCG_H_FXBBEZAS */
+
+/**
+ * get_mmuidx
+ * @oi: combined op/idx parameter
+ *
+ * Extract the mmu index from the combined value.
+ */
+static inline unsigned get_mmuidx(TCGMemOpIdx oi)
+{
+    return oi & 15;
+}
+
+/**
+ * get_memop
+ * @oi: combined op/idx parameter
+ *
+ * Extract the memory operation from the combined value.
+ */
+static inline MemOp get_memop(TCGMemOpIdx oi)
+{
+    return oi >> 4;
+}
+
+/**
+ * get_alignment_bits
+ * @memop: MemOp value
+ *
+ * Extract the alignment size from the memop.
+ */
+static inline unsigned get_alignment_bits(MemOp memop)
+{
+    unsigned a = memop & MO_AMASK;
+
+    if (a == MO_UNALN) {
+        /* No alignment required.  */
+        a = 0;
+    } else if (a == MO_ALIGN) {
+        /* A natural alignment requirement.  */
+        a = memop & MO_SIZE;
+    } else {
+        /* A specific alignment requirement.  */
+        a = a >> MO_ASHIFT;
+    }
+#if defined(CONFIG_SOFTMMU)
+    /* The requested alignment cannot overlap the TLB flags.  */
+    // FIXME later
+    // tcg_debug_assert((TLB_FLAGS_MASK & ((1 << a) - 1)) == 0);
+#endif
+    return a;
+}
 
 #endif

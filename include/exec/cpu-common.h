@@ -3,6 +3,7 @@
 
 #include "../qemu/config-host.h"
 #include "../types.h"
+#include "../hw/core/cpu.h"
 
 
 // FIXME what's the purpose of this header
@@ -19,6 +20,11 @@ typedef uintptr_t ram_addr_t;
 #  define RAM_ADDR_FMT "%" PRIxPTR
 #endif
 
+
+void async_safe_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
+                           run_on_cpu_data data){
+  // FIXME
+}
 
 
 #endif /* end of include guard: CPU_COMMON_H_OF49R186 */
