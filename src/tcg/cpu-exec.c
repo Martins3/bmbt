@@ -13,7 +13,7 @@
 #include "../i386/svm.h"
 #include "../i386/cpu.h"
 #include <assert.h>
-#include <stdbool.h> // FIXME header for bool
+#include <stdbool.h>
 #include <stdio.h>
 
 // FIXME qemu log

@@ -23,4 +23,10 @@
                        QEMU_BUILD_BUG_ON_ZERO(!QEMU_IS_ARRAY(x)))
 #endif
 
+// FIXME defined in util/cacheinfo.c
+extern int qemu_icache_linesize;
+extern int qemu_icache_linesize_log;
+extern int qemu_dcache_linesize;
+extern int qemu_dcache_linesize_log;
+
 #endif /* end of include guard: OSDEP_H_DXJTBG8M */

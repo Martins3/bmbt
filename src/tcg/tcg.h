@@ -240,4 +240,44 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
 
 void tcg_tb_remove(TranslationBlock *tb);
 
+#if TCG_TARGET_NB_REGS <= 32
+typedef uint32_t TCGRegSet;
+#elif TCG_TARGET_NB_REGS <= 64
+typedef uint64_t TCGRegSet;
+#else
+#error unsupported
+#endif
+
+typedef enum TCGType {
+    TCG_TYPE_I32,
+    TCG_TYPE_I64,
+
+    TCG_TYPE_V64,
+    TCG_TYPE_V128,
+    TCG_TYPE_V256,
+
+    TCG_TYPE_COUNT, /* number of different types */
+
+    /* An alias for the size of the host register.  */
+#if TCG_TARGET_REG_BITS == 32
+    TCG_TYPE_REG = TCG_TYPE_I32,
+#else
+    TCG_TYPE_REG = TCG_TYPE_I64,
+#endif
+
+    /* An alias for the size of the native pointer.  */
+#if UINTPTR_MAX == UINT32_MAX
+    TCG_TYPE_PTR = TCG_TYPE_I32,
+#else
+    TCG_TYPE_PTR = TCG_TYPE_I64,
+#endif
+
+    /* An alias for the size of the target "long", aka register.  */
+#if TARGET_LONG_BITS == 64
+    TCG_TYPE_TL = TCG_TYPE_I64,
+#else
+    TCG_TYPE_TL = TCG_TYPE_I32,
+#endif
+} TCGType;
+
 #endif
