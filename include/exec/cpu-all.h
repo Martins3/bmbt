@@ -178,5 +178,17 @@ static inline bool tlb_hit(target_ulong tlb_addr, target_ulong addr)
 }
 
 
+/**
+ * cpu_neg(cpu)
+ * @cpu: The generic CPUState
+ *
+ * Return the CPUNegativeOffsetState associated with the cpu.
+ */
+static inline CPUNegativeOffsetState *cpu_neg(CPUState *cpu)
+{
+    ArchCPU *arch_cpu = container_of(cpu, ArchCPU, parent_obj);
+    return &arch_cpu->neg;
+}
+
 
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */

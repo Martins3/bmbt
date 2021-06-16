@@ -4,6 +4,7 @@
 #include "../qemu/config-host.h"
 #include "../qemu/config-target.h"
 #include "../qemu/thread.h"
+#include "../hw/core/cpu.h"
 #include "../types.h"
 #include "cpu-para.h"
 #include "memattrs.h"
@@ -221,7 +222,7 @@ typedef struct CPUTLB {
  */
 typedef struct CPUNegativeOffsetState {
   CPUTLB tlb;
-  // FIXME I don't understand the icount mode
-  // IcountDecr icount_decr;
+
+  IcountDecr icount_decr;
 } CPUNegativeOffsetState;
 #endif /* end of include guard: CPU_DEFS_H_QNWQEKKO */

@@ -180,4 +180,70 @@ static inline unsigned get_alignment_bits(MemOp memop)
     return a;
 }
 
+/**
+ * tcg_qemu_tb_exec:
+ * @env: pointer to CPUArchState for the CPU
+ * @tb_ptr: address of generated code for the TB to execute
+ *
+ * Start executing code from a given translation block.
+ * Where translation blocks have been linked, execution
+ * may proceed from the given TB into successive ones.
+ * Control eventually returns only when some action is needed
+ * from the top-level loop: either control must pass to a TB
+ * which has not yet been directly linked, or an asynchronous
+ * event such as an interrupt needs handling.
+ *
+ * Return: The return value is the value passed to the corresponding
+ * tcg_gen_exit_tb() at translation time of the last TB attempted to execute.
+ * The value is either zero or a 4-byte aligned pointer to that TB combined
+ * with additional information in its two least significant bits. The
+ * additional information is encoded as follows:
+ *  0, 1: the link between this TB and the next is via the specified
+ *        TB index (0 or 1). That is, we left the TB via (the equivalent
+ *        of) "goto_tb <index>". The main loop uses this to determine
+ *        how to link the TB just executed to the next.
+ *  2:    we are using instruction counting code generation, and we
+ *        did not start executing this TB because the instruction counter
+ *        would hit zero midway through it. In this case the pointer
+ *        returned is the TB we were about to execute, and the caller must
+ *        arrange to execute the remaining count of instructions.
+ *  3:    we stopped because the CPU's exit_request flag was set
+ *        (usually meaning that there is an interrupt that needs to be
+ *        handled). The pointer returned is the TB we were about to execute
+ *        when we noticed the pending exit request.
+ *
+ * If the bottom two bits indicate an exit-via-index then the CPU
+ * state is correctly synchronised and ready for execution of the next
+ * TB (and in particular the guest PC is the address to execute next).
+ * Otherwise, we gave up on execution of this TB before it started, and
+ * the caller must fix up the CPU state by calling the CPU's
+ * synchronize_from_tb() method with the TB pointer we return (falling
+ * back to calling the CPU's set_pc method with tb->pb if no
+ * synchronize_from_tb() method exists).
+ *
+ * Note that TCG targets may use a different definition of tcg_qemu_tb_exec
+ * to this default (which just calls the prologue.code emitted by
+ * tcg_target_qemu_prologue()).
+ */
+#define TB_EXIT_MASK      3
+#define TB_EXIT_IDX0      0
+#define TB_EXIT_IDX1      1
+#define TB_EXIT_IDXMAX    1
+#define TB_EXIT_REQUESTED 3
+
+
+#ifdef HAVE_TCG_QEMU_TB_EXEC
+uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
+#elif defined(CONFIG_X86toMIPS)
+# define tcg_qemu_tb_exec(env, tb_ptr) \
+    ((uintptr_t (*)(void *, void *))context_switch_bt_to_native)(tb_ptr, env); \
+    if (current_cpu->exception_index == EXCP_DEBUG) { \
+        current_cpu->can_do_io = 1; \
+        siglongjmp(current_cpu->jmp_env, 1); \
+    }
+#else
+# define tcg_qemu_tb_exec(env, tb_ptr) \
+    ((uintptr_t (*)(void *, void *))tcg_ctx->code_gen_prologue)(env, tb_ptr)
+#endif
+
 #endif
