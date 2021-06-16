@@ -74,6 +74,8 @@ typedef unsigned long int uint64_t;
 
 #define QEMU_ALWAYS_INLINE __attribute__((always_inline))
 
+#define qemu_build_not_reached()  g_assert_not_reached()
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

@@ -46,6 +46,11 @@ static inline void cpu_physical_memory_set_dirty_range(ram_addr_t start,
 #define DIRTY_CLIENTS_ALL     ((1 << DIRTY_MEMORY_NUM) - 1)
 #define DIRTY_CLIENTS_NOCODE  (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
 
+// FIXME I don't know why x86 doesn't register the handler
+// maybe it never been called
+static inline void cpu_unaligned_access(CPUState *cpu, vaddr addr,
+                                        MMUAccessType access_type,
+                                        int mmu_idx, uintptr_t retaddr);
 
 #ifdef DEBUG_TLB
 # define DEBUG_TLB_GATE 1
