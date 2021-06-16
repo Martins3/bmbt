@@ -82,6 +82,9 @@ typedef struct TranslationBlock {
   /* original tb when cflags has CF_NOCACHE */
   struct TranslationBlock *orig_tb;
 
+  /* jmp_lock placed here to fill a 4-byte hole. Its documentation is below */
+  QemuSpin jmp_lock;
+
   tb_page_addr_t page_addr[2];
 
   /* The following data are used to directly call another TB from
@@ -129,18 +132,6 @@ static inline u32 curr_cflags(void) {
 
 // TODO why is 16 ?
 #define CODE_GEN_ALIGN 16 /* must be >= of the size of a icache line */
-/**
- * get_page_addr_code() - full-system version
- * @env: CPUArchState
- * @addr: guest virtual address of guest code
- *
- * If we cannot translate and execute from the entire RAM page, or if
- * the region is not backed by RAM, returns -1. Otherwise, returns the
- * ram_addr_t corresponding to the guest code at @addr.
- *
- * Note: this function can trigger an exception.
- */
-tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr);
 
 /* vl.c */
 extern int singlestep;
@@ -164,27 +155,26 @@ void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
   } while (0)
 
 #define CPU_LOG_TB_OUT_ASM (1 << 0)
-#define CPU_LOG_TB_IN_ASM  (1 << 1)
-#define CPU_LOG_TB_OP      (1 << 2)
-#define CPU_LOG_TB_OP_OPT  (1 << 3)
-#define CPU_LOG_INT        (1 << 4)
-#define CPU_LOG_EXEC       (1 << 5)
-#define CPU_LOG_PCALL      (1 << 6)
-#define CPU_LOG_TB_CPU     (1 << 8)
-#define CPU_LOG_RESET      (1 << 9)
-#define LOG_UNIMP          (1 << 10)
-#define LOG_GUEST_ERROR    (1 << 11)
-#define CPU_LOG_MMU        (1 << 12)
+#define CPU_LOG_TB_IN_ASM (1 << 1)
+#define CPU_LOG_TB_OP (1 << 2)
+#define CPU_LOG_TB_OP_OPT (1 << 3)
+#define CPU_LOG_INT (1 << 4)
+#define CPU_LOG_EXEC (1 << 5)
+#define CPU_LOG_PCALL (1 << 6)
+#define CPU_LOG_TB_CPU (1 << 8)
+#define CPU_LOG_RESET (1 << 9)
+#define LOG_UNIMP (1 << 10)
+#define LOG_GUEST_ERROR (1 << 11)
+#define CPU_LOG_MMU (1 << 12)
 #define CPU_LOG_TB_NOCHAIN (1 << 13)
-#define CPU_LOG_PAGE       (1 << 14)
+#define CPU_LOG_PAGE (1 << 14)
 /* LOG_TRACE (1 << 15) is defined in log-for-trace.h */
-#define CPU_LOG_TB_OP_IND  (1 << 16)
-#define CPU_LOG_TB_FPU     (1 << 17)
-#define CPU_LOG_PLUGIN     (1 << 18)
+#define CPU_LOG_TB_OP_IND (1 << 16)
+#define CPU_LOG_TB_FPU (1 << 17)
+#define CPU_LOG_PLUGIN (1 << 18)
 
 /* Return the number of characters emitted.  */
 int qemu_log(const char *fmt, ...);
-
 
 static inline void log_cpu_state(CPUState *cpu, int flags);
 // FIXME copied from log.h end
@@ -207,10 +197,8 @@ bool cpu_restore_state(CPUState *cpu, uintptr_t searched_pc, bool will_exit);
 
 void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
 void QEMU_NORETURN cpu_io_recompile(CPUState *cpu, uintptr_t retaddr);
-TranslationBlock *tb_gen_code(CPUState *cpu,
-                              target_ulong pc, target_ulong cs_base,
-                              uint32_t flags,
-                              int cflags);
+TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
+                              target_ulong cs_base, uint32_t flags, int cflags);
 
 void QEMU_NORETURN cpu_loop_exit(CPUState *cpu);
 void QEMU_NORETURN cpu_loop_exit_restore(CPUState *cpu, uintptr_t pc);
@@ -366,33 +354,34 @@ void tlb_flush_by_mmuidx_all_cpus_synced(CPUState *cpu, uint16_t idxmap);
  * single TARGET_PAGE_SIZE region is mapped; the supplied @size is only
  * used by tlb_flush_page.
  */
-void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
-                             hwaddr paddr, MemTxAttrs attrs,
-                             int prot, int mmu_idx, target_ulong size);
+void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
+                             MemTxAttrs attrs, int prot, int mmu_idx,
+                             target_ulong size);
 /* tlb_set_page:
  *
  * This function is equivalent to calling tlb_set_page_with_attrs()
  * with an @attrs argument of MEMTXATTRS_UNSPECIFIED. It's provided
  * as a convenience for CPUs which don't use memory transaction attributes.
  */
-void tlb_set_page(CPUState *cpu, target_ulong vaddr,
-                  hwaddr paddr, int prot,
+void tlb_set_page(CPUState *cpu, target_ulong vaddr, hwaddr paddr, int prot,
                   int mmu_idx, target_ulong size);
 
 // FIXME copied from /usr/include/glib-2.0/glib/gmem.h
 // of course, we will rewrite all the
 #define g_new(type, num) (type *)NULL
 #define g_try_new(type, num) (type *)NULL
-#define g_free(type) {}
-#define g_assert(expr) {}
-#define g_assert_not_reached() {}
+#define g_free(type)                                                           \
+  {}
+#define g_assert(expr)                                                         \
+  {}
+#define g_assert_not_reached()                                                 \
+  {}
 
-#undef	MAX
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#undef MAX
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-#undef	MIN
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-
+#undef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 /* The true return address will often point to a host insn that is part of
    the next translated guest insn.  Adjust the address backward to point to
@@ -401,9 +390,99 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr,
    to indicate the compressed mode; subtracting two works around that.  It
    is also the case that there are no host isas that contain a call insn
    smaller than 4 bytes, so we don't worry about special-casing this.  */
-#define GETPC_ADJ   2
+#define GETPC_ADJ 2
 
 /* exec.c */
 void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr);
+
+#if defined(CONFIG_USER_ONLY)
+void mmap_lock(void);
+void mmap_unlock(void);
+bool have_mmap_lock(void);
+
+/**
+ * get_page_addr_code() - user-mode version
+ * @env: CPUArchState
+ * @addr: guest virtual address of guest code
+ *
+ * Returns @addr.
+ */
+static inline tb_page_addr_t get_page_addr_code(CPUArchState *env,
+                                                target_ulong addr)
+{
+    return addr;
+}
+
+/**
+ * get_page_addr_code_hostp() - user-mode version
+ * @env: CPUArchState
+ * @addr: guest virtual address of guest code
+ *
+ * Returns @addr.
+ *
+ * If @hostp is non-NULL, sets *@hostp to the host address where @addr's content
+ * is kept.
+ */
+static inline tb_page_addr_t get_page_addr_code_hostp(CPUArchState *env,
+                                                      target_ulong addr,
+                                                      void **hostp)
+{
+    if (hostp) {
+        *hostp = g2h(addr);
+    }
+    return addr;
+}
+#else
+// FIXME why is mmap_lock empty in system mode?
+// In another word, why mmap_lock is necessary for user mode ?
+static inline void mmap_lock(void) {}
+static inline void mmap_unlock(void) {}
+
+/**
+ * get_page_addr_code() - full-system version
+ * @env: CPUArchState
+ * @addr: guest virtual address of guest code
+ *
+ * If we cannot translate and execute from the entire RAM page, or if
+ * the region is not backed by RAM, returns -1. Otherwise, returns the
+ * ram_addr_t corresponding to the guest code at @addr.
+ *
+ * Note: this function can trigger an exception.
+ */
+tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr);
+
+/**
+ * get_page_addr_code_hostp() - full-system version
+ * @env: CPUArchState
+ * @addr: guest virtual address of guest code
+ *
+ * See get_page_addr_code() (full-system version) for documentation on the
+ * return value.
+ *
+ * Sets *@hostp (when @hostp is non-NULL) as follows.
+ * If the return value is -1, sets *@hostp to NULL. Otherwise, sets *@hostp
+ * to the host address where @addr's content is kept.
+ *
+ * Note: this function can trigger an exception.
+ */
+tb_page_addr_t get_page_addr_code_hostp(CPUArchState *env, target_ulong addr,
+                                        void **hostp);
+
+// FIXME I don't know who needs them and where they are defined.
+#if 0
+void tlb_reset_dirty(CPUState *cpu, ram_addr_t start1, ram_addr_t length);
+void tlb_set_dirty(CPUState *cpu, target_ulong vaddr);
+
+/* exec.c */
+void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr);
+
+MemoryRegionSection *
+address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
+                                  hwaddr *xlat, hwaddr *plen,
+                                  MemTxAttrs attrs, int *prot);
+hwaddr memory_region_section_get_iotlb(CPUState *cpu,
+                                       MemoryRegionSection *section);
+#endif
+#endif
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

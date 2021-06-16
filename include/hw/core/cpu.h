@@ -39,6 +39,9 @@ struct CPUWatchpoint {
   QTAILQ_ENTRY(CPUWatchpoint) entry;
 };
 
+#define TB_JMP_CACHE_BITS 12
+#define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
+
 typedef struct CPUState {
   CPUClass *cc; // TODO init this
 
@@ -77,6 +80,9 @@ typedef struct CPUState {
    * we store some rarely used information in the CPU context.
    */
   uintptr_t mem_io_pc;
+
+  /* Accessed in parallel; all accesses must be atomic */
+  struct TranslationBlock *tb_jmp_cache[TB_JMP_CACHE_SIZE];
 
 } CPUState;
 
@@ -162,12 +168,11 @@ extern CPUInterruptHandler cpu_interrupt_handler;
  *
  * Invokes the interrupt handler.
  */
-static inline void cpu_interrupt(CPUState *cpu, int mask)
-{
-    cpu_interrupt_handler(cpu, mask);
+static inline void cpu_interrupt(CPUState *cpu, int mask) {
+  cpu_interrupt_handler(cpu, mask);
 }
 
-// FIXME will redesing cpu_abort, 
+// FIXME will redesing cpu_abort,
 // GCC_FMT_ATTR(2, 3) ??
 void QEMU_NORETURN cpu_abort(CPUState *cpu, const char *fmt, ...);
 
@@ -177,17 +182,17 @@ void QEMU_NORETURN cpu_abort(CPUState *cpu, const char *fmt, ...);
  * hosts in a single parameter
  */
 typedef union {
-    int           host_int;
-    unsigned long host_ulong;
-    void         *host_ptr;
-    vaddr         target_ptr;
+  int host_int;
+  unsigned long host_ulong;
+  void *host_ptr;
+  vaddr target_ptr;
 } run_on_cpu_data;
 
-#define RUN_ON_CPU_HOST_PTR(p)    ((run_on_cpu_data){.host_ptr = (p)})
-#define RUN_ON_CPU_HOST_INT(i)    ((run_on_cpu_data){.host_int = (i)})
+#define RUN_ON_CPU_HOST_PTR(p) ((run_on_cpu_data){.host_ptr = (p)})
+#define RUN_ON_CPU_HOST_INT(i) ((run_on_cpu_data){.host_int = (i)})
 #define RUN_ON_CPU_HOST_ULONG(ul) ((run_on_cpu_data){.host_ulong = (ul)})
-#define RUN_ON_CPU_TARGET_PTR(v)  ((run_on_cpu_data){.target_ptr = (v)})
-#define RUN_ON_CPU_NULL           RUN_ON_CPU_HOST_PTR(NULL)
+#define RUN_ON_CPU_TARGET_PTR(v) ((run_on_cpu_data){.target_ptr = (v)})
+#define RUN_ON_CPU_NULL RUN_ON_CPU_HOST_PTR(NULL)
 
 typedef void (*run_on_cpu_func)(CPUState *cpu, run_on_cpu_data data);
 
@@ -202,16 +207,16 @@ static inline void cpu_tb_jmp_cache_clear(CPUState *cpu);
  * for both decrementer underflow and exceptions.
  */
 typedef union IcountDecr {
-    uint32_t u32;
-    struct {
+  uint32_t u32;
+  struct {
 #ifdef HOST_WORDS_BIGENDIAN
-        uint16_t high;
-        uint16_t low;
+    uint16_t high;
+    uint16_t low;
 #else
-        uint16_t low;
-        uint16_t high;
+    uint16_t low;
+    uint16_t high;
 #endif
-    } u16;
+  } u16;
 } IcountDecr;
 
 #include "../../../src/i386/cpu.h"

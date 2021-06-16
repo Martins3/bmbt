@@ -141,16 +141,8 @@ static inline unsigned get_mmuidx(TCGMemOpIdx oi)
     return oi & 15;
 }
 
-/**
- * get_memop
- * @oi: combined op/idx parameter
- *
- * Extract the memory operation from the combined value.
- */
-static inline MemOp get_memop(TCGMemOpIdx oi)
-{
-    return oi >> 4;
-}
+// FIXME cputlb.c
+// static inline MemOp get_memop(TCGMemOpIdx oi)
 
 /**
  * get_alignment_bits

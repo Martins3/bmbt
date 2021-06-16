@@ -2,6 +2,7 @@
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/tb-lookup.h"
+#include "../../include/exec/tb-hash.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/sysemu/replay.h"
@@ -125,7 +126,45 @@ void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr) {}
 
 static inline void tb_add_jump(TranslationBlock *tb, int n,
                                TranslationBlock *tb_next) {
-  // TODO
+    uintptr_t old;
+
+    assert(n < ARRAY_SIZE(tb->jmp_list_next));
+    qemu_spin_lock(&tb_next->jmp_lock);
+
+    /* make sure the destination TB is valid */
+    if (tb_next->cflags & CF_INVALID) {
+        goto out_unlock_next;
+    }
+    /* Atomically claim the jump destination slot only if it was NULL */
+    old = atomic_cmpxchg(&tb->jmp_dest[n], (uintptr_t)NULL, (uintptr_t)tb_next);
+    if (old) {
+        goto out_unlock_next;
+    }
+
+#ifndef CONFIG_X86toMIPS
+    /* patch the native jump address */
+    tb_set_jmp_target(tb, n, (uintptr_t)tb_next->tc.ptr);
+#else
+    /* check fpu rotate and patch the native jump address */
+    x86_to_mips_tb_set_jmp_target(tb, n, tb_next);
+#endif
+
+    /* add in TB jmp list */
+    tb->jmp_list_next[n] = tb_next->jmp_list_head;
+    tb_next->jmp_list_head = (uintptr_t)tb | n;
+
+    qemu_spin_unlock(&tb_next->jmp_lock);
+
+    qemu_log_mask_and_addr(CPU_LOG_EXEC, tb->pc,
+                           "Linking TBs %p [" TARGET_FMT_lx
+                           "] index %d -> %p [" TARGET_FMT_lx "]\n",
+                           tb->tc.ptr, tb->pc, n,
+                           tb_next->tc.ptr, tb_next->pc);
+    return;
+
+ out_unlock_next:
+    qemu_spin_unlock(&tb_next->jmp_lock);
+    return;
 }
 
 static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
@@ -188,16 +227,28 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
   tb = tb_lookup__cpu_state(cpu, &pc, &cs_base, &flags, cf_mask);
 
   if (tb == NULL) {
-    // TODO why gen code needs mmap_lock?
-    // mmap_lock();
+    mmap_lock();
     tb = tb_gen_code(cpu, pc, cs_base, flags, cf_mask);
-    // mmap_unlock();
+#if defined(CONFIG_X86toMIPS) && !defined(CONFIG_SOFTMMU)
+/* Enable Shadow Stack in user-mode only */
+/* Option Profile in user-mode only */
+        /* set tb field in etb */
+        ETB *etb;
+        if (option_shadow_stack || option_profile) {
+            etb = etb_cache_find(pc, false);
+            etb->tb = tb;
+        }
+/* Enable IBTC in user-mode only */
+        if (last_tb == NULL) { /* last tb is indirect block */
+            update_ibtc(pc, tb);
+        }
+#endif
+    mmap_unlock();
     /* We add the TB in the virtual pc hash table for the fast lookup */
-    // TODO
-    // atomic_set(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)], tb);
-    //
+    atomic_set(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)], tb);
   }
 
+#ifndef CONFIG_USER_ONLY
   // FIXME deeper understanding of tb expanding two pages is needed
   /* We don't take care of direct jumps when address mapping changes in
    * system emulation. So it's not safe to make a direct jump to a TB
@@ -206,6 +257,7 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
   if (tb->page_addr[1] != -1) {
     last_tb = NULL;
   }
+#endif
 
   /* See if we can patch the calling TB. */
   if (last_tb) {

@@ -76,6 +76,15 @@ typedef unsigned long int uint64_t;
 
 #define qemu_build_not_reached()  g_assert_not_reached()
 
+
+#define QEMU_BUILD_BUG_ON_STRUCT(x) \
+    struct { \
+        int:(x) ? -1 : 1; \
+    }
+
+#define QEMU_BUILD_BUG_ON_ZERO(x) (sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)) - \
+                                   sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)))
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

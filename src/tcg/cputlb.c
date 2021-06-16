@@ -19,6 +19,20 @@
 #include <assert.h>
 
 
+// FIXME get_memop belongs to tcg.h, but ccls can't distinguish c header
+// and cpp header, so it complains about `oi >> 4`, but if we have compile_commands.json, 
+// the problem will be fix, put the 
+/**
+ * get_memop
+ * @oi: combined op/idx parameter
+ *
+ * Extract the memory operation from the combined value.
+ */
+static inline MemOp get_memop(TCGMemOpIdx oi)
+{
+    return oi >> 4;
+}
+
 // FIXME defined in exec.c
 // I don't know what's happending in exec.c
 /* Note: start and end must be within the same ram block.  */
