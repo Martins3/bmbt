@@ -91,6 +91,18 @@ x86_cpu_common_class_init 中注册的函数:
   - [ ] 一些 unreachable 之类的
   - [ ] tcg_abort
 
+## 应该被小心 review 一下的
+- [ ] dirty page
+- [ ] 一个 tb 分布在两个 page 上
+- [ ] 为什么需要使用 glib 来维护 tb
+- [ ] tcg.c 中的 jit
+- [ ] 那些数据结构需要 RCU 来保护 
+
+- [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
+  - tcg_context_init
+  - tcg_prologue_init
+
+
 ## 设计 
 - 移除掉 memory model
   - 现在的模型没有必要搞得这么复杂, 因为其中支持了 memory migration, memory listener 之类

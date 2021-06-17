@@ -4,6 +4,7 @@
 #include "../exec/cpu-defs.h"
 #include "../exec/exec-all.h"
 
+#ifdef CONFIG_SOFTMMU
 
 /* Only the bottom TB_JMP_PAGE_BITS of the jump cache hash bits vary for
    addresses on the same page.  The top bits are the same.  This allows
@@ -27,4 +28,14 @@ static inline unsigned int tb_jmp_cache_hash_func(target_ulong pc)
     return (((tmp >> (TARGET_PAGE_BITS - TB_JMP_PAGE_BITS)) & TB_JMP_PAGE_MASK)
            | (tmp & TB_JMP_ADDR_MASK));
 }
+
+#else
+
+/* In user-mode we can get better hashing because we do not have a TLB */
+static inline unsigned int tb_jmp_cache_hash_func(target_ulong pc)
+{
+    return (pc ^ (pc >> TB_JMP_CACHE_BITS)) & (TB_JMP_CACHE_SIZE - 1);
+}
+
+#endif /* CONFIG_SOFTMMU */
 #endif /* end of include guard: TB_HASH_H_HPADT4RC */

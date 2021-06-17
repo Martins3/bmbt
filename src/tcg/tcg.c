@@ -75,24 +75,6 @@ struct tcg_region_state {
   size_t current;       /* current region index */
   size_t agg_size_full; /* aggregate size of full regions */
 };
-
-typedef struct TCGLabelPoolData {
-    struct TCGLabelPoolData *next;
-    tcg_insn_unit *label;
-    intptr_t addend;
-    int rtype;
-    unsigned nlong;
-    tcg_target_ulong data[];
-} TCGLabelPoolData;
-
-static void tcg_register_jit_int(void *buf, size_t size,
-                                 const void *debug_frame,
-                                 size_t debug_frame_size)
-    __attribute__((unused));
-
-static TCGContext **tcg_ctxs;
-static unsigned int n_tcg_ctxs;
-
 /*
  * LoongArch ISA opcodes
  */
@@ -1130,4 +1112,87 @@ void tcg_region_reset_all(void)
     qemu_mutex_unlock(&region.lock);
 
     tcg_region_tree_reset_all();
+}
+
+void tcg_context_init(TCGContext *s)
+{
+    int op, total_args, n, i;
+    TCGOpDef *def;
+    TCGArgConstraint *args_ct;
+    int *sorted_args;
+    TCGTemp *ts;
+
+    memset(s, 0, sizeof(*s));
+    s->nb_globals = 0;
+    // FIXME why I still take care of tcg_op?
+
+    /* Count total number of arguments and allocate the corresponding
+       space */
+    total_args = 0;
+    for(op = 0; op < NB_OPS; op++) {
+        def = &tcg_op_defs[op];
+        n = def->nb_iargs + def->nb_oargs;
+        total_args += n;
+    }
+
+    args_ct = g_malloc(sizeof(TCGArgConstraint) * total_args);
+    sorted_args = g_malloc(sizeof(int) * total_args);
+
+    for(op = 0; op < NB_OPS; op++) {
+        def = &tcg_op_defs[op];
+        def->args_ct = args_ct;
+        def->sorted_args = sorted_args;
+        n = def->nb_iargs + def->nb_oargs;
+        sorted_args += n;
+        args_ct += n;
+    }
+
+    /* Register helpers.  */
+    /* Use g_direct_hash/equal for direct pointer comparisons on func.  */
+    helper_table = g_hash_table_new(NULL, NULL);
+
+    for (i = 0; i < ARRAY_SIZE(all_helpers); ++i) {
+        g_hash_table_insert(helper_table, (gpointer)all_helpers[i].func,
+                            (gpointer)&all_helpers[i]);
+    }
+
+    tcg_target_init(s);
+    process_op_defs(s);
+
+    /* Reverse the order of the saved registers, assuming they're all at
+       the start of tcg_target_reg_alloc_order.  */
+    for (n = 0; n < ARRAY_SIZE(tcg_target_reg_alloc_order); ++n) {
+        int r = tcg_target_reg_alloc_order[n];
+        if (tcg_regset_test_reg(tcg_target_call_clobber_regs, r)) {
+            break;
+        }
+    }
+    for (i = 0; i < n; ++i) {
+        indirect_reg_alloc_order[i] = tcg_target_reg_alloc_order[n - 1 - i];
+    }
+    for (; i < ARRAY_SIZE(tcg_target_reg_alloc_order); ++i) {
+        indirect_reg_alloc_order[i] = tcg_target_reg_alloc_order[i];
+    }
+
+    alloc_tcg_plugin_context(s);
+
+    tcg_ctx = s;
+    /*
+     * In user-mode we simply share the init context among threads, since we
+     * use a single region. See the documentation tcg_region_init() for the
+     * reasoning behind this.
+     * In softmmu we will have at most max_cpus TCG threads.
+     */
+#ifdef CONFIG_USER_ONLY
+    tcg_ctxs = &tcg_ctx;
+    n_tcg_ctxs = 1;
+#else
+    MachineState *ms = MACHINE(qdev_get_machine());
+    unsigned int max_cpus = ms->smp.max_cpus;
+    tcg_ctxs = g_new(TCGContext *, max_cpus);
+#endif
+
+    tcg_debug_assert(!tcg_regset_test_reg(s->reserved_regs, TCG_AREG0));
+    ts = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, TCG_AREG0, "env");
+    cpu_env = temp_tcgv_ptr(ts);
 }

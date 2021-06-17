@@ -12,6 +12,7 @@
 #include "../../include/types.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/exec/cpu-common.h"
+#include "../../include/exec/tb-hash.h"
 
 #include "./tcg.h" // FIXME move tcg.h to include dir ?
 #include <assert.h>
@@ -1277,9 +1278,10 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count)
     tcg_tb_foreach(x86_to_mips_free_etb, 0);
 #endif
 
-    CPU_FOREACH(cpu) {
-        cpu_tb_jmp_cache_clear(cpu);
-    }
+    // FIXME cpus
+    // CPU_FOREACH(cpu) {
+        // cpu_tb_jmp_cache_clear(cpu);
+    // }
 
     qht_reset_size(&tb_ctx.htable, CODE_GEN_HTABLE_SIZE);
     page_flush_tb();
@@ -1533,11 +1535,12 @@ static void do_tb_phys_invalidate(TranslationBlock *tb, bool rm_from_page_list)
         ((void(*)(uint64_t))cam_clear_key_func)((uint64_t)tb->pc);
     }
 #endif
-    CPU_FOREACH(cpu) {
-        if (atomic_read(&cpu->tb_jmp_cache[h]) == tb) {
-            atomic_set(&cpu->tb_jmp_cache[h], NULL);
-        }
-    }
+    // FIXME cpus
+    // CPU_FOREACH(cpu) {
+        // if (atomic_read(&cpu->tb_jmp_cache[h]) == tb) {
+            // atomic_set(&cpu->tb_jmp_cache[h], NULL);
+        // }
+    // }
 
     /* suppress this TB from the two jump lists */
     tb_remove_from_jmp_list(tb, 0);
@@ -2292,9 +2295,10 @@ static void print_qht_statistics(struct qht_stats hst)
     if (!hst.head_buckets) {
         return;
     }
-    qemu_printf("TB hash buckets     %zu/%zu (%0.2f%% head buckets used)\n",
-                hst.used_head_buckets, hst.head_buckets,
-                (double)hst.used_head_buckets / hst.head_buckets * 100);
+    // FIXME quick fix
+    // qemu_printf("TB hash buckets     %zu/%zu (%0.2f%% head buckets used)\n",
+                // hst.used_head_buckets, hst.head_buckets,
+                // (double)hst.used_head_buckets / hst.head_buckets * 100);
 
     hgram_opts =  QDIST_PR_BORDER | QDIST_PR_LABELS;
     hgram_opts |= QDIST_PR_100X   | QDIST_PR_PERCENT;

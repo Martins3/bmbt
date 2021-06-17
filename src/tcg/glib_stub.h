@@ -4,6 +4,8 @@
 // but #include <glib-2.0/glib/gtree.h> doesn't work
 // so create a empty stub for it
 
+#include <stdbool.h>
+
 typedef struct GTree {
   GTree *left;
   GTree *right;

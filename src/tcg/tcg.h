@@ -417,4 +417,64 @@ size_t tcg_nb_tbs(void);
 
 void tcg_region_reset_all(void);
 
+void tcg_context_init(TCGContext *s);
+
+typedef struct TCGLabelPoolData {
+    struct TCGLabelPoolData *next;
+    tcg_insn_unit *label;
+    intptr_t addend;
+    int rtype;
+    unsigned nlong;
+    tcg_target_ulong data[];
+} TCGLabelPoolData;
+
+static void tcg_register_jit_int(void *buf, size_t size,
+                                 const void *debug_frame,
+                                 size_t debug_frame_size)
+    __attribute__((unused));
+
+static TCGContext **tcg_ctxs;
+static unsigned int n_tcg_ctxs;
+
+typedef struct TCGArgConstraint {
+    uint16_t ct;
+    uint8_t alias_index;
+    union {
+        TCGRegSet regs;
+    } u;
+} TCGArgConstraint;
+
+#define TCG_MAX_OP_ARGS 16
+
+/* Bits for TCGOpDef->flags, 8 bits available.  */
+enum {
+    /* Instruction exits the translation block.  */
+    TCG_OPF_BB_EXIT      = 0x01,
+    /* Instruction defines the end of a basic block.  */
+    TCG_OPF_BB_END       = 0x02,
+    /* Instruction clobbers call registers and potentially update globals.  */
+    TCG_OPF_CALL_CLOBBER = 0x04,
+    /* Instruction has side effects: it cannot be removed if its outputs
+       are not used, and might trigger exceptions.  */
+    TCG_OPF_SIDE_EFFECTS = 0x08,
+    /* Instruction operands are 64-bits (otherwise 32-bits).  */
+    TCG_OPF_64BIT        = 0x10,
+    /* Instruction is optional and not implemented by the host, or insn
+       is generic and should not be implemened by the host.  */
+    TCG_OPF_NOT_PRESENT  = 0x20,
+    /* Instruction operands are vectors.  */
+    TCG_OPF_VECTOR       = 0x40,
+};
+
+typedef struct TCGOpDef {
+    const char *name;
+    uint8_t nb_oargs, nb_iargs, nb_cargs, nb_args;
+    uint8_t flags;
+    TCGArgConstraint *args_ct;
+    int *sorted_args;
+#if defined(CONFIG_DEBUG_TCG)
+    int used;
+#endif
+} TCGOpDef;
+
 #endif
