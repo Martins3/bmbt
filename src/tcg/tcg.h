@@ -406,4 +406,8 @@ static inline size_t tcg_current_code_size(TCGContext *s) {
    this value, they are statically allocated in the TB stack frame */
 #define TCG_STATIC_CALL_ARGS_SIZE 128
 
+#define tcg_regset_set_reg(d, r)   ((d) |= (TCGRegSet)1 << (r))
+#define tcg_regset_reset_reg(d, r) ((d) &= ~((TCGRegSet)1 << (r)))
+#define tcg_regset_test_reg(d, r)  (((d) >> (r)) & 1)
+
 #endif

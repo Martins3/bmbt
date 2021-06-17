@@ -1,6 +1,9 @@
 #ifndef BITOPS_H_Z29X3LYD
 #define BITOPS_H_Z29X3LYD
 #include <limits.h>
+#include <assert.h>
+#include "../types.h"
+
 
 #define MAKE_64BIT_MASK(shift, length) \
     (((~0ULL) >> (64 - (length))) << (shift))
@@ -18,6 +21,32 @@
 static inline int test_bit(long nr, const unsigned long *addr)
 {
     return 1UL & (addr[BIT_WORD(nr)] >> (nr & (BITS_PER_LONG-1)));
+}
+
+/**
+ * deposit32:
+ * @value: initial value to insert bit field into
+ * @start: the lowest bit in the bit field (numbered from 0)
+ * @length: the length of the bit field
+ * @fieldval: the value to insert into the bit field
+ *
+ * Deposit @fieldval into the 32 bit @value at the bit field specified
+ * by the @start and @length parameters, and return the modified
+ * @value. Bits of @value outside the bit field are not modified.
+ * Bits of @fieldval above the least significant @length bits are
+ * ignored. The bit field must lie entirely within the 32 bit word.
+ * It is valid to request that all 32 bits are modified (ie @length
+ * 32 and @start 0).
+ *
+ * Returns: the modified @value.
+ */
+static inline uint32_t deposit32(uint32_t value, int start, int length,
+                                 uint32_t fieldval)
+{
+    uint32_t mask;
+    assert(start >= 0 && length > 0 && length <= 32 - start);
+    mask = (~0U >> (32 - length)) << start;
+    return (value & ~mask) | ((fieldval << start) & mask);
 }
 
 #endif /* end of include guard: BITOPS_H_Z29X3LYD */

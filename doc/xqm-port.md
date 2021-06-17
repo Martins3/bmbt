@@ -5,6 +5,7 @@
   - [ ] tcg.c : 主要是 tb 的一些分配工作在使用，其实几乎没有什么用途了
     - [ ] tcg_prologue_init
     - [ ] 从 tcg_prologue_init 向外发散出来很多东西，不过大大的丰富了 TCGContext 的
+    - [ ] tcg.c 在本来的涉及中间，是好几个文件和合集(因为 #include .c 的原因), 到时候拆开 ?
   - [ ] cpu.c : 感觉 helper 没有向这里调用，感觉很奇怪啊, 似乎只是一些配置函数 ?
   - [ ] tcg-all.c : 涉及到初始化 tcg engine
 
@@ -30,7 +31,10 @@ x86_cpu_common_class_init 中注册的函数:
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
   - cpu_ldst_template.h 这个文件在 6.0 版本中被替换掉了，这一部分的代码是按照 6.0 的
 
-2. 在文件夹的组织上，将原来的 tcg 和 accel/tcg 都合并到一个位置了
+2. 在文件夹的组织上
+  1. 将原来的 tcg 和 accel/tcg 都合并到一个位置了
+  2. include/elf.h => include/qemu/elf.h
+
 ## TODO
 2. 写一个脚本，自动比对出现出入地方
   1. 函数在文件的顺序保持一致
@@ -77,6 +81,7 @@ x86_cpu_common_class_init 中注册的函数:
       4. 在 include/qemu 下存在 thread.h thread-posix.h 等
       5. seqlock.h
       6. lockable
+  2. 据说处理 io 的 thread 和执行是两个 thread
 
 9. 非常不统一的 assert
   - [ ] tcg_debug_assert
