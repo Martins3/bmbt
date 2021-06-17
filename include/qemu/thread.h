@@ -7,8 +7,10 @@ typedef struct QemuSpin {
 
 static inline void qemu_spin_init(QemuSpin *spin) {}
 
-static inline void qemu_spin_lock(QemuSpin *spin){}
+static inline void qemu_spin_lock(QemuSpin *spin) {}
 
-static inline void qemu_spin_unlock(QemuSpin *spin){}
+static inline void qemu_spin_unlock(QemuSpin *spin) {}
+
+static inline bool qemu_spin_trylock(QemuSpin *spin) {}
 
 #endif /* end of include guard: THREAD_H_P9X05SBE */

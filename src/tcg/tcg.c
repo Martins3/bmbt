@@ -25,10 +25,10 @@
 
 #define CPU_TEMP_BUF_NLONGS 128
 
-#include <glib-2.0/glib/gtree.h> // remove glib
+#include "glib_stub.h"
 struct tcg_region_tree {
   QemuMutex lock;
-  GTree *tree;
+  struct GTree *tree;
   /* padding to avoid false sharing is computed at run-time */
 };
 
@@ -89,6 +89,9 @@ static void tcg_register_jit_int(void *buf, size_t size,
                                  const void *debug_frame,
                                  size_t debug_frame_size)
     __attribute__((unused));
+
+static TCGContext **tcg_ctxs;
+static unsigned int n_tcg_ctxs;
 
 /*
  * LoongArch ISA opcodes
@@ -649,8 +652,6 @@ void tcg_tb_insert(TranslationBlock *tb) {
   struct tcg_region_tree *rt = tc_ptr_to_region_tree(tb->tc.ptr);
 
   qemu_mutex_lock(&rt->lock);
-  // FIXME of course, it's impossible to include glib
-  // but, understand how this file work and make a reconstruction
   g_tree_insert(rt->tree, &tb->tc, tb);
   qemu_mutex_unlock(&rt->lock);
 }
@@ -1058,7 +1059,6 @@ static void tcg_region_tree_unlock_all(void)
     }
 }
 
-// FIXME notice : the tree also should support function walk
 void tcg_tb_foreach(GTraverseFunc func, gpointer user_data)
 {
     size_t i;
@@ -1085,6 +1085,30 @@ size_t tcg_nb_tbs(void)
     }
     tcg_region_tree_unlock_all();
     return nb_tbs;
+}
+
+static void tcg_region_tree_reset_all(void)
+{
+    size_t i;
+
+    tcg_region_tree_lock_all();
+    for (i = 0; i < region.n; i++) {
+        struct tcg_region_tree *rt = region_trees + i * tree_size;
+
+        /* Increment the refcount first so that destroy acts as a reset */
+        g_tree_ref(rt->tree);
+        g_tree_destroy(rt->tree);
+    }
+    tcg_region_tree_unlock_all();
+}
+
+/*
+ * Perform a context's first region allocation.
+ * This function does _not_ increment region.agg_size_full.
+ */
+static inline bool tcg_region_initial_alloc__locked(TCGContext *s)
+{
+    return tcg_region_alloc__locked(s);
 }
 
 /* Call from a safe-work context */

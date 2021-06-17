@@ -7,8 +7,7 @@
 #include "../../src/tcg/loongarch/tcg-target.h"
 #include <stddef.h>
 #include <stdint.h>
-
-#include <glib-2.0/glib/gtree.h> // remove glib
+#include "glib_stub.h"
 
 // FIXME
 // wow, it almost destoried me

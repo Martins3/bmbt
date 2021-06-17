@@ -16,9 +16,7 @@
 #include "./tcg.h" // FIXME move tcg.h to include dir ?
 #include <assert.h>
 #include <stdbool.h> // FIXME header for bool
-#include <glib-2.0/glib/gtree.h> // FIXME remove glib
-#include <glib-2.0/glib/gtypes.h>
-#include <glib-2.0/glib/gmacros.h>
+#include "./glib_stub.h"
 #include <sys/mman.h>
 
 // FIXME copied from /usr/include/x86_64-linux-gnu/bits/mman-linux.h
@@ -163,7 +161,7 @@ struct page_entry {
  * See also: page_collection_lock().
  */
 struct page_collection {
-    GTree *tree;
+    struct GTree *tree;
     struct page_entry *max;
 };
 
