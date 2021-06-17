@@ -7,10 +7,10 @@
 
 // FIXME
 // wow, it almost destoried me
-// tcg_target_reg_bits is defined at 
+// tcg_target_reg_bits is defined at
 // /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch/tcg-target.h
 // FIXME it here
-# define TCG_TARGET_REG_BITS 64
+#define TCG_TARGET_REG_BITS 64
 
 #if tcg_target_reg_bits == 32
 typedef int32_t tcg_target_long;
@@ -50,6 +50,8 @@ typedef struct TCGContext {
   /* Threshold to flush the translated code buffer.  */
   void *code_gen_highwater;
 
+  tcg_insn_unit *code_ptr;
+
 } TCGContext;
 
 // FIXME tcg.h is being well included
@@ -59,9 +61,9 @@ extern TCGContext *tcg_ctx;
 typedef uint32_t TCGMemOpIdx;
 
 #ifndef TARGET_INSN_START_EXTRA_WORDS
-# define TARGET_INSN_START_WORDS 1
+#define TARGET_INSN_START_WORDS 1
 #else
-# define TARGET_INSN_START_WORDS (1 + TARGET_INSN_START_EXTRA_WORDS)
+#define TARGET_INSN_START_WORDS (1 + TARGET_INSN_START_EXTRA_WORDS)
 #endif
 
 TranslationBlock *tcg_tb_alloc(TCGContext *s);
@@ -79,13 +81,16 @@ tcg_target_ulong helper_le_lduw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
 tcg_target_ulong helper_le_ldul_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
-uint64_t helper_le_ldq_mmu(CPUArchState *env, target_ulong addr,
-                           TCGMemOpIdx oi, uintptr_t retaddr);
+uint64_t helper_le_ldq_mmu(CPUArchState *env, target_ulong addr, TCGMemOpIdx oi,
+                           uintptr_t retaddr);
 #ifdef CONFIG_X86toMIPS
-tcg_target_ulong xtm_helper_ret_ldub_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_lduw_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_ldul_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
-uint64_t xtm_helper_le_ldq_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+tcg_target_ulong xtm_helper_ret_ldub_mmu(CPUArchState *, target_ulong,
+                                         TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_lduw_mmu(CPUArchState *, target_ulong,
+                                        TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_ldul_mmu(CPUArchState *, target_ulong,
+                                        TCGMemOpIdx);
+uint64_t xtm_helper_le_ldq_mmu(CPUArchState *, target_ulong, TCGMemOpIdx);
 #endif
 
 /* Value sign-extended to tcg register size.  */
@@ -96,9 +101,12 @@ tcg_target_ulong helper_le_ldsw_mmu(CPUArchState *env, target_ulong addr,
 tcg_target_ulong helper_le_ldsl_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
 #ifdef CONFIG_X86toMIPS
-tcg_target_ulong xtm_helper_ret_ldsb_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_ldsw_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_ldsl_mmu(CPUArchState*, target_ulong, TCGMemOpIdx);
+tcg_target_ulong xtm_helper_ret_ldsb_mmu(CPUArchState *, target_ulong,
+                                         TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_ldsw_mmu(CPUArchState *, target_ulong,
+                                        TCGMemOpIdx);
+tcg_target_ulong xtm_helper_le_ldsl_mmu(CPUArchState *, target_ulong,
+                                        TCGMemOpIdx);
 #endif
 
 void helper_ret_stb_mmu(CPUArchState *env, target_ulong addr, uint8_t val,
@@ -110,20 +118,20 @@ void helper_le_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
 void helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr);
 #ifdef CONFIG_X86toMIPS
-void xtm_helper_ret_stb_mmu(CPUArchState*, target_ulong, uint8_t, TCGMemOpIdx);
-void xtm_helper_le_stw_mmu(CPUArchState*, target_ulong, uint16_t, TCGMemOpIdx);
-void xtm_helper_le_stl_mmu(CPUArchState*, target_ulong, uint32_t, TCGMemOpIdx);
-void xtm_helper_le_stq_mmu(CPUArchState*, target_ulong, uint64_t, TCGMemOpIdx);
+void xtm_helper_ret_stb_mmu(CPUArchState *, target_ulong, uint8_t, TCGMemOpIdx);
+void xtm_helper_le_stw_mmu(CPUArchState *, target_ulong, uint16_t, TCGMemOpIdx);
+void xtm_helper_le_stl_mmu(CPUArchState *, target_ulong, uint32_t, TCGMemOpIdx);
+void xtm_helper_le_stq_mmu(CPUArchState *, target_ulong, uint64_t, TCGMemOpIdx);
 #endif
 
 uint8_t helper_ret_ldub_cmmu(CPUArchState *env, target_ulong addr,
-                            TCGMemOpIdx oi, uintptr_t retaddr);
+                             TCGMemOpIdx oi, uintptr_t retaddr);
 int8_t helper_ret_ldsb_cmmu(CPUArchState *env, target_ulong addr,
                             TCGMemOpIdx oi, uintptr_t retaddr);
 uint16_t helper_le_lduw_cmmu(CPUArchState *env, target_ulong addr,
                              TCGMemOpIdx oi, uintptr_t retaddr);
 int16_t helper_le_ldsw_cmmu(CPUArchState *env, target_ulong addr,
-                             TCGMemOpIdx oi, uintptr_t retaddr);
+                            TCGMemOpIdx oi, uintptr_t retaddr);
 uint32_t helper_le_ldl_cmmu(CPUArchState *env, target_ulong addr,
                             TCGMemOpIdx oi, uintptr_t retaddr);
 uint64_t helper_le_ldq_cmmu(CPUArchState *env, target_ulong addr,
@@ -136,10 +144,7 @@ uint64_t helper_le_ldq_cmmu(CPUArchState *env, target_ulong addr,
  *
  * Extract the mmu index from the combined value.
  */
-static inline unsigned get_mmuidx(TCGMemOpIdx oi)
-{
-    return oi & 15;
-}
+static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
 
 // FIXME cputlb.c
 // static inline MemOp get_memop(TCGMemOpIdx oi)
@@ -150,26 +155,25 @@ static inline unsigned get_mmuidx(TCGMemOpIdx oi)
  *
  * Extract the alignment size from the memop.
  */
-static inline unsigned get_alignment_bits(MemOp memop)
-{
-    unsigned a = memop & MO_AMASK;
+static inline unsigned get_alignment_bits(MemOp memop) {
+  unsigned a = memop & MO_AMASK;
 
-    if (a == MO_UNALN) {
-        /* No alignment required.  */
-        a = 0;
-    } else if (a == MO_ALIGN) {
-        /* A natural alignment requirement.  */
-        a = memop & MO_SIZE;
-    } else {
-        /* A specific alignment requirement.  */
-        a = a >> MO_ASHIFT;
-    }
+  if (a == MO_UNALN) {
+    /* No alignment required.  */
+    a = 0;
+  } else if (a == MO_ALIGN) {
+    /* A natural alignment requirement.  */
+    a = memop & MO_SIZE;
+  } else {
+    /* A specific alignment requirement.  */
+    a = a >> MO_ASHIFT;
+  }
 #if defined(CONFIG_SOFTMMU)
-    /* The requested alignment cannot overlap the TLB flags.  */
-    // FIXME later
-    // tcg_debug_assert((TLB_FLAGS_MASK & ((1 << a) - 1)) == 0);
+  /* The requested alignment cannot overlap the TLB flags.  */
+  // FIXME later
+  // tcg_debug_assert((TLB_FLAGS_MASK & ((1 << a) - 1)) == 0);
 #endif
-    return a;
+  return a;
 }
 
 /**
@@ -217,25 +221,24 @@ static inline unsigned get_alignment_bits(MemOp memop)
  * to this default (which just calls the prologue.code emitted by
  * tcg_target_qemu_prologue()).
  */
-#define TB_EXIT_MASK      3
-#define TB_EXIT_IDX0      0
-#define TB_EXIT_IDX1      1
-#define TB_EXIT_IDXMAX    1
+#define TB_EXIT_MASK 3
+#define TB_EXIT_IDX0 0
+#define TB_EXIT_IDX1 1
+#define TB_EXIT_IDXMAX 1
 #define TB_EXIT_REQUESTED 3
-
 
 #ifdef HAVE_TCG_QEMU_TB_EXEC
 uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
 #elif defined(CONFIG_X86toMIPS)
-# define tcg_qemu_tb_exec(env, tb_ptr) \
-    ((uintptr_t (*)(void *, void *))context_switch_bt_to_native)(tb_ptr, env); \
-    if (current_cpu->exception_index == EXCP_DEBUG) { \
-        current_cpu->can_do_io = 1; \
-        siglongjmp(current_cpu->jmp_env, 1); \
-    }
+#define tcg_qemu_tb_exec(env, tb_ptr)                                          \
+  ((uintptr_t(*)(void *, void *))context_switch_bt_to_native)(tb_ptr, env);    \
+  if (current_cpu->exception_index == EXCP_DEBUG) {                            \
+    current_cpu->can_do_io = 1;                                                \
+    siglongjmp(current_cpu->jmp_env, 1);                                       \
+  }
 #else
-# define tcg_qemu_tb_exec(env, tb_ptr) \
-    ((uintptr_t (*)(void *, void *))tcg_ctx->code_gen_prologue)(env, tb_ptr)
+#define tcg_qemu_tb_exec(env, tb_ptr)                                          \
+  ((uintptr_t(*)(void *, void *))tcg_ctx->code_gen_prologue)(env, tb_ptr)
 #endif
 
 void tcg_tb_remove(TranslationBlock *tb);
@@ -249,34 +252,34 @@ typedef uint64_t TCGRegSet;
 #endif
 
 typedef enum TCGType {
-    TCG_TYPE_I32,
-    TCG_TYPE_I64,
+  TCG_TYPE_I32,
+  TCG_TYPE_I64,
 
-    TCG_TYPE_V64,
-    TCG_TYPE_V128,
-    TCG_TYPE_V256,
+  TCG_TYPE_V64,
+  TCG_TYPE_V128,
+  TCG_TYPE_V256,
 
-    TCG_TYPE_COUNT, /* number of different types */
+  TCG_TYPE_COUNT, /* number of different types */
 
-    /* An alias for the size of the host register.  */
+/* An alias for the size of the host register.  */
 #if TCG_TARGET_REG_BITS == 32
-    TCG_TYPE_REG = TCG_TYPE_I32,
+  TCG_TYPE_REG = TCG_TYPE_I32,
 #else
-    TCG_TYPE_REG = TCG_TYPE_I64,
+  TCG_TYPE_REG = TCG_TYPE_I64,
 #endif
 
-    /* An alias for the size of the native pointer.  */
+/* An alias for the size of the native pointer.  */
 #if UINTPTR_MAX == UINT32_MAX
-    TCG_TYPE_PTR = TCG_TYPE_I32,
+  TCG_TYPE_PTR = TCG_TYPE_I32,
 #else
-    TCG_TYPE_PTR = TCG_TYPE_I64,
+  TCG_TYPE_PTR = TCG_TYPE_I64,
 #endif
 
-    /* An alias for the size of the target "long", aka register.  */
+/* An alias for the size of the target "long", aka register.  */
 #if TARGET_LONG_BITS == 64
-    TCG_TYPE_TL = TCG_TYPE_I64,
+  TCG_TYPE_TL = TCG_TYPE_I64,
 #else
-    TCG_TYPE_TL = TCG_TYPE_I32,
+  TCG_TYPE_TL = TCG_TYPE_I32,
 #endif
 } TCGType;
 

@@ -10,10 +10,10 @@
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
+#include "../../include/qemu/thread-posix.h"
+#include "loongarch/tcg-target.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include "../../include/qemu/thread-posix.h"
-#include <glib/gtree.h> // remove glib
 
 // FIXME we define similar functios at head of cpu-tlb.c
 #define qemu_mutex_lock(m) ({})
@@ -21,6 +21,7 @@
 
 #define TCG_HIGHWATER 1024
 
+#include <glib-2.0/glib/gtree.h> // remove glib
 struct tcg_region_tree {
   QemuMutex lock;
   GTree *tree;
@@ -132,6 +133,64 @@ static struct tcg_region_tree *tc_ptr_to_region_tree(void *p) {
   return region_trees + region_idx * tree_size;
 }
 
+/* Generate global QEMU prologue and epilogue code */
+static void tcg_target_qemu_prologue(TCGContext *s)
+{
+    int i;
+
+    #ifdef LOONGARCH_DEBUG
+    printf("Start tcg_target_qemu_prologue.\n");
+    #endif
+
+    tcg_set_frame(s, TCG_REG_SP, TCG_STATIC_CALL_ARGS_SIZE, TEMP_SIZE);
+
+#ifdef CONFIG_LATX
+    i = target_x86_to_mips_static_codes(s->code_ptr);
+    s->code_ptr += i;
+    s->code_gen_prologue = (void*)context_switch_bt_to_native;
+    s->code_gen_epilogue = (void*)context_switch_native_to_bt;
+#else
+    /* TB prologue */
+    tcg_out_opc_imm(s, ALIAS_PADDI, TCG_REG_SP, TCG_REG_SP, -FRAME_SIZE);
+    for (i = 0; i < ARRAY_SIZE(tcg_target_callee_save_regs); i++) {
+        tcg_out_st(s, TCG_TYPE_REG, tcg_target_callee_save_regs[i],
+                   TCG_REG_SP, SAVE_OFS + i * REG_SIZE);
+    }
+
+#ifndef CONFIG_SOFTMMU
+    if (guest_base) {
+        tcg_out_movi(s, TCG_TYPE_PTR, TCG_GUEST_BASE_REG, guest_base);
+        tcg_regset_set_reg(s->reserved_regs, TCG_GUEST_BASE_REG);
+    }
+#endif
+
+    /* Call generated code */
+    tcg_out_mov(s, TCG_TYPE_PTR, TCG_AREG0, tcg_target_call_iarg_regs[0]);
+    //LoongArch
+    //tcg_out_opc_imm(s, OPC_JALR, TCG_REG_ZERO, tcg_target_call_iarg_regs[1], 0);
+    tcg_out_opc_jirl(s, TCG_REG_ZERO, tcg_target_call_iarg_regs[1], 0);
+    /* Return path for goto_ptr. Set return value to 0 */
+    s->code_gen_epilogue = s->code_ptr;
+    tcg_out_mov(s, TCG_TYPE_REG, TCG_REG_A0, TCG_REG_ZERO);
+
+    /* TB epilogue */
+    tb_ret_addr = s->code_ptr;
+    for (i = 0; i < ARRAY_SIZE(tcg_target_callee_save_regs); i++) {
+        tcg_out_ld(s, TCG_TYPE_REG, tcg_target_callee_save_regs[i],
+                   TCG_REG_SP, SAVE_OFS + i * REG_SIZE);
+    }
+
+    tcg_out_opc_imm(s, ALIAS_PADDI, TCG_REG_SP, TCG_REG_SP, FRAME_SIZE);
+    //LoongArch
+    //tcg_out_opc_imm(s, OPC_JALR, TCG_REG_ZERO, TCG_REG_RA, 0);
+    tcg_out_opc_jirl(s, TCG_REG_ZERO, TCG_REG_RA, 0);
+#endif
+
+    #ifdef LOONGARCH_DEBUG
+    printf("End tcg_target_qemu_prologue.\n");
+    #endif
+}
+
 /*
  * Allocate TBs right before their corresponding translated code, making
  * sure that TBs and code are on different cache lines.
@@ -190,4 +249,90 @@ TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr)
     tb = g_tree_lookup(rt->tree, &s);
     qemu_mutex_unlock(&rt->lock);
     return tb;
+}
+
+
+
+void tcg_prologue_init(TCGContext *s)
+{
+    size_t prologue_size, total_size;
+    void *buf0, *buf1;
+
+    /* Put the prologue at the beginning of code_gen_buffer.  */
+    buf0 = s->code_gen_buffer;
+    total_size = s->code_gen_buffer_size;
+    s->code_ptr = buf0;
+    s->code_buf = buf0;
+    s->data_gen_ptr = NULL;
+    s->code_gen_prologue = buf0;
+
+    /* Compute a high-water mark, at which we voluntarily flush the buffer
+       and start over.  The size here is arbitrary, significantly larger
+       than we expect the code generation for any one opcode to require.  */
+    s->code_gen_highwater = s->code_gen_buffer + (total_size - TCG_HIGHWATER);
+
+#ifdef TCG_TARGET_NEED_POOL_LABELS
+    s->pool_labels = NULL;
+#endif
+
+    /* Generate the prologue.  */
+    tcg_target_qemu_prologue(s);
+
+    // FIXME what does this macro mean ?
+#ifdef TCG_TARGET_NEED_POOL_LABELS
+    /* Allow the prologue to put e.g. guest_base into a pool entry.  */
+    {
+        int result = tcg_out_pool_finalize(s);
+        tcg_debug_assert(result == 0);
+    }
+#endif
+
+    buf1 = s->code_ptr;
+    flush_icache_range((uintptr_t)buf0, (uintptr_t)buf1);
+
+    /* Deduct the prologue from the buffer.  */
+    prologue_size = tcg_current_code_size(s);
+    s->code_gen_ptr = buf1;
+    s->code_gen_buffer = buf1;
+    s->code_buf = buf1;
+    total_size -= prologue_size;
+    s->code_gen_buffer_size = total_size;
+
+    tcg_register_jit(s->code_gen_buffer, total_size);
+
+#ifdef DEBUG_DISAS
+    if (qemu_loglevel_mask(CPU_LOG_TB_OUT_ASM)) {
+        qemu_log_lock();
+        qemu_log("PROLOGUE: [size=%zu]\n", prologue_size);
+        if (s->data_gen_ptr) {
+            size_t code_size = s->data_gen_ptr - buf0;
+            size_t data_size = prologue_size - code_size;
+            size_t i;
+
+            log_disas(buf0, code_size);
+
+            for (i = 0; i < data_size; i += sizeof(tcg_target_ulong)) {
+                if (sizeof(tcg_target_ulong) == 8) {
+                    qemu_log("0x%08" PRIxPTR ":  .quad  0x%016" PRIx64 "\n",
+                             (uintptr_t)s->data_gen_ptr + i,
+                             *(uint64_t *)(s->data_gen_ptr + i));
+                } else {
+                    qemu_log("0x%08" PRIxPTR ":  .long  0x%08x\n",
+                             (uintptr_t)s->data_gen_ptr + i,
+                             *(uint32_t *)(s->data_gen_ptr + i));
+                }
+            }
+        } else {
+            log_disas(buf0, prologue_size);
+        }
+        qemu_log("\n");
+        qemu_log_flush();
+        qemu_log_unlock();
+    }
+#endif
+
+    /* Assert that goto_ptr is implemented completely.  */
+    if (TCG_TARGET_HAS_goto_ptr) {
+        tcg_debug_assert(s->code_gen_epilogue != NULL);
+    }
 }
