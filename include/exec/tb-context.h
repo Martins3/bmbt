@@ -1,6 +1,6 @@
 #ifndef TB_CONTEXT_H_GOOTFXVY
 #define TB_CONTEXT_H_GOOTFXVY
-
+#include "../qemu/qht.h"
 
 #define CODE_GEN_HTABLE_BITS     15
 #define CODE_GEN_HTABLE_SIZE     (1 << CODE_GEN_HTABLE_BITS)

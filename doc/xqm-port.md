@@ -2,6 +2,8 @@
 
 - 短期计划
   - [ ] translate-all.c : tb 的各种管理工作, 但是管理了很多 page 相关的工作
+    - [ ] page
+    - [ ] page entry
   - [ ] tcg.c : 主要是 tb 的一些分配工作在使用，其实几乎没有什么用途了
     - [ ] tcg_prologue_init
   - [ ] cpu.c : 感觉 helper 没有向这里调用，感觉很奇怪啊, 似乎只是一些配置函数 ?
@@ -32,6 +34,7 @@ x86_cpu_common_class_init 中注册的函数:
   3. qemu_spin_lock
   4. 在 include/qemu 下存在 thread.h thread-posix.h 等
   5. seqlock.h
+  6. lockable
 
 ## 注意
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
@@ -58,7 +61,7 @@ x86_cpu_common_class_init 中注册的函数:
 | 多核 | 现在为了代码的方便执行，也没有太搞清楚其中的作用，在 cputlb.c 的 async_run_on_cpu 以及各种 atomic 函数，qemu_spin_lock, 以及 RCU. 现在的操作是，先将接口保存下来，之后需要支持多核，有一个参考 |
 | icount / record replay| 没有 record replay 是不是很难调试，使用 record replay 会不会很难集成|
 | trace| |
-| 存在好几个数据结构需要重构| qlist, qht 和 glib 的 qtree|
+| 存在好几个数据结构需要重构| queue.h, qht.h 和 glib 的 qtree|
 
 | TODO                     | 问题描述                                                                                                                                                       |
 |--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -69,6 +72,13 @@ x86_cpu_common_class_init 中注册的函数:
 | NEED_CPU_H               | 这个 macro 是干啥的，猜测真正的操作是，一个头文件 a.h，其中的一部分被 NEED_CPU_H 包围，a.h 被不同的 c 文件包含，b.c 和 c.c, 那么 b.c 和 c.c 看到的内容可以不同 |
 | 写一个所有头文件功能描述 | cpu-all.h exec-all.h cpu.h cpu-defs.h 中间到底有什么，根本不清楚啊                                                                                             |
 
+6. 需要被重新设计的头文件
+  1. seglock.h
+  2. thread-posix.h
+  3. qht.h
+  4. qdist.h
+
+7. cpu-defs.h osdep.h 和 config-host.h / config-target.h 的内容分析整理一下
 
 ## 设计 
 - 移除掉 memory model

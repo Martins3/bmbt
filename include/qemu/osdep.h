@@ -2,6 +2,9 @@
 #define OSDEP_H_DXJTBG8M
 
 #include "../types.h"
+#include <stdint.h>
+// FIXME we need these so that HOST_LONG_BITS works
+// host and target int types is twisted
 
 
 /* Round number up to multiple. Requires that d be a power of 2 (see
@@ -28,5 +31,14 @@ extern int qemu_icache_linesize;
 extern int qemu_icache_linesize_log;
 extern int qemu_dcache_linesize;
 extern int qemu_dcache_linesize_log;
+
+/* HOST_LONG_BITS is the size of a native pointer in bits. */
+#if UINTPTR_MAX == UINT32_MAX
+# define HOST_LONG_BITS 32
+#elif UINTPTR_MAX == UINT64_MAX
+# define HOST_LONG_BITS 64
+#else
+# error Unknown pointer size
+#endif
 
 #endif /* end of include guard: OSDEP_H_DXJTBG8M */

@@ -3,5 +3,4 @@
 
 extern int use_icount;
 
-
 #endif /* end of include guard: CPUS_H_XUGZP1FI */

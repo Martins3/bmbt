@@ -12,18 +12,14 @@
 #include "../../include/types.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include "../../include/qemu/thread-posix.h"
+#include <glib/gtree.h> // remove glib
 
 // FIXME we define similar functios at head of cpu-tlb.c
 #define qemu_mutex_lock(m) ({})
 #define qemu_mutex_unlock(m) ({})
 
-typedef struct QemuMutex {
-
-} QemuMutex;
-
 #define TCG_HIGHWATER 1024
-
-#include <glib-2.0/glib/gtree.h> // remove glib
 
 struct tcg_region_tree {
   QemuMutex lock;

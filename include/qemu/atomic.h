@@ -12,10 +12,11 @@
   do {                                                                         \
   } while (0)
 
-#define atomic_cmpxchg(ptr, old, new)    ({                             \
-    (old);\
-})
+#define atomic_cmpxchg(ptr, old, new) ({ (old); })
 
-#define atomic_mb_set(ptr, i)  {}
+#define atomic_mb_set(ptr, i)                                                  \
+  {}
+
+#define atomic_rcu_read(ptr) (*ptr)
 
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

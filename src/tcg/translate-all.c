@@ -2,17 +2,25 @@
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/tb-lookup.h"
+#include "../../include/exec/tb-context.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/thread.h"
 #include "../../include/sysemu/replay.h"
+#include "../../include/sysemu/cpus.h"
 #include "../../include/todo.h"
 #include "../../include/types.h"
+#include "../../include/qemu/atomic.h"
 
 #include "./tcg.h" // FIXME move tcg.h to include dir ?
 #include <assert.h>
 #include <stdbool.h> // FIXME header for bool
-#include <glib/gtree.h> // FIXME remove glib
+#include <glib-2.0/glib/gtree.h> // FIXME remove glib
+#include <glib-2.0/glib/gtypes.h>
+#include <glib-2.0/glib/gmacros.h>
+
+// belongs to /home/maritns3/core/ld/x86-qemu-mips/accel/tcg/cpu-exec-common.c
+bool tcg_allowed;
 
 // FIXME copied from  util/cacheinfo.c
 // why I should take care of icache size ?
@@ -467,6 +475,7 @@ static void page_init(void)
 #endif
 }
 
+// FIXME understand the workflow, what does page mean? 
 static PageDesc *page_find_alloc(tb_page_addr_t index, int alloc)
 {
     PageDesc *pd;
@@ -883,6 +892,9 @@ static void page_lock_pair(PageDesc **ret_p1, tb_page_addr_t phys1,
 /* Minimum size of the code gen buffer.  This number is randomly chosen,
    but not so small that we can't have a fair number of TB's live.  */
 #define MIN_CODE_GEN_BUFFER_SIZE     (1024u * 1024)
+
+// FIXME where does the macro defined ?
+// maybe if the we wil have generated compile_commands.json, it would be fixed
 
 /* Maximum size of the code gen buffer we'd like to use.  Unless otherwise
    indicated, this is constrained by the range of direct branches on the
