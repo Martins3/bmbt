@@ -29,6 +29,28 @@ typedef uint64_t tcg_target_ulong;
 #error unsupported
 #endif
 
+#if TCG_TARGET_NB_REGS <= 32
+typedef uint32_t TCGRegSet;
+#elif TCG_TARGET_NB_REGS <= 64
+typedef uint64_t TCGRegSet;
+#else
+#error unsupported
+#endif
+
+#ifndef TCG_TARGET_INSN_UNIT_SIZE
+#error "Missing TCG_TARGET_INSN_UNIT_SIZE"
+#elif TCG_TARGET_INSN_UNIT_SIZE == 1
+typedef uint8_t tcg_insn_unit;
+#elif TCG_TARGET_INSN_UNIT_SIZE == 2
+typedef uint16_t tcg_insn_unit;
+#elif TCG_TARGET_INSN_UNIT_SIZE == 4
+typedef uint32_t tcg_insn_unit;
+#elif TCG_TARGET_INSN_UNIT_SIZE == 8
+typedef uint64_t tcg_insn_unit;
+#else
+/* The port better have done this.  */
+#endif
+
 typedef enum TCGType {
   TCG_TYPE_I32,
   TCG_TYPE_I64,
@@ -99,6 +121,8 @@ typedef struct TCGTemp {
   void *state_ptr;
 } TCGTemp;
 
+#define TCG_MAX_TEMPS 512
+
 typedef struct TCGContext {
 
   /* goto_tb support */
@@ -132,6 +156,14 @@ typedef struct TCGContext {
   intptr_t frame_start;
   intptr_t frame_end;
   TCGTemp *frame_temp;
+
+  int nb_temps;
+
+  int nb_globals;
+
+  TCGTemp temps[TCG_MAX_TEMPS]; /* globals first, temps after */
+
+  TCGRegSet reserved_regs;
 
 } TCGContext;
 
@@ -324,14 +356,6 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
 
 void tcg_tb_remove(TranslationBlock *tb);
 
-#if TCG_TARGET_NB_REGS <= 32
-typedef uint32_t TCGRegSet;
-#elif TCG_TARGET_NB_REGS <= 64
-typedef uint64_t TCGRegSet;
-#else
-#error unsupported
-#endif
-
 // FIXME
 #if defined CONFIG_DEBUG_TCG || defined QEMU_STATIC_ANALYSIS
 #define tcg_debug_assert(X)                                                    \
@@ -377,5 +401,9 @@ static inline size_t tcg_current_code_size(TCGContext *s) {
 #define tcg_abort()                                                            \
   do {                                                                         \
   } while (0)
+
+/* when the size of the arguments of a called function is smaller than
+   this value, they are statically allocated in the TB stack frame */
+#define TCG_STATIC_CALL_ARGS_SIZE 128
 
 #endif

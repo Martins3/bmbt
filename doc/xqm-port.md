@@ -2,10 +2,9 @@
 
 - 短期计划
   - [ ] translate-all.c : tb 的各种管理工作, 但是管理了很多 page 相关的工作
-    - [ ] page
-    - [ ] page entry
   - [ ] tcg.c : 主要是 tb 的一些分配工作在使用，其实几乎没有什么用途了
     - [ ] tcg_prologue_init
+    - [ ] 从 tcg_prologue_init 向外发散出来很多东西，不过大大的丰富了 TCGContext 的
   - [ ] cpu.c : 感觉 helper 没有向这里调用，感觉很奇怪啊, 似乎只是一些配置函数 ?
   - [ ] tcg-all.c : 涉及到初始化 tcg engine
 

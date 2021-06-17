@@ -11,8 +11,11 @@
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 #include "../../include/qemu/thread-posix.h"
+#include "../i386/LATX/x86tomips-config.h"
+#include "../../include/qemu/osdep.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
 
 // FIXME we define similar functios at head of cpu-tlb.c
 #define qemu_mutex_lock(m) ({})
@@ -20,12 +23,23 @@
 
 #define TCG_HIGHWATER 1024
 
+#define CPU_TEMP_BUF_NLONGS 128
+
 #include <glib-2.0/glib/gtree.h> // remove glib
 struct tcg_region_tree {
   QemuMutex lock;
   GTree *tree;
   /* padding to avoid false sharing is computed at run-time */
 };
+
+/* Stack frame parameters.  */
+#define REG_SIZE   (TCG_TARGET_REG_BITS / 8)
+#define SAVE_SIZE  ((int)ARRAY_SIZE(tcg_target_callee_save_regs) * REG_SIZE)
+#define TEMP_SIZE  (CPU_TEMP_BUF_NLONGS * (int)sizeof(long))
+#define FRAME_SIZE ((TCG_STATIC_CALL_ARGS_SIZE + TEMP_SIZE + SAVE_SIZE \
+                     + TCG_TARGET_STACK_ALIGN - 1) \
+                    & -TCG_TARGET_STACK_ALIGN)
+#define SAVE_OFS   (TCG_STATIC_CALL_ARGS_SIZE + TEMP_SIZE)
 
 /*
  * We divide code_gen_buffer into equally-sized "regions" that TCG threads
@@ -141,6 +155,25 @@ static struct tcg_region_tree *tc_ptr_to_region_tree(void *p) {
   return region_trees + region_idx * tree_size;
 }
 
+static inline TCGTemp *tcg_temp_alloc(TCGContext *s)
+{
+    int n = s->nb_temps++;
+    tcg_debug_assert(n < TCG_MAX_TEMPS);
+    return memset(&s->temps[n], 0, sizeof(TCGTemp));
+}
+
+static inline TCGTemp *tcg_global_alloc(TCGContext *s)
+{
+    TCGTemp *ts;
+
+    tcg_debug_assert(s->nb_globals == s->nb_temps);
+    s->nb_globals++;
+    ts = tcg_temp_alloc(s);
+    ts->temp_global = 1;
+
+    return ts;
+}
+
 #ifndef CONFIG_DIRECT_REGS
 static
 #endif
@@ -171,6 +204,7 @@ void tcg_set_frame(TCGContext *s, TCGReg reg, intptr_t start, intptr_t size)
     s->frame_temp
         = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, reg, "_frame");
 }
+
 
 // FIXME review this functions later, so many macros
 /* Generate global QEMU prologue and epilogue code */
@@ -235,6 +269,77 @@ static void tcg_target_qemu_prologue(TCGContext *s)
 static void tcg_register_jit_int(void *buf_ptr, size_t buf_size,
                                  const void *debug_frame,
                                  size_t debug_frame_size);
+
+/* The CIE and FDE header definitions will be common to all hosts.  */
+typedef struct {
+    uint32_t len __attribute__((aligned((sizeof(void *)))));
+    uint32_t id;
+    uint8_t version;
+    char augmentation[1];
+    uint8_t code_align;
+    uint8_t data_align;
+    uint8_t return_column;
+} DebugFrameCIE;
+
+typedef struct QEMU_PACKED {
+    uint32_t len __attribute__((aligned((sizeof(void *)))));
+    uint32_t cie_offset;
+    uintptr_t func_start;
+    uintptr_t func_len;
+} DebugFrameFDEHeader;
+
+typedef struct QEMU_PACKED {
+    DebugFrameCIE cie;
+    DebugFrameFDEHeader fde;
+} DebugFrameHeader;
+
+static const int tcg_target_callee_save_regs[] = {
+    TCG_REG_S0,       /* used for the global env (TCG_AREG0) */
+    TCG_REG_S1,
+    TCG_REG_S2,
+    TCG_REG_S3,
+    TCG_REG_S4,
+    TCG_REG_S5,
+    TCG_REG_S6,
+    TCG_REG_S7,
+    TCG_REG_S8,
+    TCG_REG_RA,       /* should be last for ABI compliance */
+};
+
+typedef struct {
+    DebugFrameHeader h;
+    uint8_t fde_def_cfa[4];
+    uint8_t fde_reg_ofs[ARRAY_SIZE(tcg_target_callee_save_regs) * 2];
+} DebugFrame;
+
+static const DebugFrame debug_frame = {
+    .h.cie.len = sizeof(DebugFrameCIE) - 4, /* length after .len member */
+    .h.cie.id = -1,
+    .h.cie.version = 1,
+    .h.cie.code_align = 1,
+    .h.cie.data_align = -(TCG_TARGET_REG_BITS / 8) & 0x7f, /* sleb128 */
+    .h.cie.return_column = TCG_REG_RA,
+
+    /* Total FDE size does not include the "len" member.  */
+    .h.fde.len = sizeof(DebugFrame) - offsetof(DebugFrame, h.fde.cie_offset),
+
+    .fde_def_cfa = {
+        12, TCG_REG_SP,                 /* DW_CFA_def_cfa sp, ... */
+        (FRAME_SIZE & 0x7f) | 0x80,     /* ... uleb128 FRAME_SIZE */
+        (FRAME_SIZE >> 7)
+    },
+    .fde_reg_ofs = {
+        0x80 + 24, 9,                   /* DW_CFA_offset, s1,  -72 */
+        0x80 + 25, 8,                   /* DW_CFA_offset, s2,  -64 */
+        0x80 + 26, 7,                   /* DW_CFA_offset, s3,  -56 */
+        0x80 + 27, 6,                   /* DW_CFA_offset, s4,  -48 */
+        0x80 + 28, 5,                   /* DW_CFA_offset, s5,  -40 */
+        0x80 + 29, 4,                   /* DW_CFA_offset, s6,  -32 */
+        0x80 + 30, 3,                   /* DW_CFA_offset, s7,  -24 */
+        0x80 + 31, 2,                   /* DW_CFA_offset, s8,  -16 */
+        0x80 + 1 , 1,                   /* DW_CFA_offset, ra,  -8 */
+    }
+};
 
 void tcg_register_jit(void *buf, size_t buf_size)
 {
