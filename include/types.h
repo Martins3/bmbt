@@ -88,6 +88,8 @@ typedef unsigned long int uint64_t;
 #define QEMU_BUILD_BUG_ON_ZERO(x)                                              \
   (sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)) - sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)))
 
+#define sizeof_field(type, field) sizeof(((type *)0)->field)
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

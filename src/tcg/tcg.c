@@ -23,7 +23,7 @@ typedef struct QemuMutex {
 
 #define TCG_HIGHWATER 1024
 
-#include <glib-2.0/glib/gtree.h>
+#include <glib-2.0/glib/gtree.h> // remove glib
 
 struct tcg_region_tree {
   QemuMutex lock;

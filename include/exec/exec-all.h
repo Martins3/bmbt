@@ -122,6 +122,9 @@ typedef struct TranslationBlock {
   /* remember to free these memory when QEMU recycle one TB */
   ETB *extra_tb;
 
+  /* Per-vCPU dynamic tracing state used to generate this TB */
+  uint32_t trace_vcpu_dstate;
+
 } TranslationBlock;
 
 /* current cflags for hashing/comparison */
@@ -408,9 +411,8 @@ bool have_mmap_lock(void);
  * Returns @addr.
  */
 static inline tb_page_addr_t get_page_addr_code(CPUArchState *env,
-                                                target_ulong addr)
-{
-    return addr;
+                                                target_ulong addr) {
+  return addr;
 }
 
 /**
@@ -423,14 +425,12 @@ static inline tb_page_addr_t get_page_addr_code(CPUArchState *env,
  * If @hostp is non-NULL, sets *@hostp to the host address where @addr's content
  * is kept.
  */
-static inline tb_page_addr_t get_page_addr_code_hostp(CPUArchState *env,
-                                                      target_ulong addr,
-                                                      void **hostp)
-{
-    if (hostp) {
-        *hostp = g2h(addr);
-    }
-    return addr;
+static inline tb_page_addr_t
+get_page_addr_code_hostp(CPUArchState *env, target_ulong addr, void **hostp) {
+  if (hostp) {
+    *hostp = g2h(addr);
+  }
+  return addr;
 }
 #else
 // FIXME why is mmap_lock empty in system mode?

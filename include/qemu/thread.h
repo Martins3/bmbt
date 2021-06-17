@@ -1,9 +1,9 @@
 #ifndef THREAD_H_P9X05SBE
 #define THREAD_H_P9X05SBE
 
-struct QemuSpin {
+typedef struct QemuSpin {
   int value;
-};
+} QemuSpin;
 
 static inline void qemu_spin_init(QemuSpin *spin) {}
 

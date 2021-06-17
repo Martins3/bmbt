@@ -1,24 +1,21 @@
 # Divergence between qemu
 
 - 短期计划
-  - [ ] translate-all.c
-  - [ ] tcg.c
+  - [ ] translate-all.c : tb 的各种管理工作, 但是管理了很多 page 相关的工作
+  - [ ] tcg.c : 主要是 tb 的一些分配工作在使用，其实几乎没有什么用途了
     - [ ] tcg_prologue_init
-    - [x] tcg_tb_remove
-    - [x] tcg_enabled
-    - [x] tcg_tb_lookup
-    - [x] tcg_tb_insert
-    - [x] tcg_tb_alloc
-  - [ ] cpu.c
+  - [ ] cpu.c : 感觉 helper 没有向这里调用，感觉很奇怪啊, 似乎只是一些配置函数 ?
+  - [ ] tcg-all.c : 涉及到初始化 tcg engine
 
 ## 几个关键的结构体功能和移植差异说明
 | struct           | divergence                                                                              |
 |------------------|-----------------------------------------------------------------------------------------|
-| CPUState         |                                                                                         |
 | CPUClass         | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
-| TranslationBlock |                                                                                         |
+| CPUState         |                                                                                         |
 | CPUX86State      |                                                                                         |
 | X86CPU           |                                                                                         |
+| TranslationBlock |                                                                                         |
+| TBContext |
 
 
 x86_cpu_common_class_init 中注册的函数:
@@ -26,6 +23,15 @@ x86_cpu_common_class_init 中注册的函数:
 |-----------------------------|-----------------------------|
 | x86_cpu_tlb_fill            | tlb_fill, tlb_vaddr_to_host |
 | x86_cpu_synchronize_from_tb | cpu_tb_exec                 |
+
+
+多核:
+1. 感觉 Qemu 关于多核的接口不是很统一啊
+  1. QemuSpin
+  2. QemuMutex
+  3. qemu_spin_lock
+  4. 在 include/qemu 下存在 thread.h thread-posix.h 等
+  5. seqlock.h
 
 ## 注意
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
@@ -52,6 +58,7 @@ x86_cpu_common_class_init 中注册的函数:
 | 多核 | 现在为了代码的方便执行，也没有太搞清楚其中的作用，在 cputlb.c 的 async_run_on_cpu 以及各种 atomic 函数，qemu_spin_lock, 以及 RCU. 现在的操作是，先将接口保存下来，之后需要支持多核，有一个参考 |
 | icount / record replay| 没有 record replay 是不是很难调试，使用 record replay 会不会很难集成|
 | trace| |
+| 存在好几个数据结构需要重构| qlist, qht 和 glib 的 qtree|
 
 | TODO                     | 问题描述                                                                                                                                                       |
 |--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
