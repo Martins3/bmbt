@@ -8,6 +8,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <glib-2.0/glib/gtree.h> // remove glib
+
 // FIXME
 // wow, it almost destoried me
 // tcg_target_reg_bits is defined at
@@ -409,5 +411,11 @@ static inline size_t tcg_current_code_size(TCGContext *s) {
 #define tcg_regset_set_reg(d, r)   ((d) |= (TCGRegSet)1 << (r))
 #define tcg_regset_reset_reg(d, r) ((d) &= ~((TCGRegSet)1 << (r)))
 #define tcg_regset_test_reg(d, r)  (((d) >> (r)) & 1)
+
+void tcg_tb_foreach(GTraverseFunc func, gpointer user_data);
+
+size_t tcg_nb_tbs(void);
+
+void tcg_region_reset_all(void);
 
 #endif

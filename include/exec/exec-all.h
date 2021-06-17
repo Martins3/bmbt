@@ -125,6 +125,11 @@ typedef struct TranslationBlock {
   /* Per-vCPU dynamic tracing state used to generate this TB */
   uint32_t trace_vcpu_dstate;
 
+  /* first and second physical page containing code. The lower bit
+     of the pointer tells the index in page_next[].
+     The list is protected by the TB's page('s) lock(s) */
+  uintptr_t page_next[2];
+
 } TranslationBlock;
 
 /* current cflags for hashing/comparison */

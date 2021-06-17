@@ -11,6 +11,7 @@
 #include "../../include/todo.h"
 #include "../../include/types.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/exec/cpu-common.h"
 
 #include "./tcg.h" // FIXME move tcg.h to include dir ?
 #include <assert.h>
@@ -18,9 +19,30 @@
 #include <glib-2.0/glib/gtree.h> // FIXME remove glib
 #include <glib-2.0/glib/gtypes.h>
 #include <glib-2.0/glib/gmacros.h>
+#include <sys/mman.h>
 
-// belongs to /home/maritns3/core/ld/x86-qemu-mips/accel/tcg/cpu-exec-common.c
+// FIXME copied from /usr/include/x86_64-linux-gnu/bits/mman-linux.h
+// maybe move to a better location
+// whatever it takes, mmap is invalid in furture framework
+// The macros will be removed
+#define PROT_READ	0x1		/* Page can be read.  */
+#define PROT_WRITE	0x2		/* Page can be written.  */
+#define PROT_EXEC	0x4		/* Page can be executed.  */
+#define PROT_NONE	0x0		/* Page can not be accessed.  */
+
+/* Sharing types (must choose one and only one of these).  */
+#define MAP_SHARED	0x01		/* Share changes.  */
+#define MAP_PRIVATE	0x02		/* Changes are private.  */
+
+// FIXME I'm not sure about the value
+#define MAP_ANONYMOUS	0x20
+
+// FIXME belongs to /home/maritns3/core/ld/x86-qemu-mips/accel/tcg/cpu-exec-common.c
+// In previous commitment, we defined comment the code.
 bool tcg_allowed;
+
+// FIXME defined in vl.c
+ram_addr_t ram_size;
 
 // FIXME copied from  util/cacheinfo.c
 // why I should take care of icache size ?
@@ -1104,7 +1126,8 @@ static inline void *alloc_code_gen_buffer(void)
 #endif
 
     /* Request large pages for the buffer.  */
-    qemu_madvise(buf, size, QEMU_MADV_HUGEPAGE);
+    // FIXME a quick fix
+    // qemu_madvise(buf, size, QEMU_MADV_HUGEPAGE);
 
     return buf;
 }
@@ -1247,8 +1270,9 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count)
         size_t host_size = 0;
 
         tcg_tb_foreach(tb_host_size_iter, &host_size);
-        printf("qemu: flush code_size=%zu nb_tbs=%zu avg_tb_size=%zu\n",
-               tcg_code_size(), nb_tbs, nb_tbs > 0 ? host_size / nb_tbs : 0);
+        // FIXME change to a better style
+        // printf("qemu: flush code_size=%zu nb_tbs=%zu avg_tb_size=%zu\n",
+               // tcg_code_size(), nb_tbs, nb_tbs > 0 ? host_size / nb_tbs : 0);
     }
 
 #ifdef CONFIG_X86toMIPS
@@ -1270,7 +1294,8 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count)
 done:
     mmap_unlock();
     if (did_flush) {
-        qemu_plugin_flush_cb();
+        // FIXME what's plugin, it's empty
+        // qemu_plugin_flush_cb();
     }
 }
 
