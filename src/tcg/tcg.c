@@ -11,7 +11,6 @@
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 #include "../../include/qemu/thread-posix.h"
-#include "loongarch/tcg-target.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -49,6 +48,15 @@ struct tcg_region_state {
   size_t current;       /* current region index */
   size_t agg_size_full; /* aggregate size of full regions */
 };
+
+typedef struct TCGLabelPoolData {
+    struct TCGLabelPoolData *next;
+    tcg_insn_unit *label;
+    intptr_t addend;
+    int rtype;
+    unsigned nlong;
+    tcg_target_ulong data[];
+} TCGLabelPoolData;
 
 static struct tcg_region_state region;
 /*
@@ -133,6 +141,38 @@ static struct tcg_region_tree *tc_ptr_to_region_tree(void *p) {
   return region_trees + region_idx * tree_size;
 }
 
+#ifndef CONFIG_DIRECT_REGS
+static
+#endif
+TCGTemp *tcg_global_reg_new_internal(TCGContext *s, TCGType type,
+                                            TCGReg reg, const char *name)
+{
+    TCGTemp *ts;
+
+    if (TCG_TARGET_REG_BITS == 32 && type != TCG_TYPE_I32) {
+        tcg_abort();
+    }
+
+    ts = tcg_global_alloc(s);
+    ts->base_type = type;
+    ts->type = type;
+    ts->fixed_reg = 1;
+    ts->reg = reg;
+    ts->name = name;
+    tcg_regset_set_reg(s->reserved_regs, reg);
+
+    return ts;
+}
+
+void tcg_set_frame(TCGContext *s, TCGReg reg, intptr_t start, intptr_t size)
+{
+    s->frame_start = start;
+    s->frame_end = start + size;
+    s->frame_temp
+        = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, reg, "_frame");
+}
+
+// FIXME review this functions later, so many macros
 /* Generate global QEMU prologue and epilogue code */
 static void tcg_target_qemu_prologue(TCGContext *s)
 {
@@ -189,6 +229,54 @@ static void tcg_target_qemu_prologue(TCGContext *s)
     #ifdef LOONGARCH_DEBUG
     printf("End tcg_target_qemu_prologue.\n");
     #endif
+}
+
+// FIXME wow, a huge function
+static void tcg_register_jit_int(void *buf_ptr, size_t buf_size,
+                                 const void *debug_frame,
+                                 size_t debug_frame_size);
+
+void tcg_register_jit(void *buf, size_t buf_size)
+{
+    tcg_register_jit_int(buf, buf_size, &debug_frame, sizeof(debug_frame));
+}
+
+
+// FIXME review this function
+static int tcg_out_pool_finalize(TCGContext *s)
+{
+    TCGLabelPoolData *p = s->pool_labels;
+    TCGLabelPoolData *l = NULL;
+    void *a;
+
+    if (p == NULL) {
+        return 0;
+    }
+
+    /* ??? Round up to qemu_icache_linesize, but then do not round
+       again when allocating the next TranslationBlock structure.  */
+    a = (void *)ROUND_UP((uintptr_t)s->code_ptr,
+                         sizeof(tcg_target_ulong) * p->nlong);
+    tcg_out_nop_fill(s->code_ptr, (tcg_insn_unit *)a - s->code_ptr);
+    s->data_gen_ptr = a;
+
+    for (; p != NULL; p = p->next) {
+        size_t size = sizeof(tcg_target_ulong) * p->nlong;
+        if (!l || l->nlong != p->nlong || memcmp(l->data, p->data, size)) {
+            if (unlikely(a > s->code_gen_highwater)) {
+                return -1;
+            }
+            memcpy(a, p->data, size);
+            a += size;
+            l = p;
+        }
+        if (!patch_reloc(p->label, p->rtype, (intptr_t)a - size, p->addend)) {
+            return -2;
+        }
+    }
+
+    s->code_ptr = a;
+    return 0;
 }
 
 /*
@@ -250,8 +338,6 @@ TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr)
     qemu_mutex_unlock(&rt->lock);
     return tb;
 }
-
-
 
 void tcg_prologue_init(TCGContext *s)
 {

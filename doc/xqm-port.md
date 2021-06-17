@@ -27,9 +27,6 @@ x86_cpu_common_class_init 中注册的函数:
 | x86_cpu_synchronize_from_tb | cpu_tb_exec                 |
 
 
-
-
-
 ## 注意
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
   - cpu_ldst_template.h 这个文件在 6.0 版本中被替换掉了，这一部分的代码是按照 6.0 的
@@ -81,6 +78,12 @@ x86_cpu_common_class_init 中注册的函数:
       4. 在 include/qemu 下存在 thread.h thread-posix.h 等
       5. seqlock.h
       6. lockable
+
+9. 非常不统一的 assert
+  - [ ] tcg_debug_assert
+  - [ ] assert
+  - [ ] 一些 unreachable 之类的
+  - [ ] tcg_abort
 
 ## 设计 
 - 移除掉 memory model

@@ -4,6 +4,9 @@
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/memop.h"
 #include "../../include/qemu/config-target.h"
+#include "../../src/tcg/loongarch/tcg-target.h"
+#include <stddef.h>
+#include <stdint.h>
 
 // FIXME
 // wow, it almost destoried me
@@ -25,6 +28,76 @@ typedef uint64_t tcg_target_ulong;
 #else
 #error unsupported
 #endif
+
+typedef enum TCGType {
+  TCG_TYPE_I32,
+  TCG_TYPE_I64,
+
+  TCG_TYPE_V64,
+  TCG_TYPE_V128,
+  TCG_TYPE_V256,
+
+  TCG_TYPE_COUNT, /* number of different types */
+
+/* An alias for the size of the host register.  */
+#if TCG_TARGET_REG_BITS == 32
+  TCG_TYPE_REG = TCG_TYPE_I32,
+#else
+  TCG_TYPE_REG = TCG_TYPE_I64,
+#endif
+
+/* An alias for the size of the native pointer.  */
+#if UINTPTR_MAX == UINT32_MAX
+  TCG_TYPE_PTR = TCG_TYPE_I32,
+#else
+  TCG_TYPE_PTR = TCG_TYPE_I64,
+#endif
+
+/* An alias for the size of the target "long", aka register.  */
+#if TARGET_LONG_BITS == 64
+  TCG_TYPE_TL = TCG_TYPE_I64,
+#else
+  TCG_TYPE_TL = TCG_TYPE_I32,
+#endif
+} TCGType;
+
+typedef enum TCGTempVal {
+  TEMP_VAL_DEAD,
+  TEMP_VAL_REG,
+  TEMP_VAL_MEM,
+  TEMP_VAL_CONST,
+} TCGTempVal;
+
+typedef struct TCGTemp {
+  TCGReg reg : 8;
+  TCGTempVal val_type : 8;
+  TCGType base_type : 8;
+  TCGType type : 8;
+  unsigned int fixed_reg : 1;
+  unsigned int indirect_reg : 1;
+  unsigned int indirect_base : 1;
+  unsigned int mem_coherent : 1;
+  unsigned int mem_allocated : 1;
+  /* If true, the temp is saved across both basic blocks and
+     translation blocks.  */
+  unsigned int temp_global : 1;
+  /* If true, the temp is saved across basic blocks but dead
+     at the end of translation blocks.  If false, the temp is
+     dead at the end of basic blocks.  */
+  unsigned int temp_local : 1;
+  unsigned int temp_allocated : 1;
+
+  tcg_target_long val;
+  struct TCGTemp *mem_base;
+  intptr_t mem_offset;
+  const char *name;
+
+  /* Pass-specific information that can be stored for a temporary.
+     One word worth of integer data, and one pointer to data
+     allocated separately.  */
+  uintptr_t state;
+  void *state_ptr;
+} TCGTemp;
 
 typedef struct TCGContext {
 
@@ -51,6 +124,14 @@ typedef struct TCGContext {
   void *code_gen_highwater;
 
   tcg_insn_unit *code_ptr;
+
+#ifdef TCG_TARGET_NEED_POOL_LABELS
+  struct TCGLabelPoolData *pool_labels;
+#endif
+
+  intptr_t frame_start;
+  intptr_t frame_end;
+  TCGTemp *frame_temp;
 
 } TCGContext;
 
@@ -251,36 +332,50 @@ typedef uint64_t TCGRegSet;
 #error unsupported
 #endif
 
-typedef enum TCGType {
-  TCG_TYPE_I32,
-  TCG_TYPE_I64,
-
-  TCG_TYPE_V64,
-  TCG_TYPE_V128,
-  TCG_TYPE_V256,
-
-  TCG_TYPE_COUNT, /* number of different types */
-
-/* An alias for the size of the host register.  */
-#if TCG_TARGET_REG_BITS == 32
-  TCG_TYPE_REG = TCG_TYPE_I32,
+// FIXME
+#if defined CONFIG_DEBUG_TCG || defined QEMU_STATIC_ANALYSIS
+#define tcg_debug_assert(X)                                                    \
+  do {                                                                         \
+    assert(X);                                                                 \
+  } while (0)
 #else
-  TCG_TYPE_REG = TCG_TYPE_I64,
+#define tcg_debug_assert(X)                                                    \
+  do {                                                                         \
+    if (!(X)) {                                                                \
+      __builtin_unreachable();                                                 \
+    }                                                                          \
+  } while (0)
 #endif
 
-/* An alias for the size of the native pointer.  */
-#if UINTPTR_MAX == UINT32_MAX
-  TCG_TYPE_PTR = TCG_TYPE_I32,
-#else
-  TCG_TYPE_PTR = TCG_TYPE_I64,
-#endif
+/**
+ * tcg_ptr_byte_diff
+ * @a, @b: addresses to be differenced
+ *
+ * There are many places within the TCG backends where we need a byte
+ * difference between two pointers.  While this can be accomplished
+ * with local casting, it's easy to get wrong -- especially if one is
+ * concerned with the signedness of the result.
+ *
+ * This version relies on GCC's void pointer arithmetic to get the
+ * correct result.
+ */
 
-/* An alias for the size of the target "long", aka register.  */
-#if TARGET_LONG_BITS == 64
-  TCG_TYPE_TL = TCG_TYPE_I64,
-#else
-  TCG_TYPE_TL = TCG_TYPE_I32,
-#endif
-} TCGType;
+static inline ptrdiff_t tcg_ptr_byte_diff(void *a, void *b) { return a - b; }
+
+/**
+ * tcg_current_code_size
+ * @s: the tcg context
+ *
+ * Compute the current code size within the translation block.
+ * This is used to fill in qemu's data structures for goto_tb.
+ */
+
+static inline size_t tcg_current_code_size(TCGContext *s) {
+  return tcg_ptr_byte_diff(s->code_ptr, s->code_buf);
+}
+
+#define tcg_abort()                                                            \
+  do {                                                                         \
+  } while (0)
 
 #endif
