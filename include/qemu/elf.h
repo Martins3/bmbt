@@ -134,4 +134,81 @@ typedef struct elf64_shdr {
 # endif
 #endif
 
+/* These constants define the different elf file types */
+#define ET_NONE   0
+#define ET_REL    1
+#define ET_EXEC   2
+#define ET_DYN    3
+#define ET_CORE   4
+#define ET_LOPROC 0xff00
+#define ET_HIPROC 0xffff
+
+#define EM_LOONGARCH    258     /* loongarch */
+
+/* These constants are for the segment types stored in the image headers */
+#define PT_NULL    0
+#define PT_LOAD    1
+#define PT_DYNAMIC 2
+#define PT_INTERP  3
+#define PT_NOTE    4
+#define PT_SHLIB   5
+#define PT_PHDR    6
+#define PT_LOPROC  0x70000000
+#define PT_HIPROC  0x7fffffff
+
+/* These constants define the permissions on sections in the program
+   header, p_flags. */
+#define PF_R		0x4
+#define PF_W		0x2
+#define PF_X		0x1
+
+/* sh_type */
+#define SHT_NULL	0
+#define SHT_PROGBITS	1
+#define SHT_SYMTAB	2
+#define SHT_STRTAB	3
+#define SHT_RELA	4
+#define SHT_HASH	5
+#define SHT_DYNAMIC	6
+#define SHT_NOTE	7
+#define SHT_NOBITS	8
+#define SHT_REL		9
+#define SHT_SHLIB	10
+#define SHT_DYNSYM	11
+#define SHT_NUM		12
+#define SHT_LOPROC	0x70000000
+#define SHT_HIPROC	0x7fffffff
+#define SHT_LOUSER	0x80000000
+#define SHT_HIUSER	0xffffffff
+#define SHT_MIPS_LIST		0x70000000
+#define SHT_MIPS_CONFLICT	0x70000002
+#define SHT_MIPS_GPTAB		0x70000003
+#define SHT_MIPS_UCODE		0x70000004
+
+/* sh_flags */
+#define SHF_WRITE	0x1
+#define SHF_ALLOC	0x2
+#define SHF_EXECINSTR	0x4
+#define SHF_MASKPROC	0xf0000000
+#define SHF_MIPS_GPREL	0x10000000
+
+#define ELF_ST_BIND(x)		((x) >> 4)
+#define ELF_ST_TYPE(x)		(((unsigned int) x) & 0xf)
+#define ELF_ST_INFO(bind, type) (((bind) << 4) | ((type) & 0xf))
+#define ELF32_ST_BIND(x)	ELF_ST_BIND(x)
+#define ELF32_ST_TYPE(x)	ELF_ST_TYPE(x)
+#define ELF64_ST_BIND(x)	ELF_ST_BIND(x)
+#define ELF64_ST_TYPE(x)	ELF_ST_TYPE(x)
+
+/* This info is needed when parsing the symbol table */
+#define STB_LOCAL  0
+#define STB_GLOBAL 1
+#define STB_WEAK   2
+
+#define STT_NOTYPE  0
+#define STT_OBJECT  1
+#define STT_FUNC    2
+#define STT_SECTION 3
+#define STT_FILE    4
+
 #endif /* end of include guard: ELF_H_0RO4QZ1K */

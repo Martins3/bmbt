@@ -381,6 +381,7 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr, hwaddr paddr, int prot,
   {}
 
 #define g_new0(struct_type, n_structs) (struct_type *)NULL
+#define g_malloc(size) NULL
 
 #undef MAX
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
