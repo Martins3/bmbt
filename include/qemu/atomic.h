@@ -19,4 +19,10 @@
 
 #define atomic_rcu_read(ptr) (*ptr)
 
+#define atomic_mb_read(ptr) (*ptr)
+
+#define atomic_and(ptr, n) (*ptr &= n)
+
+#define atomic_or_fetch(ptr, n)  __atomic_or_fetch(ptr, n, __ATOMIC_SEQ_CST)
+
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

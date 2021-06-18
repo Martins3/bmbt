@@ -12,6 +12,17 @@
 #include "../../include/qemu/bitops.h"
 #include "../../include/types.h"
 
+// FIXME copied from include/sysemu/tcg.h
+// it will be deleted later?
+extern bool tcg_allowed;
+void tcg_exec_init(unsigned long tb_size);
+#ifdef CONFIG_TCG
+#define tcg_enabled() (tcg_allowed)
+#else
+#define tcg_enabled() 0
+#endif
+
+
 // FIXME copy a lot of macros without checking
 // ------------------------------ blindly copy started
 // ---------------------------------- //
@@ -1727,6 +1738,16 @@ bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 // this is function in cpu.h, and originally registered by 
 // x86_cpu_common_class_init, 
 void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb);
+
+// FIXME understand this function
+static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
+                                        target_ulong *cs_base, uint32_t *flags)
+{
+    *cs_base = env->segs[R_CS].base;
+    *pc = *cs_base + env->eip;
+    *flags = env->hflags |
+        (env->eflags & (IOPL_MASK | TF_MASK | RF_MASK | VM_MASK | AC_MASK));
+}
 
 
 typedef CPUX86State CPUArchState;

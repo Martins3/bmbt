@@ -90,6 +90,7 @@ x86_cpu_common_class_init 中注册的函数:
   - [ ] assert
   - [ ] 一些 unreachable 之类的
   - [ ] tcg_abort
+  - [ ] 在 bitmap.c 中间是直接从
 
 ## 应该被小心 review 一下的
 - [ ] dirty page
@@ -102,6 +103,7 @@ x86_cpu_common_class_init 中注册的函数:
   - tcg_context_init
   - tcg_prologue_init
 
+- [ ] tcg_op_defs : 在 tcg.c 中间定义，具体在 tcg_context_init 中间初始化了，但是按照道理来说，xqm 将这些事情都处理了
 
 ## 设计 
 - 移除掉 memory model

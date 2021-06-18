@@ -5,9 +5,9 @@
 #include "../../include/exec/memop.h"
 #include "../../include/qemu/config-target.h"
 #include "../../src/tcg/loongarch/tcg-target.h"
+#include "glib_stub.h"
 #include <stddef.h>
 #include <stdint.h>
-#include "glib_stub.h"
 
 // FIXME
 // wow, it almost destoried me
@@ -209,6 +209,8 @@ typedef struct TCGContext {
   TCGTemp temps[TCG_MAX_TEMPS]; /* globals first, temps after */
 
   TCGRegSet reserved_regs;
+
+  size_t tb_phys_invalidate_count;
 
 } TCGContext;
 
@@ -452,9 +454,9 @@ static inline size_t tcg_current_code_size(TCGContext *s) {
    this value, they are statically allocated in the TB stack frame */
 #define TCG_STATIC_CALL_ARGS_SIZE 128
 
-#define tcg_regset_set_reg(d, r)   ((d) |= (TCGRegSet)1 << (r))
+#define tcg_regset_set_reg(d, r) ((d) |= (TCGRegSet)1 << (r))
 #define tcg_regset_reset_reg(d, r) ((d) &= ~((TCGRegSet)1 << (r)))
-#define tcg_regset_test_reg(d, r)  (((d) >> (r)) & 1)
+#define tcg_regset_test_reg(d, r) (((d) >> (r)) & 1)
 
 void tcg_tb_foreach(GTraverseFunc func, gpointer user_data);
 
@@ -465,12 +467,12 @@ void tcg_region_reset_all(void);
 void tcg_context_init(TCGContext *s);
 
 typedef struct TCGLabelPoolData {
-    struct TCGLabelPoolData *next;
-    tcg_insn_unit *label;
-    intptr_t addend;
-    int rtype;
-    unsigned nlong;
-    tcg_target_ulong data[];
+  struct TCGLabelPoolData *next;
+  tcg_insn_unit *label;
+  intptr_t addend;
+  int rtype;
+  unsigned nlong;
+  tcg_target_ulong data[];
 } TCGLabelPoolData;
 
 static void tcg_register_jit_int(void *buf, size_t size,
@@ -482,49 +484,62 @@ static TCGContext **tcg_ctxs;
 static unsigned int n_tcg_ctxs;
 
 typedef struct TCGArgConstraint {
-    uint16_t ct;
-    uint8_t alias_index;
-    union {
-        TCGRegSet regs;
-    } u;
+  uint16_t ct;
+  uint8_t alias_index;
+  union {
+    TCGRegSet regs;
+  } u;
 } TCGArgConstraint;
 
 #define TCG_MAX_OP_ARGS 16
 
 /* Bits for TCGOpDef->flags, 8 bits available.  */
 enum {
-    /* Instruction exits the translation block.  */
-    TCG_OPF_BB_EXIT      = 0x01,
-    /* Instruction defines the end of a basic block.  */
-    TCG_OPF_BB_END       = 0x02,
-    /* Instruction clobbers call registers and potentially update globals.  */
-    TCG_OPF_CALL_CLOBBER = 0x04,
-    /* Instruction has side effects: it cannot be removed if its outputs
-       are not used, and might trigger exceptions.  */
-    TCG_OPF_SIDE_EFFECTS = 0x08,
-    /* Instruction operands are 64-bits (otherwise 32-bits).  */
-    TCG_OPF_64BIT        = 0x10,
-    /* Instruction is optional and not implemented by the host, or insn
-       is generic and should not be implemened by the host.  */
-    TCG_OPF_NOT_PRESENT  = 0x20,
-    /* Instruction operands are vectors.  */
-    TCG_OPF_VECTOR       = 0x40,
+  /* Instruction exits the translation block.  */
+  TCG_OPF_BB_EXIT = 0x01,
+  /* Instruction defines the end of a basic block.  */
+  TCG_OPF_BB_END = 0x02,
+  /* Instruction clobbers call registers and potentially update globals.  */
+  TCG_OPF_CALL_CLOBBER = 0x04,
+  /* Instruction has side effects: it cannot be removed if its outputs
+     are not used, and might trigger exceptions.  */
+  TCG_OPF_SIDE_EFFECTS = 0x08,
+  /* Instruction operands are 64-bits (otherwise 32-bits).  */
+  TCG_OPF_64BIT = 0x10,
+  /* Instruction is optional and not implemented by the host, or insn
+     is generic and should not be implemened by the host.  */
+  TCG_OPF_NOT_PRESENT = 0x20,
+  /* Instruction operands are vectors.  */
+  TCG_OPF_VECTOR = 0x40,
 };
 
 typedef struct TCGOpDef {
-    const char *name;
-    uint8_t nb_oargs, nb_iargs, nb_cargs, nb_args;
-    uint8_t flags;
-    TCGArgConstraint *args_ct;
-    int *sorted_args;
+  const char *name;
+  uint8_t nb_oargs, nb_iargs, nb_cargs, nb_args;
+  uint8_t flags;
+  TCGArgConstraint *args_ct;
+  int *sorted_args;
 #if defined(CONFIG_DEBUG_TCG)
-    int used;
+  int used;
 #endif
 } TCGOpDef;
 
-static inline TCGv_ptr temp_tcgv_ptr(TCGTemp *t)
-{
-    return (TCGv_ptr)temp_tcgv_i32(t);
+static inline size_t temp_idx(TCGTemp *ts) {
+  ptrdiff_t n = ts - tcg_ctx->temps;
+  tcg_debug_assert(n >= 0 && n < tcg_ctx->nb_temps);
+  return n;
 }
+
+static inline TCGv_i32 temp_tcgv_i32(TCGTemp *t) {
+  (void)temp_idx(t); /* trigger embedded assert */
+  return (TCGv_i32)((void *)t - (void *)tcg_ctx);
+}
+
+static inline TCGv_ptr temp_tcgv_ptr(TCGTemp *t) {
+  return (TCGv_ptr)temp_tcgv_i32(t);
+
+}
+
+void tcg_prologue_init(TCGContext *s);
 
 #endif

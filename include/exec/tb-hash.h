@@ -38,4 +38,15 @@ static inline unsigned int tb_jmp_cache_hash_func(target_ulong pc)
 }
 
 #endif /* CONFIG_SOFTMMU */
+
+// FIXME a little function, copy it later
+static inline uint32_t qemu_xxhash7(uint64_t ab, uint64_t cd, uint32_t e, uint32_t f, uint32_t g);
+
+static inline
+uint32_t tb_hash_func(tb_page_addr_t phys_pc, target_ulong pc, uint32_t flags,
+                      uint32_t cf_mask, uint32_t trace_vcpu_dstate)
+{
+    return qemu_xxhash7(phys_pc, pc, flags, cf_mask, trace_vcpu_dstate);
+}
+
 #endif /* end of include guard: TB_HASH_H_HPADT4RC */

@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "../types.h"
 
+#define BIT(nr)                 (1UL << (nr))
 
 #define MAKE_64BIT_MASK(shift, length) \
     (((~0ULL) >> (64 - (length))) << (shift))

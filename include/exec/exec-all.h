@@ -3,6 +3,7 @@
 #include "../hw/core/cpu.h"
 #include "../types.h"
 #include "cpu-defs.h"
+#include "../qemu/atomic.h"
 
 // TODO it seems this is the hacking of xqm
 // copy here blindly
@@ -130,7 +131,9 @@ typedef struct TranslationBlock {
      The list is protected by the TB's page('s) lock(s) */
   uintptr_t page_next[2];
 
+
 } TranslationBlock;
+
 
 /* current cflags for hashing/comparison */
 static inline u32 curr_cflags(void) {
@@ -494,5 +497,11 @@ hwaddr memory_region_section_get_iotlb(CPUState *cpu,
 #endif
 
 void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr);
+
+/* Hide the atomic_read to make code a little easier on the eyes */
+static inline uint32_t tb_cflags(const TranslationBlock *tb)
+{
+    return atomic_read(&tb->cflags);
+}
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

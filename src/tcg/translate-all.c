@@ -6,6 +6,7 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/thread.h"
+#include "../../include/qemu/bitmap.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/todo.h"
@@ -13,6 +14,7 @@
 #include "../../include/qemu/atomic.h"
 #include "../../include/exec/cpu-common.h"
 #include "../../include/exec/tb-hash.h"
+#include "../../include/exec/cputlb.h"
 
 #include "./tcg.h" // FIXME move tcg.h to include dir ?
 #include <assert.h>
@@ -335,6 +337,17 @@ static int encode_search(TranslationBlock *tb, uint8_t *block)
 }
 #endif
 
+// FIXME copied from i386/translate.c
+void restore_state_to_opc(CPUX86State *env, TranslationBlock *tb,
+                          target_ulong *data)
+{
+    int cc_op = data[1];
+    env->eip = data[0] - tb->cs_base;
+    if (cc_op != CC_OP_DYNAMIC) {
+        env->cc_op = cc_op;
+    }
+}
+
 /* The cpu state corresponding to 'searched_pc' is restored.
  * When reset_icount is true, current TB will be interrupted and
  * icount should be recalculated.
@@ -427,7 +440,8 @@ bool cpu_restore_state(CPUState *cpu, uintptr_t host_pc, bool will_exit)
 
 static void page_init(void)
 {
-    page_size_init();
+    // FIXME this function is easy
+    // page_size_init();
     page_table_config_init();
 
 #if defined(CONFIG_BSD) && defined(CONFIG_USER_ONLY)
@@ -822,7 +836,8 @@ page_collection_lock(tb_page_addr_t start, tb_page_addr_t end)
     set->tree = g_tree_new_full(tb_page_addr_cmp, NULL, NULL,
                                 page_entry_destroy);
     set->max = NULL;
-    assert_no_pages_locked();
+    // FIXME quick fix
+    // assert_no_pages_locked();
 
  retry:
     g_tree_foreach(set->tree, page_entry_lock, NULL);
@@ -2306,8 +2321,9 @@ static void print_qht_statistics(struct qht_stats hst)
         hgram_opts |= QDIST_PR_NODECIMAL;
     }
     hgram = qdist_pr(&hst.occupancy, 10, hgram_opts);
-    qemu_printf("TB hash occupancy   %0.2f%% avg chain occ. Histogram: %s\n",
-                qdist_avg(&hst.occupancy) * 100, hgram);
+    // FIXME debug
+    // qemu_printf("TB hash occupancy   %0.2f%% avg chain occ. Histogram: %s\n",
+                // qdist_avg(&hst.occupancy) * 100, hgram);
     g_free(hgram);
 
     hgram_opts = QDIST_PR_BORDER | QDIST_PR_LABELS;
@@ -2319,8 +2335,9 @@ static void print_qht_statistics(struct qht_stats hst)
         hgram_opts |= QDIST_PR_NODECIMAL | QDIST_PR_NOBINRANGE;
     }
     hgram = qdist_pr(&hst.chain, hgram_bins, hgram_opts);
-    qemu_printf("TB hash avg chain   %0.3f buckets. Histogram: %s\n",
-                qdist_avg(&hst.chain), hgram);
+    // FIXME debug
+    // qemu_printf("TB hash avg chain   %0.3f buckets. Histogram: %s\n",
+                // qdist_avg(&hst.chain), hgram);
     g_free(hgram);
 }
 
@@ -2392,6 +2409,7 @@ static gboolean tb_tree_stats_iter(gpointer key, gpointer value, gpointer data)
     return false;
 }
 
+#if 0
 void dump_exec_info(void)
 {
     struct tb_tree_stats tst = {};
@@ -2471,10 +2489,14 @@ void dump_exec_info(void)
     qemu_printf("TLB elided flushes  %zu\n", flush_elide);
     tcg_dump_info();
 }
+#endif
 
 void dump_opcount_info(void)
 {
+  // FIXME debug
+#if 0
     tcg_dump_op_count();
+#endif
 }
 
 #else /* CONFIG_USER_ONLY */

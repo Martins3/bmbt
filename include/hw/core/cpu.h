@@ -87,7 +87,9 @@ typedef struct CPUState {
   int64_t icount_budget;
   int64_t icount_extra;
 
-    bool exit_request;
+  bool exit_request;
+
+  bool in_exclusive_context;
 
 } CPUState;
 
@@ -226,18 +228,29 @@ typedef union IcountDecr {
 
 typedef struct CPUWatchpoint CPUWatchpoint;
 
-#define SSTEP_ENABLE  0x1  /* Enable simulated HW single stepping */
-#define SSTEP_NOIRQ   0x2  /* Do not use IRQ while single stepping */
-#define SSTEP_NOTIMER 0x4  /* Do not Timers while single stepping */
+#define SSTEP_ENABLE 0x1  /* Enable simulated HW single stepping */
+#define SSTEP_NOIRQ 0x2   /* Do not use IRQ while single stepping */
+#define SSTEP_NOTIMER 0x4 /* Do not Timers while single stepping */
 
 #define CPU_UNSET_NUMA_NODE_ID -1
 #define CPU_TRACE_DSTATE_MAX_EVENTS 32
 
-#define first_cpu        QTAILQ_FIRST_RCU(&cpus)
-#define CPU_NEXT(cpu)    QTAILQ_NEXT_RCU(cpu, node)
+#define first_cpu QTAILQ_FIRST_RCU(&cpus)
+#define CPU_NEXT(cpu) QTAILQ_NEXT_RCU(cpu, node)
 #define CPU_FOREACH(cpu) QTAILQ_FOREACH_RCU(cpu, &cpus, node)
-#define CPU_FOREACH_SAFE(cpu, next_cpu) \
-    QTAILQ_FOREACH_SAFE_RCU(cpu, &cpus, node, next_cpu)
+#define CPU_FOREACH_SAFE(cpu, next_cpu)                                        \
+  QTAILQ_FOREACH_SAFE_RCU(cpu, &cpus, node, next_cpu)
+
+/**
+ * cpu_in_exclusive_context()
+ * @cpu: The vCPU to check
+ *
+ * Returns true if @cpu is an exclusive context, for example running
+ * something which has previously been queued via async_safe_run_on_cpu().
+ */
+static inline bool cpu_in_exclusive_context(const CPUState *cpu) {
+  return cpu->in_exclusive_context;
+}
 
 #include "../../../src/i386/cpu.h"
 

@@ -31,4 +31,13 @@ typedef bool (*GTraverseFunc)(gpointer key, gpointer value, gpointer data);
 
 void g_tree_foreach(GTree *tree, GTraverseFunc func, gpointer user_data);
 
+typedef gint (*GCompareDataFunc)(gconstpointer a, gconstpointer b,
+                                 gpointer user_data);
+typedef void (*GDestroyNotify)(gpointer data);
+
+GTree *g_tree_new_full(GCompareDataFunc key_compare_func,
+                       gpointer key_compare_data,
+                       GDestroyNotify key_destroy_func,
+                       GDestroyNotify value_destroy_func);
+
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */
