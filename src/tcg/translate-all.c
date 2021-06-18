@@ -1774,7 +1774,6 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
   int max_insns;
   int gen_code_size, search_size;
 
-  // FIXME why pc is virtual address
   phys_pc = get_page_addr_code(env, pc);
 
   if (phys_pc == -1) {
@@ -1796,7 +1795,7 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
     max_insns = TCG_MAX_INSNS;
   }
 
-  // TODO is it possible to support singlestep?
+  // FIXME is it possible to support singlestep?
   if (cpu->singlestep_enabled || singlestep) {
     max_insns = 1;
   }
@@ -1824,10 +1823,10 @@ buffer_overflow:
   tb->flags = flags;
   tb->cflags = cflags;
   tb->orig_tb = NULL;
-  // TODO how trace works ?
+  // FIXME how trace works ?
   // tb->trace_vcpu_dstate = *cpu->trace_dstate;
 
-  // TODO what's tcg_ctx's role ?
+  // FIXME what's tcg_ctx's role ?
   tcg_ctx->tb_cflags = cflags;
 
 tb_overflow:
@@ -1836,7 +1835,7 @@ tb_overflow:
   tb->jmp_reset_offset[1] = TB_JMP_RESET_OFFSET_INVALID;
   tcg_ctx->tb_jmp_reset_offset = tb->jmp_reset_offset;
 
-  // TODO maybe move this macro to proper locations
+  // FIXME maybe move this macro to proper locations
 #define TCG_TARGET_HAS_direct_jump 1
   if (TCG_TARGET_HAS_direct_jump) {
     tcg_ctx->tb_jmp_insn_offset = tb->jmp_target_arg;
@@ -1856,7 +1855,7 @@ tb_overflow:
       xtm_is_bo = 1;
       goto buffer_overflow;
     case -2:
-      // TODO what's icount
+      // FIXME what's icount
       // max_insns = tb->icount;
       assert(max_insns > 1);
       max_insns /= 2;

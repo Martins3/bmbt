@@ -17,6 +17,7 @@
 #include <string.h>
 #include "tcg.h"
 #include <assert.h>
+#include <stdlib.h> // for abort
 
 
 // FIXME get_memop belongs to tcg.h, but ccls can't distinguish c header
@@ -963,6 +964,8 @@ static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr)
 
     ram_addr = qemu_ram_addr_from_host(ptr);
     if (ram_addr == RAM_ADDR_INVALID) {
+        // FIXME fix this later
+        void error_report(const char *fmt, ...);
         error_report("Bad ram pointer %p", ptr);
         abort();
     }

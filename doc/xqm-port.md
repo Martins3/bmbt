@@ -83,6 +83,7 @@ x86_cpu_common_class_init 中注册的函数:
   - [ ] tcg_abort
   - [ ] 在 bitmap.c 中间是直接从
   - [ ] g_assert
+  - error_report
 
 ## 应该被小心 review 一下的
 - [ ] dirty page

@@ -1,3 +1,14 @@
+- [ ] translate-all.c : tb 的各种管理工作, 但是管理了很多 page 相关的工作
+- tcg.c : 主要是 tb 的一些分配工作在使用，其实几乎没有什么用途了
+  - [ ] tcg_prologue_init
+  - [ ] 从 tcg_prologue_init 向外发散出来很多东西，不过大大的丰富了 TCGContext 的
+  - [ ] tcg.c 在本来的涉及中间，是好几个文件和合集(因为 #include .c 的原因), 到时候拆开 ?
+  - [ ] ELF_HOST_MACHINE 到底在干什么 ?
+  - [ ] 实际上，将 tcg_prologue_init 包含进来，也只是花费了 1000 行而已，原来的设计中，剩下的代码在干什么 ?
+- [ ] cpu.c : 感觉 helper 没有向这里调用，感觉很奇怪啊, 似乎只是一些配置函数 ?
+  - [ ] 显然哪里实现还是有考虑有问题，显然 i386/cpu.c 中间还是存在很多我们需要的东西的
+- [ ] tcg-all.c : 涉及到初始化 tcg engine, 很短的一个文件
+
 # translate-all.c 代码分析
 > 最后将这些东西整理到 softmmu 和 translator 中吧
 
