@@ -1769,7 +1769,8 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
   TranslationBlock *tb, *existing_tb;
   tb_page_addr_t phys_pc, phys_page2;
   target_ulong virt_page2;
-  // FIXME so, there are tcg instructions?
+  // FIXME  in xqm, tcg has been removed, 
+  // so, why there are tcg instructions?
   tcg_insn_unit *gen_code_buf;
   int max_insns;
   int gen_code_size, search_size;

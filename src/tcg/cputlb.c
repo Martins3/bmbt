@@ -962,6 +962,10 @@ static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr)
 {
     ram_addr_t ram_addr;
 
+    // FIXME soft tlb translate gva to hva, but sometimes we need gpa
+    // so find them from ram block
+    // We will return back when resolving issue #39
+    ram_addr_t qemu_ram_addr_from_host(void *ptr);
     ram_addr = qemu_ram_addr_from_host(ptr);
     if (ram_addr == RAM_ADDR_INVALID) {
         // FIXME fix this later

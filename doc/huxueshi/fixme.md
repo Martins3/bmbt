@@ -9,6 +9,8 @@
   - [ ] 显然哪里实现还是有考虑有问题，显然 i386/cpu.c 中间还是存在很多我们需要的东西的
 - [ ] tcg-all.c : 涉及到初始化 tcg engine, 很短的一个文件
 
+- [ ] 关键问题 : 
+
 # translate-all.c 代码分析
 > 最后将这些东西整理到 softmmu 和 translator 中吧
 

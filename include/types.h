@@ -19,7 +19,6 @@ typedef unsigned int u32;
 typedef int i32;
 
 typedef u64 tb_page_addr_t;
-typedef u32 tcg_insn_unit;
 
 typedef unsigned long int uintptr_t;
 

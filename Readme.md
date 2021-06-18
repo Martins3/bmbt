@@ -1,6 +1,6 @@
 # DuckBuBi
 
-## Manual
+## LoongArch Manual
 contect huxueshi@loongson.cn
 
 ## TODO
@@ -13,7 +13,6 @@ contect huxueshi@loongson.cn
 - [ ] TLB refill init
 - [ ] memory probe
 - [ ] probe pci devices
-
 
 - [ ] setup keyboard
 - [ ] extract tcg module from XQM
