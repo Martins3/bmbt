@@ -3,9 +3,6 @@
 #include "cpu-defs.h"
 #include "exec-all.h"
 
-// FIXME copy form target/i386/cpu-param.h
-#define TARGET_PAGE_BITS 12
-
 // TODO need deeper understanding for this macros
 #define EXCP_INTERRUPT 0x10000 /* async interruption */
 #define EXCP_HLT 0x10001       /* hlt instruction reached */

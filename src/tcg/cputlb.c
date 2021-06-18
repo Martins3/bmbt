@@ -960,13 +960,12 @@ void tstore_helperlb_set_page(CPUState *cpu, target_ulong vaddr,
 static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr)
 {
     ram_addr_t ram_addr;
-    // FIXME try to understand ram_block
 
-    // ram_addr = qemu_ram_addr_from_host(ptr);
-    // if (ram_addr == RAM_ADDR_INVALID) {
-        // error_report("Bad ram pointer %p", ptr);
-        // abort();
-    // }
+    ram_addr = qemu_ram_addr_from_host(ptr);
+    if (ram_addr == RAM_ADDR_INVALID) {
+        error_report("Bad ram pointer %p", ptr);
+        abort();
+    }
     return ram_addr;
 }
 
@@ -1079,6 +1078,7 @@ tb_page_addr_t get_page_addr_code_hostp(CPUArchState *env, target_ulong addr,
     void *p;
 
     if (unlikely(!tlb_hit(entry->addr_code, addr))) {
+        // @todo how victim tlb works?
         if (!VICTIM_TLB_HIT(addr_code, addr)) {
             tlb_fill(env_cpu(env), addr, 0, MMU_INST_FETCH, mmu_idx, 0);
             index = tlb_index(env, mmu_idx, addr);
