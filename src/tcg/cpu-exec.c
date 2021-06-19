@@ -21,9 +21,6 @@
     do {                                                \
     } while (0)
 
-// FIXME iothread lock need further investigation
-void qemu_mutex_lock_iothread();
-void qemu_mutex_unlock_iothread();
 
 target_ulong breakpoint_addrx = 0;
 int breakpoint_hit_count= 0;

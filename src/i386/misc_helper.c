@@ -5,6 +5,7 @@
 #include "../../include/fpu/softfloat.h"
 #include "../../include/fpu/softfloat-helper.h"
 #include "../../include/qemu/bswap.h"
+#include "../../include/hw/i386/apic.h"
 #include "cpu.h"
 #include "svm.h"
 #include "LATX/x86tomips-config.h"
@@ -110,12 +111,11 @@ target_ulong helper_read_crN(CPUX86State *env, int reg)
         val = env->cr[reg];
         break;
     case 8:
-        // FIXME handle this later
-        // if (!(env->hflags2 & HF2_VINTR_MASK)) {
-            // val = cpu_get_apic_tpr(env_archcpu(env)->apic_state);
-        // } else {
-            // val = env->v_tpr;
-        // }
+        if (!(env->hflags2 & HF2_VINTR_MASK)) {
+            val = cpu_get_apic_tpr(env_archcpu(env)->apic_state);
+        } else {
+            val = env->v_tpr;
+        }
         break;
     }
     return val;
@@ -135,13 +135,12 @@ void helper_write_crN(CPUX86State *env, int reg, target_ulong t0)
         cpu_x86_update_cr4(env, t0);
         break;
     case 8:
-        // FIXME handle this later
-        // if (!(env->hflags2 & HF2_VINTR_MASK)) {
-            // qemu_mutex_lock_iothread();
-            // cpu_set_apic_tpr(env_archcpu(env)->apic_state, t0);
-            // qemu_mutex_unlock_iothread();
-        // }
-        // env->v_tpr = t0 & 0x0f;
+        if (!(env->hflags2 & HF2_VINTR_MASK)) {
+            qemu_mutex_lock_iothread();
+            cpu_set_apic_tpr(env_archcpu(env)->apic_state, t0);
+            qemu_mutex_unlock_iothread();
+        }
+        env->v_tpr = t0 & 0x0f;
         break;
     default:
         env->cr[reg] = t0;

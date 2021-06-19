@@ -93,6 +93,51 @@ code_gen_ptr 和 data_gen_ptr 都是意思啊
   - 从 tcg_code_size 看， code_gen_ptr  code_gen_buffer 分别是缓冲区的尾和头
 
 将 code_gen_buffer 划分为大小相等的 regions，
+
+- [ ] tb_jmp_cache 是个啥
+  - [ ] tb_flush_jmp_cache
+
 ## cputlb.c
 
 
+
+### 什么是 mmu idx
+```c
+#define NB_MMU_MODES 3
+
+typedef struct CPUTLB {
+    CPUTLBCommon c;
+    CPUTLBDesc d[NB_MMU_MODES];
+    CPUTLBDescFast f[NB_MMU_MODES];
+} CPUTLB;
+```
+
+- [x] 深入理解一下 tlb_hit 和 victim_tlb_hit
+  - tlb_hit 的实现很容易，通过 cpu_mmu_index 获取 mmu_idx, 然后就可以得到对应的 TLB entry 了，然后比较即可
+  - victim_tlb_hit 是一个全相连的 TLB
+
+使用 mmu idx 的原因是，因为为了将各种状态下的 TLB 分类保存，
+例如在用户态下，SMAP[^1] 之类的
+```c
+static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
+{
+    return (env->hflags & HF_CPL_MASK) == 3 ? MMU_USER_IDX :
+        (!(env->hflags & HF_SMAP_MASK) || (env->eflags & AC_MASK))
+        ? MMU_KNOSMAP_IDX : MMU_KSMAP_IDX;
+}
+```
+
+两个 flush 的接口， tlb_flush_page_by_mmuidx 和 tlb_flush_by_mmuidx 一个用于 flush 一个，一个用于 flush 全部 tlb
+
+### remote tlb shoot
+很多时候，需要将 remote 的 TLB 清理掉，但是 remote 的 cpu 还在运行，所以必须确定了 remote cpu 不会使用
+TLB 才可以返回。
+
+- [ ] async_run_on_cpu : 首先将代码实现出来
+  - qemu_cpu_kick
+    - cpu_exit : 如果是 qemu_tcg_mttcg_enabled 那么就对于所有的 cpu 进行 cpu_exit
+      - `atomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);` : 猜测这个会导致接下来 tb 执行退出 ?
+        - [ ] icount_decr 只是在 TB 开始的位置检查，怎么办 ? (tr_gen_tb_start)
+
+
+[^1]: https://lwn.net/Articles/517475/
