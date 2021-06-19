@@ -22,7 +22,6 @@ void tcg_exec_init(unsigned long tb_size);
 #define tcg_enabled() 0
 #endif
 
-
 // FIXME copy a lot of macros without checking
 // ------------------------------ blindly copy started
 // ---------------------------------- //
@@ -1448,23 +1447,22 @@ typedef struct CPUX86State {
   uint64_t tsc_aux;
 
   // FIXME what's mtrr ?
-    /* MTRRs */
-    uint64_t mtrr_fixed[11];
-    uint64_t mtrr_deftype;
-    MTRRVar mtrr_var[MSR_MTRRcap_VCNT];
+  /* MTRRs */
+  uint64_t mtrr_fixed[11];
+  uint64_t mtrr_deftype;
+  MTRRVar mtrr_var[MSR_MTRRcap_VCNT];
 
-    uint64_t mcg_cap;
-    uint64_t mcg_ctl;
-    uint64_t mcg_ext_ctl;
-    uint64_t mce_banks[MCE_BANKS_DEF*4];
-    uint64_t xstate_bv;
+  uint64_t mcg_cap;
+  uint64_t mcg_ctl;
+  uint64_t mcg_ext_ctl;
+  uint64_t mce_banks[MCE_BANKS_DEF * 4];
+  uint64_t xstate_bv;
 
+  uint64_t pat;
 
-    uint64_t pat;
+  uint64_t mcg_status;
 
-    uint64_t mcg_status;
-
-    uint64_t msr_ia32_misc_enable;
+  uint64_t msr_ia32_misc_enable;
 
 } CPUX86State;
 
@@ -1715,8 +1713,8 @@ uint64_t cpu_get_tsc(CPUX86State *env);
 
 /* helper.c */
 bool x86_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
-                      MMUAccessType access_type, int mmu_idx,
-                      bool probe, uintptr_t retaddr);
+                      MMUAccessType access_type, int mmu_idx, bool probe,
+                      uintptr_t retaddr);
 void x86_cpu_set_a20(X86CPU *cpu, int a20_state);
 
 // FIXME maybe, we should group cc functions together
@@ -1724,20 +1722,19 @@ void breakpoint_handler(CPUState *cs);
 bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 
 // FIXME
-// this is function in cpu.h, and originally registered by 
-// x86_cpu_common_class_init, 
+// this is function in cpu.h, and originally registered by
+// x86_cpu_common_class_init,
 void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb);
 
 // FIXME understand this function
 static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
-                                        target_ulong *cs_base, uint32_t *flags)
-{
-    *cs_base = env->segs[R_CS].base;
-    *pc = *cs_base + env->eip;
-    *flags = env->hflags |
-        (env->eflags & (IOPL_MASK | TF_MASK | RF_MASK | VM_MASK | AC_MASK));
+                                        target_ulong *cs_base,
+                                        uint32_t *flags) {
+  *cs_base = env->segs[R_CS].base;
+  *pc = *cs_base + env->eip;
+  *flags = env->hflags |
+           (env->eflags & (IOPL_MASK | TF_MASK | RF_MASK | VM_MASK | AC_MASK));
 }
-
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
