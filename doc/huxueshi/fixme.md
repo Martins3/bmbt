@@ -9,7 +9,7 @@
   - [ ] 显然哪里实现还是有考虑有问题，显然 i386/cpu.c 中间还是存在很多我们需要的东西的
 - [ ] tcg-all.c : 涉及到初始化 tcg engine, 很短的一个文件
 
-- [ ] 关键问题 : 
+- [ ] qemu_tcg_init_vcpu : 在 cpus.c 中还存在一些代码
 
 # translate-all.c 代码分析
 > 最后将这些东西整理到 softmmu 和 translator 中吧
@@ -50,6 +50,11 @@
       - tlb_protect_code : 指向 exec.c 中间，应该是通过 dirty / clean 的方式来防止代码被修改 ?
         - [ ] 原则上，guest 代码段被修改必然需要让对应的 tb 也是被 invalidate 的呀
 
+- [ ] tb_gen_code 的 cflags 是做什么的 ?
+  - compile flags
+  - 来控制什么 ?
+  - CPUState 中间的 cpu_index, cluster_index 做啥的 ?
+
 # tcg.c 的代码分析
 
 - [ ] tcg_region_state
@@ -81,4 +86,13 @@
   - code_gen_alloc
   - tcg_prologue_init
 
+tcg_region 到底是什么东西呀?
+
+code_gen_ptr 和 data_gen_ptr 都是意思啊
+  - [ ] 从 tcg_tb_alloc 中看，就是连续分配的啊
+  - 从 tcg_code_size 看， code_gen_ptr  code_gen_buffer 分别是缓冲区的尾和头
+
+将 code_gen_buffer 划分为大小相等的 regions，
 ## cputlb.c
+
+

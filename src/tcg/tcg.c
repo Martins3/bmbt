@@ -1106,7 +1106,6 @@ void tcg_region_reset_all(void)
     for (i = 0; i < n_ctxs; i++) {
         TCGContext *s = atomic_read(&tcg_ctxs[i]);
         bool err = tcg_region_initial_alloc__locked(s);
-
         g_assert(!err);
     }
     qemu_mutex_unlock(&region.lock);
@@ -1257,7 +1256,7 @@ void tcg_context_init(TCGContext *s)
     tcg_ctxs = &tcg_ctx;
     n_tcg_ctxs = 1;
 #else
-    // FIXME ....
+    // FIXME ...
     // MachineState *ms = MACHINE(qdev_get_machine());
     // unsigned int max_cpus = ms->smp.max_cpus;
     tcg_ctxs = g_new(TCGContext *, max_cpus);
@@ -1266,4 +1265,137 @@ void tcg_context_init(TCGContext *s)
     tcg_debug_assert(!tcg_regset_test_reg(s->reserved_regs, TCG_AREG0));
     ts = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, TCG_AREG0, "env");
     cpu_env = temp_tcgv_ptr(ts);
+}
+
+#ifdef CONFIG_USER_ONLY
+static size_t tcg_n_regions(void)
+{
+    return 1;
+}
+#else
+/*
+ * It is likely that some vCPUs will translate more code than others, so we
+ * first try to set more regions than max_cpus, with those regions being of
+ * reasonable size. If that's not possible we make do by evenly dividing
+ * the code_gen_buffer among the vCPUs.
+ */
+static size_t tcg_n_regions(void)
+{
+    size_t i;
+
+    /* Use a single region if all we have is one vCPU thread */
+#if !defined(CONFIG_USER_ONLY)
+    // FIXME I don't know how mttcg works
+    unsigned int max_cpus = 1;
+
+    // MachineState *ms = MACHINE(qdev_get_machine());
+    // unsigned int max_cpus = ms->smp.max_cpus;
+#endif
+    // if (max_cpus == 1 || !qemu_tcg_mttcg_enabled()) {
+        // return 1;
+    // }
+
+    /* Try to have more regions than max_cpus, with each region being >= 2 MB */
+    for (i = 8; i > 0; i--) {
+        size_t regions_per_thread = i;
+        size_t region_size;
+
+        region_size = tcg_init_ctx.code_gen_buffer_size;
+        region_size /= max_cpus * regions_per_thread;
+
+        if (region_size >= 2 * 1024u * 1024) {
+            return max_cpus * regions_per_thread;
+        }
+    }
+    /* If we can't, then just allocate one region per vCPU thread */
+    return max_cpus;
+}
+#endif
+
+/*
+ * Initializes region partitioning.
+ *
+ * Called at init time from the parent thread (i.e. the one calling
+ * tcg_context_init), after the target's TCG globals have been set.
+ *
+ * Region partitioning works by splitting code_gen_buffer into separate regions,
+ * and then assigning regions to TCG threads so that the threads can translate
+ * code in parallel without synchronization.
+ *
+ * In softmmu the number of TCG threads is bounded by max_cpus, so we use at
+ * least max_cpus regions in MTTCG. In !MTTCG we use a single region.
+ * Note that the TCG options from the command-line (i.e. -accel accel=tcg,[...])
+ * must have been parsed before calling this function, since it calls
+ * qemu_tcg_mttcg_enabled().
+ *
+ * In user-mode we use a single region.  Having multiple regions in user-mode
+ * is not supported, because the number of vCPU threads (recall that each thread
+ * spawned by the guest corresponds to a vCPU thread) is only bounded by the
+ * OS, and usually this number is huge (tens of thousands is not uncommon).
+ * Thus, given this large bound on the number of vCPU threads and the fact
+ * that code_gen_buffer is allocated at compile-time, we cannot guarantee
+ * that the availability of at least one region per vCPU thread.
+ *
+ * However, this user-mode limitation is unlikely to be a significant problem
+ * in practice. Multi-threaded guests share most if not all of their translated
+ * code, which makes parallel code generation less appealing than in softmmu.
+ */
+void tcg_region_init(void)
+{
+    void *buf = tcg_init_ctx.code_gen_buffer;
+    void *aligned;
+    size_t size = tcg_init_ctx.code_gen_buffer_size;
+    size_t page_size = qemu_real_host_page_size;
+    size_t region_size;
+    size_t n_regions;
+    size_t i;
+
+    n_regions = tcg_n_regions();
+
+    /* The first region will be 'aligned - buf' bytes larger than the others */
+    aligned = QEMU_ALIGN_PTR_UP(buf, page_size);
+    g_assert(aligned < tcg_init_ctx.code_gen_buffer + size);
+    /*
+     * Make region_size a multiple of page_size, using aligned as the start.
+     * As a result of this we might end up with a few extra pages at the end of
+     * the buffer; we will assign those to the last region.
+     */
+    region_size = (size - (aligned - buf)) / n_regions;
+    region_size = QEMU_ALIGN_DOWN(region_size, page_size);
+
+    /* A region must have at least 2 pages; one code, one guard */
+    g_assert(region_size >= 2 * page_size);
+
+    /* init the region struct */
+    qemu_mutex_init(&region.lock);
+    region.n = n_regions;
+    region.size = region_size - page_size;
+    region.stride = region_size;
+    region.start = buf;
+    region.start_aligned = aligned;
+    /* page-align the end, since its last page will be a guard page */
+    region.end = QEMU_ALIGN_PTR_DOWN(buf + size, page_size);
+    /* account for that last guard page */
+    region.end -= page_size;
+
+    /* set guard pages */
+    for (i = 0; i < region.n; i++) {
+        void *start, *end;
+        int rc;
+
+        tcg_region_bounds(i, &start, &end);
+        rc = qemu_mprotect_none(end, page_size);
+        g_assert(!rc);
+    }
+
+    tcg_region_trees_init();
+
+    /* In user-mode we support only one ctx, so do the initial allocation now */
+#ifdef CONFIG_USER_ONLY
+    {
+        bool err = tcg_region_initial_alloc__locked(tcg_ctx);
+
+        g_assert(!err);
+    }
+#endif
 }

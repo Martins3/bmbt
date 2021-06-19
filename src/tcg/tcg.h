@@ -214,7 +214,7 @@ typedef struct TCGContext {
 
 } TCGContext;
 
-// FIXME tcg.h is being well included
+extern TCGContext tcg_init_ctx;
 extern TCGContext *tcg_ctx;
 TCGv_env cpu_env = 0;
 
@@ -537,7 +537,6 @@ static inline TCGv_i32 temp_tcgv_i32(TCGTemp *t) {
 
 static inline TCGv_ptr temp_tcgv_ptr(TCGTemp *t) {
   return (TCGv_ptr)temp_tcgv_i32(t);
-
 }
 
 void tcg_prologue_init(TCGContext *s);

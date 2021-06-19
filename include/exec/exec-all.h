@@ -1,11 +1,12 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
 #include "../hw/core/cpu.h"
+#include "../qemu/atomic.h"
 #include "../types.h"
 #include "cpu-defs.h"
-#include "../qemu/atomic.h"
+#include "../sysemu/cpus.h"
 
-// TODO it seems this is the hacking of xqm
+// FIXME it seems this is the hacking of xqm
 // copy here blindly
 // maybe mvoe ExtraBlock to LATX
 // 1. typedef char int8; defined by LATX
@@ -61,7 +62,9 @@ typedef struct TranslationBlock {
   u32 flags; /* flags defining in which context the code was generated */
   u16 size;  /* size of target code for this block (1 <=
                      size <= TARGET_PAGE_SIZE) */
-  // FIXME What's icount, how to handle it?
+  // FIXME
+  // What's icount, how to handle it?
+  // what's the relatetion with icount_decr?
   uint16_t icount;
   u32 cflags; /* compile flags */
 
@@ -131,17 +134,16 @@ typedef struct TranslationBlock {
      The list is protected by the TB's page('s) lock(s) */
   uintptr_t page_next[2];
 
-
 } TranslationBlock;
 
+extern bool parallel_cpus;
 
 /* current cflags for hashing/comparison */
 static inline u32 curr_cflags(void) {
-  // TODO
-  return 0;
+  return (parallel_cpus ? CF_PARALLEL : 0) | (use_icount ? CF_USE_ICOUNT : 0);
 }
 
-// TODO why is 16 ?
+// FIXME why is 16 ?
 #define CODE_GEN_ALIGN 16 /* must be >= of the size of a icache line */
 
 /* vl.c */
@@ -499,9 +501,8 @@ hwaddr memory_region_section_get_iotlb(CPUState *cpu,
 void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr);
 
 /* Hide the atomic_read to make code a little easier on the eyes */
-static inline uint32_t tb_cflags(const TranslationBlock *tb)
-{
-    return atomic_read(&tb->cflags);
+static inline uint32_t tb_cflags(const TranslationBlock *tb) {
+  return atomic_read(&tb->cflags);
 }
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
