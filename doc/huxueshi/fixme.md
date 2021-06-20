@@ -3,13 +3,26 @@
   - [ ] tcg_prologue_init
   - [ ] 从 tcg_prologue_init 向外发散出来很多东西，不过大大的丰富了 TCGContext 的
   - [ ] tcg.c 在本来的涉及中间，是好几个文件和合集(因为 #include .c 的原因), 到时候拆开 ?
+    - [ ] 最恐怖的是，发现这些文件基本处于没有被使用的状态
+    - [ ] 实际上，将 tcg_prologue_init 包含进来，也只是花费了 1000 行而已，原来的设计中，剩下的代码在干什么 ?
   - [ ] ELF_HOST_MACHINE 到底在干什么 ?
-  - [ ] 实际上，将 tcg_prologue_init 包含进来，也只是花费了 1000 行而已，原来的设计中，剩下的代码在干什么 ?
 - [ ] cpu.c : 感觉 helper 没有向这里调用，感觉很奇怪啊, 似乎只是一些配置函数 ?
-  - [ ] 显然哪里实现还是有考虑有问题，显然 i386/cpu.c 中间还是存在很多我们需要的东西的
+  - [ ] 哪里有问题，显然 i386/cpu.c 中间还是存在很多我们需要的东西的
 - [ ] tcg-all.c : 涉及到初始化 tcg engine, 很短的一个文件
 
 - [ ] qemu_tcg_init_vcpu : 在 cpus.c 中还存在一些代码
+
+- [ ] memory_ldst.c 的结构分析
+  - [ ] 分析一下文件结构
+  - [ ] 分析一下调用路径
+
+- [ ] 分析一下 rcu 机制
+- [ ] atomic 机制谁在使用啊
+- [ ] qemu_mutex 机制 ?
+
+- [ ] 多核机制分析其实不仅仅在于此
+  - cpus.h
+  - CPUState 中的 cpu_index, cluster_index 等
 
 # translate-all.c 代码分析
 > 最后将这些东西整理到 softmmu 和 translator 中吧

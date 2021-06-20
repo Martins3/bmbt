@@ -11,10 +11,12 @@
 | TBContext        |                                                                                         |
 
 x86_cpu_common_class_init 中注册的函数:
-| function                    | 使用位置                    |
-|-----------------------------|-----------------------------|
-| x86_cpu_tlb_fill            | tlb_fill, tlb_vaddr_to_host |
-| x86_cpu_synchronize_from_tb | cpu_tb_exec                 |
+本来在 CPUState 中持有 CPUClass 的指针，并且可以通过 CPU_GET_CLASS 来获取
+| function                               | 使用位置                    |
+|----------------------------------------|-----------------------------|
+| x86_cpu_tlb_fill                       | tlb_fill, tlb_vaddr_to_host |
+| x86_cpu_synchronize_from_tb            | cpu_tb_exec                 |
+| x86_cpu_exec_exit & x86_cpu_exec_enter | cpu_exec                    |
 
 - [ ] 应该感到非常奇怪才对，注册了这么多函数，为什么只有这么一点点才在使用啊
 - [ ] CPUClass 应该可以完全被移除掉才对啊

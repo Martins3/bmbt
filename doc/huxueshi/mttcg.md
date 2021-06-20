@@ -29,8 +29,6 @@
 
 - [ ] 当持有 BQL 的时候，到底可以做什么事情 ?
 
-- [ ] https://lwn.net/Articles/697265/
-- [ ] https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
 
 主要使用 qemu_mutex_unlock_iothread 的主要在
 /home/maritns3/core/ld/DuckBuBi/src/tcg/cpu-exec.c
@@ -47,5 +45,34 @@
 
 ## 如果 mttcg 之外，iothread 之外，还有什么 thread 的挑战
 
+
+## [^3]
+- QEMU architecture
+  - QEMU architecture (up to 0.15) : 这个版本只有同时只有一个 cpu_exec 执行，执行流在处理 io 和翻译之间交替进行
+  - QEMU architecture (1.0) : 多个 cpu_exec 可以同时执行，所以只有一个 cpu_exec 可以获取 BQL 从而处理 io 事件。
+- virtio-blk-dataplane architecture
+- Unlocked memory dispatch
+- Unlocked MMIO
+
+RCU is a bulk reference-counting mechanism
+- [ ] 我感觉 RCU 在 QEMU 中间的作用是，如果 writer 已经释放了资源，但是这个资源真正释放的时间是 reader 不在使用的时候
+
+
+Virtio-blk-data-plane 允许块I/O处理操作与其他的虚拟设备并行运行，去除big-qemu-lock的影响，达到高I/O性能的结果。 [^4]
+
+## [^5]
+在 A TCG primer 很好的总结了 TCG 的工作模式以及退出的原因。
+
+在 Atomics, 
+Save load value/address and check on store, 
+Load-link/store-conditional instruction support via SoftMMU,
+Link helpers and instrumented stores,
+中应该是分析了在 TCG 需要增加的工作
+
+在 Memory coherency 分析的东西，暂时有点迷茫，不知道想要表达什么东西。 @todo
+
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
+[^3]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
+[^4]: https://blog.csdn.net/memblaze_2011/article/details/48808147
+[^5]: https://lwn.net/Articles/697265/

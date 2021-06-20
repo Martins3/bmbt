@@ -15,13 +15,6 @@ typedef struct CPUState CPUState;
  */
 typedef uint64_t vaddr;
 
-typedef struct CPUClass {
-
-  void (*cpu_exec_exit)(CPUState *cpu);
-  void (*cpu_exec_enter)(CPUState *cpu);
-
-} CPUClass;
-
 typedef struct CPUBreakpoint {
   vaddr pc;
   int flags; /* BP_* */
@@ -43,9 +36,7 @@ struct CPUWatchpoint {
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
 
 typedef struct CPUState {
-  CPUClass *cc; // FIXME init this
-
-  // TODO cores
+  // FIXME cores
   int nr_cores;
   int nr_threads;
 

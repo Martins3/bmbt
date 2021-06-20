@@ -5,6 +5,7 @@
 #include "../../include/exec/tb-lookup.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/rcu.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
@@ -470,10 +471,6 @@ static inline bool cpu_handle_interrupt(CPUState *cpu,
 }
 
 int cpu_exec(CPUState *cpu) {
-  // FIXME how
-  // CPUClass *cc = CPU_GET_CLASS(cpu);
-  CPUClass *cc = cpu->cc;
-
   int ret;
 
   // FIXME is user mode come to here too?
@@ -487,9 +484,8 @@ int cpu_exec(CPUState *cpu) {
   // return EXCP_HALTED;
   // }
 
-  // rcu_read_lock();
-
-  cc->cpu_exec_enter(cpu);
+  rcu_read_lock();
+  x86_cpu_exec_enter(cpu);
 
   /* Calculate difference between guest clock and host clock.
    * This delay includes the delay of the last cycle, so
@@ -505,9 +501,9 @@ int cpu_exec(CPUState *cpu) {
     if (qemu_mutex_iothread_locked()) {
       qemu_mutex_unlock_iothread();
     }
-    qemu_plugin_disable_mem_helpers(cpu);
-
-    assert_no_pages_locked();
+    // FIXME they are empty
+    // qemu_plugin_disable_mem_helpers(cpu);
+    // assert_no_pages_locked();
   }
 
   /* if an exception is pending, we execute it here */
@@ -545,7 +541,8 @@ int cpu_exec(CPUState *cpu) {
     }
   }
 
-  cc->cpu_exec_exit(cpu);
+  x86_cpu_exec_exit(cpu);
+  rcu_read_unlock();
 
   return ret;
 

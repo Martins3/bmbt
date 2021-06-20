@@ -1736,6 +1736,9 @@ static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
            (env->eflags & (IOPL_MASK | TF_MASK | RF_MASK | VM_MASK | AC_MASK));
 }
 
+void x86_cpu_exec_enter(CPUState *cpu);
+void x86_cpu_exec_exit(CPUState *cpu);
+
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
 
