@@ -94,8 +94,6 @@ code_gen_ptr 和 data_gen_ptr 都是意思啊
 
 将 code_gen_buffer 划分为大小相等的 regions，
 
-- [ ] tb_jmp_cache 是个啥
-  - [ ] tb_flush_jmp_cache
 
 ## cputlb.c
 
@@ -139,5 +137,10 @@ TLB 才可以返回。
       - `atomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);` : 猜测这个会导致接下来 tb 执行退出 ?
         - [ ] icount_decr 只是在 TB 开始的位置检查，怎么办 ? (tr_gen_tb_start)
 
+## 其他
+- [ ] tb_jmp_cache 是个啥
+  - [ ] tb_flush_jmp_cache
+
+## 分析 memory_ldst.c.inc
 
 [^1]: https://lwn.net/Articles/517475/
