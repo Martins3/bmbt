@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <assert.h>
 #include "../types.h"
+#include "osdep.h"
 
 #define BIT(nr)                 (1UL << (nr))
 
@@ -13,6 +14,8 @@
 #define BITS_PER_BYTE           CHAR_BIT
 #define BITS_PER_LONG           (sizeof (unsigned long) * BITS_PER_BYTE)
 #define BIT_WORD(nr)            ((nr) / BITS_PER_LONG)
+#define BIT_WORD(nr)            ((nr) / BITS_PER_LONG)
+#define BITS_TO_LONGS(nr)       DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
 
 /**
  * test_bit - Determine whether a bit is set

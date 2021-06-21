@@ -111,7 +111,7 @@ void call_rcu1(struct rcu_head *node, void (*func)(struct rcu_head *node))
 }
 ```
 
-## qatomic_rcu_read 和 qatomic_rcu_set
+#### qatomic_rcu_read 和 qatomic_rcu_set
 qatomic_rcu_read and qatomic_rcu_set replace `rcu_dereference` and
 `rcu_assign_pointer`.  They take a _pointer_ to the variable being accessed.[^1]
 
@@ -142,6 +142,45 @@ reader 获取了指针 p 之后，之后通过 p 进行各种操作可以保证 
 
 ## [^1] 
 In QEMU, when a lock is used, this will often be the "iothread mutex", also known as the "big QEMU lock" (BQL). 
+
+## 分析一下在当前项目中使用到的 RCU
+```
+➜  src git:(xqm) ✗ ag rcu
+qemu/memory_ldst.c.inc
+35:    RCU_READ_LOCK();
+65:    RCU_READ_UNLOCK();
+103:    RCU_READ_LOCK();
+133:    RCU_READ_UNLOCK();
+169:    RCU_READ_LOCK();
+188:    RCU_READ_UNLOCK();
+205:    RCU_READ_LOCK();
+235:    RCU_READ_UNLOCK();
+274:    RCU_READ_LOCK();
+296:    RCU_READ_UNLOCK();
+311:    RCU_READ_LOCK();
+340:    RCU_READ_UNLOCK();
+374:    RCU_READ_LOCK();
+392:    RCU_READ_UNLOCK();
+407:    RCU_READ_LOCK();
+436:    RCU_READ_UNLOCK();
+471:    RCU_READ_LOCK();
+500:    RCU_READ_UNLOCK();
+528:#undef RCU_READ_LOCK
+529:#undef RCU_READ_UNLOCK
+
+tcg/cputlb.c
+764: * Called from TCG-generated code, which is under an RCU read-side
+
+tcg/cpu-exec.c
+8:#include "../../include/qemu/rcu.h"
+487:  rcu_read_lock();
+545:  rcu_read_unlock();
+
+tcg/translate-all.c
+525:        void **p = atomic_rcu_read(lp);
+544:    pd = atomic_rcu_read(lp);
+```
+
 
 [^1]: https://github.com/qemu/qemu/blob/master/docs/devel/rcu.txt
 [^2]: https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2021/03/14/qemu-rcu

@@ -4,6 +4,7 @@
 // FIXME can I include this in kernel mode?
 #include "../../exec/memattrs.h"
 #include "../../qemu/queue.h"
+#include "../../qemu/bitmap.h"
 #include "../../types.h"
 #include <setjmp.h>
 
@@ -81,6 +82,11 @@ typedef struct CPUState {
 
   bool in_exclusive_context;
 
+  // FIXME the macros defines here temporarily
+#define CPU_TRACE_DSTATE_MAX_EVENTS 32
+  // FIXME currently, this field is only referenced by tb_lookup__cpu_state
+  // it's weird, find how it works in original qemu
+  DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
 } CPUState;
 
 // FIXME

@@ -227,4 +227,5 @@ void qht_statistics_init(const struct qht *ht, struct qht_stats *stats);
  */
 void qht_statistics_destroy(struct qht_stats *stats);
 
+
 #endif /* QEMU_QHT_H */

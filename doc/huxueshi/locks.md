@@ -14,6 +14,9 @@
 - [ ] 如果 mttcg 的话，对于同一份 guest code 会每一个 cpu 都会生成 tb 吗?
   - [ ] 完全就是分开管理的吗 ?
   - [ ] 如果是，qht 的作用是根据地址找代码段，似乎这个就说不过去了
+  - 这些 tb 的插入都是靠 tb_link_page 进行的，`qht_insert(&tb_ctx.htable, tb, h, &existing_tb);`
+    - 现在只是需要分析一下，这些 tb_ctx.htable 的关系
+
 
 实际上，就是需要理解 cpus.h
 
@@ -47,6 +50,7 @@
 在 /home/maritns3/core/ld/DuckBuBi/src/qemu/memory_ldst.c.inc 中间还有一堆 RCU_READ_LOCK
 
 ## 如果 mttcg 之外，iothread 之外，还有什么 thread 的挑战
+- [ ] 在 translate-all.c 的 page_lock
 
 
 ## [^3]

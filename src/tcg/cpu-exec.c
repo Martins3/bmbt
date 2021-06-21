@@ -1,10 +1,12 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/exec-all.h"
+#include "../../include/exec/tb-context.h"
 #include "../../include/exec/tb-hash.h"
 #include "../../include/exec/tb-lookup.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
@@ -547,4 +549,74 @@ int cpu_exec(CPUState *cpu) {
   return ret;
 
   return 0;
+}
+
+struct tb_desc {
+  target_ulong pc;
+  target_ulong cs_base;
+  CPUArchState *env;
+  tb_page_addr_t phys_page1;
+  uint32_t flags;
+  uint32_t cf_mask;
+  uint32_t trace_vcpu_dstate;
+};
+
+static bool tb_lookup_cmp(const void *p, const void *d) {
+  const TranslationBlock *tb = p;
+  const struct tb_desc *desc = d;
+
+  if (tb->pc == desc->pc && tb->page_addr[0] == desc->phys_page1 &&
+      tb->cs_base == desc->cs_base && tb->flags == desc->flags &&
+      tb->trace_vcpu_dstate == desc->trace_vcpu_dstate &&
+      (tb_cflags(tb) & (CF_HASH_MASK | CF_INVALID)) == desc->cf_mask) {
+    /* check next page if needed */
+    if (tb->page_addr[1] == -1) {
+      return true;
+    } else {
+      tb_page_addr_t phys_page2;
+      target_ulong virt_page2;
+
+      virt_page2 = (desc->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE;
+      phys_page2 = get_page_addr_code(desc->env, virt_page2);
+      if (tb->page_addr[1] == phys_page2) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
+                                   target_ulong cs_base, uint32_t flags,
+                                   uint32_t cf_mask) {
+  tb_page_addr_t phys_pc;
+  struct tb_desc desc;
+  uint32_t h;
+
+  desc.env = (CPUArchState *)cpu->env_ptr;
+  desc.cs_base = cs_base;
+  desc.flags = flags;
+  desc.cf_mask = cf_mask;
+  desc.trace_vcpu_dstate = *cpu->trace_dstate;
+  desc.pc = pc;
+  phys_pc = get_page_addr_code(desc.env, pc);
+  if (phys_pc == -1) {
+    return NULL;
+  }
+  desc.phys_page1 = phys_pc & TARGET_PAGE_MASK;
+  h = tb_hash_func(phys_pc, pc, flags, cf_mask, *cpu->trace_dstate);
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_X86toMIPS) &&                    \
+    defined(CONFIG_XTM_PROFILE)
+  tb_hash_cmp_cnt = 0;
+
+  TranslationBlock *tb =
+      qht_lookup_custom_xtm(&tb_ctx.htable, &desc, h, tb_lookup_cmp,
+                            &tb_hash_cmp_cnt, xtm_pf_tb_hash_cmp_counter);
+
+  xtm_pf_tb_hash_table(cpu, tb, tb_hash_cmp_cnt);
+  tb_hash_cmp_cnt = 0;
+
+  return tb;
+#else
+  return qht_lookup_custom(&tb_ctx.htable, &desc, h, tb_lookup_cmp);
+#endif
 }

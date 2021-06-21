@@ -2,6 +2,7 @@
 #define BITMAP_H_ENRPTXFD
 
 #include <stdlib.h>
+#include "bitops.h"
 
 
 static inline unsigned long *bitmap_try_new(long nbits)
@@ -24,5 +25,8 @@ static inline unsigned long *bitmap_new(long nbits)
 
 // FIXME fix later, I'm fucking tired
 void bitmap_set(unsigned long *map, long i, long len);
+
+#define DECLARE_BITMAP(name,bits)                  \
+        unsigned long name[BITS_TO_LONGS(bits)]
 
 #endif /* end of include guard: BITMAP_H_ENRPTXFD */

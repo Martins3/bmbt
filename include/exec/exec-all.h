@@ -505,4 +505,8 @@ static inline uint32_t tb_cflags(const TranslationBlock *tb) {
   return atomic_read(&tb->cflags);
 }
 
+TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
+                                   target_ulong cs_base, uint32_t flags,
+                                   uint32_t cf_mask);
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
