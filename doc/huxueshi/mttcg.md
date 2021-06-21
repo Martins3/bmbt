@@ -13,6 +13,7 @@
 
 - [ ] 如果 mttcg 的话，对于同一份 guest code 会每一个 cpu 都会生成 tb 吗?
   - [ ] 完全就是分开管理的吗 ?
+  - [ ] 如果是，qht 的作用是根据地址找代码段，似乎这个就说不过去了
 
 实际上，就是需要理解 cpus.h
 
@@ -42,6 +43,8 @@
 在 io_readx 和 io_writex 当 `mr->global_locking` 时候需要进行
 
 - 主要是在处理中断的时候
+
+在 /home/maritns3/core/ld/DuckBuBi/src/qemu/memory_ldst.c.inc 中间还有一堆 RCU_READ_LOCK
 
 ## 如果 mttcg 之外，iothread 之外，还有什么 thread 的挑战
 
