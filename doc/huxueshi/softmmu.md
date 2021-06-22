@@ -174,7 +174,15 @@ struct X86CPU {
   - tr_gen_softmmu_slow_path : slow path 的代码在每一个 tb 哪里只会生成一次
   - tr_gen_tb_end 
 
-## store_helper
+## 各种 helper 以及 memory_ldst.c.inc 在搞什么 ?
+cputlb.c 中的各种 helper 都会调用 load_helper
+
+memory_ldst.inc.h 和 memory_ldst.inc.c 是完全对应的，
+定义了那些 `address_space_*` 
+
+在目前移植的版本中间，`_cached_slow` 没有使用，这个只是出现在 exec.c 中间, 其调用者都是 virtio
+
+- [ ] 处理 endian ?
 
 ## 问题
 - [ ] 我们会模拟 hugetlb 之类的操作吗 ?
