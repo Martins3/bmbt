@@ -585,6 +585,7 @@ static bool tb_lookup_cmp(const void *p, const void *d) {
   }
   return false;
 }
+
 TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
                                    target_ulong cs_base, uint32_t flags,
                                    uint32_t cf_mask) {

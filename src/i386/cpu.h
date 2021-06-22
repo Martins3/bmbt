@@ -1726,7 +1726,6 @@ bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 // x86_cpu_common_class_init,
 void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb);
 
-// FIXME understand this function
 static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
                                         target_ulong *cs_base,
                                         uint32_t *flags) {

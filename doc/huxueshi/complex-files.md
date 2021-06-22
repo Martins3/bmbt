@@ -24,17 +24,22 @@
   - CPUState 中的 cpu_index, cluster_index 等
 
 ## cpu_exec.c
+
+#### tb 查找的过程
 - [ ] 在 /home/maritns3/core/notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-02.txt
 中间提到了, 首先使用虚拟地址查询(fast)，然后使用物理地址查询(slow)，为什么这么设计。
 - [ ] captive 说，其使用物理地址索引，所以效率更高之类的
   - [ ] 当使用上物理TLB 之后，使用物理地址作为索引更好吗 ?
 - [ ] 同时使用物理地址和虚拟地址作为索引的一个原因是不是因为曾经为了支持 usermode 的二进制翻译
 
-- tb_lookup
-  - tb_jmp_cache : 是快路径查询
+- tb_lookup__cpu_state(在 v6.0 叫做 tb_lookup)
+  - tb_jmp_cache : 是快路径查询查询，使用虚拟地址 tb_jmp_cache_hash_func 计算 hash，在 `cpu->tb_jmp_cache` 中间直接查询出来
+  - tb_ctx.htable : 慢路径，通过 get_page_addr_code 获取物理地址，然后通过 tb_hash_func 计算 hash 值, 最后调用 qht_lookup_custom 来查询
 
-# translate-all.c 代码分析
-(TB) 納入 QEMU 的管理，這是 tb_link_page 做的事。
+## translate-all.c 代码分析
+
+    
+#### SMC
 
 - tb_link_page (exec.c) 把新的 TB 加進 tb_phys_hash 和 l1_map 二級頁表。
 tb_find_slow 會用 pc 對映的 GPA 的哈希值索引 tb_phys_hash。
@@ -51,8 +56,6 @@ PageDesc 會維護一個 bitmap，這是給 SMC 之用。
 中，分析 PageDesc 的作用，可以通过 PageDesc 迅速找到这个 guest page 对应的所有的
 tb，从而将这些 tb 全部 invalidate 掉。
 
-- [ ] build_page_bitmap 居然是对于每一个 byte 建立一个 bit
-
 - [ ] 居然 PageDesc 是给 SMC 用的
   - 一共四个结构体, 去掉一个锁，first_tb 用于获取这个 page 上的所有 tb, 
 
@@ -60,7 +63,6 @@ tb，从而将这些 tb 全部 invalidate 掉。
 tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而是发现 tb_invalidate_phys_page_fast 多次被调用才会创建
 创建 bitmap 的作用是为了精准定位出来到底是哪一个 page 需要被 invalid。
 ```
-
 
 
 - [ ] page_flush_tb
@@ -72,14 +74,8 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
   - TranslationBlock::page_addr
     - 记录了一个 TB 所在的页面
     - 如果页面是连续的，就不应该申请两个
-    
-- tb_invalidate_phys_page_fast
-  - page_find
-    - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
-      - index 索引的标准是什么 ?
-      - 分配空间，还需要考虑 level 什么的
-  - build_page_bitmap
-  - tb_invalidate_phys_page_range__locked
+
+
 
 
 - [ ] SMC_BITMAP_USE_THRESHOLD
@@ -90,7 +86,7 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
     - get_page_addr_code_hostp
       - 如果命中，就是 TLB 的翻译 `p = (void *)((uintptr_t)addr + entry->addend);`
       - qemu_ram_addr_from_host_nofail
-  - tb_link_page
+  - tb_link_page : 将 tb 纳入到 QEMU 的管理中
     - tb_page_add
       - [ ] invalidate_page_bitmap : 根本无法理解，link page 的时候为什么会将 bitmap disable 掉
       - page_already_protected : 这个是什么逻辑

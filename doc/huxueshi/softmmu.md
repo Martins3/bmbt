@@ -25,6 +25,42 @@
 
 
 ## 问题
-- [ ] mmu_idx 是搞什么的
-  - 关键是这个东西老是和 async_run_on_cpu 有关
-- [ ] victim_tlb_hit : victim tlb 是做什么的 ?
+- [ ] 找到 load / store 的 softmmu 命中的过程
+- [ ] 我们会模拟 hugetlb 之类的操作吗 ?
+
+```c
+typedef struct CPUTLBEntry {
+    /* bit TARGET_LONG_BITS to TARGET_PAGE_BITS : virtual address
+       bit TARGET_PAGE_BITS-1..4  : Nonzero for accesses that should not
+                                    go directly to ram.
+       bit 3                      : indicates that the entry is invalid
+       bit 2..0                   : zero
+    */
+    union {
+        struct {
+            target_ulong addr_read;
+            target_ulong addr_write;
+            target_ulong addr_code;
+            /* Addend to virtual address to get host address.  IO accesses
+               use the corresponding iotlb value.  */
+            uintptr_t addend;
+        };
+        /* padding to get a power of two size */
+        uint8_t dummy[1 << CPU_TLB_ENTRY_BITS];
+    };
+} CPUTLBEntry;
+```
+- [ ] 为什么 CPUTLBEntry 需要三个 addr
+  - addr_write
+  - addr_code
+  - addr_read
+
+## softmmu 的 fast path 和 slow path
+
+#### fast path
+
+#### slot path
+- tr_ir2_generate
+  - tr_gen_tb_start
+  - tr_gen_softmmu_slow_path
+  - tr_gen_tb_end
