@@ -1,11 +1,13 @@
 # Divergence between qemu
 
 ## 几个关键的结构体功能和移植差异说明
+- [ ] 暂时无法区分 CPUX86State 和 X86CPU 的关系
+
 | struct           | explaination                                                                            |
 |------------------|-----------------------------------------------------------------------------------------|
 | CPUClass         | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
 | CPUState         |                                                                                         |
-| CPUX86State      |                                                                                         |
+| CPUX86State      | 和 CPUState 没有父子关系，而是靠 CPUState::env_ptr 决定的 |
 | X86CPU           |                                                                                         |
 | TranslationBlock | 1. size x86 代码的 size 还是 la 代码段的 size </br> 2.                                  |
 | TBContext        | 一个统计，一个 qht, 似乎只是定义了一个全局变量                                                                        |

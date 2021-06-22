@@ -1,5 +1,6 @@
 # SMC 
 
+
 - tb_invalidate_phys_page_fast
   - page_find
     - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
@@ -16,7 +17,8 @@
   - [ ] 包含了一堆 TARGET_HAS_PRECISE_SMC, 如果不精确，会怎么样 ?
     - [ ] 找一个不适用精确 SMC 的例子 ?
 
-- [ ] 真的相信是通过信号机制(SEGV)来防护的吗 ?
+- [x] 真的相信是通过信号机制(SEGV)来防护的吗 ?
+  - 用户态是如此处理的，系统态直接在 softmmu 的位置检查
 
 > 在软件 MMU 中通过 TLB_NOTDIRTY 标志和相关逻辑实现这些.
 
@@ -40,10 +42,12 @@
 static void tlb_reset_dirty_range_locked(CPUTLBEntry *tlb_entry,
                                          uintptr_t start, uintptr_t length)
 ```
-- [ ] 所有的 TLB 访问都是需要走 softmmu 计算的，当 store 的时候就可以知道开始通知 tb 的 flush
 
+## 检测: 当检测
+notdirty_write : 每次调用，都是存在检查到 TLB_NOTDIRTY 的时候，所以其作用是当写入一个 TLB_NOTDIRTY 的位置，然后将 page invalidate 掉
 
-## 一个没有任何分叉的调用路径
+## 保护 : 将含有代码的位置使用 TLB_NOTDIRTY 保护起来 
+一个没有任何分叉的调用路径
 
 - tb_link_page
   - tb_page_add
