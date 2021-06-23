@@ -1,14 +1,14 @@
 #include "../../include/exec/cpu-all.h"
+#include "../../include/exec/cpu-common.h"
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/exec-all.h"
-#include "../../include/exec/tb-hash.h"
-#include "../../include/exec/tb-lookup.h"
+#include "../../include/exec/memop.h"
+#include "../../include/exec/ramlist.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
-#include "../../include/qemu/osdep.h"
 #include "../../include/qemu/bswap.h"
+#include "../../include/qemu/osdep.h"
 #include "../../include/qemu/rcu.h"
-
 
 #include <stdbool.h>
 
@@ -196,6 +196,8 @@ uint32_t address_space_lduw(AddressSpace *as, hwaddr addr, MemTxAttrs attrs,
                                      DEVICE_NATIVE_ENDIAN);
 }
 
+// FIXME it references so many dirty related function
+// maybe I don't need it
 void address_space_stl_notdirty(AddressSpace *as, hwaddr addr, uint32_t val,
                                 MemTxAttrs attrs, MemTxResult *result) {
   uint8_t *ptr;
@@ -279,7 +281,6 @@ void address_space_stl(AddressSpace *as, hwaddr addr, uint32_t val,
   address_space_stl_internal(as, addr, val, attrs, result,
                              DEVICE_NATIVE_ENDIAN);
 }
-
 
 void address_space_stb(AddressSpace *as, hwaddr addr, uint32_t val,
                        MemTxAttrs attrs, MemTxResult *result) {
@@ -408,4 +409,3 @@ void address_space_stq(AddressSpace *as, hwaddr addr, uint64_t val,
   address_space_stq_internal(as, addr, val, attrs, result,
                              DEVICE_NATIVE_ENDIAN);
 }
-
