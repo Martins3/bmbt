@@ -4,6 +4,7 @@
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/memop.h"
 #include "../../include/exec/ramlist.h"
+#include "../../include/exec/memory.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bswap.h"

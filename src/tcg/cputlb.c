@@ -768,6 +768,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
                              hwaddr paddr, MemTxAttrs attrs, int prot,
                              int mmu_idx, target_ulong size)
 {
+  // FIXME uncomment this code
 #if 0
     CPUArchState *env = cpu->env_ptr;
     CPUTLB *tlb = env_tlb(env);
@@ -950,7 +951,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr,
 /* Add a new TLB entry, but without specifying the memory
  * transaction attributes to be used.
  */
-void tstore_helperlb_set_page(CPUState *cpu, target_ulong vaddr,
+void tlb_set_page(CPUState *cpu, target_ulong vaddr,
                   hwaddr paddr, int prot,
                   int mmu_idx, target_ulong size)
 {

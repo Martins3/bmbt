@@ -24,13 +24,11 @@ typedef struct MemoryRegionSection {
 
 #define RAM_ADDR_INVALID (~(ram_addr_t)0)
 
-// FIXME needed by address_space_ldl_internal, but I will not implement this
-// function
-static inline MemoryRegion *address_space_translate(AddressSpace *as,
-                                                    hwaddr addr, hwaddr *xlat,
-                                                    hwaddr *len, bool is_write,
-                                                    MemTxAttrs attrs);
-static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write);
+static MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
+                                             hwaddr *xlat, hwaddr *len,
+                                             bool is_write, MemTxAttrs attrs);
+
+static bool memory_access_is_direct(MemoryRegion *mr, bool is_write);
 
 // FIXME defined in exec.c
 static bool prepare_mmio_access(MemoryRegion *mr);

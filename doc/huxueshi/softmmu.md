@@ -112,6 +112,11 @@ typedef struct CPUIOTLBEntry {
 - [ ] tlb_set_page_with_attrs : 在这里似乎没有看到正常的 tlb refill 啊
 
 ## MemTxAttrs
+在 `x86_*_phys` 和 helper_outb 都是通过 cpu_get_mem_attrs 来构建参数 MemTxAttrs
+
+从目前看，MemTxAttrs 的主要作用是为了 SMM 模式，完全可以简化。
+
+- [ ] 简化的事情，以后在分析，等待可以编译的之后
 
 ## TLB 结构
 include/exec/cpu-defs.h
@@ -173,16 +178,6 @@ struct X86CPU {
   - tr_gen_tb_start
   - tr_gen_softmmu_slow_path : slow path 的代码在每一个 tb 哪里只会生成一次
   - tr_gen_tb_end 
-
-## 各种 helper 以及 memory_ldst.c.inc 在搞什么 ?
-cputlb.c 中的各种 helper 都会调用 load_helper
-
-memory_ldst.inc.h 和 memory_ldst.inc.c 是完全对应的，
-定义了那些 `address_space_*` 
-
-在目前移植的版本中间，`_cached_slow` 没有使用，这个只是出现在 exec.c 中间, 其调用者都是 virtio
-
-- [ ] 处理 endian ?
 
 ## 问题
 - [ ] 我们会模拟 hugetlb 之类的操作吗 ?
