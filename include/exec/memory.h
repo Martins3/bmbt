@@ -30,8 +30,6 @@ static MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
 
 static bool memory_access_is_direct(MemoryRegion *mr, bool is_write);
 
-// FIXME defined in exec.c
-static bool prepare_mmio_access(MemoryRegion *mr);
 
 /**
  * memory_region_dispatch_read: perform a read directly to the specified
@@ -98,10 +96,14 @@ static inline MemOp devend_memop(enum device_endian end) {
 }
 #endif
 
+// FIXME originally defined in exec.c
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr);
 
 // FIXME originally defined in exec.c
 static void invalidate_and_set_dirty(MemoryRegion *mr, hwaddr addr,
                                      hwaddr length);
+
+// FIXME originally defined in exec.c
+static bool prepare_mmio_access(MemoryRegion *mr);
 
 #endif /* end of include guard: MEMORY_H_E0UHP2JS */

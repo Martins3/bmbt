@@ -3,8 +3,8 @@
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/memop.h"
-#include "../../include/exec/ramlist.h"
 #include "../../include/exec/memory.h"
+#include "../../include/exec/ramlist.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bswap.h"
@@ -313,6 +313,10 @@ void address_space_stb(AddressSpace *as, hwaddr addr, uint32_t val,
   rcu_read_unlock();
 }
 
+// FIXME there's one scaring questions:
+// 1. get the QBL when entering cpu_exec
+// 2. but here, we are trying to know is lock locked
+// 3. so, in some helper, we unlocked the BQL, or the assumption is wrong
 static inline void address_space_stw_internal(AddressSpace *as, hwaddr addr,
                                               uint32_t val, MemTxAttrs attrs,
                                               MemTxResult *result,

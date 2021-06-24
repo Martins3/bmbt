@@ -78,6 +78,27 @@ Link helpers and instrumented stores,
 
 在 Memory coherency 分析的东西，暂时有点迷茫，不知道想要表达什么东西。 @todo
 
+## global_locking
+```c
+/**
+ * memory_region_clear_global_locking: Declares that access processing does
+ *                                     not depend on the QEMU global lock.
+ *
+ * By clearing this property, accesses to the memory region will be processed
+ * outside of QEMU's global lock (unless the lock is held on when issuing the
+ * access request). In this case, the device model implementing the access
+ * handlers is responsible for synchronization of concurrency.
+ *
+ * @mr: the memory region to be updated.
+ */
+void memory_region_clear_global_locking(MemoryRegion *mr);
+```
+- 从上下文知道，这里的 QEMU's global lock 就是 QEMU big lock
+- 而且 QEMU big lock 就是用于处理 memory region 的
+- memory_region_clear_global_locking 从来都不会被调用 
+
+- [ ] 用于进一步简化 memory_ldst
+
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
 [^3]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf

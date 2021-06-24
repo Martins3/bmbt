@@ -4,11 +4,6 @@
 分析 `address_space_*` 以及如何检查 memory_ldst.inc.c 和
 memory_ldst.inc.h 的方法。
 
-## [ ] x86_stl_phys_notdirty
-- [ ] notdirty 意味着什么 ?
-
-
-
 ## memory_ldst 的分析
 `#include "exec/memory_ldst.inc.h"` defined four times
 
@@ -109,4 +104,59 @@ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
   - cpu_address_space_init
 
 ## memory_ldst.c 分析
+这几个函数几乎都是对称的，但是 address_space_stl_notdirty 稍有不同
 
+- [ ] address_space_stl_notdirty 还没有分析
+
+分析 memory.h 吧。
+
+| function                                                   | desc                                                                                                          |
+|------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的 |
+| memory_region_dispatch_read / memory_region_dispatch_write | 最关键的，访问 device, 逐步向下分发的过程                                                                     |
+| memory_region_get_dirty_log_mask                           | 获取 MemoryRegion::dirty_log_mask                                                                             |
+| memory_region_get_ram_addr                                 |                                                                                                               |
+| devend_memop                                               | 使用一个非常繁杂的宏判断，进行 IO 的时候，设备是否需要进行 endiana 调整，从现在的调用链看，应该永远返回都是 0 |
+| qemu_map_ram_ptr                                           | 仔细看看注释，为了定义从 memory region 中的偏移获取 HVA, 定义了一堆函数                                       |
+| invalidate_and_set_dirty                                   | 将一个范围的 TLB invalidate 利用 DirtyMemoryBlocks 标记这个区域为 dirty                                       |
+| prepare_mmio_access                                        | 如果没有上 QBL 的话，那么把锁加上去                                                                           |
+| memory_access_is_direct                                    | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                                      |
+
+按道理，memory_ldst 提供的是标准访存接口，那么:
+
+- store_helper 和 io_readx 是如何实现的 ?
+  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read
+  - store_helper 是 address_space_stw_internal 的强化版本
+    - 主要是需要处理 TLB 命中的问题
+    - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
+
+## RAMBlock
+- qemu_ram_alloc : MemoryRegion::ram_block 总是使用这个初始化
+  - ram_block_add
+    - phys_mem_alloc (qemu_anon_ram_alloc)
+      - qemu_ram_mmap
+        - mmap : 可见，RAMBlock 就是分配一块空间
+
+- address_space_rw 和 address_space_stl 之类的关系是什么 ?
+  - 含义很清晰(指定 address_space 来访问)，但是，到目前为止，没有指向 address_space_rw 调用路径
+  - cpu_physical_memory_rw 是关键的调用者
+
+
+```c
+/* Return a host pointer to ram allocated with qemu_ram_alloc.
+ * This should not be used for general purpose DMA.  Use address_space_map
+ * or address_space_rw instead. For local memory (e.g. video ram) that the
+ * device owns, use memory_region_get_ram_ptr.
+ *
+ * Called within RCU critical section.
+ */
+void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr)
+```
+
+- [ ] 关注一下这两个全局变量的作用
+```c
+AddressSpace address_space_io;
+AddressSpace address_space_memory;
+```
+
+## [ ] 需要考虑 IOMMU 的问题吗 ?
