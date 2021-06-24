@@ -11,8 +11,8 @@
 下面是 tlb_fill 的几个调用者
 - get_page_addr_code : 从 guest 虚拟地址的 pc 获取 guest 物理地址的 pc
   - get_page_addr_code_hostp
-    - qemu_ram_addr_from_host_nofail
-      - qemu_ram_addr_from_host
+    - qemu_ram_addr_from_host_nofail : 通过 hva 获取 gpa 
+      - qemu_ram_addr_from_host 
         - qemu_ram_block_from_host
 
 ## CPUIOTLBEntry

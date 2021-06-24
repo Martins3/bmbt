@@ -167,5 +167,229 @@ AddressSpace address_space_memory;
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr)
 ```
 
+## QEMU Memory Model 结构分析
+https://kernelgo.org/images/qemu-address-space.svg
 
-## [ ] 需要考虑 IOMMU 的问题吗 ?
+一致存在一个很强的误导，因为 memory model 一层层的很复杂，实际上，info mtree 出来的内容相当的简单啊
+
+关键结构体内容分析:
+| struct               | desc                                                                                                                |
+|----------------------|---------------------------------------------------------------------------------------------------------------------|
+| AddressSpace         | root : 仅仅关联一个 MemoryRegion, current_map : 关联 Flatview，其余是 ioeventfd 之类的                              |
+| MemoryRegion         | 主要成员 ram_block, ops, *container*, *alias*, **subregions**, 看来是 MemoryRegion 通过 subregions 负责构建树形结构 |
+| Flatview             | ranges : 通过 render_memory_region 生成, 成员 nr nr_allocated 来管理其数量, root : 关联的 MemoryRegions , dispatch  |
+| AddressSpaceDispatch | 保存 GPA 到 HVA 的映射关系                                                                                          |
+
+
+- cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAddressSpace 的主要成员 AddressSpace + CPUState
+  - address_space_init : 使用 MemoryRegion 来初始化 AddressSpace，除了调用
+    - address_space_update_topology
+      - [ ] memory_region_get_flatview_root : 我看不懂这是在表达什么东西，在从上向下的查找一个 MemoryRegions 来作为 root ?
+      - generate_memory_topology
+        - render_memory_region
+        - flatview_simplify
+        - address_space_dispatch_new : 初始化 Flatview::dispatch
+
+> info mtree [-f][-d][-o][-D] -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
+
+#### dispatch 的过程
+- [ ] 如果通过 Flatview 来构建来 dispatch read/write ?
+- [ ] 这里存在一个非常尴尬的事情，从 memory_ldst.c 的 address_space_stl 调用的时候都是物理地址啊
+  - 从操作系统的角度，进行 IO 也是经过了自己的 TLB 翻译的之后，才得到物理地址的啊，之后这个地址才会发给地址总线
+  - [ ] IO 也需要从 softmmu 中翻译，找到对应的代码验证一下
+
+
+从 memory_ldst 中的 address_space_translate 到 phys_page_find 的:
+- 在 memory_ldst.c 的经典调用方法:
+  - address_space_translate 获取 mr
+    - [ ] 为什么需要从 as 获取 as
+    - address_space_translate : translate an address range into an address space into a MemoryRegion and an address range into that section.
+      - flatview_translate : 将 MemoryRegionSection::mr 返回
+        - flatview_do_translate : 返回 MemoryRegionSection
+          - address_space_translate_internal
+            - phys_page_find : 当没有命中的时候，需要查询一波
+  - memory_region_dispatch_read 进行 IO
+
+这个玩意设计成为多级页面的目的和页表查询的作用应该差不多吧!
+
+```c
+struct AddressSpaceDispatch {
+    MemoryRegionSection *mru_section;
+    /* This is a multi-level map on the physical address space.
+     * The bottom level has pointers to MemoryRegionSections.
+     */
+    PhysPageEntry phys_map;
+    PhysPageMap map;
+};
+```
+- phys_map : 相当于 cr3
+- map : 相当于管理所有的 page tabel 的页面
+- mru_section : 缓存
+
+```c
+struct PhysPageEntry {
+    /* How many bits skip to next level (in units of L2_SIZE). 0 for a leaf. */
+    uint32_t skip : 6;
+     /* index into phys_sections (!skip) or phys_map_nodes (skip) */
+    uint32_t ptr : 26;
+};
+```
+- skip : 表示还有多少级就可以到 leaf 节点
+- prt : 下标
+  - 如果 leaf 节点，那么就是索引 PhysPageMap::sections 的下标
+  - 如果 non-leaf 节点，那么就是索引  PhysPageMap::nodes 的下标
+
+```c
+typedef PhysPageEntry Node[P_L2_SIZE];
+
+typedef struct PhysPageMap {
+    struct rcu_head rcu;
+
+    unsigned sections_nb;
+    unsigned sections_nb_alloc;
+    unsigned nodes_nb;
+    unsigned nodes_nb_alloc;
+    Node *nodes;
+    MemoryRegionSection *sections;
+} PhysPageMap;
+```
+- Node : 定义这个结构体，相当于定义了一个 page table
+- nodes : 
+- sections :
+
+
+#### Flatview
+- generate_memory_topology : Render a memory topology into a list of disjoint absolute ranges.
+  - render_memory_region : 具体分析可以参考一个让人更加难受的 blog https://blog.csdn.net/sinat_38205774/article/details/104312303
+    - flatview_insert
+
+ 
+#### [ ] 神奇的 memory_region_get_flatview_root
+- memory_region_get_flatview_root 到底发挥什么作用?
+
+只有一个例子，那就是 PCI device 中:
+
+mr = system
+ori = bus master container
+
+```
+address-space: e1000
+  0000000000000000-ffffffffffffffff (prio 0, i/o): bus master container
+    0000000000000000-ffffffffffffffff (prio 0, i/o): alias bus master @system 0000000000000000-ffffffffffffffff
+```
+- 定义出来的这个玩意儿有啥用啊，如何访问 PCIe 空间啊
+  - PCIe 空间是放到 system memory 的
+  - 定义这个用于和 system 进行 DMA 的
+
+```c
+struct PCIDevice {
+    // ...
+    PCIIORegion io_regions[PCI_NUM_REGIONS];
+    AddressSpace bus_master_as;
+    MemoryRegion bus_master_container_region;
+    MemoryRegion bus_master_enable_region;
+```
+
+```c
+static void pci_init_bus_master(PCIDevice *pci_dev)
+{
+    AddressSpace *dma_as = pci_device_iommu_address_space(pci_dev); // dma 的空间就是 system memory
+
+    memory_region_init_alias(&pci_dev->bus_master_enable_region,
+                             OBJECT(pci_dev), "bus master",
+                             dma_as->root, 0, memory_region_size(dma_as->root)); // 创建一个 alias 到 system memory
+    memory_region_set_enabled(&pci_dev->bus_master_enable_region, false);
+    memory_region_add_subregion(&pci_dev->bus_master_container_region, 0, // 创建一个 container
+                                &pci_dev->bus_master_enable_region);
+}
+```
+
+-  do_pci_register_device : PCI 设备是如何构建自己的 address_space 的
+   - `address_space_init(&pci_dev->bus_master_as, &pci_dev->bus_master_container_region, pci_dev->name);`
+
+#### [official doc](https://qemu.readthedocs.io/en/latest/devel/memory.html)
+In addition to MemoryRegion objects, the memory API provides AddressSpace objects for every root and possibly for intermediate MemoryRegions too. These represent memory as seen from the CPU or a device’s viewpoint.
+- [ ] 一个 bus 为什么需要自己的视角啊
+
+> For example, a PCI BAR may be composed of a RAM region and an MMIO region.
+- [ ] 什么意思 ?
+
+#### TODO
+- [ ] 既然 flatview 计算好了，那么按照道理来说，就可以直接注册，结果每次 mmio，路径那么深
+  - [ ] 一种可能，那就是，这空间是动态分配的
+    - [ ] 似乎不是这个原因
+
+- [ ] 为什么需要设计出来 container ?
+  - [ ] alias: a subsection of another region. 
+```c
+static hwaddr memory_region_to_absolute_addr(MemoryRegion *mr, hwaddr offset)
+{
+    MemoryRegion *root;
+    hwaddr abs_addr = offset;
+
+    abs_addr += mr->addr;
+    for (root = mr; root->container; ) {
+        root = root->container;
+        abs_addr += root->addr;
+    }
+
+    return abs_addr;
+}
+```
+
+- [ ] memory_region_add_subregion
+
+举个例子:
+```
+0000000000000600-000000000000063f (prio 0, i/o): piix4-pm
+```
+
+```
+>>> p mr->ops->write
+$4 = (void (*)(void *, hwaddr, uint64_t, unsigned int)) 0x555555880a20 <acpi_pm_cnt_write>
+>>> p mr->container->name
+$5 = 0x5555569b4040 "piix4-pm"
+>>> p mr->name
+$6 = 0x555556dd37d0 "acpi-cnt"
+>>> p/x mr->container->addr
+$8 = 0x600
+```
+
+- [ ] 之所以设计出来 Flatview 和 AddressSpace 树状的结构，难道不是主要因为地址空间的相互重合问题吗，找到一个相互重叠的例子
+
+#### QEMU内存虚拟化源码分析[^1]
+首先，qemu中用AddressSpace用来表示CPU/设备看到的内存，一个AddressSpace下面包含多个MemoryRegion，这些MemoryRegion结构通过树连接起来，树的根是AddressSpace的root域。
+
+MemoryRegion有多种类型，可以表示一段ram，rom，MMIO，alias，alias表示一个MemoryRegion的一部分区域，MemoryRegion也可以表示一个container，这就表示它只是其他若干个MemoryRegion的容器。在MemoryRegion中，'ram_block'表示的是分配的实际内存。
+
+AddressSpace下面root及其子树形成了一个虚拟机的物理地址，但是在往kvm进行设置的时候，需要将其转换为一个平坦的地址模型，也就是从0开始的。这个就用FlatView表示，**一个AddressSpace对应一个FlatView**。
+
+在 FlatView 中，FlatRange表示按照需要被切分为了几个范围。
+在内存虚拟化中，还有一个重要的结构是MemoryRegionSection，这个结构通过函数 section_from_flat_range 可由 FlatRange 转换过来。
+
+```c
+static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatView *fv)
+{
+    return (MemoryRegionSection) {
+        .mr = fr->mr,
+        .fv = fv,
+        .offset_within_region = fr->offset_in_region,
+        .size = fr->addr.size,
+        .offset_within_address_space = int128_get64(fr->addr.start),
+        .readonly = fr->readonly,
+        .nonvolatile = fr->nonvolatile,
+    };
+}
+```
+> woc, 这简直就是离谱，就是一个简单的拼装啊!
+
+mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，这也是 alias 的作用
+
+继续 pc_memory_init，函数在创建好了ram并且分配好了空间之后，创建了两个mr alias，ram_below_4g以及ram_above_4g，这两个mr分别指向ram的低4g以及高4g空间，这两个alias是挂在根system_memory mr下面的。
+
+为了在虚拟机退出时，能够顺利根据物理地址找到对应的 HVA 地址，qemu 会有一个 AddressSpaceDispatch 结构，用来在 AddressSpace 中进行位置的找寻，继而完成对IO/MMIO地址的访问。
+
+#### [^2]
+
+[^1]: https://www.anquanke.com/post/id/86412
+[^2]: https://oenhan.com/qemu-memory-struct
