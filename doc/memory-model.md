@@ -99,9 +99,23 @@ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
    - 应该不会，调用者都是 helper 而已
 
 ## 为什么需要给创建多个 AddressSpace ?
-关注下面两个函数，可以发现，创建的两个分别为普通模式和 SMM 模式
+关注下面两个函数，可以发现
+1. 创建的两个分别为普通模式和 SMM 模式
+2. 这两个 AddressSpace 只有在 TCG 模式下才会有
 - x86_cpu_realizefn
   - cpu_address_space_init
+
+```c
+static MemoryRegion *system_memory;
+static MemoryRegion *system_io;
+
+AddressSpace address_space_io;
+AddressSpace address_space_memory;
+```
+这两个 AddressSpace 的初始位置，都是在 memory_map_init, 将其和 system_memory 和 system_io 联系起来
+而之后的一些列初始化和内容的填充都是通过这两个 MemoryRegion 完成的。
+
+- [ ] 暂时打住一下
 
 ## memory_ldst.c 分析
 这几个函数几乎都是对称的，但是 address_space_stl_notdirty 稍有不同
@@ -153,10 +167,5 @@ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr)
 ```
 
-- [ ] 关注一下这两个全局变量的作用
-```c
-AddressSpace address_space_io;
-AddressSpace address_space_memory;
-```
 
 ## [ ] 需要考虑 IOMMU 的问题吗 ?

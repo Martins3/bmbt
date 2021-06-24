@@ -1,19 +1,9 @@
 # DuckBuBi
 
 ## LoongArch Manual
-contect huxueshi@loongson.cn
+contact huxueshi@loongson.cn
 
-## TODO
-- [x] create a multiboot kernel image : use `-kernel` is enough
-- [x] setup console
+## Contributor
+As for collaboration, please follow [these instructions](./CONTRIBUTING.md)
 
-- [ ] apci probe
-- [ ] cache init
-- [ ] interrupt init
-- [ ] TLB refill init
-- [ ] memory probe
-- [ ] probe pci devices
-
-- [ ] setup keyboard
-- [ ] extract tcg module from XQM
-- [ ] simulate x86 apic/ioapic with Loongarch
+This project is fairly tricky for beginner, we also write some [documents for newbie](./doc/newbie.md)
