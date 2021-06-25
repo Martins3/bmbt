@@ -198,7 +198,6 @@ https://kernelgo.org/images/qemu-address-space.svg
   - 从操作系统的角度，进行 IO 也是经过了自己的 TLB 翻译的之后，才得到物理地址的啊，之后这个地址才会发给地址总线
   - [ ] IO 也需要从 softmmu 中翻译，找到对应的代码验证一下
 
-
 从 memory_ldst 中的 address_space_translate 到 phys_page_find 的:
 - 在 memory_ldst.c 的经典调用方法:
   - address_space_translate 获取 mr
@@ -254,9 +253,17 @@ typedef struct PhysPageMap {
 } PhysPageMap;
 ```
 - Node : 定义这个结构体，相当于定义了一个 page table
-- nodes : 
-- sections :
+- nodes : 存储所有的 Node，如果分配完了，使用 phys_map_node_reserve 来补充
+- sections : 最终想要获取的
 
+如何构建 PhysPageMap 这颗树:
+- flatview_add_to_dispatch
+  - register_subpage : 如果 MemoryRegionSection 无法完整地覆盖一整个页
+  - register_multipage
+    - phys_section_add : 将 MemoryRegionSection 添加到 PhysPageMap::sections
+    - phys_page_set : 设置对应的 PhysPageMap::nodes
+      - phys_map_node_reserve : 预留空间
+      - phys_page_set_level :
 
 #### Flatview
 - generate_memory_topology : Render a memory topology into a list of disjoint absolute ranges.
@@ -385,11 +392,58 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 
 mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，这也是 alias 的作用
 
-继续 pc_memory_init，函数在创建好了ram并且分配好了空间之后，创建了两个mr alias，ram_below_4g以及ram_above_4g，这两个mr分别指向ram的低4g以及高4g空间，这两个alias是挂在根system_memory mr下面的。
+*继续 pc_memory_init，函数在创建好了 ram 并且分配好了空间之后，创建了两个mr alias，ram_below_4g以及ram_above_4g，这两个mr分别指向ram的低4g以及高4g空间，这两个alias是挂在根system_memory mr下面的。*
+
+> - [ ] 这个结构很难理解啊，即是一个 memory region 的 subregion，又是另一个 region 的 alias
 
 为了在虚拟机退出时，能够顺利根据物理地址找到对应的 HVA 地址，qemu 会有一个 AddressSpaceDispatch 结构，用来在 AddressSpace 中进行位置的找寻，继而完成对IO/MMIO地址的访问。
+> 其实不是获取 HVA，而是通过 GPA 获取到对应的 dispatch 函数
+
+为了监控虚拟机的物理地址访问，对于每一个AddressSpace，会有一个MemoryListener与之对应。每当物理映射（`GPA->HVA`)发生改变时，会回调这些函数。
+
+在上面看到MemoryListener之后，我们看看什么时候需要更新内存。 进行内存更新有很多个点，比如我们新创建了一个AddressSpace address_space_init，再比如我们将一个mr添加到另一个mr的subregions中memory_region_add_subregion,再比如我们更改了一端内存的属性memory_region_set_readonly，将一个mr设置使能或者非使能memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个Listener，这包括各个AddressSpace对应的，以及kvm注册的，这个过程叫做commit，通过函数memory_region_transaction_commit实现。
+
+进行内存更新有很多个点，比如我们新创建了一个AddressSpace address_space_init，再比如我们将一个mr添加到另一个mr的subregions中memory_region_add_subregion,再比如我们更改了一端内存的属性memory_region_set_readonly，将一个mr设置使能或者非使能memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个Listener，这包括各个AddressSpace对应的，以及kvm注册的，这个过程叫做commit，通过函数memory_region_transaction_commit实现。
 
 #### [^2]
+
+## [ ] 在 v6.0 中将memory model 相关的文件划分为两个 memory.c 和 physmem.c
+
+## memory listener
+- [x] 这个玩意儿到底做啥的
+  -  用来监听 `GPA->HVA` 的改变
+
+- [ ] 如果一边正在修改映射关系，一边在进行 IO，怎么办?
+
+```c
+/*
+#0  memory_listener_register (listener=0x55555582e460 <_start>, as=0x7fffffffcfc0) at ../softmmu/memory.c:2777
+#1  0x0000555555d2ce67 in cpu_address_space_init (cpu=0x555556c8ac00, asidx=0, prefix=0x555556092140 "cpu-memory", mr=0x555556a85900) at ../softmmu/physmem.c:767
+#2  0x0000555555b41d1d in tcg_cpu_realizefn (cs=0x555556c8ac00, errp=0x7fffffffd070) at ../target/i386/tcg/sysemu/tcg-cpu.c:76
+#3  0x0000555555c849c0 in accel_cpu_realizefn (cpu=0x555556c8ac00, errp=0x7fffffffd070) at ../accel/accel-common.c:119
+#4  0x0000555555c67ed9 in cpu_exec_realizefn (cpu=0x555556c8ac00, errp=0x7fffffffd070) at ../cpu.c:136
+#5  0x0000555555ba4f37 in x86_cpu_realizefn (dev=0x555556c8ac00, errp=0x7fffffffd0f0) at ../target/i386/cpu.c:6139
+#6  0x0000555555e7e012 in device_set_realized (obj=0x555556c8ac00, value=true, errp=0x7fffffffd1f8) at ../hw/core/qdev.c:761
+#7  0x0000555555e68ee6 in property_set_bool (obj=0x555556c8ac00, v=0x555556bae8b0, name=0x555556128bb9 "realized", opaque=0x55555689a7a0, errp=0x7fffffffd1f8) at ../qom
+/object.c:2257
+#8  0x0000555555e66f07 in object_property_set (obj=0x555556c8ac00, name=0x555556128bb9 "realized", v=0x555556bae8b0, errp=0x5555567a94b0 <error_fatal>) at ../qom/object
+.c:1402
+#9  0x0000555555e63789 in object_property_set_qobject (obj=0x555556c8ac00, name=0x555556128bb9 "realized", value=0x555556b8cd40, errp=0x5555567a94b0 <error_fatal>) at .
+./qom/qom-qobject.c:28
+#10 0x0000555555e6727f in object_property_set_bool (obj=0x555556c8ac00, name=0x555556128bb9 "realized", value=true, errp=0x5555567a94b0 <error_fatal>) at ../qom/object.
+c:1472
+#11 0x0000555555e7d032 in qdev_realize (dev=0x555556c8ac00, bus=0x0, errp=0x5555567a94b0 <error_fatal>) at ../hw/core/qdev.c:389
+#12 0x0000555555b673b2 in x86_cpu_new (x86ms=0x555556a37000, apic_id=0, errp=0x5555567a94b0 <error_fatal>) at ../hw/i386/x86.c:111
+#13 0x0000555555b67485 in x86_cpus_init (x86ms=0x555556a37000, default_cpu_version=1) at ../hw/i386/x86.c:138
+#14 0x0000555555b7b69b in pc_init1 (machine=0x555556a37000, host_type=0x55555609e70a "i440FX-pcihost", pci_type=0x55555609e703 "i440FX") at ../hw/i386/pc_piix.c:157
+#15 0x0000555555b7c24e in pc_init_v6_1 (machine=0x555556a37000) at ../hw/i386/pc_piix.c:425
+#16 0x0000555555aec313 in machine_run_board_init (machine=0x555556a37000) at ../hw/core/machine.c:1239
+#17 0x0000555555cdada6 in qemu_init_board () at ../softmmu/vl.c:2526
+#18 0x0000555555cdaf85 in qmp_x_exit_preconfig (errp=0x5555567a94b0 <error_fatal>) at ../softmmu/vl.c:2600
+#19 0x0000555555cdd65d in qemu_init (argc=25, argv=0x7fffffffd7a8, envp=0x7fffffffd878) at ../softmmu/vl.c:3635
+#20 0x000055555582e575 in main (argc=25, argv=0x7fffffffd7a8, envp=0x7fffffffd878) at ../softmmu/main.c:49
+```
+
 
 [^1]: https://www.anquanke.com/post/id/86412
 [^2]: https://oenhan.com/qemu-memory-struct

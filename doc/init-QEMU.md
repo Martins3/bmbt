@@ -1,18 +1,27 @@
 # QEMU 启动代码
 
-- [ ] 主要分布的文件
-- [ ] 都做了什么事情
-- 如何移除掉 QOM 机制
-  - 也许话费一点时间理解 QOM 的运行原理，然后将这些函数逐个初始化即可
+- [ ] 都做了什么事情，初始化了什么环境啊
 
+- [ ] KVM 和 tcg 的初始化的差别是在调用那些函数的时候体现的
 
 - [ ] 我们需要 qemu 的 acpi 机制来实现 acpi table 的组装啊 ?
 - [ ] 为了让 bios 可以正确运行，一定需要 fw_cfg 吗 ?
 
-| file          | 内容分析                                   |
-| hw/i386/x86.c | cpu_hotplug / pic / x86_machine_class_init |
+- [ ] 定义在 target 下的 pc.c 和 hw 下的 pc.c 存在什么关联
 
-- [ ] KVM 和 tcg 的初始化的差别是在调用那些函数的时候体现的
+
+| file             | 行数 | 内容分析                                   |
+| hw/i386/x86.c    | 1300 | cpu_hotplug / pic / x86_machine_class_init |
+| hw/i386/pc.c     | 1700 | pc_machine_info                            |
+| target/i386/pc.c | 7000 |                                            |
+
+定义的各种 type info
+
+| variable          | location         |
+|-------------------|------------------|
+| x86_cpu_type_info | target/i386/pc.c |
+
+
 
 这些玩意儿都是什么时候初始化的 ?
 - [ ] X86MachineState
@@ -24,21 +33,33 @@
 
 - [ ] io_mem_unassigned 的引用位置扑朔迷离
 
+
+pc_memory_init
+
 一路向下的分析一下:
 
 - qemu_init : 这里面存在很长的参数解析的内容
   - qemu_create_machine(select_machine()) : select_machine 中获取 MachineClass
     - cpu_exec_init_all :
       - [ ] io_mem_init : 初始化 io_mem_unassigned
-      - memory_map_init : 初始化 system_memory
+      - memory_map_init : 初始化 system_memory, 和 io_memory 这两个都是 container 并不会真正的分配的映射空间
     - page_size_init : 初始化之后的 softmmu 需要的内容
   - qmp_x_exit_preconfig
     - qemu_init_board
       - machine_run_board_init
         - `machine_class->init` : DEFINE_I440FX_MACHINE 这个封装出来 pc_init_v6_1 来调用
           - pc_init1
-            - [ ] 在这里就直接调用了 get_system_memory，那么这些是在什么是初始化的 ?
-            - [ ] 
+            - x86_cpus_init
+              - x86_cpu_new
+                - qdev_realize : 经过 QOM 的 object_property 机制，最后调用到 device_set_realized :
+                  - device_set_realized : 
+                    - x86_cpu_realizefn
+                      - cpu_exec_realizefn
+                        - accel_cpu_realizefn
+                          - tcg_cpu_realizefn
+                            - cpu_address_space_init
+                              - memory_listener_register
+            - pc_memory_init : 创建了两个mr alias，ram_below_4g 以及ram_above_4g，这两个mr分别指向ram的低4g以及高4g空间，这两个alias是挂在根system_memory mr下面的
     - [ ] qemu_create_cli_devices
     - qemu_machine_creation_done : 在 vn/hack/qemu/internals/seabios.md 中展示了从这里一直到 i8042_build_aml 的过程
 
