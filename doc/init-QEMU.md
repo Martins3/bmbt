@@ -17,9 +17,10 @@
 
 定义的各种 type info
 
-| variable          | location         |
-|-------------------|------------------|
-| x86_cpu_type_info | target/i386/pc.c |
+| variable          | location         | desc                                                                                                 |
+|-------------------|------------------|------------------------------------------------------------------------------------------------------|
+| x86_cpu_type_info | target/i386/pc.c | x86_cpu_initfn : 调用一些 object_property_add 和 accel_cpu_instance_init(这是 tcg 和 kvm 分叉点之一) |
+| pc_machine_info   | hw/i286/pc.c     | pc_machine_initfn : 初始化一下 PCMachineState                                                        |
 
 
 
