@@ -1,43 +1,74 @@
 # QEMU 启动代码
 
-- [ ] 都做了什么事情，初始化了什么环境啊
+## 整体的问题
+怎么说，是启动到 bios 部分还是启动到 Linux Kernel 部分
+  - [ ] seabios 的启动过程是什么 ?
+
+- 到底什么必须在物理机器上测试 ?
+  - [ ] PCIe 设备穿透，这个能否可以直接拒绝提供，让 seabios 无法探测出来任何 PCIe 设备
+  - [ ] legacy 设备模拟，不清楚是否能够进行一些穿透
+  - [ ] 能不能只是提供一个串口出去 ?
+
+- [ ] seabios 其实也是输出信息出去的 ?
+  - 是串口实现的吗 ?
+
+- [ ] 如果只是提供一个串口设备，系统真的可以启动吗 ?
+  - [ ] 应该思考一下, la-qemu 的代码初始化机器也是很容易的啊，观测一下他们怎么操作的
 
 - [ ] KVM 和 tcg 的初始化的差别是在调用那些函数的时候体现的
 
-- [ ] 我们需要 qemu 的 acpi 机制来实现 acpi table 的组装啊 ?
+- [ ] 我们需要 qemu 的 acpi 机制来实现 acpi table 的组装吗 ?
+  - 还是感觉不需要, QEMU 的功能过于强大
+  - [ ] 当通过 qemu_create_cli_devices 来实现添加 cli 提供的设备
+    - [ ] 似乎很多设备，e1000 没有提供，最后也是默认添加了, 怎么添加上的
+    - [ ] 似乎，不添加磁盘，一般是等待最后 mount 系统的时候才会出现问题啊
+    - [ ] 各种 isa 设备能够不要添加
+```
+huxueshi:qdev_device_add isa-debugcon
+huxueshi:qdev_device_add nvme
+huxueshi:qdev_device_add virtio-9p-pci
+```
+
 - [ ] 为了让 bios 可以正确运行，一定需要 fw_cfg 吗 ?
+  - 似乎是的，至少 e820 的信息是靠 fw_cfg 传递过去的
 
-- [ ] 定义在 target 下的 pc.c 和 hw 下的 pc.c 存在什么关联
+- [ ] /home/maritns3/core/kvmqemu/hw/core/loader.c 在干嘛
+  - rom_add_file : 加载 bios 的
+  - [ ] 除了 bios 之外，还搞了一堆 rom 例如 linuxboot_dma.bin 之类的，都是什么作用，如何确保自己找到的就是全部的
 
 
-| file             | 行数 | 内容分析                                   |
-| hw/i386/x86.c    | 1300 | cpu_hotplug / pic / x86_machine_class_init |
-| hw/i386/pc.c     | 1700 | pc_machine_info                            |
-| target/i386/pc.c | 7000 |                                            |
+## 细节的 mark
+- [ ] apic_id_limit : 初始化中老是处理的 apci id 是啥 ?
+  - [ ] 还有，内核其实也可以不提供 acpi (应该使用 kvmqemu trace 一下)
+
+
+文件内容的基本分析:
+| file              | 行数 | 内容分析                                               |
+|-------------------|------|--------------------------------------------------------|
+| hw/i386/x86.c     | 1300 | cpu_hotplug / pic / x86_machine_class_init             |
+| hw/i386/pc.c      | 1700 | 处理 Machine 相关的初始化，例如 hpet, vga 之类的       |
+| target/i386/cpu.c | 7000 | X86CPU 相关，主要处理的都是 PC 的 feature 之类的       |
+| hw/i386/pi_piix.c | 1000 | pc_init1 剩下的就是 DEFINE_I440FX_MACHINE 定义的东西了 |
+
 
 定义的各种 type info
-
 | variable          | location         | desc                                                                                                 |
 |-------------------|------------------|------------------------------------------------------------------------------------------------------|
 | x86_cpu_type_info | target/i386/pc.c | x86_cpu_initfn : 调用一些 object_property_add 和 accel_cpu_instance_init(这是 tcg 和 kvm 分叉点之一) |
-| pc_machine_info   | hw/i286/pc.c     | pc_machine_initfn : 初始化一下 PCMachineState                                                        |
+| pc_machine_info   | hw/i386/pc.c     | pc_machine_initfn : 初始化一下 PCMachineState, pc_machine_class_init : 实际上，                                 |
 
+到底初始化什么内容:
+| item | necessary          | desc                                                                                     |
+|------|--------------------|------------------------------------------------------------------------------------------|
+| e820 | :heavy_check_mark: | - [ ] 为什么有了 acpi 还是需要 e820 啊，当使用增加了一个内存条，并没有说非要修改 acpi 啊 |
+| apci | :x:                | - [ ] 在 QEMU 和 kernel 中间都存在 CONFIG_ACPI 的选项，也许暂时可以不去管                |
+| pci  | :x:                | - [ ] `pcmc->pci_enabled`                                                                |
 
-
-这些玩意儿都是什么时候初始化的 ?
-- [ ] X86MachineState
-- [ ] MachineState
-- [ ] MachineClass
-  - [ ] select_machine 的
-- [ ] PCMachineState
-- [ ] PCMachineClass
+PCMachineState <- X86MachineState <- MachineState
 
 - [ ] io_mem_unassigned 的引用位置扑朔迷离
 
-
-pc_memory_init
-
-一路向下的分析一下:
+- [ ] 这些路径中间，为什么没有看到 pcie 相关的初始化
 
 - qemu_init : 这里面存在很长的参数解析的内容
   - qemu_create_machine(select_machine()) : select_machine 中获取 MachineClass
@@ -47,6 +78,7 @@ pc_memory_init
     - page_size_init : 初始化之后的 softmmu 需要的内容
   - qmp_x_exit_preconfig
     - qemu_init_board
+      - create_default_memdev : 比想象的复杂一点，是因为实际上，RAM 还可以是 filebased
       - machine_run_board_init
         - `machine_class->init` : DEFINE_I440FX_MACHINE 这个封装出来 pc_init_v6_1 来调用
           - pc_init1
@@ -54,16 +86,51 @@ pc_memory_init
               - x86_cpu_new
                 - qdev_realize : 经过 QOM 的 object_property 机制，最后调用到 device_set_realized :
                   - device_set_realized : 
-                    - x86_cpu_realizefn
+                    - x86_cpu_realizefn : 需要重点分析一下
+                      - cpu_list_add
                       - cpu_exec_realizefn
                         - accel_cpu_realizefn
-                          - tcg_cpu_realizefn
-                            - cpu_address_space_init
+                          - tcg_cpu_realizefn : 非常不能理解，为什么需要重新创建一次两个基本函数
+                            - cpu_address_space_init 
                               - memory_listener_register
-            - pc_memory_init : 创建了两个mr alias，ram_below_4g 以及ram_above_4g，这两个mr分别指向ram的低4g以及高4g空间，这两个alias是挂在根system_memory mr下面的
-    - [ ] qemu_create_cli_devices
+                        - tcg_exec_realizefn
+                          - tcg_x86_init: 这是 CPUClass 上注册的函数，进行一些 tcg 相关的的初始化, 例如 regs
+                      - x86_cpu_expand_features
+                      - x86_cpu_filter_features
+                      - [ ] mce_init : 根本不知道干啥的
+                      - qemu_init_vcpu : 创建执行线程
+                      - x86_cpu_apic_realize 
+                      - X86CPUClass::parent_realize : 也就是 cpu_common_realizefn, 这里并没有做什么事情
+            - pc_memory_init : 创建了两个mr alias，ram_below_4g 以及ram_above_4g，这两个mr分别指向ram的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr下面的
+              - e820_add_entry
+              - pc_system_firmware_init : pflash 参考 [pflash](#pflash)
+                - x86_bios_rom_init : 不考虑 pflash, 这是唯一的调用者
+                  - memory_region_init_ram(bios, NULL, "pc.bios", bios_size, &error_fatal)
+                  - rom_add_file_fixed
+                  - 还有两个 memory region 的操作, 将 bios 的后 128KB 映射到 ISA 空间，但是 bios 的大小是 256k 啊，其次，为什么映射到 pci 空间最上方啊
+                    - [ ] map the last 128KB of the BIOS in ISA space
+                    - [ ] map all the bios at the top of memory
+              - memory_region_init_ram : 初始化 "pc.rom"
+              - fw_cfg_arch_create : 创建 `FWCfgState *fw_cfg`, 并且初始化 e820 CPU 数量之类的参数
+              - rom_set_fw : 用从 fw_cfg_arch_create 返回的值初始化全局 fw_cfg
+              - x86_load_linux : 如果指定了 kernel, 那么就从此处 load kernel
+              - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loaer](#loader)
+            - pc_guest_info_init
+              - qemu_add_machine_init_done_notifier
+            - pc_gsi_create
+    - qemu_create_cli_devices
+      - soundhw_init
+      - parse_fw_cfg : 解析参数 -fw_cfg (Add named fw_cfg entry with contents from file file.)
+      - usb_parse
+      - device_init_func : 解析参数 -device 比如 nvme
     - qemu_machine_creation_done : 在 vn/hack/qemu/internals/seabios.md 中展示了从这里一直到 i8042_build_aml 的过程
-
+      - qdev_machine_creation_done
+        - notifier_list_notify : 这会调用 pc_machine_done, 实际上，注册到 machine_init_done_notifiers 上的 notifier 只有这一个而已
+          - pc_machine_done
+            - [ ] x86_rtc_set_cpus_count 
+            - [ ] fw_cfg_add_extra_pci_roots 
+            - acpi_setup
+            - [ ] 似乎是可以 disable fw_cfg 的
 
 ```c
 /*
@@ -86,7 +153,22 @@ pc_memory_init
 #16 0x000055555582e575 in main (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/main.c:49
 ```
 
-```c
-    MachineClass *machine_class = MACHINE_GET_CLASS(machine);
-```
+#### e820
+- 信息是如何构造出来的
+  - 在  pc_memory_init 调用两次 e820_add_entry, 分别添加 below_4g_mem_size 和 above_4g_mem_size
+- 如何通知 guest 内核的 ?
+  - 在 fw_cfg_arch_create 中添加 `etc/e820` 实现的
+
+
+- [ ] 类似 pci 映射的 MMIO 空间的分配是 e820 之类的操作的吗 ?
+
+
+#### pflash
+在 hw/i386/pc_sysfw.c 似乎主要处理的就是 pflash
+
+关于 pflash 和 bios 的关系可以首先看看[^1], 但是目前不需要知道 pflash 也可以
+
+## loader
+
+[^1]: https://wiki.qemu.org/Features/PC_System_Flash
 

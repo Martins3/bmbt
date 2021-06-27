@@ -99,6 +99,11 @@ void memory_region_clear_global_locking(MemoryRegion *mr);
 
 - [ ] 用于进一步简化 memory_ldst
 
+## io evnet 机制
+qemu_init_vcpu => AccelOpsClass::create_vcpu_thread => kvm_start_vcpu_thread 
+这里真的会创建线程，但是会因为 qemu_wait_io_event 一直等待，那么如何正确通知 kvm 线程开始执行。
+
+
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
 [^3]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
