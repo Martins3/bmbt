@@ -544,7 +544,14 @@ memory-region: smram
     00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
 ```
 
+## MemoryRegionSection and RCU 
+[^4] 中间提到了一个非常有意思的事情，将 MemoryRegion 的 inaccessible 和 destroy 划分为两个阶段
+所以使用 rcu, 其中涉及到
+- memory_region_destroy / memory_region_del_subregion
+- hotplug
+
 
 [^1]: https://www.anquanke.com/post/id/86412
 [^2]: https://oenhan.com/qemu-memory-struct
 [^3]: https://wiki.osdev.org/System_Management_Mode
+[^4]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf

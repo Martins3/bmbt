@@ -120,7 +120,8 @@ PCMachineState <- X86MachineState <- MachineState
           - smbios_set_defaults : 参考 [smbios](#smbios)
           - [ ] pc_gsi_create : 关于中断的事情可以重新看看狼书好好分析一下
           - i440fx_init : 只有 pcmc->pci_enabled 才会调用的
-            - qdev_new("i440FX-pcihost") : 这当然会调用 
+            - qdev_new("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数 
+              - i440fx_pcihost_initfn : 初始化出来 0xcf8 0xcfb 这两个关键地址
             - pci_root_bus_new : 创建 PCIBus
               - [ ] PCIHostState 和分别是啥关系 ? host bridge 和 bus 的关系 ?
               - qbus_create("pci")
