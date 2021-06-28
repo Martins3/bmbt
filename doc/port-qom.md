@@ -222,7 +222,7 @@ object_class_dynamic_cast 的 happy path 实现是很容易的，但是其中涉
     static TypeInfo object_info = {
         .name = TYPE_OBJECT,
         .instance_size = sizeof(Object),
-        .class_init = object_class_init,
+        .clas s_init = object_class_init,
         .abstract = true,
     };
 ```
@@ -241,13 +241,13 @@ static const TypeInfo conventional_pci_interface_info = {
 
 
 ## object_property
+- [ ] 无法理解 property parent 强于 child, 是 class 强于 object 的
+
 - [x] 为什么需要定义出来 property 出来
-  - 为了动态的添加属性, 比如 create_default_memdev 中，根据参数 mem_path 可以动态的选择
-到底是创建 TYPE_MEMORY_BACKEND_FILE 还是 TYPE_MEMORY_BACKEND_RAM 对象，以及是否添加 "mem-path" 属性
+  - 为了动态的添加属性, 比如 create_default_memdev 中，根据参数 mem_path 可以动态的选择到底是创建 TYPE_MEMORY_BACKEND_FILE 还是 TYPE_MEMORY_BACKEND_RAM 对象，以及是否添加 "mem-path" 属性
   - [ ] 也许还存在其他的原因
 
-- [ ] 似乎还是存在 property 数组的 ?
-- [ ] 无法理解 property parent 强于 child, 是 class 强于 object 的
+- property 数组, 比如 i440fx_props, 并没有什么神奇的，添加的时候循环添加进去即可
 
 - machine_class_init
   - object_class_property_add_bool

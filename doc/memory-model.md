@@ -4,6 +4,13 @@
 分析 `address_space_*` 以及如何检查 memory_ldst.inc.c 和
 memory_ldst.inc.h 的方法。
 
+在 v6.0 中
+| file             | desc                                                            |
+|------------------|-----------------------------------------------------------------|
+| softmmu/memory.c | memory_region_dispatch_read 之类的各种 memory region 的管理工作 |
+| softmmu/physmem  | RAMBlock 之类的管理                                             |
+
+
 ## memory_ldst 的分析
 `#include "exec/memory_ldst.inc.h"` defined four times
 
@@ -473,14 +480,15 @@ mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，�
 进行内存更新有很多个点，比如我们新创建了一个AddressSpace address_space_init，再比如我们将一个mr添加到另一个mr的subregions中memory_region_add_subregion,再比如我们更改了一端内存的属性memory_region_set_readonly，将一个mr设置使能或者非使能memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个Listener，这包括各个AddressSpace对应的，以及kvm注册的，这个过程叫做commit，通过函数memory_region_transaction_commit实现。
 
 ## [^2]
-
-## [ ] 在 v6.0 中将memory model 相关的文件划分为两个 memory.c 和 physmem.c, 分别描述什么东西
+- [ ] TODO
 
 ## memory listener
 - [x] 这个玩意儿到底做啥的
   -  用来监听 `GPA->HVA` 的改变
 
 - [ ] 如果一边正在修改映射关系，一边在进行 IO，怎么办?
+
+- [ ] 最经典的位置应该在于 PCI 设备的初始化
 
 ```c
 /*

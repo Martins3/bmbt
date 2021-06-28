@@ -117,12 +117,44 @@ PCMachineState <- X86MachineState <- MachineState
             - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loaer](#loader)
           - pc_guest_info_init
               - qemu_add_machine_init_done_notifier
-          - pc_gsi_create
-          - [ ] i440fx_init : 这些都是只有 pcmc->pci_enabled 才会调用的
-          - [ ] piix3_create
+          - smbios_set_defaults : 参考 [smbios](#smbios)
+          - [ ] pc_gsi_create : 关于中断的事情可以重新看看狼书好好分析一下
+          - i440fx_init : 只有 pcmc->pci_enabled 才会调用的
+            - qdev_new("i440FX-pcihost") : 这当然会调用 
+            - pci_root_bus_new : 创建 PCIBus
+              - [ ] PCIHostState 和分别是啥关系 ? host bridge 和 bus 的关系 ?
+              - qbus_create("pci")
+                - qbus_create("pci")
+                  - pci_root_bus_init
+                    - 一些常规的初始化
+                    - pci_host_bus_register : 将 PCIHostState 挂载到一个全局的链表上
+                - qbus_init
+              - pci_root_bus_init
+            - 处理 PCI 的地址空间的映射初始化
+            - [ ] init_pam : https://wiki.qemu.org/Documentation/Platforms/PC
+          - piix3_create
+            - pci_create_simple_multifunction : 创建出来设备
+            - 设置从 piix3 到 i440fx 的中断路由之类的事情
           - [ ] isa_bus_irqs
           - [ ] pc_i8259_create
-          - [ ] 后面还有很多 。。。
+          - [ ] ioapic_init_gsi
+          - [ ] pc_vga_init
+            - pci_vga_init
+            - isa_vga_init
+          - [ ] pc_basic_device_init
+            - ioport80_io 初始化
+            - ioportF0_io 初始化
+            - hpet 初始化
+            - mc146818_rtc_init
+            - i8254_pit_init
+            - i8257_dma_init
+            - pc_superio_init
+          - pci_ide_create_devs
+            - ide_drive_get
+            - ide_create_drive
+          - [ ] pc_cmos_init
+            - 多次调用 rtc_set_memory
+          - piix4_pm_init : 当支持 acpi 的时候, 那么初始化电源管理
     - qemu_create_cli_devices
       - soundhw_init
       - parse_fw_cfg : 解析参数 -fw_cfg (Add named fw_cfg entry with contents from file file.)
@@ -174,6 +206,38 @@ PCMachineState <- X86MachineState <- MachineState
 关于 pflash 和 bios 的关系可以首先看看[^1], 但是目前不需要知道 pflash 也可以
 
 ## loader
+- [ ] 等待分析 loader.c
+
+## smbios
+- [ ] 等待分析 smbios.c
+
+smbios_set_defaults
+
+## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
+```c
+static const TypeInfo i440fx_pcihost_info = {
+    .name          = TYPE_I440FX_PCI_HOST_BRIDGE,
+    .parent        = TYPE_PCI_HOST_BRIDGE,
+    .instance_size = sizeof(I440FXState),
+    .instance_init = i440fx_pcihost_initfn,
+    .class_init    = i440fx_pcihost_class_init,
+};
+```
+
+## BUS
+- pci host bridge 和 pcibus 的关系?
+
+```
+#0  qbus_init (bus=0x55555608760c, parent=0x7fffffffd510, name=0x555555e65068 <object_initialize+99> "\220\311\303\363\017\036\372UH\211\345H\201\354\020\001") at ../hw
+/core/bus.c:103
+#1  0x0000555555e78fdb in qbus_create_inplace (bus=0x555556aacb60, size=120, typename=0x55555608760c "System", parent=0x0, name=0x5555560876dc "main-system-bus") at ../
+hw/core/bus.c:158
+#2  0x0000555555b03423 in main_system_bus_create () at ../hw/core/sysbus.c:346
+#3  0x0000555555b03451 in sysbus_get_default () at ../hw/core/sysbus.c:354
+#4  0x0000555555cd9c11 in qemu_create_machine (machine_class=0x5555569a3850) at ../softmmu/vl.c:2087
+#5  0x0000555555cdd500 in qemu_init (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/vl.c:3570
+#6  0x000055555582e575 in main (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/main.c:49
+```
+
 
 [^1]: https://wiki.qemu.org/Features/PC_System_Flash
-
