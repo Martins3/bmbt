@@ -90,7 +90,7 @@ PCMachineState <- X86MachineState <- MachineState
                       - cpu_list_add
                       - cpu_exec_realizefn
                         - accel_cpu_realizefn
-                          - tcg_cpu_realizefn : 非常不能理解，为什么需要重新创建一次两个基本函数
+                          - tcg_cpu_realizefn
                             - cpu_address_space_init 
                               - memory_listener_register
                         - tcg_exec_realizefn
@@ -101,23 +101,28 @@ PCMachineState <- X86MachineState <- MachineState
                       - qemu_init_vcpu : 创建执行线程
                       - x86_cpu_apic_realize 
                       - X86CPUClass::parent_realize : 也就是 cpu_common_realizefn, 这里并没有做什么事情
-            - pc_memory_init : 创建了两个mr alias，ram_below_4g 以及ram_above_4g，这两个mr分别指向ram的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr下面的
-              - e820_add_entry
-              - pc_system_firmware_init : pflash 参考 [pflash](#pflash)
-                - x86_bios_rom_init : 不考虑 pflash, 这是唯一的调用者
-                  - memory_region_init_ram(bios, NULL, "pc.bios", bios_size, &error_fatal)
-                  - rom_add_file_fixed
-                  - 还有两个 memory region 的操作, 将 bios 的后 128KB 映射到 ISA 空间，但是 bios 的大小是 256k 啊，其次，为什么映射到 pci 空间最上方啊
-                    - [ ] map the last 128KB of the BIOS in ISA space
-                    - [ ] map all the bios at the top of memory
-              - memory_region_init_ram : 初始化 "pc.rom"
-              - fw_cfg_arch_create : 创建 `FWCfgState *fw_cfg`, 并且初始化 e820 CPU 数量之类的参数
-              - rom_set_fw : 用从 fw_cfg_arch_create 返回的值初始化全局 fw_cfg
-              - x86_load_linux : 如果指定了 kernel, 那么就从此处 load kernel
-              - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loaer](#loader)
-            - pc_guest_info_init
+          - pc_memory_init : 创建了两个mr alias，ram_below_4g 以及ram_above_4g，这两个mr分别指向ram的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr下面的
+            - e820_add_entry
+            - pc_system_firmware_init : pflash 参考 [pflash](#pflash)
+              - x86_bios_rom_init : 不考虑 pflash, 这是唯一的调用者
+                - memory_region_init_ram(bios, NULL, "pc.bios", bios_size, &error_fatal)
+                - rom_add_file_fixed
+                - 还有两个 memory region 的操作, 将 bios 的后 128KB 映射到 ISA 空间，但是 bios 的大小是 256k 啊，其次，为什么映射到 pci 空间最上方啊
+                  - [ ] map the last 128KB of the BIOS in ISA space
+                  - [ ] map all the bios at the top of memory
+            - memory_region_init_ram : 初始化 "pc.rom"
+            - fw_cfg_arch_create : 创建 `FWCfgState *fw_cfg`, 并且初始化 e820 CPU 数量之类的参数
+            - rom_set_fw : 用从 fw_cfg_arch_create 返回的值初始化全局 fw_cfg
+            - x86_load_linux : 如果指定了 kernel, 那么就从此处 load kernel
+            - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loaer](#loader)
+          - pc_guest_info_init
               - qemu_add_machine_init_done_notifier
-            - pc_gsi_create
+          - pc_gsi_create
+          - [ ] i440fx_init : 这些都是只有 pcmc->pci_enabled 才会调用的
+          - [ ] piix3_create
+          - [ ] isa_bus_irqs
+          - [ ] pc_i8259_create
+          - [ ] 后面还有很多 。。。
     - qemu_create_cli_devices
       - soundhw_init
       - parse_fw_cfg : 解析参数 -fw_cfg (Add named fw_cfg entry with contents from file file.)

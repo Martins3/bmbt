@@ -472,9 +472,9 @@ mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，�
 
 进行内存更新有很多个点，比如我们新创建了一个AddressSpace address_space_init，再比如我们将一个mr添加到另一个mr的subregions中memory_region_add_subregion,再比如我们更改了一端内存的属性memory_region_set_readonly，将一个mr设置使能或者非使能memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个Listener，这包括各个AddressSpace对应的，以及kvm注册的，这个过程叫做commit，通过函数memory_region_transaction_commit实现。
 
-#### [^2]
+## [^2]
 
-## [ ] 在 v6.0 中将memory model 相关的文件划分为两个 memory.c 和 physmem.c
+## [ ] 在 v6.0 中将memory model 相关的文件划分为两个 memory.c 和 physmem.c, 分别描述什么东西
 
 ## memory listener
 - [x] 这个玩意儿到底做啥的
@@ -511,6 +511,32 @@ c:1472
 #20 0x000055555582e575 in main (argc=25, argv=0x7fffffffd7a8, envp=0x7fffffffd878) at ../softmmu/main.c:49
 ```
 
+## TCG 和 SMM
+SMM 实际上是给 firmware 使用的
+
+在 tcg_cpu_realizefn 中
+
+- get_system_memory : 获取的 MemoryRegion 的名称为 system, 总会挂到 cpu-memory-0 / cpu-memory-2 上
+
+```
+address-space: tcg-cpu-smm-0
+  0000000000000000-ffffffffffffffff (prio 0, i/o): cpu_as_root-memory
+    0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
+    0000000000000000-ffffffffffffffff (prio 0, i/o): alias cpu_as_mem-memory @system 0000000000000000-ffffffffffffffff
+```
+
+通过 qemu_add_machine_init_done_notifier 调用
+在 tcg_cpu_machine_done 中，从而在 cpu_as_root-memory 下创建一个 smram
+
+
+而在 i440fx_init 中，创建出来了 smram
+```
+memory-region: smram
+  0000000000000000-00000000ffffffff (prio 0, i/o): smram
+    00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
+```
+
 
 [^1]: https://www.anquanke.com/post/id/86412
 [^2]: https://oenhan.com/qemu-memory-struct
+[^3]: https://wiki.osdev.org/System_Management_Mode
