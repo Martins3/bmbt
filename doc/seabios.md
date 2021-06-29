@@ -1,8 +1,7 @@
 # seabios
 
-当这个文件完成之后，需要关闭 #60
-
 - 使用 KVM 和 tcg 执行 seabios 会出现区别吗, 同样是 tcg，在 LA 上执行和在 x86 上执行存在区别吗? 没有区别，所以在 x86 上使用 kvm 测试就可以了
+
 
 - [ ] 基本的内容的探测完成之后，让 QEMU 启动到加载内核，然后拦截所有的 io 操作
 
@@ -24,7 +23,6 @@
 - [ ] mtrr 是什么?
 
 - [ ] thread 在 ？
-
 
 ## [ ] 基本调用路径
 - [ ] 将自己伪装成为 qemu 需要支持什么，而且很清晰的告诉了他是什么主板
@@ -138,46 +136,6 @@ P69 : 在 fw_cfg_io_realize 调用 memory_region_init_io 来实现分配 FW_CFG_
 
 总结下，fw_cfg : 存在一些数值是常规定义的，没有定义过的为 file，fw_cfg_add_file_callback 会计算出其偏移 file 的偏移，并且将文件信息放到 `FWCfgFiles *files;` 中间:
 
-
-## FW_CFG_IO_BASE
-
-```c
-#define FW_CFG_IO_BASE     0x510
-```
-
-fw_cfg_add_acpi_dsdt : 制作 acpi table 的时候会包含这个信息
-
-在这里初始化:
-```c
-static void fw_cfg_io_realize(DeviceState *dev, Error **errp)
-{
-    ERRP_GUARD();
-    FWCfgIoState *s = FW_CFG_IO(dev);
-
-    fw_cfg_file_slots_allocate(FW_CFG(s), errp);
-    if (*errp) {
-        return;
-    }
-
-    /* when using port i/o, the 8-bit data register ALWAYS overlaps
-     * with half of the 16-bit control register. Hence, the total size
-     * of the i/o region used is FW_CFG_CTL_SIZE */
-    memory_region_init_io(&s->comb_iomem, OBJECT(s), &fw_cfg_comb_mem_ops,
-                          FW_CFG(s), "fwcfg", FW_CFG_CTL_SIZE);
-
-    if (FW_CFG(s)->dma_enabled) {
-        memory_region_init_io(&FW_CFG(s)->dma_iomem, OBJECT(s),
-                              &fw_cfg_dma_mem_ops, FW_CFG(s), "fwcfg.dma",
-                              sizeof(dma_addr_t));
-    }
-
-    fw_cfg_common_realize(dev, errp);
-}
-```
-
-fw_cfg_comb_mem_ops 中对应的 read / write 实现，首先选择地址，然后操作:
-
-- dma 的操作: fw_cfg_dma_transfer 中的，根据配置的地址，最后调用 dma_memory_read / dma_memory_write
 
 ## acpi 在 seabios 中是怎么处理的
 1. ACPI 在 seabios 中是一个标准定义项目

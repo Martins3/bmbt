@@ -242,6 +242,7 @@ static const TypeInfo conventional_pci_interface_info = {
 
 ## object_property
 - [ ] 无法理解 property parent 强于 child, 是 class 强于 object 的
+  - [ ] object_property_add_child (出现的位置: fw_cfg_init_io_dma)
 
 - [x] 为什么需要定义出来 property 出来
   - 为了动态的添加属性, 比如 create_default_memdev 中，根据参数 mem_path 可以动态的选择到底是创建 TYPE_MEMORY_BACKEND_FILE 还是 TYPE_MEMORY_BACKEND_RAM 对象，以及是否添加 "mem-path" 属性

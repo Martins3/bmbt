@@ -33,5 +33,3 @@
 #12 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 原来是通过 isa 总线将描述信息添加进去的。
-
-

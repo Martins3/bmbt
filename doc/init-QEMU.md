@@ -111,7 +111,7 @@ PCMachineState <- X86MachineState <- MachineState
                   - [ ] map the last 128KB of the BIOS in ISA space
                   - [ ] map all the bios at the top of memory
             - memory_region_init_ram : 初始化 "pc.rom"
-            - fw_cfg_arch_create : 创建 `FWCfgState *fw_cfg`, 并且初始化 e820 CPU 数量之类的参数
+            - fw_cfg_arch_create : 创建 `FWCfgState *fw_cfg`, 并且初始化 e820 CPU 数量之类的参数, 具体参考 [fw_cfg](./fw_cfg.md)
             - rom_set_fw : 用从 fw_cfg_arch_create 返回的值初始化全局 fw_cfg
             - x86_load_linux : 如果指定了 kernel, 那么就从此处 load kernel
             - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loaer](#loader)
