@@ -2,20 +2,127 @@
 
 当这个文件完成之后，需要关闭 #60
 
-- [ ] 使用 KVM 和 tcg 执行 seabios 会出现区别吗 ?
+- 使用 KVM 和 tcg 执行 seabios 会出现区别吗, 同样是 tcg，在 LA 上执行和在 x86 上执行存在区别吗? 没有区别，所以在 x86 上使用 kvm 测试就可以了
 
-- [ ] 同样是 tcg， 在 LA 上执行和在 x86 上执行存在区别吗 ?
+- [ ] 基本的内容的探测完成之后，让 QEMU 启动到加载内核，然后拦截所有的 io 操作
 
-## 基本调用路径
-
-# seabios
-- [ ] 从 QEMU fw_cfg 的是如何被 seabios 的 romfile_add
-- [ ] seabios 是如何处理 acpi 的, 可以让 seabios 不处理 acpi 吗 ?
-
-- [ ] layoutrom.S 是怎么安装的 ？
+## 问题
+- [ ] 可以让 seabios 不处理 acpi 吗 ?
   - 硬件应该保证，当其 int 0x19 的时候， pc 直接指向对应的位置
-
 - [ ] 如果通过 boot_disk 中加载的 MBR，那么 MBR 中是什么
+- [ ] 又看到好朋友 smm 了
+
+- [ ] pci_probe_host 中间说明实际上可以暂时 disable 掉这些 PCI
+但是 qemu_detect 说明似乎至少需要提供一个关于 PCI host 的 IO 操作, 所以最小的需要 PCI 支持是什么 ？
+
+- [ ] apci 对于 seabios 的最小支持是什么 ?
+  - [ ] seabios 对于 acpi 到底进行了什么处理
+
+- [ ] 到底提供了什么 romfile, 其中的出现了大量的，检测 romfile_loadint 如果失败就离开的代码
+  - 从 QEMU 和 seabios 这边分别列举出来
+
+- [ ] mtrr 是什么?
+
+- [ ] thread 在 ？
+
+
+## [ ] 基本调用路径
+- [ ] 将自己伪装成为 qemu 需要支持什么，而且很清晰的告诉了他是什么主板
+
+| label   | 说明                     |
+|---------|--------------------------|
+| :x:     | 关键                     |
+| :apple: | 进一步调查               |
+| :pear:  | 不懂，但是和现在没啥关系 |
+
+
+- layoutrom.S :pear: 这个东西大概是怎么制作的
+  - handle_post
+    - serial_debug_preinit :apple: 串口调试，使用 CONFIG_DEBUG_SERIAL 可以关闭
+    - make_bios_writable :apple:
+      - code_mutable_preinit
+        - [ ] rtc_write (Setup reset-vector entry point (controls legacy reboots)) :x:  处理 CMOS 设备, 但是具体什么作用不清楚
+    - dopost
+      - qemu_preinit
+        - qemu_detect
+          - qemu_debug_preinit :apple: 关注一下 DebugOutputPort
+          - pci_config_readw : 通过读去 PCI 设备的 vendor id 来确定到底需要什么东西 :x: 虽然似乎可以不支持 pci，但是 host bridge 还是需要好好模拟的呀
+        - kvm_detect : 空函数, 但是表示需要支持 cpuid
+        - qemu_early_e820
+          - [ ] qemu_cfg_detect : 如果 QEMU 不支持 cfg 那么 qmeu 靠什么传递文件，还是说 cfg 在 QEMU 下是必选的
+          - 进行 qemu_cfg_read 之类的事情，将 "etc/e820" 从 host 中读取过来
+        - e820_add
+        - coreboot_preinit : 为了支持 coreboot, 所以这个是空函数
+      - [ ] reloc_preinit : 为什么需要进行这种 reloc，如何操作的
+        - maininit : 这就是所有的位置了
+          - interface_init
+            - malloc_init
+            - [ ] qemu_cfg_init
+            - ivt_init :pear:
+            - bda_init :pear:
+            - boot_init
+              - [ ] romfile_loadint("etc/boot-fail-wait", 60*1000) : 什么时候定义的，怎么一举把所有组装的 fw_cfg 全部打印出来
+              - loadBootOrder / loadBiosGeometry : 这两个文件应该是没有的
+            - bios32_init
+            - pmm_init
+            - pnp_init
+            - kbd_init :pear: 初始化的是一些结构体
+            - mouse_init : mouse 是一个可以配置的系统
+          - platform_hardware_setup
+            - dma_setup :x: Make sure legacy DMA isn't running. 完全无法理解
+            - pic_setup :x:
+            - [ ] thread_setup : 纯粹的迷惑
+            - [ ] mathcp_setup
+            - qemu_platform_setup
+              - pci_setup
+                - pci_probe_host : 检测 PCI 是否存在
+                  - `outl(0x80000000, PORT_PCI_CMD);`
+                - [ ] pci_bios_init_bus : 应该也是遍历所有的设备
+                - pci_probe_devices : 枚举所有的设备
+                - pci_bios_init_platform : 初始化 platform pci, 也就是 bios 从什么地方开始
+                - pci_bios_check_devices
+                  - pci_region_create_entry
+                - pci_bios_map_devices
+                  - pci_bios_init_root_regions_io : 映射 ioport
+                  - pci_region_map_entries
+                    - pci_region_map_one_entry
+                      - pci_config_writeb : 
+                - pci_bios_init_devices
+                  - `if (pin != 0) pci_config_writeb(bdf, PCI_INTERRUPT_LINE, pci_slot_get_irq(pci, pin));` : 如果可以，那么分配中断给他
+                - pci_enable_default_vga
+              - [ ] smm_device_setup
+              - [ ] smm_setup
+              - [ ] mtrr_setup
+              - msr_feature_control_setup :pear: 应该是空的
+              - smp_setup
+                - smp_scan :apple: 似乎需要通过 APIC_SVR 和 APIC_LINT1 之类的蛇皮玩意儿来实现操作
+              - [ ] pirtable_setup :pear:
+              - [ ] smbios_setup : 我的天啊
+              - [ ] romfile_loader_execute("etc/table-loader") : CONFIG_FW_ROMFILE_LOAD 是个什么东西，和 acpi table 是啥关系
+              - find_acpi_rsdp
+              - acpi_dsdt_parse
+              - virtio_mmio_setup_acpi
+              - find_acpi_rsdp
+              - acpi_setup
+            - timer_setup
+            - clock_setup
+            - [ ] tpm_setup : ???? CONFIG_TCGBIOS ???
+          - threads_during_optionroms : 难道在 bios 也是支持多线程吗 ?
+          - [ ] device_hardware_setup : 这些设备按道理应该都其实是可选的
+            - usb_setup
+            - ps2port_setup
+            - block_setup
+            - lpt_setup :apple:
+            - [ ] serial_setup : 原来 serial 端口的数量都是可以探测的，之前 debug 的时候，为什么不去探测
+            - cbfs_payload_setup : CONFIG_COREBOOT_FLASH
+          - [ ] vgarom_setup : CONFIG_OPTIONROMS 是个什么东西 :apple: 下面两个函数也都是处理 vga 的，这个东西是必须的吗？
+          - sercon_setup :pear:
+          - enable_vga_console :pear:
+          - [ ] optionrom_setup : Non-VGA option rom init ，非常的奇怪，为什么需要 vga 和 rom 是什么关系啊
+          - interactive_bootmenu : 因为 QEMU 没有提供，所以这个函数就是空的
+          - wait_threads
+          - make_bios_readonly
+          - startBoot : 终于到了启动的位置了，可以结束了
 
 ## 结论
 
@@ -162,6 +269,7 @@ length : 从而知道 table_offset_entry 到底存在多少项了.
 ## ACPI: dumping dsdt devices
 - [ ] 就算是在 seabios 中间枚举了所有的设备，又怎么样, 需要干什么吗?
 - [ ] 为什么需要靠 acpi 枚举 pci 设备，pci 在 acpi 之前就搞定了
+
 ```
 ACPI: dumping dsdt devices
     SF8
@@ -236,45 +344,20 @@ parse_resource: small: 0x5 (len 3)
     PCI0, hid
 ```
 - [x] 前面的 `S` 之类的东西都是搞什么的 ?
-  - build_append_pci_bus_devices 中定义的
+  - qemu: build_append_pci_bus_devices 中定义的, 具体作用未知
 - [x] 那些 LNK 之类的是搞什么的 ?
-  - qemu :  build_piix4_pci0_int 中创建了一堆这些玩意儿，但是不知道有什么作用
-  - 似乎是 routing table 之类的东西
+  - qemu :  build_piix4_pci0_int, 似乎是 routing table 之类的东西
 
 在 seabios/src/fw/dsdt_parser.c: parse_resource 将资源划分为 small resource, 所以打印分为两种。
-
 
 #### qemu 是如何制作这个东西的
 参考 ./hack/acpi/acpi.md 中 ACPI considerations for PCI host bridges, 大概可以知道 acpi 的 crs 就是用于记录 io 空间和 irq 的
 
 在 https://github.com/disdi/ACPI/blob/master/debian/ssdt.dsl 似乎找到了对应的 QEMU 对应的 dsl
 
-- [ ] 其实，我有点想知道，这些 acpi 的内容会真的影响操作系统？
-  - [ ] 比如键盘的 keyboard 的 irq 是什么 ?
 - [ ] 试图拦截一下 GPE 的内容
 
 总体来说，是从 build_dsdt 的位置触发的。
-
-#### FDC0 / MOU / KBD 是如何添加进去的
-```c
-/*
-#0  i8042_build_aml (isadev=0x5555566eb400, scope=0x55555699a990) at ../hw/input/pckbd.c:564
-#1  0x000055555590c474 in isa_build_aml (bus=<optimized out>, scope=scope@entry=0x55555699a990) at ../hw/isa/isa-bus.c:214
-#2  0x0000555555a6e08d in build_isa_devices_aml (table=table@entry=0x555556909540) at /home/maritns3/core/kvmqemu/include/hw/isa/isa.h:17
-#3  0x0000555555a71281 in build_dsdt (machine=0x5555566c0400, pci_hole64=<synthetic pointer>, pci_hole=<synthetic pointer>, misc=<synthetic pointer>, pm=0x7fffffffd450,
- linker=0x5555568d6bc0, table_data=0x555556aae0a0) at ../hw/i386/acpi-build.c:1403
-#4  acpi_build (tables=tables@entry=0x7fffffffd530, machine=0x5555566c0400) at ../hw/i386/acpi-build.c:2374
-#5  0x0000555555a73e8e in acpi_setup () at /home/maritns3/core/kvmqemu/include/hw/boards.h:24
-#6  0x0000555555a5fd1f in pc_machine_done (notifier=0x5555566c0598, data=<optimized out>) at ../hw/i386/pc.c:789
-#7  0x0000555555d27e67 in notifier_list_notify (list=list@entry=0x5555564c0a58 <machine_init_done_notifiers>, data=data@entry=0x0) at ../util/notify.c:39
-#8  0x00005555558ff94b in qdev_machine_creation_done () at ../hw/core/machine.c:1280
-#9  0x0000555555bae301 in qemu_machine_creation_done () at ../softmmu/vl.c:2567
-#10 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2590
-#11 0x0000555555bb1e62 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3611
-#12 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
-```
-原来是通过 isa 总线将描述信息添加进去的。
-
 
 
 #### [ ] 为什么在 seabios 中间会调用 `acpi_build_update`
@@ -296,9 +379,6 @@ parse_resource: small: 0x5 (len 3)
       - ...(多次调用，跟踪 acpi_build_update 的传递)  fw_cfg_add_bytes_callback 中注册这个函数指针
   
 - [ ] 暂时搞不清楚了，只是知道在 fw_cfg 的 dma select 的时候最后会调用
-
-#### [ ] 看懂 dsdt.dsl
-- [ ] Notify 和 hotplug
 
 ## qemu_detect
 在 qemu_detect 中，通过检测 host bridge, 可以发现判断当前在 qemu 中间运行。
@@ -407,29 +487,6 @@ e@entry=false) at ../softmmu/physmem.c:2890
 #17 0x00007ffff5fbb293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 */
 ```
-
-## pci_setup
-- pci_setup
-  - pci_probe_host : 检测 PCI 是否存在
-    - `outl(0x80000000, PORT_PCI_CMD);`
-  - [ ] pci_bios_init_bus : 应该也是遍历所有的设备
-  - pci_probe_devices : 枚举所有的设备
-  - pci_bios_init_platform : 初始化 platform pci, 也就是 bios 从什么地方开始
-  - pci_bios_check_devices
-    - pci_region_create_entry
-  - pci_bios_map_devices
-    - pci_bios_init_root_regions_io : 映射 ioport
-    - pci_region_map_entries
-      - pci_region_map_one_entry
-        - pci_config_writeb : 
-  - pci_bios_init_devices
-    - `if (pin != 0) pci_config_writeb(bdf, PCI_INTERRUPT_LINE, pci_slot_get_irq(pci, pin));` : 如果可以，那么分配中断给他
-  - pci_enable_default_vga
-
-验证 : 在内核的时候，绝对不会发生对于 pci 配置空间的操作, 配置还是会被写:
-或者，我们想要的是，bios 的工作，无论是谁来做，其实都是相同的。
-
-
 ## 到底在 pci 配置空间中写入了什么东西
 
 e1000 的三个 bar 空间:
