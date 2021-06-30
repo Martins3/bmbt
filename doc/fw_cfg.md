@@ -1,6 +1,4 @@
 # fw_cfg
-- [ ] 到底提供了什么 romfile, 其中的出现了大量的，检测 romfile_loadint 如果失败就离开的代码
-  - 从 QEMU 和 seabios 这边分别列举出来
 
 ## 基本原理
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
@@ -8,7 +6,6 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
 - fw_cfg_add_acpi_dsdt : 在 acpi 中添加描述
 - fw_cfg_build_feature_control : 构建 etc/msr_feature_control
 - [ ] fw_cfg_build_smbios : 暂时看不懂
-
 
 - fw_cfg_arch_create : come from [init-QEMU](./init-QEMU.md)
   - fw_cfg_init_io_dma(FW_CFG_IO_BASE, FW_CFG_IO_BASE + 4, &address_space_memory) : 第一参数是 IO, 第二个是 DMA
@@ -22,6 +19,68 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
       - memory_region_add_subregion
     - 一堆 fw_cfg_add_i16 添加 x86 特有的配置 
     - 处理 NUMA 相关的内容
+
+## smbios
+https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
+
+- fw_cfg_build_smbios
+  - 然后就是各种构建 smbios 了
+  - [ ] 无法理解的是，为什么需要 anchor 啊
+
+## 枚举所有的参数出来
+```
+huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
+huxueshi:fw_cfg_add_file_callback etc/e820
+huxueshi:fw_cfg_add_file_callback genroms/kvmvapic.bin
+huxueshi:fw_cfg_add_file_callback genroms/linuxboot_dma.bin
+huxueshi:fw_cfg_add_file_callback etc/system-states
+huxueshi:fw_cfg_add_file_callback etc/acpi/tables
+huxueshi:fw_cfg_add_file_callback etc/table-loader
+huxueshi:fw_cfg_add_file_callback etc/tpm/log
+huxueshi:fw_cfg_add_file_callback etc/acpi/rsdp
+huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-tables
+huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-anchor
+huxueshi:fw_cfg_add_file_callback etc/msr_feature_control
+huxueshi:fw_cfg_add_file_callback bootorder
+huxueshi:fw_cfg_add_file_callback bios-geometry
+```
+
+
+```
+huxueshi:fw_cfg_add_bytes 0
+huxueshi:fw_cfg_add_bytes 2
+huxueshi:fw_cfg_add_bytes 4
+huxueshi:fw_cfg_add_bytes e
+huxueshi:fw_cfg_add_bytes 19
+huxueshi:fw_cfg_add_bytes 1
+huxueshi:fw_cfg_add_bytes 5
+huxueshi:fw_cfg_add_bytes f
+huxueshi:fw_cfg_add_bytes 3
+huxueshi:fw_cfg_add_bytes 8000
+huxueshi:fw_cfg_add_bytes 8002
+huxueshi:fw_cfg_add_bytes 8003
+huxueshi:fw_cfg_add_bytes 8004
+huxueshi:fw_cfg_add_bytes d
+huxueshi:fw_cfg_add_bytes 13
+huxueshi:fw_cfg_add_bytes 14
+huxueshi:fw_cfg_add_bytes 15
+huxueshi:fw_cfg_add_bytes 7
+huxueshi:fw_cfg_add_bytes 8
+huxueshi:fw_cfg_add_bytes 11
+huxueshi:fw_cfg_add_bytes 16
+huxueshi:fw_cfg_add_bytes 17
+huxueshi:fw_cfg_add_bytes 18
+```
+
+```c
+#define FW_CFG_ACPI_TABLES      (FW_CFG_ARCH_LOCAL + 0)
+#define FW_CFG_SMBIOS_ENTRIES   (FW_CFG_ARCH_LOCAL + 1)
+#define FW_CFG_IRQ0_OVERRIDE    (FW_CFG_ARCH_LOCAL + 2)
+#define FW_CFG_E820_TABLE       (FW_CFG_ARCH_LOCAL + 3)
+#define FW_CFG_HPET             (FW_CFG_ARCH_LOCAL + 4)
+```
+和架构无关的在: include/standard-headers/linux/qemu_fw_cfg.h
+并没有让人恐惧的东西，主要是在 fw_cfg_arch_create 等位置初始化
 
 ## add / modify
 - fw_cfg_add_bytes : 很容易
@@ -87,7 +146,6 @@ c:2909
   - acpi_build : 我屮艸芔茻，这是把整个 acpi table 构建一次
   - acpi_ram_update
 
-
 应该是，acpi 必须在运行时才可以构建好, 而且是通过 copy of table in RAM 来 patched
 ```c
 typedef struct AcpiBuildState {
@@ -100,7 +158,39 @@ typedef struct AcpiBuildState {
     MemoryRegion *linker_mr;
 } AcpiBuildState;
 ```
-又是涉及到 linker 之类的东西了
+
+
+## 从 NVDIMM 到 Bios Linker
+https://richardweiyang-2.gitbook.io/understanding_qemu/00-qmeu_bios_guest/03-seabios
+
+https://richardweiyang-2.gitbook.io/understanding_qemu/00-devices/00-an_example/05-nvdimm
+> 似乎，连 acpi 的函数和构建地址空间
+
+从 romfile_loader_execute 看，etc/table-loader 中就是装载各种 table 的东西
+
+etc/table-loader
+
+- build_rsdt : 指向其他的 table 的，之所以需要 linker，好像是因为将 table 放到哪里，只是知道相对偏移，而不知道绝对偏移，
+所以需要 linker 将绝对值计算出来。
+
+- checksum 需要让 guest 计算的原因:
+  - 因为 checksum 中间包含了 linker 正确计算出来的指针，只有被修正之后的指针才能计算出来正确的 checksum
+
+DSDT address to be filled by Guest linker at runtime
+
+- [x] 为什么 microvm 的 table 就不会动态修改? (猜测是一些东西写死了吧, 不需要 linker 吧)
+
+除了 TMPLOG ，其余的三个都是和 acpi_build_update 关联起来的:
+```c
+#define ACPI_BUILD_TABLE_FILE "etc/acpi/tables"
+#define ACPI_BUILD_RSDP_FILE "etc/acpi/rsdp"
+#define ACPI_BUILD_TPMLOG_FILE "etc/tpm/log"
+#define ACPI_BUILD_LOADER_FILE "etc/table-loader"
+```
+
+- bios_linker_loader_alloc : ask guest to load file into guest memory.
+  - romfile_loader_allocate 实际上加载的两个文件为 etc/acpi/rsdp 和 etc/acpi/tables
+  - 应该是首先传递进去的是  etc/table-loader, 然后靠这个将 etc/acpi/rsdp 和 etc/acpi/tables 传递进去
 
 ## io 和 mem
 在 section [FWCfgState FWCfgIoState FWCfgMemState](#fwcfgstate-fwcfgiostate-fwcfgmemstate) 中我们看到存在两种 IO 模式，PIO 和 MMIO
