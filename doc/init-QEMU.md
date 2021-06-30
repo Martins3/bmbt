@@ -165,9 +165,10 @@ PCMachineState <- X86MachineState <- MachineState
       - qdev_machine_creation_done
         - notifier_list_notify : 这会调用 pc_machine_done, 实际上，注册到 machine_init_done_notifiers 上的 notifier 只有这一个而已
           - pc_machine_done
-            - [ ] x86_rtc_set_cpus_count 
+            - [ ] x86_rtc_set_cpus_count : 神奇的机制，和 seabios 对称的看看
             - [ ] fw_cfg_add_extra_pci_roots 
-            - acpi_setup
+            - [ ] acpi_setup
+              - 依赖于 acpi 的 `x86ms->fw_cfg` 和 pcms->acpi_build_enabled, 否则都会失败
             - [ ] 似乎是可以 disable fw_cfg 的
 
 ```c

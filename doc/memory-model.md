@@ -123,6 +123,7 @@ AddressSpace address_space_memory;
 而之后的一些列初始化和内容的填充都是通过这两个 MemoryRegion 完成的。
 
 - [ ] 暂时打住一下
+  - [ ] 在分析 fw_cfg 的时候，我忽然意识到 address_space_memory, 这个东西几乎只是和 iommu 相关，这个是 `info mtree` 中间的那两个 AddressSpace 吧
 
 ## memory_ldst.c 分析
 这几个函数几乎都是对称的，但是 address_space_stl_notdirty 稍有不同

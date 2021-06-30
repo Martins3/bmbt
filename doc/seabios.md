@@ -17,8 +17,6 @@
 - [ ] apci 对于 seabios 的最小支持是什么 ?
   - [ ] seabios 对于 acpi 到底进行了什么处理
 
-- [ ] 到底提供了什么 romfile, 其中的出现了大量的，检测 romfile_loadint 如果失败就离开的代码
-  - 从 QEMU 和 seabios 这边分别列举出来
 
 - [ ] mtrr 是什么?
 
