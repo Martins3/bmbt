@@ -1,46 +1,30 @@
 # QEMU 启动代码
 
 ## 整体的问题
-怎么说，是启动到 bios 部分还是启动到 Linux Kernel 部分
-  - [ ] seabios 的启动过程是什么 ?
 
 - 到底什么必须在物理机器上测试 ?
   - [ ] PCIe 设备穿透，这个能否可以直接拒绝提供，让 seabios 无法探测出来任何 PCIe 设备
   - [ ] legacy 设备模拟，不清楚是否能够进行一些穿透
-  - [ ] 能不能只是提供一个串口出去 ?
+  - [x] 能不能只是提供一个串口出去 ? （不能）
 
 - [ ] seabios 其实也是输出信息出去的 ?
   - 是串口实现的吗 ?
 
-- [ ] 如果只是提供一个串口设备，系统真的可以启动吗 ?
-  - [ ] 应该思考一下, la-qemu 的代码初始化机器也是很容易的啊，观测一下他们怎么操作的
-
-- [ ] KVM 和 tcg 的初始化的差别是在调用那些函数的时候体现的
-
-- [ ] 我们需要 qemu 的 acpi 机制来实现 acpi table 的组装吗 ?
-  - 还是感觉不需要, QEMU 的功能过于强大
-  - [ ] 当通过 qemu_create_cli_devices 来实现添加 cli 提供的设备
-    - [ ] 似乎很多设备，e1000 没有提供，最后也是默认添加了, 怎么添加上的
-    - [ ] 似乎，不添加磁盘，一般是等待最后 mount 系统的时候才会出现问题啊
-    - [ ] 各种 isa 设备能够不要添加
 ```
 huxueshi:qdev_device_add isa-debugcon
 huxueshi:qdev_device_add nvme
 huxueshi:qdev_device_add virtio-9p-pci
 ```
 
-- [ ] 为了让 bios 可以正确运行，一定需要 fw_cfg 吗 ?
-  - 似乎是的，至少 e820 的信息是靠 fw_cfg 传递过去的
-
-- [ ] /home/maritns3/core/kvmqemu/hw/core/loader.c 在干嘛
-  - rom_add_file : 加载 bios 的
-  - [ ] 除了 bios 之外，还搞了一堆 rom 例如 linuxboot_dma.bin 之类的，都是什么作用，如何确保自己找到的就是全部的
-
+启动，总体划分三个部分：
+1. x86_cpus_init ：进行 CPU 相关的初始化
+2. pc_memory_init : 进行内存初始化
+3. 设备的初始化
+  - pci 相关的组织比较麻烦
 
 ## 细节的 mark
 - [ ] apic_id_limit : 初始化中老是处理的 apci id 是啥 ?
   - [ ] 还有，内核其实也可以不提供 acpi (应该使用 kvmqemu trace 一下)
-
 
 文件内容的基本分析:
 | file              | 行数 | 内容分析                                               |
@@ -64,11 +48,22 @@ huxueshi:qdev_device_add virtio-9p-pci
 | apci | :x:                | - [ ] 在 QEMU 和 kernel 中间都存在 CONFIG_ACPI 的选项，也许暂时可以不去管                |
 | pci  | :x:                | - [ ] `pcmc->pci_enabled`                                                                |
 
+非 PCI 设备枚举
+| Device       | parent              |
+|--------------|---------------------|
+| mc146818 rtc | TYPE_ISA_DEVICE     |
+| i8254 pit    | TYPE_ISA_DEVICE     |
+| i8257 dma    | TYPE_ISA_DEVICE     |
+| hpet         | TYPE_SYS_BUS_DEVICE |
+| i8259        | TYPE_ISA_DEVICE     |
+
+- [ ] pc_basic_device_init : 中初始化的都是 isa 设备吗 ?
+
+
+
 PCMachineState <- X86MachineState <- MachineState
 
 - [ ] io_mem_unassigned 的引用位置扑朔迷离
-
-- [ ] 这些路径中间，为什么没有看到 pcie 相关的初始化
 
 - qemu_init : 这里面存在很长的参数解析的内容
   - qemu_create_machine(select_machine()) : select_machine 中获取 MachineClass
@@ -107,6 +102,9 @@ PCMachineState <- X86MachineState <- MachineState
               - x86_bios_rom_init : 不考虑 pflash, 这是唯一的调用者
                 - memory_region_init_ram(bios, NULL, "pc.bios", bios_size, &error_fatal)
                 - rom_add_file_fixed
+                  - rom_add_file
+                    - rom_insert
+                    - add_boot_device_path
                 - 还有两个 memory region 的操作, 将 bios 的后 128KB 映射到 ISA 空间，但是 bios 的大小是 256k 啊，其次，为什么映射到 pci 空间最上方啊
                   - [ ] map the last 128KB of the BIOS in ISA space
                   - [ ] map all the bios at the top of memory
@@ -114,10 +112,10 @@ PCMachineState <- X86MachineState <- MachineState
             - fw_cfg_arch_create : 创建 `FWCfgState *fw_cfg`, 并且初始化 e820 CPU 数量之类的参数, 具体参考 [fw_cfg](./fw_cfg.md)
             - rom_set_fw : 用从 fw_cfg_arch_create 返回的值初始化全局 fw_cfg
             - x86_load_linux : 如果指定了 kernel, 那么就从此处 load kernel
-            - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loaer](#loader)
+            - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loader](#loader)
           - pc_guest_info_init
-              - qemu_add_machine_init_done_notifier
-          - smbios_set_defaults : 参考 [smbios](#smbios)
+              - qemu_add_machine_init_done_notifier : 将所有注册到 machine_init_done_notifiers 上的 notifier 逐个执行
+          - smbios_set_defaults : 初始化一些 smbios 变量，为下一步制作 smbios table 打下基础
           - [ ] pc_gsi_create : 关于中断的事情可以重新看看狼书好好分析一下
           - i440fx_init : 只有 pcmc->pci_enabled 才会调用的
             - qdev_new("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数 
@@ -137,24 +135,26 @@ PCMachineState <- X86MachineState <- MachineState
             - pci_create_simple_multifunction : 创建出来设备
             - 设置从 piix3 到 i440fx 的中断路由之类的事情
           - [ ] isa_bus_irqs
-          - [ ] pc_i8259_create
+          - pc_i8259_create : 根据配置，存在多种选项
+            - i8259_init
           - [ ] ioapic_init_gsi
           - [ ] pc_vga_init
             - pci_vga_init
             - isa_vga_init
-          - [ ] pc_basic_device_init
+          - pc_basic_device_init
             - ioport80_io 初始化
             - ioportF0_io 初始化
             - hpet 初始化
-            - mc146818_rtc_init
+            - mc146818_rtc_init : 通过 QOM 调用 rtc_class_initfn 和 rtc_realizefn 之类的，进行 rtc 的初始化
             - i8254_pit_init
             - i8257_dma_init
-            - pc_superio_init
+            - pc_superio_init : https://en.wikipedia.org/wiki/Super_I/O
+          - pc_nic_init : 网卡的初始化
           - pci_ide_create_devs
             - ide_drive_get
             - ide_create_drive
-          - [ ] pc_cmos_init
-            - 多次调用 rtc_set_memory
+          - pc_cmos_init
+            - 多次调用 rtc_set_memory 初始化 RTCState::cmos_data
           - piix4_pm_init : 当支持 acpi 的时候, 那么初始化电源管理
     - qemu_create_cli_devices
       - soundhw_init
@@ -169,8 +169,12 @@ PCMachineState <- X86MachineState <- MachineState
             - [ ] fw_cfg_add_extra_pci_roots 
             - [ ] acpi_setup
               - 依赖于 acpi 的 `x86ms->fw_cfg` 和 pcms->acpi_build_enabled, 否则都会失败
-            - [ ] 似乎是可以 disable fw_cfg 的
 
+- [ ] 这些 qom 的自动初始化的东西全部被忽视了
+- [ ] pam / mce 的代码
+- [ ] 似乎搞了两个 notifier ?
+  - qdev_machine_creation_done
+  - pc_guest_info_init
 ```c
 /*
 #0  cpu_common_initfn (obj=0x555555e64ab3 <object_init_with_type+96>) at ../hw/core/cpu-common.c:237
