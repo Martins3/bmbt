@@ -48,7 +48,7 @@ huxueshi:qdev_device_add virtio-9p-pci
 | apci | :x:                | - [ ] 在 QEMU 和 kernel 中间都存在 CONFIG_ACPI 的选项，也许暂时可以不去管                |
 | pci  | :x:                | - [ ] `pcmc->pci_enabled`                                                                |
 
-非 PCI 设备枚举
+非 PCI 设备枚举:
 | Device       | parent              |
 |--------------|---------------------|
 | mc146818 rtc | TYPE_ISA_DEVICE     |
@@ -57,9 +57,7 @@ huxueshi:qdev_device_add virtio-9p-pci
 | hpet         | TYPE_SYS_BUS_DEVICE |
 | i8259        | TYPE_ISA_DEVICE     |
 
-- [ ] pc_basic_device_init : 中初始化的都是 isa 设备吗 ?
-
-
+从 type info 上可以轻易的看到一个设备是不是 TYPE_ISA_DEVICE 
 
 PCMachineState <- X86MachineState <- MachineState
 
@@ -88,6 +86,7 @@ PCMachineState <- X86MachineState <- MachineState
                           - tcg_cpu_realizefn
                             - cpu_address_space_init 
                               - memory_listener_register
+                                - tcg_commit
                         - tcg_exec_realizefn
                           - tcg_x86_init: 这是 CPUClass 上注册的函数，进行一些 tcg 相关的的初始化, 例如 regs
                       - x86_cpu_expand_features
@@ -95,6 +94,9 @@ PCMachineState <- X86MachineState <- MachineState
                       - [ ] mce_init : 根本不知道干啥的
                       - qemu_init_vcpu : 创建执行线程
                       - x86_cpu_apic_realize 
+                        - 通过 QOM 调用到 apic_common_realize
+                           - 通过 QOM 调用 apic_realize
+                        - 添加对应的 memory region
                       - X86CPUClass::parent_realize : 也就是 cpu_common_realizefn, 这里并没有做什么事情
           - pc_memory_init : 创建了两个mr alias，ram_below_4g 以及ram_above_4g，这两个mr分别指向ram的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr下面的
             - e820_add_entry
@@ -144,7 +146,7 @@ PCMachineState <- X86MachineState <- MachineState
           - pc_basic_device_init
             - ioport80_io 初始化
             - ioportF0_io 初始化
-            - hpet 初始化
+            - hpet 初始化 : hpet 不是
             - mc146818_rtc_init : 通过 QOM 调用 rtc_class_initfn 和 rtc_realizefn 之类的，进行 rtc 的初始化
             - i8254_pit_init
             - i8257_dma_init

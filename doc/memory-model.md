@@ -480,45 +480,133 @@ mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，�
 
 进行内存更新有很多个点，比如我们新创建了一个AddressSpace address_space_init，再比如我们将一个mr添加到另一个mr的subregions中memory_region_add_subregion,再比如我们更改了一端内存的属性memory_region_set_readonly，将一个mr设置使能或者非使能memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个Listener，这包括各个AddressSpace对应的，以及kvm注册的，这个过程叫做commit，通过函数memory_region_transaction_commit实现。
 
-## [^2]
-- [ ] TODO
-
 ## memory listener
-- [x] 这个玩意儿到底做啥的
-  -  用来监听 `GPA->HVA` 的改变
+TCG
+- cpu_address_space_init 中注册 memory listener
 
-- [ ] 如果一边正在修改映射关系，一边在进行 IO，怎么办?
+- 忽然意识到，CPUAddressSpace 只是 tcg 特有的
+```c
+/**
+ * CPUAddressSpace: all the information a CPU needs about an AddressSpace
+ * @cpu: the CPU whose AddressSpace this is
+ * @as: the AddressSpace itself
+ * @memory_dispatch: its dispatch pointer (cached, RCU protected)
+ * @tcg_as_listener: listener for tracking changes to the AddressSpace
+ */
+struct CPUAddressSpace {
+    CPUState *cpu;
+    AddressSpace *as;
+    struct AddressSpaceDispatch *memory_dispatch;
+    MemoryListener tcg_as_listener;
+};
+```
 
-- [ ] 最经典的位置应该在于 PCI 设备的初始化
+kvm 的注册方式:
+- kvm_init
+  - kvm_memory_listener_register
+    - memory_listener_register
+
+- kvm 根本没有注册 MemoryListener::commit
+
+- tcg_commit
+  - 处理一些 RCU，iothread 的问题
+  - tlb_flush
+
+listener 的 hook 分析：
+| hook                  | desc                                                                                                                                                                                                                                    |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| begin                 |                                                                                                                                                                                                                                         |
+| region_add            | address_space_set_flatview 调用这个 hook, kvm_region_add 最后会调用到 kvm_vm_ioctl(s, KVM_SET_USER_MEMORY_REGION, &mem)  上                                                                                                             |
+| region_del            |                                                                                                                                                                                                                                         |
+| region_nop            |                                                                                                                                                                                                                                         |
+| log_start             | listener_add_address_space 和 address_space_update_topology_pass 两个，kvm_log_start 最终调用到 kvm_vm_ioctl(s, KVM_SET_USER_MEMORY_REGION, &mem)                                                                                       |
+| log_stop              |                                                                                                                                                                                                                                         |
+| commit                |                                                                                                                                                                                                                                         |
+| log_sync              | Called by memory_region_snapshot_and_clear_dirty() and memory_global_dirty_log_sync(), before accessing QEMU's "official" copy of the dirty memory bitmap for a #MemoryRegionSection. 最终调用到 kvm_vm_ioctl(s, KVM_GET_DIRTY_LOG, &d) |
+| log_sync_global       | This is the global version of @log_sync when the listener does not have a way to synchronize the log with finer granularity. When the listener registers with @log_sync_global defined, then its @log_sync must be NULL.  Vice versa.   |
+| log_clear             |                                                                                                                                                                                                                                         |
+| log_global_start      |                                                                                                                                                                                                                                         |
+| log_global_stop       |                                                                                                                                                                                                                                         |
+| log_global_after_sync |                                                                                                                                                                                                                                         |
+| eventfd_add           |                                                                                                                                                                                                                                         |
+| eventfd_del           |                                                                                                                                                                                                                                         |
+| coalesced_io_add      |                                                                                                                                                                                                                                         |
+| coalesced_io_del      |                                                                                                                                                                                                                                         |
+
+实际上，这些 hook 都是 KVM 注册的:
+- region_add / region_del 是因为需要通过 iotcl 告知 kvm
+- eventfd 和 coalesced_io 都是需要和内核打交道的机制
+- 关于 dirty log 可以参考李强的 blog[^1]
+
+#### dirty log
+- DIRTY_MEMORY_CODE : 和 ram_list 配合使用的时候，为什么划分为三种类型的内存
+```c
+#define DIRTY_MEMORY_VGA       0
+#define DIRTY_MEMORY_CODE      1
+#define DIRTY_MEMORY_MIGRATION 2
+#define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
+```
+
+- colo_incoming_start_dirty_log
+  - ramblock_sync_dirty_bitmap
+    - cpu_physical_memory_sync_dirty_bitmap
+
+RAMList 和 DirtyMemoryBlocks 在搞什么, 这个东西为什么会成为 memory region 啊
+
+qemu_ram_alloc
+  - qemu_ram_alloc_internal
+    - ram_block_add
+      - dirty_memory_extend : 应该是唯一初始化 ram_list.dirty_memory 的位置吧, 另外使用的位置在 cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty
+
+
+- 在正常的 kvm 其中的操作过程中，cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty 都不会被调用
+- 在 cpu_physical_memory_test_and_clear_dirty 作为 SMC 的基础设施, 这是为数不多的需要支持的接口
+
+- tlb_protect_code
+  - [ ] cpu_physical_memory_test_and_clear_dirty : 从 tcg 的角度，这个函数中间有一堆似乎没用用的东西，之后再去分析吧
+    - memory_region_clear_dirty_bitmap : 因为 tcg 的 memory listener 没有注册 `listener->log_clear`, 所以这个函数什么都是不需要做的
+    - tlb_reset_dirty_range_all
+      - tlb_reset_dirty : 将这个范围内的 TLB 全部添加上 TLB_NOTDIRTY
+
+- store_helper
+  - notdirty_write : 当写向一个 dirty 的位置的处理
+    - cpu_physical_memory_get_dirty_flag
+    - tb_invalidate_phys_page_fast : 
+    - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
+    - tlb_set_dirty
 
 ```c
 /*
-#0  memory_listener_register (listener=0x55555582e460 <_start>, as=0x7fffffffcfc0) at ../softmmu/memory.c:2777
-#1  0x0000555555d2ce67 in cpu_address_space_init (cpu=0x555556c8ac00, asidx=0, prefix=0x555556092140 "cpu-memory", mr=0x555556a85900) at ../softmmu/physmem.c:767
-#2  0x0000555555b41d1d in tcg_cpu_realizefn (cs=0x555556c8ac00, errp=0x7fffffffd070) at ../target/i386/tcg/sysemu/tcg-cpu.c:76
-#3  0x0000555555c849c0 in accel_cpu_realizefn (cpu=0x555556c8ac00, errp=0x7fffffffd070) at ../accel/accel-common.c:119
-#4  0x0000555555c67ed9 in cpu_exec_realizefn (cpu=0x555556c8ac00, errp=0x7fffffffd070) at ../cpu.c:136
-#5  0x0000555555ba4f37 in x86_cpu_realizefn (dev=0x555556c8ac00, errp=0x7fffffffd0f0) at ../target/i386/cpu.c:6139
-#6  0x0000555555e7e012 in device_set_realized (obj=0x555556c8ac00, value=true, errp=0x7fffffffd1f8) at ../hw/core/qdev.c:761
-#7  0x0000555555e68ee6 in property_set_bool (obj=0x555556c8ac00, v=0x555556bae8b0, name=0x555556128bb9 "realized", opaque=0x55555689a7a0, errp=0x7fffffffd1f8) at ../qom
-/object.c:2257
-#8  0x0000555555e66f07 in object_property_set (obj=0x555556c8ac00, name=0x555556128bb9 "realized", v=0x555556bae8b0, errp=0x5555567a94b0 <error_fatal>) at ../qom/object
-.c:1402
-#9  0x0000555555e63789 in object_property_set_qobject (obj=0x555556c8ac00, name=0x555556128bb9 "realized", value=0x555556b8cd40, errp=0x5555567a94b0 <error_fatal>) at .
-./qom/qom-qobject.c:28
-#10 0x0000555555e6727f in object_property_set_bool (obj=0x555556c8ac00, name=0x555556128bb9 "realized", value=true, errp=0x5555567a94b0 <error_fatal>) at ../qom/object.
-c:1472
-#11 0x0000555555e7d032 in qdev_realize (dev=0x555556c8ac00, bus=0x0, errp=0x5555567a94b0 <error_fatal>) at ../hw/core/qdev.c:389
-#12 0x0000555555b673b2 in x86_cpu_new (x86ms=0x555556a37000, apic_id=0, errp=0x5555567a94b0 <error_fatal>) at ../hw/i386/x86.c:111
-#13 0x0000555555b67485 in x86_cpus_init (x86ms=0x555556a37000, default_cpu_version=1) at ../hw/i386/x86.c:138
-#14 0x0000555555b7b69b in pc_init1 (machine=0x555556a37000, host_type=0x55555609e70a "i440FX-pcihost", pci_type=0x55555609e703 "i440FX") at ../hw/i386/pc_piix.c:157
-#15 0x0000555555b7c24e in pc_init_v6_1 (machine=0x555556a37000) at ../hw/i386/pc_piix.c:425
-#16 0x0000555555aec313 in machine_run_board_init (machine=0x555556a37000) at ../hw/core/machine.c:1239
-#17 0x0000555555cdada6 in qemu_init_board () at ../softmmu/vl.c:2526
-#18 0x0000555555cdaf85 in qmp_x_exit_preconfig (errp=0x5555567a94b0 <error_fatal>) at ../softmmu/vl.c:2600
-#19 0x0000555555cdd65d in qemu_init (argc=25, argv=0x7fffffffd7a8, envp=0x7fffffffd878) at ../softmmu/vl.c:3635
-#20 0x000055555582e575 in main (argc=25, argv=0x7fffffffd7a8, envp=0x7fffffffd878) at ../softmmu/main.c:49
+#0  cpu_physical_memory_set_dirty_range (start=952888, length=4, mask=5 '\005') at /home/maritns3/core/kvmqemu/include/exec/ram_addr.h:290
+#1  0x0000555555c6d24f in notdirty_write (cpu=0x555556d5fc00, mem_vaddr=952888, size=4, iotlbentry=0x7ffdcc01db90, retaddr=140734602805726) at ../accel/tcg/cputlb.c:156
+1
+#2  0x0000555555c6f601 in store_helper (env=0x555556d68480, addr=952888, val=3221225472, oi=34, retaddr=140734602805726, op=MO_32) at ../accel/tcg/cputlb.c:2451
+#3  0x0000555555c6f815 in helper_le_stl_mmu (env=0x555556d68480, addr=952888, val=3221225472, oi=34, retaddr=140734602805726) at ../accel/tcg/cputlb.c:2505
+#4  0x00007fff540201de in code_gen_buffer ()
+#5  0x0000555555cb0254 in cpu_tb_exec (cpu=0x555556d5fc00, itb=0x7fff940200c0, tb_exit=0x7fffe888e1b0) at ../accel/tcg/cpu-exec.c:190
+#6  0x0000555555cb11d8 in cpu_loop_exec_tb (cpu=0x555556d5fc00, tb=0x7fff940200c0, last_tb=0x7fffe888e1b8, tb_exit=0x7fffe888e1b0) at ../accel/tcg/cpu-exec.c:673
+#7  0x0000555555cb14c9 in cpu_exec (cpu=0x555556d5fc00) at ../accel/tcg/cpu-exec.c:798
+#8  0x0000555555d60555 in tcg_cpus_exec (cpu=0x555556d5fc00) at ../accel/tcg/tcg-accel-ops.c:67
+#9  0x0000555555c496c3 in mttcg_cpu_thread_fn (arg=0x555556d5fc00) at ../accel/tcg/tcg-accel-ops-mttcg.c:70
+#10 0x0000555555f53fcd in qemu_thread_start (args=0x555556c6dd10) at ../util/qemu-thread-posix.c:521
+#11 0x00007ffff6298609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#12 0x00007ffff61bd293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
+- migration_bitmap_sync
+  - memory_global_dirty_log_sync
+    - memory_region_sync_dirty_bitmap
+      - MemoryListener::log_sync
+         - kvm_log_sync
+            - kvm_physical_sync_dirty_bitmap
+              - kvm_slot_get_dirty_log  : 使用 KVM_GET_DIRTY_LOG ioctl
+              - kvm_slot_sync_dirty_pages
+                - cpu_physical_memory_set_dirty_lebitmap : 这个将从 kvm 中得到的 dirty map 的信息放到 ram_list.dirty_memory
+      - MemoryListener::log_sync_global
+  - ramblock_sync_dirty_bitmap
+    - cpu_physical_memory_sync_dirty_bitmap
+
+总结一下，为了让 dirty log 机制是放到一起的，memory_global_dirty_log_sync 对于 tcg 是一个空函数，实际上，tcg 通过 cpu_physical_memory_sync_dirty_bitmap 将 dirty log 直接可以放到
+ramlist.dirty_memory 上
 
 ## TCG 和 SMM
 SMM 实际上是给 firmware 使用的
@@ -545,14 +633,27 @@ memory-region: smram
     00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
 ```
 
+- [ ] 实际上，需要考虑一下，
+
 ## MemoryRegionSection and RCU 
 [^4] 中间提到了一个非常有意思的事情，将 MemoryRegion 的 inaccessible 和 destroy 划分为两个阶段
 所以使用 rcu, 其中涉及到
 - memory_region_destroy / memory_region_del_subregion
 - hotplug
 
+## 问题
+- [ ] memory listener 的工作方式
+
+- [ ] 除了 memory notifier 会修改 memory region, 还有什么时候会修改?
+- [ ] FlatRange 和 MemoryRegionSection 是什么关系 ?
+- [ ] info mtree : 关于 memory region, 会发现几个问题:
+  - address-space: memory 和 address-space: I/O
+  - 每一个 cpu 为什么还创建了自己的 address space address-space: cpu-memory-0
+  - 所有的 pci 设备都创建了自己的 addresss space
+
 
 [^1]: https://www.anquanke.com/post/id/86412
 [^2]: https://oenhan.com/qemu-memory-struct
 [^3]: https://wiki.osdev.org/System_Management_Mode
 [^4]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
+[^5]: https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2018/08/11/dirty-pages-tracking-in-migration
