@@ -79,8 +79,7 @@ huxueshi:fw_cfg_add_bytes 18
 #define FW_CFG_E820_TABLE       (FW_CFG_ARCH_LOCAL + 3)
 #define FW_CFG_HPET             (FW_CFG_ARCH_LOCAL + 4)
 ```
-和架构无关的在: include/standard-headers/linux/qemu_fw_cfg.h
-并没有让人恐惧的东西，主要是在 fw_cfg_arch_create 等位置初始化
+和架构无关的在: include/standard-headers/linux/qemu_fw_cfg.h 并没有让人恐惧的东西，主要是在 fw_cfg_arch_create 等位置初始化
 
 ## add / modify
 - fw_cfg_add_bytes : 很容易

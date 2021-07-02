@@ -1,28 +1,61 @@
 # seabios
-
 - 使用 KVM 和 tcg 执行 seabios 会出现区别吗, 同样是 tcg，在 LA 上执行和在 x86 上执行存在区别吗? 没有区别，所以在 x86 上使用 kvm 测试就可以了
 
-
-- [ ] 基本的内容的探测完成之后，让 QEMU 启动到加载内核，然后拦截所有的 io 操作
+现在的设想是，如果知道只是一些 ioport 来这些设备，一个个的填补也不错。
+对于 pci 只需要一个很小的支持，而对于 acpi 的支持几乎为 0
 
 ## 问题
-- [ ] 可以让 seabios 不处理 acpi 吗 ?
-  - 硬件应该保证，当其 int 0x19 的时候， pc 直接指向对应的位置
 - [ ] 如果通过 boot_disk 中加载的 MBR，那么 MBR 中是什么
 - [ ] 又看到好朋友 smm 了
 
 - [ ] pci_probe_host 中间说明实际上可以暂时 disable 掉这些 PCI
 但是 qemu_detect 说明似乎至少需要提供一个关于 PCI host 的 IO 操作, 所以最小的需要 PCI 支持是什么 ？
 
-- [ ] apci 对于 seabios 的最小支持是什么 ?
-  - [ ] seabios 对于 acpi 到底进行了什么处理
+- [ ] enable_hwirq
+  - [ ] ivt_init
 
+## 决策
+虽然具体内容不是也很清楚，但是没有一个 MMIO，找到对应的位置就差不多了
 
-- [ ] mtrr 是什么?
+| device | seabios                             | QEMU |
+|--------|-------------------------------------|------|
+| pci    | pci_probe_host, pci_config_readw    |      |
+| acpi   |                                     |      |
+| serial | serial_setup (PORT_SERIAL1 0x3f8)   |      |
+| timer  | tsctimer_setup (PORT_PIT_MODE 0x43) |      |
+| rtc    | rtc_write / rtc_read                |      |
 
-- [ ] thread 在 ？
+## vga
+- maininit
+  - vgarom_setup
+  - sercon_setup
+  - enable_vga_console
 
-## [ ] 基本调用路径
+取决于启动的方式，如果 -nographic 的话这个这三个函数被注释掉似乎没有任何影响。
+
+但是如果是在 graphic mode, 那么会导致 gtk 的界面永远都是
+Guest has not initialized the diaplay(yet)
+
+## MTRR
+MTRR use is replaced on modern x86 hardware with PAT. [^2]
+
+Typically, the BIOS (basic input/output system) software configures the MTRRs.[^3]
+
+section 11.3 "Methods of Caching Available"
+
+The MTRRs are useful for statically
+describing memory types for physical ranges, and are typically set up by the system BIOS. The PAT extends the
+functions of the PCD and PWT bits in page tables to allow all five of the memory types that can be assigned with the
+MTRRs (plus one additional memory type) to also be assigned dynamically to pages of the linear address space.[^4]
+
+## threads 
+The goal of these threads is to reduce overall boot time by parallelizing hardware delays. (For example, by allowing the wait for an ATA hard drive to spin-up and respond to commands to occur in parallel with the wait for a PS/2 keyboard to respond to a setup command.) These hardware setup threads are only available during the "setup" sub-phase of the POST phase.[^1]
+
+## 基本调用路径
+The emulators map the SeaBIOS binary to this address,
+and SeaBIOS arranges for romlayout.S:reset_vector() to be present there.
+This code calls romlayout.S:entry_post() which then calls post.c:handle_post() in 32bit mode.[^1]
+
 - [ ] 将自己伪装成为 qemu 需要支持什么，而且很清晰的告诉了他是什么主板
 
 | label   | 说明                     |
@@ -45,7 +78,7 @@
           - pci_config_readw : 通过读去 PCI 设备的 vendor id 来确定到底需要什么东西 :x: 虽然似乎可以不支持 pci，但是 host bridge 还是需要好好模拟的呀
         - kvm_detect : 空函数, 但是表示需要支持 cpuid
         - qemu_early_e820
-          - [ ] qemu_cfg_detect : 如果 QEMU 不支持 cfg 那么 qmeu 靠什么传递文件，还是说 cfg 在 QEMU 下是必选的
+          - qemu_cfg_detect : fw_cfg 是现在唯一理解的方法，而且很好的处理了 kernel 的加载问题，所以 fw_cfg 方案是必选的
           - 进行 qemu_cfg_read 之类的事情，将 "etc/e820" 从 host 中读取过来
         - e820_add
         - coreboot_preinit : 为了支持 coreboot, 所以这个是空函数
@@ -53,30 +86,32 @@
         - maininit : 这就是所有的位置了
           - interface_init
             - malloc_init
-            - [ ] qemu_cfg_init
+            - qemu_cfg_init : 为了支持 fw_cfg，尤其是其中的 file, 需要在 seabios 这边进行支持
+              - qemu_cfg_read_entry
+              - qemu_cfg_e820
             - ivt_init :pear:
             - bda_init :pear:
             - boot_init
-              - [ ] romfile_loadint("etc/boot-fail-wait", 60*1000) : 什么时候定义的，怎么一举把所有组装的 fw_cfg 全部打印出来
+              - romfile_loadint("etc/boot-fail-wait", 60*1000) : 在 fw_cfg_common_realize => fw_cfg_reboot, 从而在 QEMU 的命令行参数可以控制 seabios 的运行
               - loadBootOrder / loadBiosGeometry : 这两个文件应该是没有的
-            - bios32_init
-            - pmm_init
-            - pnp_init
+            - [ ] bios32_init : 和 pcibios 相关的
+            - [ ] pmm_init : 和 bios32_init 类似
+            - [ ] pnp_init : 和 bios32_init 类似
             - kbd_init :pear: 初始化的是一些结构体
             - mouse_init : mouse 是一个可以配置的系统
           - platform_hardware_setup
             - dma_setup :x: Make sure legacy DMA isn't running. 完全无法理解
             - pic_setup :x:
-            - [ ] thread_setup : 纯粹的迷惑
-            - [ ] mathcp_setup
+            - thread_setup
+            - [ ] mathcp_setup : 在 /proc/ioports 中可以看到 fpu, 也许有关吧
             - qemu_platform_setup
               - pci_setup
-                - pci_probe_host : 检测 PCI 是否存在
+                - pci_probe_host : 检测 PCI 是否存在, 从这里进行拦截掉吧
                   - `outl(0x80000000, PORT_PCI_CMD);`
-                - [ ] pci_bios_init_bus : 应该也是遍历所有的设备
-                - pci_probe_devices : 枚举所有的设备
-                - pci_bios_init_platform : 初始化 platform pci, 也就是 bios 从什么地方开始
-                - pci_bios_check_devices
+                - pci_bios_init_bus :
+                - [ ] pci_probe_devices : 枚举所有的设备
+                - [ ] pci_bios_init_platform : platform pci, 也就是 bios 从什么地方开始
+                - [ ] pci_bios_check_devices
                   - pci_region_create_entry
                 - pci_bios_map_devices
                   - pci_bios_init_root_regions_io : 映射 ioport
@@ -86,15 +121,17 @@
                 - pci_bios_init_devices
                   - `if (pin != 0) pci_config_writeb(bdf, PCI_INTERRUPT_LINE, pci_slot_get_irq(pci, pin));` : 如果可以，那么分配中断给他
                 - pci_enable_default_vga
-              - [ ] smm_device_setup
-              - [ ] smm_setup
-              - [ ] mtrr_setup
+              - smm_device_setup : System Management Mode[^5] 探测 isapci 和 pmpci
+              - smm_setup 
+              - mtrr_setup
               - msr_feature_control_setup :pear: 应该是空的
               - smp_setup
                 - smp_scan :apple: 似乎需要通过 APIC_SVR 和 APIC_LINT1 之类的蛇皮玩意儿来实现操作
-              - [ ] pirtable_setup :pear:
-              - [ ] smbios_setup : 我的天啊
-              - [ ] romfile_loader_execute("etc/table-loader") : CONFIG_FW_ROMFILE_LOAD 是个什么东西，和 acpi table 是啥关系
+              - pirtable_setup :pear:
+              - smbios_setup :pear:
+                - smbios_romfile_setup
+                - smbios_legacy_setup
+              - romfile_loader_execute("etc/table-loader") : fw_cfg linker 相关
               - find_acpi_rsdp
               - acpi_dsdt_parse
               - virtio_mmio_setup_acpi
@@ -102,20 +139,24 @@
               - acpi_setup
             - timer_setup
             - clock_setup
-            - [ ] tpm_setup : ???? CONFIG_TCGBIOS ???
+              - pit_setup
+              - rtc_setup
+              - rtc_updating
+            - tpm_setup : 似乎是和可信计算相关的 [^6]
           - threads_during_optionroms : 难道在 bios 也是支持多线程吗 ?
-          - [ ] device_hardware_setup : 这些设备按道理应该都其实是可选的
+          - device_hardware_setup : 这些设备按道理应该都其实是可选的
             - usb_setup
             - ps2port_setup
             - block_setup
             - lpt_setup :apple:
-            - [ ] serial_setup : 原来 serial 端口的数量都是可以探测的，之前 debug 的时候，为什么不去探测
+            - serial_setup
             - cbfs_payload_setup : CONFIG_COREBOOT_FLASH
-          - [ ] vgarom_setup : CONFIG_OPTIONROMS 是个什么东西 :apple: 下面两个函数也都是处理 vga 的，这个东西是必须的吗？
-          - sercon_setup :pear:
-          - enable_vga_console :pear:
-          - [ ] optionrom_setup : Non-VGA option rom init ，非常的奇怪，为什么需要 vga 和 rom 是什么关系啊
-          - interactive_bootmenu : 因为 QEMU 没有提供，所以这个函数就是空的
+          - vga 相关的配置
+            - vgarom_setup
+            - sercon_setup
+            - enable_vga_console
+          - optionrom_setup : Non-VGA option rom init
+          - [ ] interactive_bootmenu
           - wait_threads
           - make_bios_readonly
           - startBoot : 终于到了启动的位置了，可以结束了
@@ -551,3 +592,54 @@ ca20, sysdata=sysdata@entry=0xffff88810022ca58) at drivers/acpi/pci_root.c:925
 #27 0x0000000000000000 in ?? ()
 ```
 从 pci_read_bases 中可以看的超级清晰，为什么在 Linux kernel 中间依旧存在配置 bar 空间的行为.
+
+## cat /proc/ioports
+```
+0000-0cf7 : PCI Bus 0000:00
+  0000-001f : dma1
+  0020-0021 : pic1
+  0040-0043 : timer0
+  0050-0053 : timer1
+  0060-0060 : keyboard
+  0064-0064 : keyboard
+  0070-0077 : rtc0
+  0080-008f : dma page reg
+  00a0-00a1 : pic2
+  00c0-00df : dma2
+  00f0-00ff : fpu
+  0170-0177 : 0000:00:01.1
+    0170-0177 : ata_piix
+  01f0-01f7 : 0000:00:01.1
+    01f0-01f7 : ata_piix
+  0376-0376 : 0000:00:01.1
+    0376-0376 : ata_piix
+  03c0-03df : vga+
+  03f2-03f2 : floppy
+  03f4-03f5 : floppy
+  03f6-03f6 : 0000:00:01.1
+    03f6-03f6 : ata_piix
+  03f7-03f7 : floppy
+  03f8-03ff : serial
+  0510-051b : QEMU0002:00
+  0600-063f : 0000:00:01.3
+    0600-0603 : ACPI PM1a_EVT_BLK
+    0604-0605 : ACPI PM1a_CNT_BLK
+    0608-060b : ACPI PM_TMR
+  0700-070f : 0000:00:01.3
+0cf8-0cff : PCI conf1
+0d00-ffff : PCI Bus 0000:00
+  afe0-afe3 : ACPI GPE0_BLK
+  c000-c03f : 0000:00:03.0
+    c000-c03f : e1000
+  c040-c05f : 0000:00:05.0
+  c060-c06f : 0000:00:01.1
+    c060-c06f : ata_piix
+```
+
+
+[^1]: https://www.seabios.org/Execution_and_code_flow
+[^2]: https://www.kernel.org/doc/html/latest/x86/mtrr.html
+[^3]: intel manual volume 11.11
+[^4]: intel manual volume 11.12
+[^5]: https://en.wikipedia.org/wiki/System_Management_Mode
+[^6]: https://docs.microsoft.com/en-us/windows-hardware/test/hlk/testref/trusted-execution-environment-acpi-profile
