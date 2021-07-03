@@ -444,19 +444,6 @@ struct PCIDevice {
       - 通过 `PCIDevice *pci_dev = pci_dev_find_by_addr(s, addr);`
 
 ```c
-[0] from 0x0000555555878040 in pci_host_config_read_common+0 at ../hw/pci/pci_host.c:88
-[1] from 0x00005555558782ee in pci_data_read+62 at ../hw/pci/pci_host.c:133
-[2] from 0x0000555555878323 in pci_host_data_read+35 at ../hw/pci/pci_host.c:178
-[3] from 0x0000555555b8da11 in memory_region_read_accessor+65 at ../softmmu/memory.c:442
-[4] from 0x0000555555b8c10e in access_with_adjusted_size+174 at ../softmmu/memory.c:552
-[5] from 0x0000555555b8fb61 in memory_region_dispatch_read1+41 at ../softmmu/memory.c:1422
-[6] from 0x0000555555b8fb61 in memory_region_dispatch_read+113 at ../softmmu/memory.c:1450
-[7] from 0x0000555555bd9ba9 in flatview_read_continue+233 at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:164
-[8] from 0x0000555555bd9d63 in flatview_read+99 at ../softmmu/physmem.c:2849
-[9] from 0x0000555555bd9eb6 in address_space_read_full+86 at ../softmmu/physmem.c:2862
-```
-
-```c
 /**
  *
 #0  pci_default_read_config (d=0x5555568923a0, address=0, len=2) at ../hw/pci/pci.c:1419
