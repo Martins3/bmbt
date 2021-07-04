@@ -104,10 +104,6 @@ x86_cpu_common_class_init 中注册的函数:
 - [ ] tcg_op_defs : 在 tcg.c 中间定义，具体在 tcg_context_init 中间初始化了，但是按照道理来说，xqm 将这些事情都处理了
 
 ## 设计 
-- 移除掉 memory model
-  - 现在的模型没有必要搞得这么复杂, 因为其中支持了 memory migration, memory listener 之类
-  - 关于各种地址空间相互覆盖，优先级等问题，可以参考 kvmtool
-
 - 到底是否保存 icount / record replay 机制
   - [ ] 在此之前，首先深入理解一下这个是怎么工作的吧
 

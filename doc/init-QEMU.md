@@ -1,30 +1,82 @@
 # QEMU 启动代码
 
-## 整体的问题
-
-- 到底什么必须在物理机器上测试 ?
-  - [ ] PCIe 设备穿透，这个能否可以直接拒绝提供，让 seabios 无法探测出来任何 PCIe 设备
-  - [ ] legacy 设备模拟，不清楚是否能够进行一些穿透
-  - [x] 能不能只是提供一个串口出去 ? （不能）
-
-- [ ] seabios 其实也是输出信息出去的 ?
-  - 是串口实现的吗 ?
-
+## 问题
+- [ ] qdev_device_add 是做什么的
 ```
 huxueshi:qdev_device_add isa-debugcon
 huxueshi:qdev_device_add nvme
 huxueshi:qdev_device_add virtio-9p-pci
 ```
 
+## CPUX86State
+这是 X86CPU 的成员，不是指针哦
+
+## host cpu / qemu cpu
+似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
+
+当使用上 tcg 的时候，是无法采用 host-x86_64-cpu 的, 当然 -cpu
+
+- [ ] 如何确定是 32bit 还是 64bit cpu 初始化的区别
+
+- 关于 cpu 中，其实还定义了 base 版本 和 max 版本
+
+通过 x86_register_cpu_model_type 创建出来了这个一堆 TypeInfo, 其作用:
+```c
+static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
+{
+    g_autofree char *typename = x86_cpu_type_name(name);
+
+    printf("huxueshi:%s %s\n", __FUNCTION__, typename);
+
+    TypeInfo ti = {
+        .name = typename,
+        .parent = TYPE_X86_CPU,
+        .class_init = x86_cpu_cpudef_class_init,
+        .class_data = model,
+    };
+
+    type_register(&ti);
+}
+```
+
+
+在 qemu_init 中进行 `current_machine->cpu_type` 的初始化, 
+而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
+
+```c
+static X86CPUDefinition builtin_x86_defs[] = {
+    {
+        .name = "qemu64",
+        .level = 0xd,
+        .vendor = CPUID_VENDOR_AMD,
+        .family = 6,
+        .model = 6,
+        .stepping = 3,
+        .features[FEAT_1_EDX] =
+            PPRO_FEATURES |
+            CPUID_MTRR | CPUID_CLFLUSH | CPUID_MCA |
+            CPUID_PSE36,
+        .features[FEAT_1_ECX] =
+            CPUID_EXT_SSE3 | CPUID_EXT_CX16,
+        .features[FEAT_8000_0001_EDX] =
+            CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX,
+        .features[FEAT_8000_0001_ECX] =
+            CPUID_EXT3_LAHF_LM | CPUID_EXT3_SVM,
+        .xlevel = 0x8000000A,
+        .model_id = "QEMU Virtual CPU version " QEMU_HW_VERSION,
+    },
+};
+```
+由此可见，重新第一出来的这些 type info 只是为了初始化主流体系而已
+
+## 整体
 启动，总体划分三个部分：
 1. x86_cpus_init ：进行 CPU 相关的初始化
 2. pc_memory_init : 进行内存初始化
 3. 设备的初始化
   - pci 相关的组织比较麻烦
-
-## 细节的 mark
-- [ ] apic_id_limit : 初始化中老是处理的 apci id 是啥 ?
-  - [ ] 还有，内核其实也可以不提供 acpi (应该使用 kvmqemu trace 一下)
+4. machine 的初始化在哪里?
+  - pc.c / pc_piix.c 中的
 
 文件内容的基本分析:
 | file              | 行数 | 内容分析                                               |
@@ -34,12 +86,11 @@ huxueshi:qdev_device_add virtio-9p-pci
 | target/i386/cpu.c | 7000 | X86CPU 相关，主要处理的都是 PC 的 feature 之类的       |
 | hw/i386/pi_piix.c | 1000 | pc_init1 剩下的就是 DEFINE_I440FX_MACHINE 定义的东西了 |
 
-
 定义的各种 type info
 | variable          | location         | desc                                                                                                 |
 |-------------------|------------------|------------------------------------------------------------------------------------------------------|
 | x86_cpu_type_info | target/i386/pc.c | x86_cpu_initfn : 调用一些 object_property_add 和 accel_cpu_instance_init(这是 tcg 和 kvm 分叉点之一) |
-| pc_machine_info   | hw/i386/pc.c     | pc_machine_initfn : 初始化一下 PCMachineState, pc_machine_class_init : 实际上，                                 |
+| pc_machine_info   | hw/i386/pc.c     | pc_machine_initfn : 初始化一下 PCMachineState, pc_machine_class_init                                 |
 
 到底初始化什么内容:
 | item | necessary          | desc                                                                                     |
@@ -47,6 +98,7 @@ huxueshi:qdev_device_add virtio-9p-pci
 | e820 | :heavy_check_mark: | - [ ] 为什么有了 acpi 还是需要 e820 啊，当使用增加了一个内存条，并没有说非要修改 acpi 啊 |
 | apci | :x:                | - [ ] 在 QEMU 和 kernel 中间都存在 CONFIG_ACPI 的选项，也许暂时可以不去管                |
 | pci  | :x:                | - [ ] `pcmc->pci_enabled`                                                                |
+| cpu  | :x:                | - [ ] 到底初始化的是那几个结构体，和 tcg 耦合的结构体是谁                                                           |
 
 非 PCI 设备枚举:
 | Device       | parent              |
@@ -59,14 +111,11 @@ huxueshi:qdev_device_add virtio-9p-pci
 
 从 type info 上可以轻易的看到一个设备是不是 TYPE_ISA_DEVICE 
 
-PCMachineState <- X86MachineState <- MachineState
-
-- [ ] io_mem_unassigned 的引用位置扑朔迷离
 
 - qemu_init : 这里面存在很长的参数解析的内容
   - qemu_create_machine(select_machine()) : select_machine 中获取 MachineClass
     - cpu_exec_init_all :
-      - [ ] io_mem_init : 初始化 io_mem_unassigned
+      - io_mem_init : 初始化 io_mem_unassigned, 但是实际上，这个 mr 永远都不会被使用
       - memory_map_init : 初始化 system_memory, 和 io_memory 这两个都是 container 并不会真正的分配的映射空间
     - page_size_init : 初始化之后的 softmmu 需要的内容
   - qmp_x_exit_preconfig
@@ -91,7 +140,7 @@ PCMachineState <- X86MachineState <- MachineState
                           - tcg_x86_init: 这是 CPUClass 上注册的函数，进行一些 tcg 相关的的初始化, 例如 regs
                       - x86_cpu_expand_features
                       - x86_cpu_filter_features
-                      - [ ] mce_init : 根本不知道干啥的
+                      - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了, mce 参考[^2]
                       - qemu_init_vcpu : 创建执行线程
                       - x86_cpu_apic_realize 
                         - 通过 QOM 调用到 apic_common_realize
@@ -115,8 +164,7 @@ PCMachineState <- X86MachineState <- MachineState
             - rom_set_fw : 用从 fw_cfg_arch_create 返回的值初始化全局 fw_cfg
             - x86_load_linux : 如果指定了 kernel, 那么就从此处 load kernel
             - rom_add_option : 添加 rom 镜像，关于 rom 分析看 [loader](#loader)
-          - pc_guest_info_init
-              - qemu_add_machine_init_done_notifier : 将所有注册到 machine_init_done_notifiers 上的 notifier 逐个执行
+          - pc_guest_info_init : 注册上 pc_machine_done 最后执行
           - smbios_set_defaults : 初始化一些 smbios 变量，为下一步制作 smbios table 打下基础
           - [ ] pc_gsi_create : 关于中断的事情可以重新看看狼书好好分析一下
           - i440fx_init : 只有 pcmc->pci_enabled 才会调用的
@@ -132,7 +180,7 @@ PCMachineState <- X86MachineState <- MachineState
                 - qbus_init
               - pci_root_bus_init
             - 处理 PCI 的地址空间的映射初始化
-            - [ ] init_pam : https://wiki.qemu.org/Documentation/Platforms/PC
+            - init_pam : https://wiki.qemu.org/Documentation/Platforms/PC
           - piix3_create
             - pci_create_simple_multifunction : 创建出来设备
             - 设置从 piix3 到 i440fx 的中断路由之类的事情
@@ -163,40 +211,16 @@ PCMachineState <- X86MachineState <- MachineState
       - parse_fw_cfg : 解析参数 -fw_cfg (Add named fw_cfg entry with contents from file file.)
       - usb_parse
       - device_init_func : 解析参数 -device 比如 nvme
-    - qemu_machine_creation_done : 在 vn/hack/qemu/internals/seabios.md 中展示了从这里一直到 i8042_build_aml 的过程
+    - qemu_machine_creation_done
       - qdev_machine_creation_done
-        - notifier_list_notify : 这会调用 pc_machine_done, 实际上，注册到 machine_init_done_notifiers 上的 notifier 只有这一个而已
+        - notifier_list_notify : 通过 qemu_add_machine_init_done_notifier 的 references 可以很快的知道都注册了什么
           - pc_machine_done
             - [ ] x86_rtc_set_cpus_count : 神奇的机制，和 seabios 对称的看看
             - [ ] fw_cfg_add_extra_pci_roots 
             - [ ] acpi_setup
               - 依赖于 acpi 的 `x86ms->fw_cfg` 和 pcms->acpi_build_enabled, 否则都会失败
-
-- [ ] 这些 qom 的自动初始化的东西全部被忽视了
-- [ ] pam / mce 的代码
-- [ ] 似乎搞了两个 notifier ?
-  - qdev_machine_creation_done
-  - pc_guest_info_init
-```c
-/*
-#0  cpu_common_initfn (obj=0x555555e64ab3 <object_init_with_type+96>) at ../hw/core/cpu-common.c:237
-#1  0x0000555555e64ab3 in object_init_with_type (obj=0x555556c89f00, ti=0x555556852de0) at ../qom/object.c:375
-#2  0x0000555555e64a95 in object_init_with_type (obj=0x555556c89f00, ti=0x55555686beb0) at ../qom/object.c:371
-#3  0x0000555555e64a95 in object_init_with_type (obj=0x555556c89f00, ti=0x55555687da00) at ../qom/object.c:371
-#4  0x0000555555e64a95 in object_init_with_type (obj=0x555556c89f00, ti=0x55555687df20) at ../qom/object.c:371
-#5  0x0000555555e6500e in object_initialize_with_type (obj=0x555556c89f00, size=42944, type=0x55555687df20) at ../qom/object.c:517
-#6  0x0000555555e65743 in object_new_with_type (type=0x55555687df20) at ../qom/object.c:732
-#7  0x0000555555e657a2 in object_new (typename=0x55555687e0a0 "host-x86_64-cpu") at ../qom/object.c:747
-#8  0x0000555555b67369 in x86_cpu_new (x86ms=0x555556a94800, apic_id=0, errp=0x5555567a94b0 <error_fatal>) at ../hw/i386/x86.c:106
-#9  0x0000555555b67485 in x86_cpus_init (x86ms=0x555556a94800, default_cpu_version=1) at ../hw/i386/x86.c:138
-#10 0x0000555555b7b69b in pc_init1 (machine=0x555556a94800, host_type=0x55555609e70a "i440FX-pcihost", pci_type=0x55555609e703 "i440FX") at ../hw/i386/pc_piix.c:157
-#11 0x0000555555b7c24e in pc_init_v6_1 (machine=0x555556a94800) at ../hw/i386/pc_piix.c:425
-#12 0x0000555555aec313 in machine_run_board_init (machine=0x555556a94800) at ../hw/core/machine.c:1239
-#13 0x0000555555cdada9 in qemu_init_board () at ../softmmu/vl.c:2526
-#14 0x0000555555cdaf88 in qmp_x_exit_preconfig (errp=0x5555567a94b0 <error_fatal>) at ../softmmu/vl.c:2600
-#15 0x0000555555cdd660 in qemu_init (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/vl.c:3635
-#16 0x000055555582e575 in main (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/main.c:49
-```
+          - tcg_cpu_machine_done : 注册 smram 相关的工作
+          - [ ] machine_init_notify
 
 #### e820
 - 信息是如何构造出来的
@@ -204,22 +228,12 @@ PCMachineState <- X86MachineState <- MachineState
 - 如何通知 guest 内核的 ?
   - 在 fw_cfg_arch_create 中添加 `etc/e820` 实现的
 
-
-- [ ] 类似 pci 映射的 MMIO 空间的分配是 e820 之类的操作的吗 ?
-
+- [ ] 类似 pci 映射的 MMIO 空间的分配是 e820 负责的操作的吗 ?
 
 #### pflash
 在 hw/i386/pc_sysfw.c 似乎主要处理的就是 pflash
 
 关于 pflash 和 bios 的关系可以首先看看[^1], 但是目前不需要知道 pflash 也可以
-
-## loader
-- [ ] 等待分析 loader.c
-
-## smbios
-- [ ] 等待分析 smbios.c
-
-smbios_set_defaults
 
 ## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
 ```c
@@ -247,5 +261,983 @@ hw/core/bus.c:158
 #6  0x000055555582e575 in main (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/main.c:49
 ```
 
+## init machine
+- [ ] 注意, 这里拷贝的代码是 v6.0, 准备写代码的时候，将这个全部替换掉
+
+#### MachineClass
+```c
+/**
+ * MachineClass:
+ * @deprecation_reason: If set, the machine is marked as deprecated. The
+ *    string should provide some clear information about what to use instead.
+ * @max_cpus: maximum number of CPUs supported. Default: 1
+ * @min_cpus: minimum number of CPUs supported. Default: 1
+ * @default_cpus: number of CPUs instantiated if none are specified. Default: 1
+ * @is_default:
+ *    If true QEMU will use this machine by default if no '-M' option is given.
+ * @get_hotplug_handler: this function is called during bus-less
+ *    device hotplug. If defined it returns pointer to an instance
+ *    of HotplugHandler object, which handles hotplug operation
+ *    for a given @dev. It may return NULL if @dev doesn't require
+ *    any actions to be performed by hotplug handler.
+ * @cpu_index_to_instance_props:
+ *    used to provide @cpu_index to socket/core/thread number mapping, allowing
+ *    legacy code to perform maping from cpu_index to topology properties
+ *    Returns: tuple of socket/core/thread ids given cpu_index belongs to.
+ *    used to provide @cpu_index to socket number mapping, allowing
+ *    a machine to group CPU threads belonging to the same socket/package
+ *    Returns: socket number given cpu_index belongs to.
+ * @hw_version:
+ *    Value of QEMU_VERSION when the machine was added to QEMU.
+ *    Set only by old machines because they need to keep
+ *    compatibility on code that exposed QEMU_VERSION to guests in
+ *    the past (and now use qemu_hw_version()).
+ * @possible_cpu_arch_ids:
+ *    Returns an array of @CPUArchId architecture-dependent CPU IDs
+ *    which includes CPU IDs for present and possible to hotplug CPUs.
+ *    Caller is responsible for freeing returned list.
+ * @get_default_cpu_node_id:
+ *    returns default board specific node_id value for CPU slot specified by
+ *    index @idx in @ms->possible_cpus[]
+ * @has_hotpluggable_cpus:
+ *    If true, board supports CPUs creation with -device/device_add.
+ * @default_cpu_type:
+ *    specifies default CPU_TYPE, which will be used for parsing target
+ *    specific features and for creating CPUs if CPU name wasn't provided
+ *    explicitly at CLI
+ * @minimum_page_bits:
+ *    If non-zero, the board promises never to create a CPU with a page size
+ *    smaller than this, so QEMU can use a more efficient larger page
+ *    size than the target architecture's minimum. (Attempting to create
+ *    such a CPU will fail.) Note that changing this is a migration
+ *    compatibility break for the machine.
+ * @ignore_memory_transaction_failures:
+ *    If this is flag is true then the CPU will ignore memory transaction
+ *    failures which should cause the CPU to take an exception due to an
+ *    access to an unassigned physical address; the transaction will instead
+ *    return zero (for a read) or be ignored (for a write). This should be
+ *    set only by legacy board models which rely on the old RAZ/WI behaviour
+ *    for handling devices that QEMU does not yet model. New board models
+ *    should instead use "unimplemented-device" for all memory ranges where
+ *    the guest will attempt to probe for a device that QEMU doesn't
+ *    implement and a stub device is required.
+ * @kvm_type:
+ *    Return the type of KVM corresponding to the kvm-type string option or
+ *    computed based on other criteria such as the host kernel capabilities.
+ *    kvm-type may be NULL if it is not needed.
+ * @numa_mem_supported:
+ *    true if '--numa node.mem' option is supported and false otherwise
+ * @smp_parse:
+ *    The function pointer to hook different machine specific functions for
+ *    parsing "smp-opts" from QemuOpts to MachineState::CpuTopology and more
+ *    machine specific topology fields, such as smp_dies for PCMachine.
+ * @hotplug_allowed:
+ *    If the hook is provided, then it'll be called for each device
+ *    hotplug to check whether the device hotplug is allowed.  Return
+ *    true to grant allowance or false to reject the hotplug.  When
+ *    false is returned, an error must be set to show the reason of
+ *    the rejection.  If the hook is not provided, all hotplug will be
+ *    allowed.
+ * @default_ram_id:
+ *    Specifies inital RAM MemoryRegion name to be used for default backend
+ *    creation if user explicitly hasn't specified backend with "memory-backend"
+ *    property.
+ *    It also will be used as a way to optin into "-m" option support.
+ *    If it's not set by board, '-m' will be ignored and generic code will
+ *    not create default RAM MemoryRegion.
+ * @fixup_ram_size:
+ *    Amends user provided ram size (with -m option) using machine
+ *    specific algorithm. To be used by old machine types for compat
+ *    purposes only.
+ *    Applies only to default memory backend, i.e., explicit memory backend
+ *    wasn't used.
+ */
+struct MachineClass {
+    /*< private >*/
+    ObjectClass parent_class;
+    /*< public >*/
+
+    const char *family; /* NULL iff @name identifies a standalone machtype */
+    char *name;
+    const char *alias;
+    const char *desc;
+    const char *deprecation_reason;
+
+    void (*init)(MachineState *state);
+    void (*reset)(MachineState *state);
+    void (*wakeup)(MachineState *state);
+    int (*kvm_type)(MachineState *machine, const char *arg);
+    void (*smp_parse)(MachineState *ms, QemuOpts *opts);
+
+    BlockInterfaceType block_default_type;
+    int units_per_default_bus;
+    int max_cpus;
+    int min_cpus;
+    int default_cpus;
+    unsigned int no_serial:1,
+        no_parallel:1,
+        no_floppy:1,
+        no_cdrom:1,
+        no_sdcard:1,
+        pci_allow_0_address:1,
+        legacy_fw_cfg_order:1;
+    bool is_default;
+    const char *default_machine_opts;
+    const char *default_boot_order;
+    const char *default_display;
+    GPtrArray *compat_props;
+    const char *hw_version;
+    ram_addr_t default_ram_size;
+    const char *default_cpu_type;
+    bool default_kernel_irqchip_split;
+    bool option_rom_has_mr;
+    bool rom_file_has_mr;
+    int minimum_page_bits;
+    bool has_hotpluggable_cpus;
+    bool ignore_memory_transaction_failures;
+    int numa_mem_align_shift;
+    const char **valid_cpu_types;
+    strList *allowed_dynamic_sysbus_devices;
+    bool auto_enable_numa_with_memhp;
+    bool auto_enable_numa_with_memdev;
+    bool ignore_boot_device_suffixes;
+    bool smbus_no_migration_support;
+    bool nvdimm_supported;
+    bool numa_mem_supported;
+    bool auto_enable_numa;
+    const char *default_ram_id;
+
+    HotplugHandler *(*get_hotplug_handler)(MachineState *machine,
+                                           DeviceState *dev);
+    bool (*hotplug_allowed)(MachineState *state, DeviceState *dev,
+                            Error **errp);
+    CpuInstanceProperties (*cpu_index_to_instance_props)(MachineState *machine,
+                                                         unsigned cpu_index);
+    const CPUArchIdList *(*possible_cpu_arch_ids)(MachineState *machine);
+    int64_t (*get_default_cpu_node_id)(const MachineState *ms, int idx);
+    ram_addr_t (*fixup_ram_size)(ram_addr_t size);
+};
+```
+
+
+#### X86MachineClass
+```c
+struct X86MachineClass {
+    /*< private >*/
+    MachineClass parent;
+
+    /*< public >*/
+
+    /* TSC rate migration: */
+    bool save_tsc_khz;
+    /* Enables contiguous-apic-ID mode */
+    bool compat_apic_id_mode;
+};
+```
+
+#### PCMachineClass
+```c
+/**
+ * PCMachineClass:
+ *
+ * Compat fields:
+ *
+ * @enforce_aligned_dimm: check that DIMM's address/size is aligned by
+ *                        backend's alignment value if provided
+ * @acpi_data_size: Size of the chunk of memory at the top of RAM
+ *                  for the BIOS ACPI tables and other BIOS
+ *                  datastructures.
+ * @gigabyte_align: Make sure that guest addresses aligned at
+ *                  1Gbyte boundaries get mapped to host
+ *                  addresses aligned at 1Gbyte boundaries. This
+ *                  way we can use 1GByte pages in the host.
+ *
+ */
+struct PCMachineClass {
+    /*< private >*/
+    X86MachineClass parent_class;
+
+    /*< public >*/
+
+    /* Device configuration: */
+    bool pci_enabled;
+    bool kvmclock_enabled;
+    const char *default_nic_model;
+
+    /* Compat options: */
+
+    /* Default CPU model version.  See x86_cpu_set_default_version(). */
+    int default_cpu_version;
+
+    /* ACPI compat: */
+    bool has_acpi_build;
+    bool rsdp_in_ram;
+    int legacy_acpi_table_size;
+    unsigned acpi_data_size;
+    bool do_not_add_smb_acpi;
+    int pci_root_uid;
+
+    /* SMBIOS compat: */
+    bool smbios_defaults;
+    bool smbios_legacy_mode;
+    bool smbios_uuid_encoded;
+
+    /* RAM / address space compat: */
+    bool gigabyte_align;
+    bool has_reserved_memory;
+    bool enforce_aligned_dimm;
+    bool broken_reserved_end;
+
+    /* generate legacy CPU hotplug AML */
+    bool legacy_cpu_hotplug;
+
+    /* use DMA capable linuxboot option rom */
+    bool linuxboot_dma_enabled;
+
+    /* use PVH to load kernels that support this feature */
+    bool pvh_enabled;
+
+    /* create kvmclock device even when KVM PV features are not exposed */
+    bool kvmclock_create_always;
+};
+```
+#### MachineState
+```c
+/**
+ * MachineState:
+ */
+struct MachineState {
+    /*< private >*/
+    Object parent_obj;
+    Notifier sysbus_notifier;
+
+    /*< public >*/
+
+    void *fdt;
+    char *dtb;
+    char *dumpdtb;
+    int phandle_start;
+    char *dt_compatible;
+    bool dump_guest_core;
+    bool mem_merge;
+    bool usb;
+    bool usb_disabled;
+    char *firmware;
+    bool iommu;
+    bool suppress_vmdesc;
+    bool enable_graphics;
+    ConfidentialGuestSupport *cgs;
+    char *ram_memdev_id;
+    /*
+     * convenience alias to ram_memdev_id backend memory region
+     * or to numa container memory region
+     */
+    MemoryRegion *ram;
+    DeviceMemoryState *device_memory;
+
+    ram_addr_t ram_size;
+    ram_addr_t maxram_size;
+    uint64_t   ram_slots;
+    const char *boot_order;
+    const char *boot_once;
+    char *kernel_filename;
+    char *kernel_cmdline;
+    char *initrd_filename;
+    const char *cpu_type;
+    AccelState *accelerator;
+    CPUArchIdList *possible_cpus;
+    CpuTopology smp;
+    struct NVDIMMState *nvdimms_state;
+    struct NumaState *numa_state;
+};
+```
+
+
+
+#### X86MachineState
+```c
+struct X86MachineState {
+    /*< private >*/
+    MachineState parent;
+
+    /*< public >*/
+
+    /* Pointers to devices and objects: */
+    ISADevice *rtc;
+    FWCfgState *fw_cfg;
+    qemu_irq *gsi;
+    DeviceState *ioapic2;
+    GMappedFile *initrd_mapped_file;
+    HotplugHandler *acpi_dev;
+
+    /* RAM information (sizes, addresses, configuration): */
+    ram_addr_t below_4g_mem_size, above_4g_mem_size;
+
+    /* CPU and apic information: */
+    bool apic_xrupt_override;
+    unsigned pci_irq_mask;
+    unsigned apic_id_limit;
+    uint16_t boot_cpus;
+    unsigned smp_dies;
+
+    OnOffAuto smm;
+    OnOffAuto acpi;
+
+    char *oem_id;
+    char *oem_table_id;
+    /*
+     * Address space used by IOAPIC device. All IOAPIC interrupts
+     * will be translated to MSI messages in the address space.
+     */
+    AddressSpace *ioapic_as;
+};
+```
+
+#### PCMachineState
+```c
+/**
+ * PCMachineState:
+ * @acpi_dev: link to ACPI PM device that performs ACPI hotplug handling
+ * @boot_cpus: number of present VCPUs
+ * @smp_dies: number of dies per one package
+ */
+typedef struct PCMachineState {
+    /*< private >*/
+    X86MachineState parent_obj;
+
+    /* <public> */
+
+    /* State for other subsystems/APIs: */
+    Notifier machine_done;
+
+    /* Pointers to devices and objects: */
+    PCIBus *bus;
+    I2CBus *smbus;
+    PFlashCFI01 *flash[2];
+    ISADevice *pcspk;
+
+    /* Configuration options: */
+    uint64_t max_ram_below_4g;
+    OnOffAuto vmport;
+
+    bool acpi_build_enabled;
+    bool smbus_enabled;
+    bool sata_enabled;
+    bool pit_enabled;
+    bool hpet_enabled;
+    uint64_t max_fw_size;
+
+    /* NUMA information: */
+    uint64_t numa_nodes;
+    uint64_t *node_mem;
+
+    /* ACPI Memory hotplug IO base address */
+    hwaddr memhp_io_base;
+} PCMachineState;
+```
+
+## init cpu
+
+#### DeviceState
+```c
+/**
+ * DeviceState:
+ * @realized: Indicates whether the device has been fully constructed.
+ *            When accessed outside big qemu lock, must be accessed with
+ *            qatomic_load_acquire()
+ * @reset: ResettableState for the device; handled by Resettable interface.
+ *
+ * This structure should not be accessed directly.  We declare it here
+ * so that it can be embedded in individual device state structures.
+ */
+struct DeviceState {
+    /*< private >*/
+    Object parent_obj;
+    /*< public >*/
+
+    const char *id;
+    char *canonical_path;
+    bool realized;
+    bool pending_deleted_event;
+    QemuOpts *opts;
+    int hotplugged;
+    bool allow_unplug_during_migration;
+    BusState *parent_bus;
+    QLIST_HEAD(, NamedGPIOList) gpios;
+    QLIST_HEAD(, NamedClockList) clocks;
+    QLIST_HEAD(, BusState) child_bus;
+    int num_child_bus;
+    int instance_id_alias;
+    int alias_required_for_version;
+    ResettableState reset;
+};
+```
+
+#### CPUState
+```c
+/**
+ * CPUState:
+ * @cpu_index: CPU index (informative).
+ * @cluster_index: Identifies which cluster this CPU is in.
+ *   For boards which don't define clusters or for "loose" CPUs not assigned
+ *   to a cluster this will be UNASSIGNED_CLUSTER_INDEX; otherwise it will
+ *   be the same as the cluster-id property of the CPU object's TYPE_CPU_CLUSTER
+ *   QOM parent.
+ * @tcg_cflags: Pre-computed cflags for this cpu.
+ * @nr_cores: Number of cores within this CPU package.
+ * @nr_threads: Number of threads within this CPU.
+ * @running: #true if CPU is currently running (lockless).
+ * @has_waiter: #true if a CPU is currently waiting for the cpu_exec_end;
+ * valid under cpu_list_lock.
+ * @created: Indicates whether the CPU thread has been successfully created.
+ * @interrupt_request: Indicates a pending interrupt request.
+ * @halted: Nonzero if the CPU is in suspended state.
+ * @stop: Indicates a pending stop request.
+ * @stopped: Indicates the CPU has been artificially stopped.
+ * @unplug: Indicates a pending CPU unplug request.
+ * @crash_occurred: Indicates the OS reported a crash (panic) for this CPU
+ * @singlestep_enabled: Flags for single-stepping.
+ * @icount_extra: Instructions until next timer event.
+ * @can_do_io: Nonzero if memory-mapped IO is safe. Deterministic execution
+ * requires that IO only be performed on the last instruction of a TB
+ * so that interrupts take effect immediately.
+ * @cpu_ases: Pointer to array of CPUAddressSpaces (which define the
+ *            AddressSpaces this CPU has)
+ * @num_ases: number of CPUAddressSpaces in @cpu_ases
+ * @as: Pointer to the first AddressSpace, for the convenience of targets which
+ *      only have a single AddressSpace
+ * @env_ptr: Pointer to subclass-specific CPUArchState field.
+ * @icount_decr_ptr: Pointer to IcountDecr field within subclass.
+ * @gdb_regs: Additional GDB registers.
+ * @gdb_num_regs: Number of total registers accessible to GDB.
+ * @gdb_num_g_regs: Number of registers in GDB 'g' packets.
+ * @next_cpu: Next CPU sharing TB cache.
+ * @opaque: User data.
+ * @mem_io_pc: Host Program Counter at which the memory was accessed.
+ * @kvm_fd: vCPU file descriptor for KVM.
+ * @work_mutex: Lock to prevent multiple access to @work_list.
+ * @work_list: List of pending asynchronous work.
+ * @trace_dstate_delayed: Delayed changes to trace_dstate (includes all changes
+ *                        to @trace_dstate).
+ * @trace_dstate: Dynamic tracing state of events for this vCPU (bitmask).
+ * @plugin_mask: Plugin event bitmap. Modified only via async work.
+ * @ignore_memory_transaction_failures: Cached copy of the MachineState
+ *    flag of the same name: allows the board to suppress calling of the
+ *    CPU do_transaction_failed hook function.
+ * @kvm_dirty_gfns: Points to the KVM dirty ring for this CPU when KVM dirty
+ *    ring is enabled.
+ * @kvm_fetch_index: Keeps the index that we last fetched from the per-vCPU
+ *    dirty ring structure.
+ *
+ * State of one CPU core or thread.
+ */
+struct CPUState {
+    /*< private >*/
+    DeviceState parent_obj;
+    /*< public >*/
+
+    int nr_cores;
+    int nr_threads;
+
+    struct QemuThread *thread;
+#ifdef _WIN32
+    HANDLE hThread;
+#endif
+    int thread_id;
+    bool running, has_waiter;
+    struct QemuCond *halt_cond;
+    bool thread_kicked;
+    bool created;
+    bool stop;
+    bool stopped;
+
+    /* Should CPU start in powered-off state? */
+    bool start_powered_off;
+
+    bool unplug;
+    bool crash_occurred;
+    bool exit_request;
+    bool in_exclusive_context;
+    uint32_t cflags_next_tb;
+    /* updates protected by BQL */
+    uint32_t interrupt_request;
+    int singlestep_enabled;
+    int64_t icount_budget;
+    int64_t icount_extra;
+    uint64_t random_seed;
+    sigjmp_buf jmp_env;
+
+    QemuMutex work_mutex;
+    QSIMPLEQ_HEAD(, qemu_work_item) work_list;
+
+    CPUAddressSpace *cpu_ases;
+    int num_ases;
+    AddressSpace *as;
+    MemoryRegion *memory;
+
+    void *env_ptr; /* CPUArchState */
+    IcountDecr *icount_decr_ptr;
+
+    /* Accessed in parallel; all accesses must be atomic */
+    TranslationBlock *tb_jmp_cache[TB_JMP_CACHE_SIZE];
+
+    struct GDBRegisterState *gdb_regs;
+    int gdb_num_regs;
+    int gdb_num_g_regs;
+    QTAILQ_ENTRY(CPUState) node;
+
+    /* ice debug support */
+    QTAILQ_HEAD(, CPUBreakpoint) breakpoints;
+
+    QTAILQ_HEAD(, CPUWatchpoint) watchpoints;
+    CPUWatchpoint *watchpoint_hit;
+
+    void *opaque;
+
+    /* In order to avoid passing too many arguments to the MMIO helpers,
+     * we store some rarely used information in the CPU context.
+     */
+    uintptr_t mem_io_pc;
+
+    /* Only used in KVM */
+    int kvm_fd;
+    struct KVMState *kvm_state;
+    struct kvm_run *kvm_run;
+    struct kvm_dirty_gfn *kvm_dirty_gfns;
+    uint32_t kvm_fetch_index;
+
+    /* Used for events with 'vcpu' and *without* the 'disabled' properties */
+    DECLARE_BITMAP(trace_dstate_delayed, CPU_TRACE_DSTATE_MAX_EVENTS);
+    DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
+
+    DECLARE_BITMAP(plugin_mask, QEMU_PLUGIN_EV_MAX);
+
+#ifdef CONFIG_PLUGIN
+    GArray *plugin_mem_cbs;
+    /* saved iotlb data from io_writex */
+    SavedIOTLB saved_iotlb;
+#endif
+
+    /* TODO Move common fields from CPUArchState here. */
+    int cpu_index;
+    int cluster_index;
+    uint32_t tcg_cflags;
+    uint32_t halted;
+    uint32_t can_do_io;
+    int32_t exception_index;
+
+    /* shared by kvm, hax and hvf */
+    bool vcpu_dirty;
+
+    /* Used to keep track of an outstanding cpu throttle thread for migration
+     * autoconverge
+     */
+    bool throttle_thread_scheduled;
+
+    bool ignore_memory_transaction_failures;
+
+    struct hax_vcpu_state *hax_vcpu;
+
+    int hvf_fd;
+
+    /* track IOMMUs whose translations we've cached in the TCG TLB */
+    GArray *iommu_notifiers;
+};
+```
+
+
+#### X86CPU
+```c
+/**
+ * X86CPU:
+ * @env: #CPUX86State
+ * @migratable: If set, only migratable flags will be accepted when "enforce"
+ * mode is used, and only migratable flags will be included in the "host"
+ * CPU model.
+ *
+ * An x86 CPU.
+ */
+struct X86CPU {
+    /*< private >*/
+    CPUState parent_obj;
+    /*< public >*/
+
+    CPUNegativeOffsetState neg;
+    CPUX86State env;
+    VMChangeStateEntry *vmsentry;
+
+    uint64_t ucode_rev;
+
+    uint32_t hyperv_spinlock_attempts;
+    char *hyperv_vendor;
+    bool hyperv_synic_kvm_only;
+    uint64_t hyperv_features;
+    bool hyperv_passthrough;
+    OnOffAuto hyperv_no_nonarch_cs;
+    uint32_t hyperv_vendor_id[3];
+    uint32_t hyperv_interface_id[4];
+    uint32_t hyperv_version_id[4];
+    uint32_t hyperv_limits[3];
+
+    bool check_cpuid;
+    bool enforce_cpuid;
+    /*
+     * Force features to be enabled even if the host doesn't support them.
+     * This is dangerous and should be done only for testing CPUID
+     * compatibility.
+     */
+    bool force_features;
+    bool expose_kvm;
+    bool expose_tcg;
+    bool migratable;
+    bool migrate_smi_count;
+    bool max_features; /* Enable all supported features automatically */
+    uint32_t apic_id;
+
+    /* Enables publishing of TSC increment and Local APIC bus frequencies to
+     * the guest OS in CPUID page 0x40000010, the same way that VMWare does. */
+    bool vmware_cpuid_freq;
+
+    /* if true the CPUID code directly forward host cache leaves to the guest */
+    bool cache_info_passthrough;
+
+    /* if true the CPUID code directly forwards
+     * host monitor/mwait leaves to the guest */
+    struct {
+        uint32_t eax;
+        uint32_t ebx;
+        uint32_t ecx;
+        uint32_t edx;
+    } mwait;
+
+    /* Features that were filtered out because of missing host capabilities */
+    FeatureWordArray filtered_features;
+
+    /* Enable PMU CPUID bits. This can't be enabled by default yet because
+     * it doesn't have ABI stability guarantees, as it passes all PMU CPUID
+     * bits returned by GET_SUPPORTED_CPUID (that depend on host CPU and kernel
+     * capabilities) directly to the guest.
+     */
+    bool enable_pmu;
+
+    /* LMCE support can be enabled/disabled via cpu option 'lmce=on/off'. It is
+     * disabled by default to avoid breaking migration between QEMU with
+     * different LMCE configurations.
+     */
+    bool enable_lmce;
+
+    /* Compatibility bits for old machine types.
+     * If true present virtual l3 cache for VM, the vcpus in the same virtual
+     * socket share an virtual l3 cache.
+     */
+    bool enable_l3_cache;
+
+    /* Compatibility bits for old machine types.
+     * If true present the old cache topology information
+     */
+    bool legacy_cache;
+
+    /* Compatibility bits for old machine types: */
+    bool enable_cpuid_0xb;
+
+    /* Enable auto level-increase for all CPUID leaves */
+    bool full_cpuid_auto_level;
+
+    /* Enable auto level-increase for Intel Processor Trace leave */
+    bool intel_pt_auto_level;
+
+    /* if true fill the top bits of the MTRR_PHYSMASKn variable range */
+    bool fill_mtrr_mask;
+
+    /* if true override the phys_bits value with a value read from the host */
+    bool host_phys_bits;
+
+    /* if set, limit maximum value for phys_bits when host_phys_bits is true */
+    uint8_t host_phys_bits_limit;
+
+    /* Stop SMI delivery for migration compatibility with old machines */
+    bool kvm_no_smi_migration;
+
+    /* Number of physical address bits supported */
+    uint32_t phys_bits;
+
+    /* in order to simplify APIC support, we leave this pointer to the
+       user */
+    struct DeviceState *apic_state;
+    struct MemoryRegion *cpu_as_root, *cpu_as_mem, *smram;
+    Notifier machine_done;
+
+    struct kvm_msrs *kvm_msr_buf;
+
+    int32_t node_id; /* NUMA node this CPU belongs to */
+    int32_t socket_id;
+    int32_t die_id;
+    int32_t core_id;
+    int32_t thread_id;
+
+    int32_t hv_max_vps;
+};
+```
+
+#####  CPUX86State
+
+```c
+typedef struct CPUX86State {
+    /* standard registers */
+    target_ulong regs[CPU_NB_REGS];
+    target_ulong eip;
+    target_ulong eflags; /* eflags register. During CPU emulation, CC
+                        flags and DF are set to zero because they are
+                        stored elsewhere */
+
+    /* emulator internal eflags handling */
+    target_ulong cc_dst;
+    target_ulong cc_src;
+    target_ulong cc_src2;
+    uint32_t cc_op;
+    int32_t df; /* D flag : 1 if D = 0, -1 if D = 1 */
+    uint32_t hflags; /* TB flags, see HF_xxx constants. These flags
+                        are known at translation time. */
+    uint32_t hflags2; /* various other flags, see HF2_xxx constants. */
+
+    /* segments */
+    SegmentCache segs[6]; /* selector values */
+    SegmentCache ldt;
+    SegmentCache tr;
+    SegmentCache gdt; /* only base and limit are used */
+    SegmentCache idt; /* only base and limit are used */
+
+    target_ulong cr[5]; /* NOTE: cr1 is unused */
+    int32_t a20_mask;
+
+    BNDReg bnd_regs[4];
+    BNDCSReg bndcs_regs;
+    uint64_t msr_bndcfgs;
+    uint64_t efer;
+
+    /* Beginning of state preserved by INIT (dummy marker).  */
+    struct {} start_init_save;
+
+    /* FPU state */
+    unsigned int fpstt; /* top of stack index */
+    uint16_t fpus;
+    uint16_t fpuc;
+    uint8_t fptags[8];   /* 0 = valid, 1 = empty */
+    FPReg fpregs[8];
+    /* KVM-only so far */
+    uint16_t fpop;
+    uint64_t fpip;
+    uint64_t fpdp;
+
+    /* emulator internal variables */
+    float_status fp_status;
+    floatx80 ft0;
+
+    float_status mmx_status; /* for 3DNow! float ops */
+    float_status sse_status;
+    uint32_t mxcsr;
+    ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
+    ZMMReg xmm_t0;
+    MMXReg mmx_t0;
+
+    XMMReg ymmh_regs[CPU_NB_REGS];
+
+    uint64_t opmask_regs[NB_OPMASK_REGS];
+    YMMReg zmmh_regs[CPU_NB_REGS];
+    ZMMReg hi16_zmm_regs[CPU_NB_REGS];
+
+    /* sysenter registers */
+    uint32_t sysenter_cs;
+    target_ulong sysenter_esp;
+    target_ulong sysenter_eip;
+    uint64_t star;
+
+    uint64_t vm_hsave;
+
+#ifdef TARGET_X86_64
+    target_ulong lstar;
+    target_ulong cstar;
+    target_ulong fmask;
+    target_ulong kernelgsbase;
+#endif
+
+    uint64_t tsc;
+    uint64_t tsc_adjust;
+    uint64_t tsc_deadline;
+    uint64_t tsc_aux;
+
+    uint64_t xcr0;
+
+    uint64_t mcg_status;
+    uint64_t msr_ia32_misc_enable;
+    uint64_t msr_ia32_feature_control;
+
+    uint64_t msr_fixed_ctr_ctrl;
+    uint64_t msr_global_ctrl;
+    uint64_t msr_global_status;
+    uint64_t msr_global_ovf_ctrl;
+    uint64_t msr_fixed_counters[MAX_FIXED_COUNTERS];
+    uint64_t msr_gp_counters[MAX_GP_COUNTERS];
+    uint64_t msr_gp_evtsel[MAX_GP_COUNTERS];
+
+    uint64_t pat;
+    uint32_t smbase;
+    uint64_t msr_smi_count;
+
+    uint32_t pkru;
+    uint32_t pkrs;
+    uint32_t tsx_ctrl;
+
+    uint64_t spec_ctrl;
+    uint64_t virt_ssbd;
+
+    /* End of state preserved by INIT (dummy marker).  */
+    struct {} end_init_save;
+
+    uint64_t system_time_msr;
+    uint64_t wall_clock_msr;
+    uint64_t steal_time_msr;
+    uint64_t async_pf_en_msr;
+    uint64_t async_pf_int_msr;
+    uint64_t pv_eoi_en_msr;
+    uint64_t poll_control_msr;
+
+    /* Partition-wide HV MSRs, will be updated only on the first vcpu */
+    uint64_t msr_hv_hypercall;
+    uint64_t msr_hv_guest_os_id;
+    uint64_t msr_hv_tsc;
+
+    /* Per-VCPU HV MSRs */
+    uint64_t msr_hv_vapic;
+    uint64_t msr_hv_crash_params[HV_CRASH_PARAMS];
+    uint64_t msr_hv_runtime;
+    uint64_t msr_hv_synic_control;
+    uint64_t msr_hv_synic_evt_page;
+    uint64_t msr_hv_synic_msg_page;
+    uint64_t msr_hv_synic_sint[HV_SINT_COUNT];
+    uint64_t msr_hv_stimer_config[HV_STIMER_COUNT];
+    uint64_t msr_hv_stimer_count[HV_STIMER_COUNT];
+    uint64_t msr_hv_reenlightenment_control;
+    uint64_t msr_hv_tsc_emulation_control;
+    uint64_t msr_hv_tsc_emulation_status;
+
+    uint64_t msr_rtit_ctrl;
+    uint64_t msr_rtit_status;
+    uint64_t msr_rtit_output_base;
+    uint64_t msr_rtit_output_mask;
+    uint64_t msr_rtit_cr3_match;
+    uint64_t msr_rtit_addrs[MAX_RTIT_ADDRS];
+
+    /* exception/interrupt handling */
+    int error_code;
+    int exception_is_int;
+    target_ulong exception_next_eip;
+    target_ulong dr[8]; /* debug registers; note dr4 and dr5 are unused */
+    union {
+        struct CPUBreakpoint *cpu_breakpoint[4];
+        struct CPUWatchpoint *cpu_watchpoint[4];
+    }; /* break/watchpoints for dr[0..3] */
+    int old_exception;  /* exception in flight */
+
+    uint64_t vm_vmcb;
+    uint64_t tsc_offset;
+    uint64_t intercept;
+    uint16_t intercept_cr_read;
+    uint16_t intercept_cr_write;
+    uint16_t intercept_dr_read;
+    uint16_t intercept_dr_write;
+    uint32_t intercept_exceptions;
+    uint64_t nested_cr3;
+    uint32_t nested_pg_mode;
+    uint8_t v_tpr;
+
+    /* KVM states, automatically cleared on reset */
+    uint8_t nmi_injected;
+    uint8_t nmi_pending;
+
+    uintptr_t retaddr;
+
+    /* Fields up to this point are cleared by a CPU reset */
+    struct {} end_reset_fields;
+
+    /* Fields after this point are preserved across CPU reset. */
+
+    /* processor features (e.g. for CPUID insn) */
+    /* Minimum cpuid leaf 7 value */
+    uint32_t cpuid_level_func7;
+    /* Actual cpuid leaf 7 value */
+    uint32_t cpuid_min_level_func7;
+    /* Minimum level/xlevel/xlevel2, based on CPU model + features */
+    uint32_t cpuid_min_level, cpuid_min_xlevel, cpuid_min_xlevel2;
+    /* Maximum level/xlevel/xlevel2 value for auto-assignment: */
+    uint32_t cpuid_max_level, cpuid_max_xlevel, cpuid_max_xlevel2;
+    /* Actual level/xlevel/xlevel2 value: */
+    uint32_t cpuid_level, cpuid_xlevel, cpuid_xlevel2;
+    uint32_t cpuid_vendor1;
+    uint32_t cpuid_vendor2;
+    uint32_t cpuid_vendor3;
+    uint32_t cpuid_version;
+    FeatureWordArray features;
+    /* Features that were explicitly enabled/disabled */
+    FeatureWordArray user_features;
+    uint32_t cpuid_model[12];
+    /* Cache information for CPUID.  When legacy-cache=on, the cache data
+     * on each CPUID leaf will be different, because we keep compatibility
+     * with old QEMU versions.
+     */
+    CPUCaches cache_info_cpuid2, cache_info_cpuid4, cache_info_amd;
+
+    /* MTRRs */
+    uint64_t mtrr_fixed[11];
+    uint64_t mtrr_deftype;
+    MTRRVar mtrr_var[MSR_MTRRcap_VCNT];
+
+    /* For KVM */
+    uint32_t mp_state;
+    int32_t exception_nr;
+    int32_t interrupt_injected;
+    uint8_t soft_interrupt;
+    uint8_t exception_pending;
+    uint8_t exception_injected;
+    uint8_t has_error_code;
+    uint8_t exception_has_payload;
+    uint64_t exception_payload;
+    uint32_t ins_len;
+    uint32_t sipi_vector;
+    bool tsc_valid;
+    int64_t tsc_khz;
+    int64_t user_tsc_khz; /* for sanity check only */
+    uint64_t apic_bus_freq;
+#if defined(CONFIG_KVM) || defined(CONFIG_HVF)
+    void *xsave_buf;
+#endif
+#if defined(CONFIG_KVM)
+    struct kvm_nested_state *nested_state;
+#endif
+#if defined(CONFIG_HVF)
+    HVFX86LazyFlags hvf_lflags;
+    void *hvf_mmio_buf;
+#endif
+
+    uint64_t mcg_cap;
+    uint64_t mcg_ctl;
+    uint64_t mcg_ext_ctl;
+    uint64_t mce_banks[MCE_BANKS_DEF*4];
+    uint64_t xstate_bv;
+
+    /* vmstate */
+    uint16_t fpus_vmstate;
+    uint16_t fptag_vmstate;
+    uint16_t fpregs_format_vmstate;
+
+    uint64_t xss;
+    uint32_t umwait;
+
+    TPRAccess tpr_access_type;
+
+    unsigned nr_dies;
+} CPUX86State;
+```
 
 [^1]: https://wiki.qemu.org/Features/PC_System_Flash
+[^2]: https://en.wikipedia.org/wiki/Machine-check_exception
