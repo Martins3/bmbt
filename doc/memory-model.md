@@ -794,6 +794,12 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 ```
 实际上，这个函数的调用者几乎就是 memory listener 了
 
+##  kvmtool
+无论是 pio 还是 mmio，传输数据都是进行传输都是 byte 级别的，所以
+ioport__register 就可以了
+
+而至于内存分配，使用 kvm__init_ram ，考虑一下 pci_hole 就差不多了
+
 [^1]: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
 [^4]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
