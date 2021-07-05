@@ -8,66 +8,7 @@ huxueshi:qdev_device_add nvme
 huxueshi:qdev_device_add virtio-9p-pci
 ```
 
-## CPUX86State
-这是 X86CPU 的成员，不是指针哦
-
-## host cpu / qemu cpu
-似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
-
-当使用上 tcg 的时候，是无法采用 host-x86_64-cpu 的, 当然 -cpu
-
-- [ ] 如何确定是 32bit 还是 64bit cpu 初始化的区别
-
-- 关于 cpu 中，其实还定义了 base 版本 和 max 版本
-
-通过 x86_register_cpu_model_type 创建出来了这个一堆 TypeInfo, 其作用:
-```c
-static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
-{
-    g_autofree char *typename = x86_cpu_type_name(name);
-
-    printf("huxueshi:%s %s\n", __FUNCTION__, typename);
-
-    TypeInfo ti = {
-        .name = typename,
-        .parent = TYPE_X86_CPU,
-        .class_init = x86_cpu_cpudef_class_init,
-        .class_data = model,
-    };
-
-    type_register(&ti);
-}
-```
-
-
-在 qemu_init 中进行 `current_machine->cpu_type` 的初始化, 
-而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
-
-```c
-static X86CPUDefinition builtin_x86_defs[] = {
-    {
-        .name = "qemu64",
-        .level = 0xd,
-        .vendor = CPUID_VENDOR_AMD,
-        .family = 6,
-        .model = 6,
-        .stepping = 3,
-        .features[FEAT_1_EDX] =
-            PPRO_FEATURES |
-            CPUID_MTRR | CPUID_CLFLUSH | CPUID_MCA |
-            CPUID_PSE36,
-        .features[FEAT_1_ECX] =
-            CPUID_EXT_SSE3 | CPUID_EXT_CX16,
-        .features[FEAT_8000_0001_EDX] =
-            CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX,
-        .features[FEAT_8000_0001_ECX] =
-            CPUID_EXT3_LAHF_LM | CPUID_EXT3_SVM,
-        .xlevel = 0x8000000A,
-        .model_id = "QEMU Virtual CPU version " QEMU_HW_VERSION,
-    },
-};
-```
-由此可见，重新第一出来的这些 type info 只是为了初始化主流体系而已
+- [ ] object_property_add_alias 是做啥的呀
 
 ## 整体
 启动，总体划分三个部分：
@@ -75,8 +16,10 @@ static X86CPUDefinition builtin_x86_defs[] = {
 2. pc_memory_init : 进行内存初始化
 3. 设备的初始化
   - pci 相关的组织比较麻烦
-4. machine 的初始化在哪里?
-  - pc.c / pc_piix.c 中的
+4. machine 的初始化
+   - 主要分布于 pc.c, 在 pc_piix.c 中只是定义了 pc_init1 而已
+
+- CPUX86State : 这是 X86CPU 的成员，不是指针哦
 
 文件内容的基本分析:
 | file              | 行数 | 内容分析                                               |
@@ -87,10 +30,15 @@ static X86CPUDefinition builtin_x86_defs[] = {
 | hw/i386/pi_piix.c | 1000 | pc_init1 剩下的就是 DEFINE_I440FX_MACHINE 定义的东西了 |
 
 定义的各种 type info
-| variable          | location         | desc                                                                                                 |
-|-------------------|------------------|------------------------------------------------------------------------------------------------------|
-| x86_cpu_type_info | target/i386/pc.c | x86_cpu_initfn : 调用一些 object_property_add 和 accel_cpu_instance_init(这是 tcg 和 kvm 分叉点之一) |
-| pc_machine_info   | hw/i386/pc.c     | pc_machine_initfn : 初始化一下 PCMachineState, pc_machine_class_init                                 |
+| variable          | location             | summary                                                              | instance_init                                                                     | class_init                                                                     |
+|-------------------|----------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| pc_machine_info   | hw/i386/pc.c         | pc_machine_initfn : 初始化一下 PCMachineState, pc_machine_class_init | 初始化了好多成员                                                                  |                                                                                |
+| x86_machine_info  | hw/i386/x86.c        | 没啥东西                                                             |                                                                                   |                                                                                |
+| machine_info      | hw/core/machine.c    |                                                                      | 没啥东西                                                                          | 注册 kernel initrd 之类的 property                                             |
+| x86_cpu_type_info | target/i386/pc.c     |                                                                      | 调用一些 object_property_add_alias, x86_cpu_load_model 和 accel_cpu_instance_init | 注册了 x86_cpu_realizefn , 一些函数指针的初始化, vendor 之类的 property 初始化 |
+| cpu_type_info     | hw/core/cpu-common.c | 并没有什么                                                           | 成员初始化，尤其是，list 之类的                                                   | 注册 cpu_common_parse_features 之类的                                          |
+| device_type_info  | hw/core/qdev.c       | 处理 hotplugged 之类，这些抽象没有必要                               |                                                                                   |                                                                                |
+
 
 到底初始化什么内容:
 | item | necessary          | desc                                                                                     |
@@ -222,7 +170,37 @@ static X86CPUDefinition builtin_x86_defs[] = {
           - tcg_cpu_machine_done : 注册 smram 相关的工作
           - [ ] machine_init_notify
 
-#### e820
+## CPUX86State 
+使用 x86_cpu_reset 进行初始化
+
+- [ ] 关于 reset 其实会进行两次, 真的有必要吗 ?
+
+每一个 CPU 都会进行一次
+
+- x86_cpu_realizefn
+  - cpu_reset
+    - device_cold_reset
+      - resettable_reset
+        - resettable_assert_reset
+          - resettable_phase_hold
+            - x86_cpu_reset
+
+- qemu_init
+  - qmp_x_exit_preconfig
+    - qemu_machine_creation_done : 我们的老朋友啊
+      - qdev_machine_creation_done
+        - qemu_system_reset
+          - pc_machine_reset
+            - qemu_devices_reset
+              - x86_cpu_machine_reset_cb
+                - cpu_reset
+                  - device_cold_reset
+                    - resettable_assert_reset
+                      - resettable_phase_hold
+                        - device_transitional_reset
+                          - x86_cpu_reset
+
+## e820
 - 信息是如何构造出来的
   - 在  pc_memory_init 调用两次 e820_add_entry, 分别添加 below_4g_mem_size 和 above_4g_mem_size
 - 如何通知 guest 内核的 ?
@@ -230,10 +208,69 @@ static X86CPUDefinition builtin_x86_defs[] = {
 
 - [ ] 类似 pci 映射的 MMIO 空间的分配是 e820 负责的操作的吗 ?
 
-#### pflash
+## pflash
 在 hw/i386/pc_sysfw.c 似乎主要处理的就是 pflash
 
 关于 pflash 和 bios 的关系可以首先看看[^1], 但是目前不需要知道 pflash 也可以
+
+
+## host cpu / qemu cpu
+似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
+
+当使用上 tcg 的时候，是无法采用 host-x86_64-cpu 的, 当然 -cpu
+
+- [ ] 如何确定是 32bit 还是 64bit cpu 初始化的区别
+
+- 关于 cpu 中，其实还定义了 base 版本 和 max 版本
+
+通过 x86_register_cpu_model_type 创建出来了这个一堆 TypeInfo, 其作用:
+```c
+static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
+{
+    g_autofree char *typename = x86_cpu_type_name(name);
+
+    printf("huxueshi:%s %s\n", __FUNCTION__, typename);
+
+    TypeInfo ti = {
+        .name = typename,
+        .parent = TYPE_X86_CPU,
+        .class_init = x86_cpu_cpudef_class_init,
+        .class_data = model,
+    };
+
+    type_register(&ti);
+}
+```
+
+
+在 qemu_init 中进行 `current_machine->cpu_type` 的初始化, 
+而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
+
+```c
+static X86CPUDefinition builtin_x86_defs[] = {
+    {
+        .name = "qemu64",
+        .level = 0xd,
+        .vendor = CPUID_VENDOR_AMD,
+        .family = 6,
+        .model = 6,
+        .stepping = 3,
+        .features[FEAT_1_EDX] =
+            PPRO_FEATURES |
+            CPUID_MTRR | CPUID_CLFLUSH | CPUID_MCA |
+            CPUID_PSE36,
+        .features[FEAT_1_ECX] =
+            CPUID_EXT_SSE3 | CPUID_EXT_CX16,
+        .features[FEAT_8000_0001_EDX] =
+            CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX,
+        .features[FEAT_8000_0001_ECX] =
+            CPUID_EXT3_LAHF_LM | CPUID_EXT3_SVM,
+        .xlevel = 0x8000000A,
+        .model_id = "QEMU Virtual CPU version " QEMU_HW_VERSION,
+    },
+};
+```
+由此可见，重新第一出来的这些 type info 只是为了初始化主流体系而已
 
 ## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
 ```c
@@ -980,7 +1017,6 @@ struct X86CPU {
 ```
 
 #####  CPUX86State
-
 ```c
 typedef struct CPUX86State {
     /* standard registers */
