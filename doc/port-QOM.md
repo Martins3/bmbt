@@ -257,7 +257,6 @@ static Property fw_cfg_io_properties[] = {
 qdev_prop_set_bit(dev, "dma_enabled", false);
 ```
 
-
 - [x] 为什么需要定义出来 property 出来
   - 为了动态的添加属性, 比如 create_default_memdev 中，根据参数 mem_path 可以动态的选择到底是创建 TYPE_MEMORY_BACKEND_FILE 还是 TYPE_MEMORY_BACKEND_RAM 对象，以及是否添加 "mem-path" 属性
   - [ ] 也许还存在其他的原因
@@ -297,6 +296,9 @@ qdev_prop_set_bit(dev, "dma_enabled", false);
                 - object_get_class
                 - object_class_property_find : 从上向下property
                 - g_hash_table_lookup(obj->properties, name) : 首先查找完成 parent 然后查找 child 的部分
+                
+#### object_property_add_alias
+- [ ] 干啥用的啊
 
 ## 附录: 宏展开
 ```c

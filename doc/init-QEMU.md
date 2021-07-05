@@ -8,8 +8,6 @@ huxueshi:qdev_device_add nvme
 huxueshi:qdev_device_add virtio-9p-pci
 ```
 
-- [ ] object_property_add_alias 是做啥的呀
-
 ## 整体
 启动，总体划分三个部分：
 1. x86_cpus_init ：进行 CPU 相关的初始化
@@ -59,7 +57,7 @@ huxueshi:qdev_device_add virtio-9p-pci
 
 从 type info 上可以轻易的看到一个设备是不是 TYPE_ISA_DEVICE 
 
-
+## call graph
 - qemu_init : 这里面存在很长的参数解析的内容
   - qemu_create_machine(select_machine()) : select_machine 中获取 MachineClass
     - cpu_exec_init_all :
@@ -212,9 +210,30 @@ huxueshi:qdev_device_add virtio-9p-pci
 在 hw/i386/pc_sysfw.c 似乎主要处理的就是 pflash
 
 关于 pflash 和 bios 的关系可以首先看看[^1], 但是目前不需要知道 pflash 也可以
+## choose Machine
+挺无聊的一个， select_machine
+
+从注册的里面进行选择一个 default, 也可以从参数中靠 machine_parse 解析出来
+```c
+// 部分省略了
+/*
+pc-q35-2.11
+pc-i440fx-3.0
+pc-q35-2.5
+pc-i440fx-2.8
+pc-i440fx-5.0
+pc-i440fx-4.0
+pc-i440fx-2.3
+microvm
+xenfv-4.2
+isapc
+x-remote
+none
+xenpv
+```
 
 
-## host cpu / qemu cpu
+## choose cpu
 似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
 
 当使用上 tcg 的时候，是无法采用 host-x86_64-cpu 的, 当然 -cpu
@@ -241,7 +260,6 @@ static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
     type_register(&ti);
 }
 ```
-
 
 在 qemu_init 中进行 `current_machine->cpu_type` 的初始化, 
 而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
@@ -272,6 +290,8 @@ static X86CPUDefinition builtin_x86_defs[] = {
 ```
 由此可见，重新第一出来的这些 type info 只是为了初始化主流体系而已
 
+当然还可以选择其他的 cpu，其解析工作在 parse_cpu_option
+
 ## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
 ```c
 static const TypeInfo i440fx_pcihost_info = {
@@ -298,8 +318,50 @@ hw/core/bus.c:158
 #6  0x000055555582e575 in main (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/main.c:49
 ```
 
+## cpu feature
+总体来说，cpu feature 都是通过 CPUX86State::features 进行的，QOM property 闲的很傻
+
+feature_word_info : 是定义了所有的存在的 feature
+
+X86CPUDefinition::features 在 x86_cpu_load_model 中，将这个拷贝到 CPUX86State::features 中
+
+- x86_cpu_common_class_init
+  - x86_cpu_register_feature_bit_props : 给 xcc 添加上一堆 property , 这些 property 的访问方式是 x86_cpu_set_bit_prop
+
+kvm
+```c
+/*
+#0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd0a0, name=0x55555689ee30 "\220\356\211VUU", opaque=0x555556963e80, errp=0x555556c32070) at ../target/i386/cpu.c:4001
+#1  0x0000555555e64f5a in object_property_set (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", v=0x555556b55070, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1402
+#2  0x0000555555e65b0f in object_property_parse (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", string=0x55555608fefa "on", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
+#3  0x0000555555ba00f3 in x86_cpu_apply_props (cpu=0x555556c32070, props=0x5555566c7e60 <kvm_default_props>) at ../target/i386/cpu.c:2638
+#4  0x0000555555b3df02 in kvm_cpu_instance_init (cs=0x555556c32070) at ../target/i386/kvm/kvm-cpu.c:126
+#5  0x0000555555c82967 in accel_cpu_instance_init (cpu=0x555556c32070) at ../accel/accel-common.c:110
+#6  0x0000555555ba3ffa in x86_cpu_initfn (obj=0x555556c32070) at ../target/i386/cpu.c:4131
+```
+
+tcg
+```c
+/*
+#0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd090, name=0x5555568963e0 "@d\211VUU", opaque=0x555556974ba0, errp=0x555556c28050) at ../target/i386/cpu.c:4001
+#1  0x0000555555e64f5a in object_property_set (obj=0x555556c28050, name=0x5555560a7af1 "vme", v=0x555556b56000, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:14
+#2  0x0000555555e65b0f in object_property_parse (obj=0x555556c28050, name=0x5555560a7af1 "vme", string=0x5555560a7af5 "off", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
+#3  0x0000555555ba00f3 in x86_cpu_apply_props (cpu=0x555556c28050, props=0x5555566d9c00 <tcg_default_props>) at ../target/i386/cpu.c:2638
+#4  0x0000555555bd68f2 in tcg_cpu_instance_init (cs=0x555556c28050) at ../target/i386/tcg/tcg-cpu.c:95
+#5  0x0000555555c82967 in accel_cpu_instance_init (cpu=0x555556c28050) at ../accel/accel-common.c:110
+#6  0x0000555555ba3ffa in x86_cpu_initfn (obj=0x555556c28050) at ../target/i386/cpu.c:4131
+```
+一共就是只是调用两次 x86_cpu_set_bit_prop
+
+x86_cpu_get_bit_prop 从来都不会被调用啊, 那么存在什么意义啊
+
+- x86_cpu_set_bit_prop 只是在 tcg 和 kvm 的这样使用，那么那些 CPU feature 几乎就是全都没有使用了
+  - 实际上，这个有点多余， x86_cpu_set_bit_prop 也只是设置了一下 CPUX86State::features
+
+- 在 86_cpu_initfn 中，多次的调用了 object_property_add_alias 这都是做啥的 (只是为了修改一下名称吧)
+  - 这个想法在 x86_cpu_register_feature_bit_props  x86_cpu_register_feature_bit_props 中得到验证
+
 ## init machine
-- [ ] 注意, 这里拷贝的代码是 v6.0, 准备写代码的时候，将这个全部替换掉
 
 #### MachineClass
 ```c
