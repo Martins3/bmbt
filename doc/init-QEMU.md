@@ -1334,5 +1334,296 @@ typedef struct CPUX86State {
 } CPUX86State;
 ```
 
+#### DeviceClass
+```c
+/**
+ * DeviceClass:
+ * @props: Properties accessing state fields.
+ * @realize: Callback function invoked when the #DeviceState:realized
+ * property is changed to %true.
+ * @unrealize: Callback function invoked when the #DeviceState:realized
+ * property is changed to %false.
+ * @hotpluggable: indicates if #DeviceClass is hotpluggable, available
+ * as readonly "hotpluggable" property of #DeviceState instance
+ *
+ * # Realization #
+ * Devices are constructed in two stages,
+ * 1) object instantiation via object_initialize() and
+ * 2) device realization via #DeviceState:realized property.
+ * The former may not fail (and must not abort or exit, since it is called
+ * during device introspection already), and the latter may return error
+ * information to the caller and must be re-entrant.
+ * Trivial field initializations should go into #TypeInfo.instance_init.
+ * Operations depending on @props static properties should go into @realize.
+ * After successful realization, setting static properties will fail.
+ *
+ * As an interim step, the #DeviceState:realized property can also be
+ * set with qdev_init_nofail().
+ * In the future, devices will propagate this state change to their children
+ * and along busses they expose.
+ * The point in time will be deferred to machine creation, so that values
+ * set in @realize will not be introspectable beforehand. Therefore devices
+ * must not create children during @realize; they should initialize them via
+ * object_initialize() in their own #TypeInfo.instance_init and forward the
+ * realization events appropriately.
+ *
+ * Any type may override the @realize and/or @unrealize callbacks but needs
+ * to call the parent type's implementation if keeping their functionality
+ * is desired. Refer to QOM documentation for further discussion and examples.
+ *
+ * <note>
+ *   <para>
+ * Since TYPE_DEVICE doesn't implement @realize and @unrealize, types
+ * derived directly from it need not call their parent's @realize and
+ * @unrealize.
+ * For other types consult the documentation and implementation of the
+ * respective parent types.
+ *   </para>
+ * </note>
+ *
+ * # Hiding a device #
+ * To hide a device, a DeviceListener function should_be_hidden() needs to
+ * be registered.
+ * It can be used to defer adding a device and therefore hide it from the
+ * guest. The handler registering to this DeviceListener can save the QOpts
+ * passed to it for re-using it later and must return that it wants the device
+ * to be/remain hidden or not. When the handler function decides the device
+ * shall not be hidden it will be added in qdev_device_add() and
+ * realized as any other device. Otherwise qdev_device_add() will return early
+ * without adding the device. The guest will not see a "hidden" device
+ * until it was marked don't hide and qdev_device_add called again.
+ *
+ */
+typedef struct DeviceClass {
+    /*< private >*/
+    ObjectClass parent_class;
+    /*< public >*/
+
+    DECLARE_BITMAP(categories, DEVICE_CATEGORY_MAX);
+    const char *fw_name;
+    const char *desc;
+    Property *props;
+
+    /*
+     * Can this device be instantiated with -device / device_add?
+     * All devices should support instantiation with device_add, and
+     * this flag should not exist.  But we're not there, yet.  Some
+     * devices fail to instantiate with cryptic error messages.
+     * Others instantiate, but don't work.  Exposing users to such
+     * behavior would be cruel; clearing this flag will protect them.
+     * It should never be cleared without a comment explaining why it
+     * is cleared.
+     * TODO remove once we're there
+     */
+    bool user_creatable;
+    bool hotpluggable;
+
+    /* callbacks */
+    DeviceReset reset;
+    DeviceRealize realize;
+    DeviceUnrealize unrealize;
+
+    /* device state */
+    const VMStateDescription *vmsd;
+
+    /* Private to qdev / bus.  */
+    const char *bus_type;
+} DeviceClass;
+```
+
+#### CPUClass
+```c
+/**
+ * CPUClass:
+ * @class_by_name: Callback to map -cpu command line model name to an
+ * instantiatable CPU type.
+ * @parse_features: Callback to parse command line arguments.
+ * @reset: Callback to reset the #CPUState to its initial state.
+ * @reset_dump_flags: #CPUDumpFlags to use for reset logging.
+ * @has_work: Callback for checking if there is work to do.
+ * @do_interrupt: Callback for interrupt handling.
+ * @do_unaligned_access: Callback for unaligned access handling, if
+ * the target defines #TARGET_ALIGNED_ONLY.
+ * @do_transaction_failed: Callback for handling failed memory transactions
+ * (ie bus faults or external aborts; not MMU faults)
+ * @virtio_is_big_endian: Callback to return %true if a CPU which supports
+ * runtime configurable endianness is currently big-endian. Non-configurable
+ * CPUs can use the default implementation of this method. This method should
+ * not be used by any callers other than the pre-1.0 virtio devices.
+ * @memory_rw_debug: Callback for GDB memory access.
+ * @dump_state: Callback for dumping state.
+ * @dump_statistics: Callback for dumping statistics.
+ * @get_arch_id: Callback for getting architecture-dependent CPU ID.
+ * @get_paging_enabled: Callback for inquiring whether paging is enabled.
+ * @get_memory_mapping: Callback for obtaining the memory mappings.
+ * @set_pc: Callback for setting the Program Counter register. This
+ *       should have the semantics used by the target architecture when
+ *       setting the PC from a source such as an ELF file entry point;
+ *       for example on Arm it will also set the Thumb mode bit based
+ *       on the least significant bit of the new PC value.
+ *       If the target behaviour here is anything other than "set
+ *       the PC register to the value passed in" then the target must
+ *       also implement the synchronize_from_tb hook.
+ * @synchronize_from_tb: Callback for synchronizing state from a TCG
+ *       #TranslationBlock. This is called when we abandon execution
+ *       of a TB before starting it, and must set all parts of the CPU
+ *       state which the previous TB in the chain may not have updated.
+ *       This always includes at least the program counter; some targets
+ *       will need to do more. If this hook is not implemented then the
+ *       default is to call @set_pc(tb->pc).
+ * @tlb_fill: Callback for handling a softmmu tlb miss or user-only
+ *       address fault.  For system mode, if the access is valid, call
+ *       tlb_set_page and return true; if the access is invalid, and
+ *       probe is true, return false; otherwise raise an exception and
+ *       do not return.  For user-only mode, always raise an exception
+ *       and do not return.
+ * @get_phys_page_debug: Callback for obtaining a physical address.
+ * @get_phys_page_attrs_debug: Callback for obtaining a physical address and the
+ *       associated memory transaction attributes to use for the access.
+ *       CPUs which use memory transaction attributes should implement this
+ *       instead of get_phys_page_debug.
+ * @asidx_from_attrs: Callback to return the CPU AddressSpace to use for
+ *       a memory access with the specified memory transaction attributes.
+ * @gdb_read_register: Callback for letting GDB read a register.
+ * @gdb_write_register: Callback for letting GDB write a register.
+ * @debug_check_watchpoint: Callback: return true if the architectural
+ *       watchpoint whose address has matched should really fire.
+ * @debug_excp_handler: Callback for handling debug exceptions.
+ * @write_elf64_note: Callback for writing a CPU-specific ELF note to a
+ * 64-bit VM coredump.
+ * @write_elf32_qemunote: Callback for writing a CPU- and QEMU-specific ELF
+ * note to a 32-bit VM coredump.
+ * @write_elf32_note: Callback for writing a CPU-specific ELF note to a
+ * 32-bit VM coredump.
+ * @write_elf32_qemunote: Callback for writing a CPU- and QEMU-specific ELF
+ * note to a 32-bit VM coredump.
+ * @vmsd: State description for migration.
+ * @gdb_num_core_regs: Number of core registers accessible to GDB.
+ * @gdb_core_xml_file: File name for core registers GDB XML description.
+ * @gdb_stop_before_watchpoint: Indicates whether GDB expects the CPU to stop
+ *           before the insn which triggers a watchpoint rather than after it.
+ * @gdb_arch_name: Optional callback that returns the architecture name known
+ * to GDB. The caller must free the returned string with g_free.
+ * @gdb_get_dynamic_xml: Callback to return dynamically generated XML for the
+ *   gdb stub. Returns a pointer to the XML contents for the specified XML file
+ *   or NULL if the CPU doesn't have a dynamically generated content for it.
+ * @cpu_exec_enter: Callback for cpu_exec preparation.
+ * @cpu_exec_exit: Callback for cpu_exec cleanup.
+ * @cpu_exec_interrupt: Callback for processing interrupts in cpu_exec.
+ * @disas_set_info: Setup architecture specific components of disassembly info
+ * @adjust_watchpoint_address: Perform a target-specific adjustment to an
+ * address before attempting to match it against watchpoints.
+ *
+ * Represents a CPU family or model.
+ */
+typedef struct CPUClass {
+    /*< private >*/
+    DeviceClass parent_class;
+    /*< public >*/
+
+    ObjectClass *(*class_by_name)(const char *cpu_model);
+    void (*parse_features)(const char *typename, char *str, Error **errp);
+
+    void (*reset)(CPUState *cpu);
+    int reset_dump_flags;
+    bool (*has_work)(CPUState *cpu);
+    void (*do_interrupt)(CPUState *cpu);
+    void (*do_unaligned_access)(CPUState *cpu, vaddr addr,
+                                MMUAccessType access_type,
+                                int mmu_idx, uintptr_t retaddr);
+    void (*do_transaction_failed)(CPUState *cpu, hwaddr physaddr, vaddr addr,
+                                  unsigned size, MMUAccessType access_type,
+                                  int mmu_idx, MemTxAttrs attrs,
+                                  MemTxResult response, uintptr_t retaddr);
+    bool (*virtio_is_big_endian)(CPUState *cpu);
+    int (*memory_rw_debug)(CPUState *cpu, vaddr addr,
+                           uint8_t *buf, int len, bool is_write);
+    void (*dump_state)(CPUState *cpu, FILE *, int flags);
+    GuestPanicInformation* (*get_crash_info)(CPUState *cpu);
+    void (*dump_statistics)(CPUState *cpu, int flags);
+    int64_t (*get_arch_id)(CPUState *cpu);
+    bool (*get_paging_enabled)(const CPUState *cpu);
+    void (*get_memory_mapping)(CPUState *cpu, MemoryMappingList *list,
+                               Error **errp);
+    void (*set_pc)(CPUState *cpu, vaddr value);
+    void (*synchronize_from_tb)(CPUState *cpu, struct TranslationBlock *tb);
+    bool (*tlb_fill)(CPUState *cpu, vaddr address, int size,
+                     MMUAccessType access_type, int mmu_idx,
+                     bool probe, uintptr_t retaddr);
+    hwaddr (*get_phys_page_debug)(CPUState *cpu, vaddr addr);
+    hwaddr (*get_phys_page_attrs_debug)(CPUState *cpu, vaddr addr,
+                                        MemTxAttrs *attrs);
+    int (*asidx_from_attrs)(CPUState *cpu, MemTxAttrs attrs);
+    int (*gdb_read_register)(CPUState *cpu, uint8_t *buf, int reg);
+    int (*gdb_write_register)(CPUState *cpu, uint8_t *buf, int reg);
+    bool (*debug_check_watchpoint)(CPUState *cpu, CPUWatchpoint *wp);
+    void (*debug_excp_handler)(CPUState *cpu);
+
+    int (*write_elf64_note)(WriteCoreDumpFunction f, CPUState *cpu,
+                            int cpuid, void *opaque);
+    int (*write_elf64_qemunote)(WriteCoreDumpFunction f, CPUState *cpu,
+                                void *opaque);
+    int (*write_elf32_note)(WriteCoreDumpFunction f, CPUState *cpu,
+                            int cpuid, void *opaque);
+    int (*write_elf32_qemunote)(WriteCoreDumpFunction f, CPUState *cpu,
+                                void *opaque);
+
+    const VMStateDescription *vmsd;
+    const char *gdb_core_xml_file;
+    gchar * (*gdb_arch_name)(CPUState *cpu);
+    const char * (*gdb_get_dynamic_xml)(CPUState *cpu, const char *xmlname);
+    void (*cpu_exec_enter)(CPUState *cpu);
+    void (*cpu_exec_exit)(CPUState *cpu);
+    bool (*cpu_exec_interrupt)(CPUState *cpu, int interrupt_request);
+
+    void (*disas_set_info)(CPUState *cpu, disassemble_info *info);
+    vaddr (*adjust_watchpoint_address)(CPUState *cpu, vaddr addr, int len);
+    void (*tcg_initialize)(void);
+
+    /* Keep non-pointer data at the end to minimize holes.  */
+    int gdb_num_core_regs;
+    bool gdb_stop_before_watchpoint;
+} CPUClass;
+```
+
+#### X86CPUClass
+```c
+/**
+ * X86CPUClass:
+ * @cpu_def: CPU model definition
+ * @host_cpuid_required: Whether CPU model requires cpuid from host.
+ * @ordering: Ordering on the "-cpu help" CPU model list.
+ * @migration_safe: See CpuDefinitionInfo::migration_safe
+ * @static_model: See CpuDefinitionInfo::static
+ * @parent_realize: The parent class' realize handler.
+ * @parent_reset: The parent class' reset handler.
+ *
+ * An x86 CPU model or family.
+ */
+typedef struct X86CPUClass {
+    /*< private >*/
+    CPUClass parent_class;
+    /*< public >*/
+
+    /* CPU definition, automatically loaded by instance_init if not NULL.
+     * Should be eventually replaced by subclass-specific property defaults.
+     */
+    X86CPUModel *model;
+
+    bool host_cpuid_required;
+    int ordering;
+    bool migration_safe;
+    bool static_model;
+
+    /* Optional description of CPU model.
+     * If unavailable, cpu_def->model_id is used */
+    const char *model_description;
+
+    DeviceRealize parent_realize;
+    DeviceUnrealize parent_unrealize;
+    void (*parent_reset)(CPUState *cpu);
+} X86CPUClass;
+```
+
 [^1]: https://wiki.qemu.org/Features/PC_System_Flash
 [^2]: https://en.wikipedia.org/wiki/Machine-check_exception
