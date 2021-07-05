@@ -310,8 +310,6 @@ hw/core/bus.c:158
  * @max_cpus: maximum number of CPUs supported. Default: 1
  * @min_cpus: minimum number of CPUs supported. Default: 1
  * @default_cpus: number of CPUs instantiated if none are specified. Default: 1
- * @is_default:
- *    If true QEMU will use this machine by default if no '-M' option is given.
  * @get_hotplug_handler: this function is called during bus-less
  *    device hotplug. If defined it returns pointer to an instance
  *    of HotplugHandler object, which handles hotplug operation
@@ -361,7 +359,6 @@ hw/core/bus.c:158
  * @kvm_type:
  *    Return the type of KVM corresponding to the kvm-type string option or
  *    computed based on other criteria such as the host kernel capabilities.
- *    kvm-type may be NULL if it is not needed.
  * @numa_mem_supported:
  *    true if '--numa node.mem' option is supported and false otherwise
  * @smp_parse:
@@ -375,19 +372,6 @@ hw/core/bus.c:158
  *    false is returned, an error must be set to show the reason of
  *    the rejection.  If the hook is not provided, all hotplug will be
  *    allowed.
- * @default_ram_id:
- *    Specifies inital RAM MemoryRegion name to be used for default backend
- *    creation if user explicitly hasn't specified backend with "memory-backend"
- *    property.
- *    It also will be used as a way to optin into "-m" option support.
- *    If it's not set by board, '-m' will be ignored and generic code will
- *    not create default RAM MemoryRegion.
- * @fixup_ram_size:
- *    Amends user provided ram size (with -m option) using machine
- *    specific algorithm. To be used by old machine types for compat
- *    purposes only.
- *    Applies only to default memory backend, i.e., explicit memory backend
- *    wasn't used.
  */
 struct MachineClass {
     /*< private >*/
@@ -403,6 +387,7 @@ struct MachineClass {
     void (*init)(MachineState *state);
     void (*reset)(MachineState *state);
     void (*wakeup)(MachineState *state);
+    void (*hot_add_cpu)(MachineState *state, const int64_t id, Error **errp);
     int (*kvm_type)(MachineState *machine, const char *arg);
     void (*smp_parse)(MachineState *ms, QemuOpts *opts);
 
@@ -418,7 +403,7 @@ struct MachineClass {
         no_sdcard:1,
         pci_allow_0_address:1,
         legacy_fw_cfg_order:1;
-    bool is_default;
+    int is_default;
     const char *default_machine_opts;
     const char *default_boot_order;
     const char *default_display;
@@ -436,13 +421,13 @@ struct MachineClass {
     const char **valid_cpu_types;
     strList *allowed_dynamic_sysbus_devices;
     bool auto_enable_numa_with_memhp;
-    bool auto_enable_numa_with_memdev;
+    void (*numa_auto_assign_ram)(MachineClass *mc, NodeInfo *nodes,
+                                 int nb_nodes, ram_addr_t size);
     bool ignore_boot_device_suffixes;
     bool smbus_no_migration_support;
     bool nvdimm_supported;
     bool numa_mem_supported;
     bool auto_enable_numa;
-    const char *default_ram_id;
 
     HotplugHandler *(*get_hotplug_handler)(MachineState *machine,
                                            DeviceState *dev);
@@ -452,7 +437,6 @@ struct MachineClass {
                                                          unsigned cpu_index);
     const CPUArchIdList *(*possible_cpu_arch_ids)(MachineState *machine);
     int64_t (*get_default_cpu_node_id)(const MachineState *ms, int idx);
-    ram_addr_t (*fixup_ram_size)(ram_addr_t size);
 };
 ```
 
@@ -550,7 +534,11 @@ struct MachineState {
 
     /*< public >*/
 
-    void *fdt;
+    char *accel;
+    bool kernel_irqchip_allowed;
+    bool kernel_irqchip_required;
+    bool kernel_irqchip_split;
+    int kvm_shadow_mem;
     char *dtb;
     char *dumpdtb;
     int phandle_start;
@@ -559,24 +547,19 @@ struct MachineState {
     bool mem_merge;
     bool usb;
     bool usb_disabled;
+    bool igd_gfx_passthru;
     char *firmware;
     bool iommu;
     bool suppress_vmdesc;
+    bool enforce_config_section;
     bool enable_graphics;
-    ConfidentialGuestSupport *cgs;
-    char *ram_memdev_id;
-    /*
-     * convenience alias to ram_memdev_id backend memory region
-     * or to numa container memory region
-     */
-    MemoryRegion *ram;
+    char *memory_encryption;
     DeviceMemoryState *device_memory;
 
     ram_addr_t ram_size;
     ram_addr_t maxram_size;
     uint64_t   ram_slots;
     const char *boot_order;
-    const char *boot_once;
     char *kernel_filename;
     char *kernel_cmdline;
     char *initrd_filename;
@@ -593,7 +576,7 @@ struct MachineState {
 
 #### X86MachineState
 ```c
-struct X86MachineState {
+typedef struct {
     /*< private >*/
     MachineState parent;
 
@@ -603,31 +586,26 @@ struct X86MachineState {
     ISADevice *rtc;
     FWCfgState *fw_cfg;
     qemu_irq *gsi;
-    DeviceState *ioapic2;
     GMappedFile *initrd_mapped_file;
-    HotplugHandler *acpi_dev;
+
+    /* Configuration options: */
+    uint64_t max_ram_below_4g;
 
     /* RAM information (sizes, addresses, configuration): */
     ram_addr_t below_4g_mem_size, above_4g_mem_size;
 
     /* CPU and apic information: */
     bool apic_xrupt_override;
-    unsigned pci_irq_mask;
     unsigned apic_id_limit;
     uint16_t boot_cpus;
     unsigned smp_dies;
 
-    OnOffAuto smm;
-    OnOffAuto acpi;
-
-    char *oem_id;
-    char *oem_table_id;
     /*
      * Address space used by IOAPIC device. All IOAPIC interrupts
      * will be translated to MSI messages in the address space.
      */
     AddressSpace *ioapic_as;
-};
+} X86MachineState;
 ```
 
 #### PCMachineState
@@ -638,7 +616,7 @@ struct X86MachineState {
  * @boot_cpus: number of present VCPUs
  * @smp_dies: number of dies per one package
  */
-typedef struct PCMachineState {
+struct PCMachineState {
     /*< private >*/
     X86MachineState parent_obj;
 
@@ -648,21 +626,19 @@ typedef struct PCMachineState {
     Notifier machine_done;
 
     /* Pointers to devices and objects: */
+    HotplugHandler *acpi_dev;
     PCIBus *bus;
     I2CBus *smbus;
     PFlashCFI01 *flash[2];
-    ISADevice *pcspk;
 
     /* Configuration options: */
-    uint64_t max_ram_below_4g;
     OnOffAuto vmport;
+    OnOffAuto smm;
 
     bool acpi_build_enabled;
     bool smbus_enabled;
     bool sata_enabled;
     bool pit_enabled;
-    bool hpet_enabled;
-    uint64_t max_fw_size;
 
     /* NUMA information: */
     uint64_t numa_nodes;
@@ -670,7 +646,7 @@ typedef struct PCMachineState {
 
     /* ACPI Memory hotplug IO base address */
     hwaddr memhp_io_base;
-} PCMachineState;
+};
 ```
 
 ## init cpu
@@ -680,9 +656,6 @@ typedef struct PCMachineState {
 /**
  * DeviceState:
  * @realized: Indicates whether the device has been fully constructed.
- *            When accessed outside big qemu lock, must be accessed with
- *            qatomic_load_acquire()
- * @reset: ResettableState for the device; handled by Resettable interface.
  *
  * This structure should not be accessed directly.  We declare it here
  * so that it can be embedded in individual device state structures.
@@ -701,12 +674,10 @@ struct DeviceState {
     bool allow_unplug_during_migration;
     BusState *parent_bus;
     QLIST_HEAD(, NamedGPIOList) gpios;
-    QLIST_HEAD(, NamedClockList) clocks;
     QLIST_HEAD(, BusState) child_bus;
     int num_child_bus;
     int instance_id_alias;
     int alias_required_for_version;
-    ResettableState reset;
 };
 ```
 
@@ -901,20 +872,13 @@ struct X86CPU {
 
     CPUNegativeOffsetState neg;
     CPUX86State env;
-    VMChangeStateEntry *vmsentry;
-
-    uint64_t ucode_rev;
 
     uint32_t hyperv_spinlock_attempts;
-    char *hyperv_vendor;
+    char *hyperv_vendor_id;
     bool hyperv_synic_kvm_only;
     uint64_t hyperv_features;
     bool hyperv_passthrough;
     OnOffAuto hyperv_no_nonarch_cs;
-    uint32_t hyperv_vendor_id[3];
-    uint32_t hyperv_interface_id[4];
-    uint32_t hyperv_version_id[4];
-    uint32_t hyperv_limits[3];
 
     bool check_cpuid;
     bool enforce_cpuid;
@@ -1019,6 +983,17 @@ struct X86CPU {
 #####  CPUX86State
 ```c
 typedef struct CPUX86State {
+#if defined(CONFIG_X86toMIPS) || defined(CONFIG_LATX)
+    ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
+    //ldq,only 10bits offset
+#endif
+#ifdef CONFIG_LATX
+    /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
+    uint64_t vregs[6];
+    /* mips_iregs: mips context backup when calling helper */
+    uint64_t mips_iregs[32];
+    uint32_t xtm_fpu;
+#endif
     /* standard registers */
     target_ulong regs[CPU_NB_REGS];
     target_ulong eip;
@@ -1035,6 +1010,25 @@ typedef struct CPUX86State {
     uint32_t hflags; /* TB flags, see HF_xxx constants. These flags
                         are known at translation time. */
     uint32_t hflags2; /* various other flags, see HF2_xxx constants. */
+
+#if defined (CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
+    void *cpt_ptr; /* Point to Code Page Table */
+#if defined(CONFIG_XTM_PROFILE)
+    struct {
+        struct {
+            /* Flag for next Jmp Cachel Lookup */
+            uint8_t is_jmpdr;
+            uint8_t is_jmpin;
+            uint8_t is_sys_eob;
+            uint8_t is_excp;
+        } jc;
+        struct {
+            uint8_t is_mov;
+            uint8_t is_pop;
+        } tbf;
+    } xtm_pf_data;
+#endif /* XTM PROFILE */
+#endif
 
     /* segments */
     SegmentCache segs[6]; /* selector values */
@@ -1072,7 +1066,9 @@ typedef struct CPUX86State {
     float_status mmx_status; /* for 3DNow! float ops */
     float_status sse_status;
     uint32_t mxcsr;
+#ifndef CONFIG_X86toMIPS
     ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
+#endif
     ZMMReg xmm_t0;
     MMXReg mmx_t0;
 
@@ -1121,7 +1117,6 @@ typedef struct CPUX86State {
     uint64_t msr_smi_count;
 
     uint32_t pkru;
-    uint32_t pkrs;
     uint32_t tsx_ctrl;
 
     uint64_t spec_ctrl;
@@ -1134,7 +1129,6 @@ typedef struct CPUX86State {
     uint64_t wall_clock_msr;
     uint64_t steal_time_msr;
     uint64_t async_pf_en_msr;
-    uint64_t async_pf_int_msr;
     uint64_t pv_eoi_en_msr;
     uint64_t poll_control_msr;
 
@@ -1243,7 +1237,6 @@ typedef struct CPUX86State {
     bool tsc_valid;
     int64_t tsc_khz;
     int64_t user_tsc_khz; /* for sanity check only */
-    uint64_t apic_bus_freq;
 #if defined(CONFIG_KVM) || defined(CONFIG_HVF)
     void *xsave_buf;
 #endif
@@ -1251,8 +1244,7 @@ typedef struct CPUX86State {
     struct kvm_nested_state *nested_state;
 #endif
 #if defined(CONFIG_HVF)
-    HVFX86LazyFlags hvf_lflags;
-    void *hvf_mmio_buf;
+    HVFX86EmulatorState *hvf_emul;
 #endif
 
     uint64_t mcg_cap;
@@ -1272,6 +1264,73 @@ typedef struct CPUX86State {
     TPRAccess tpr_access_type;
 
     unsigned nr_dies;
+#ifdef CONFIG_X86toMIPS
+#ifndef CONFIG_LATX
+    /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
+    uint64_t vregs[6];
+    /* mips_iregs: mips context backup when calling helper */
+    uint64_t mips_iregs[32];
+    /*
+     * xtm_fpu: flag for FPU
+     *
+     * [0:2]: TOP in status word
+     *        (fldenv will clear TOP in status and set the fpstt)
+     *
+     * [7]: = 0: status word is not loaded from memory
+     *      = 1: status word loaded from memory
+     *           (fldenv, frstor, fxrstor, xrstor)
+     *
+     * [6]: = 0: FPU state is not reset
+     *      = 1: FPU state is reset (fninit, fnsave)
+     *
+     * [7] and [6] cannot all be 1 at same time.
+     *
+     * [08:10]: TOP out of last executed TB
+     *
+     * [11:13]: TOP in of last executed TB
+     *
+     * [14]: = 1: TOP out is valid
+     *       = 0: TOP out is not valid and should not be used
+     *
+     * [15]: = 1: TOP in  is valid
+     *       = 0: TOP in  is not valid and should not be used
+     *
+     * For now, this is only used in system-mode.
+     * */
+    uint32_t xtm_fpu;
+#endif
+    /*
+     * X86toMIPS Flag is only useful when configure with
+     *
+     *      --enable-x86tomips-flag-int     # CONFIG_XTM_FLAG_INT
+     *
+     * If not, the value of flag will always be zero.
+     *
+     * is_in_int = 0: CPU is not handling interrupt
+     *  > is_int_inst: meaningless
+     *
+     * is_in_int >= 1: CPU is handling interrupt
+     *                 if nested interrupt, this will be greater than 1
+     *  > is_int_inst = 0: this interrupt is NOT an int instruction
+     *  > is_int_inst = 1: this interrupt is an int instruction
+     *
+     * is_top_int_inst: only useful in nested interrupt
+     *  = 0: the first interrupt is not INT instruction
+     *  = 1: the first interrupt is INT instruction
+     */
+    struct {
+        int is_in_int;
+        int is_int_inst;
+        int is_top_int_inst; /* for nested interrupt */
+    }xtm_flags;
+
+#if defined(CONFIG_XTM_TEST)
+    int exit_test;
+#endif
+#endif
+#ifdef CONFIG_BTMMU
+    struct TranslationBlock *current_tb;
+#endif
 } CPUX86State;
 ```
 
