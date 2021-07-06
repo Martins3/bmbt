@@ -168,36 +168,6 @@ huxueshi:qdev_device_add virtio-9p-pci
           - tcg_cpu_machine_done : 注册 smram 相关的工作
           - [ ] machine_init_notify
 
-## CPUX86State 
-使用 x86_cpu_reset 进行初始化
-
-- [ ] 关于 reset 其实会进行两次, 真的有必要吗 ?
-
-每一个 CPU 都会进行一次
-
-- x86_cpu_realizefn
-  - cpu_reset
-    - device_cold_reset
-      - resettable_reset
-        - resettable_assert_reset
-          - resettable_phase_hold
-            - x86_cpu_reset
-
-- qemu_init
-  - qmp_x_exit_preconfig
-    - qemu_machine_creation_done : 我们的老朋友啊
-      - qdev_machine_creation_done
-        - qemu_system_reset
-          - pc_machine_reset
-            - qemu_devices_reset
-              - x86_cpu_machine_reset_cb
-                - cpu_reset
-                  - device_cold_reset
-                    - resettable_assert_reset
-                      - resettable_phase_hold
-                        - device_transitional_reset
-                          - x86_cpu_reset
-
 ## e820
 - 信息是如何构造出来的
   - 在  pc_memory_init 调用两次 e820_add_entry, 分别添加 below_4g_mem_size 和 above_4g_mem_size
@@ -231,7 +201,6 @@ x-remote
 none
 xenpv
 ```
-
 
 ## choose cpu
 似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
@@ -302,6 +271,8 @@ static const TypeInfo i440fx_pcihost_info = {
     .class_init    = i440fx_pcihost_class_init,
 };
 ```
+
+## [ ] Assemble the code
 
 ## BUS
 - pci host bridge 和 pcibus 的关系?
