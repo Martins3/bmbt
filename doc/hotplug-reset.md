@@ -59,8 +59,7 @@ cpu_reset (cpu=0x5555565e1800) at /home/maritns3/core/kvmqemu/hw/core/cpu.c:243
 - [ ] device_class_init
 
 ## reset
-https://qemu.readthedocs.io/en/latest/devel/reset.html
-
+reset 的官方文档 [^2]
 
 ## hotplug
 - [ ] 有必要分析一下 device_set_realized 一般都做了什么东西啊
@@ -81,5 +80,5 @@ https://qemu.readthedocs.io/en/latest/devel/reset.html
 #10 0x0000555555b897af in x86_cpus_init (x86ms=0x555556975de0, default_cpu_version=1) at ../hw/i386/x86.c:138
 ```
 
-
 [^1]: http://events17.linuxfoundation.org/sites/events/files/slides/CPU%20Hot-plug%20support%20in%20QEMU.pdf
+[^2]: https://qemu.readthedocs.io/en/latest/devel/reset.html
