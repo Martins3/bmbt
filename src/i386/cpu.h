@@ -1800,7 +1800,7 @@ bool x86_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
                       uintptr_t retaddr);
 void x86_cpu_set_a20(X86CPU *cpu, int a20_state);
 
-// FIXME maybe, we should group cc functions together
+// FIXME maybe, we should group functions in same file together
 void breakpoint_handler(CPUState *cs);
 bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 
