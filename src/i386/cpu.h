@@ -1782,7 +1782,6 @@ typedef enum TPRAccess {
 /* smm_helper.c */
 void do_smm_enter(X86CPU *cpu);
 
-// FIXME implemented in cpu.c
 int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request);
 
 // FIXME what the fuck is bsp, copy the implementation later
