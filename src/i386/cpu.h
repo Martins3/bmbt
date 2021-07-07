@@ -1316,10 +1316,64 @@ typedef struct X86XSaveArea {
 // ------------------------------ blindly copy end
 
 // FIXME it shall cause problems
+// put these two line here to make them happy
 struct TranslationBlock;
 struct CPUState;
 
+enum CacheType { DATA_CACHE, INSTRUCTION_CACHE, UNIFIED_CACHE };
+
+typedef struct CPUCacheInfo {
+  enum CacheType type;
+  uint8_t level;
+  /* Size in bytes */
+  uint32_t size;
+  /* Line size, in bytes */
+  uint16_t line_size;
+  /*
+   * Associativity.
+   * Note: representation of fully-associative caches is not implemented
+   */
+  uint8_t associativity;
+  /* Physical line partitions. CPUID[0x8000001D].EBX, CPUID[4].EBX */
+  uint8_t partitions;
+  /* Number of sets. CPUID[0x8000001D].ECX, CPUID[4].ECX */
+  uint32_t sets;
+  /*
+   * Lines per tag.
+   * AMD-specific: CPUID[0x80000005], CPUID[0x80000006].
+   * (Is this synonym to @partitions?)
+   */
+  uint8_t lines_per_tag;
+
+  /* Self-initializing cache */
+  bool self_init;
+  /*
+   * WBINVD/INVD is not guaranteed to act upon lower level caches of
+   * non-originating threads sharing this cache.
+   * CPUID[4].EDX[bit 0], CPUID[0x8000001D].EDX[bit 0]
+   */
+  bool no_invd_sharing;
+  /*
+   * Cache is inclusive of lower cache levels.
+   * CPUID[4].EDX[bit 1], CPUID[0x8000001D].EDX[bit 1].
+   */
+  bool inclusive;
+  /*
+   * A complex function is used to index the cache, potentially using all
+   * address bits.  CPUID[4].EDX[bit 2].
+   */
+  bool complex_indexing;
+} CPUCacheInfo;
+
+typedef struct CPUCaches {
+  CPUCacheInfo *l1d_cache;
+  CPUCacheInfo *l1i_cache;
+  CPUCacheInfo *l2_cache;
+  CPUCacheInfo *l3_cache;
+} CPUCaches;
+
 // FIXME target_ulong isn't highlighted by ccls
+// FIXME we need to take care how the variable initialized one by one
 typedef struct CPUX86State {
   CPUState *cpu;
 #if defined(CONFIG_X86toMIPS) || defined(CONFIG_LATX)
@@ -1464,6 +1518,25 @@ typedef struct CPUX86State {
 
   uint64_t msr_ia32_misc_enable;
 
+  /* Actual level/xlevel/xlevel2 value: */
+  uint32_t cpuid_level, cpuid_xlevel, cpuid_xlevel2;
+  uint32_t cpuid_vendor1;
+  uint32_t cpuid_vendor2;
+  uint32_t cpuid_vendor3;
+  uint32_t cpuid_version;
+  /* processor features (e.g. for CPUID insn) */
+  /* Minimum cpuid leaf 7 value */
+  uint32_t cpuid_level_func7;
+
+  // FIXME why is cache_info_amd, not cache_info_intel ?
+  // notice : cache_info_cpuid2, cache_info_cpuid4 has no referenced
+  /* Cache information for CPUID.  When legacy-cache=on, the cache data
+   * on each CPUID leaf will be different, because we keep compatibility
+   * with old QEMU versions.
+   */
+  CPUCaches cache_info_cpuid2, cache_info_cpuid4, cache_info_amd;
+
+  uint32_t cpuid_model[12];
 } CPUX86State;
 
 // FIXME copied from
@@ -1500,6 +1573,17 @@ typedef struct X86CPU {
   /* in order to simplify APIC support, we leave this pointer to the
      user */
   struct DeviceState *apic_state;
+
+  // FIXME how to initialize, thse four bits are used by cpuid
+  uint32_t apic_id;
+  bool expose_tcg;
+  /* Number of physical address bits supported */
+  uint32_t phys_bits;
+  /* Compatibility bits for old machine types.
+   * If true present virtual l3 cache for VM, the vcpus in the same virtual
+   * socket share an virtual l3 cache.
+   */
+  bool enable_l3_cache;
 
 } X86CPU;
 
@@ -1576,11 +1660,10 @@ static inline int cpu_mmu_index_kernel(CPUX86State *env) {
 #define CC_SRC2 (env->cc_src2)
 #define CC_OP (env->cc_op)
 
-// TODO i386/cpu.c  this is a really monster
 void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
                    uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 
-// TODO what do you mean by "will be suppressed"
+// FIXME what do you mean by "will be suppressed"
 // FIXME functions in helper.c have not been ported yet
 /* will be suppressed */
 void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0);

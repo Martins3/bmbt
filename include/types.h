@@ -89,6 +89,12 @@ typedef unsigned long int uint64_t;
 
 #define sizeof_field(type, field) sizeof(((type *)0)->field)
 
+#define bmbt_assert()                                                          \
+  do {                                                                         \
+    printf("not implement yet %s %d\n", __FUNCTION__, __LINE__);               \
+    assert(0);                                                                 \
+  } while (0);
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */
