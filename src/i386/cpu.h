@@ -1590,6 +1590,13 @@ typedef struct X86CPU {
    */
   bool enable_l3_cache;
 
+  // FIXME mce again
+  /* LMCE support can be enabled/disabled via cpu option 'lmce=on/off'. It is
+   * disabled by default to avoid breaking migration between QEMU with
+   * different LMCE configurations.
+   */
+  bool enable_lmce;
+
 } X86CPU;
 
 #define X86_CPU(ptr) container_of(ptr, X86CPU, parent_obj)
