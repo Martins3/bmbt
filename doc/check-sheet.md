@@ -1,3 +1,0 @@
-- [ ] fw_cfg : fwcfg.dma 是大端的
-- [ ] CPUClass 的指针移除掉，然后直接替换为 `x86_cpu_*` 的函数，也许存在问题，因为这个指针同时被 cpu_comm 注册过，具体还没有分析过
-- [ ] 虽然，显然，我们不会去支持 hotplug，但是实际上，hotplug 需要很多东西的配合， /docs/specs/acpi_cpu_hotplug.txt, 思考一下，如何更好的将这个弄妥帖

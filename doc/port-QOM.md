@@ -109,15 +109,6 @@ e=0x7fffffffd510) at ../qom/object.c:1091
   - 分配 TypeImpl::class, 
   - 会将自己 以及各级 parent 注册的 class_init 被调用
 
-分析一下 x86_cpu_common_class_init 的实现:
-- X86_CPU_CLASS，CPU_CLASS 和 DEVICE_CLASS : 使用通过一个参数就可以获取
-- [ ]  `device_class_set_parent_realize(dc, x86_cpu_realizefn, &xcc->parent_realize);`
-  - [ ] 什么时候调用的 x86_cpu_realizefn
-  - [ ] x86_cpu_realizefn 是一个非常关键的函数
-  - [ ] 参数是 dc
-- [ ] 这里对于 cc (CPUClass) 进行一堆初始化，为什么不是 xcc (X86CPUClass) 的内容初始化
-
-
 - 一个 TypeImpl::class 和自己 parent TypeImpl 关联的 ObjectClass 是同一个
   - 不是的，
   - 一个 TypeImpl 和其 parent TypeImpl 初始化的对象持有的 ObjectClass 现在是部分

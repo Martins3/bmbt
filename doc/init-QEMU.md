@@ -64,6 +64,20 @@ huxueshi:qdev_device_add virtio-9p-pci
       - io_mem_init : 初始化 io_mem_unassigned, 但是实际上，这个 mr 永远都不会被使用
       - memory_map_init : 初始化 system_memory, 和 io_memory 这两个都是 container 并不会真正的分配的映射空间
     - page_size_init : 初始化之后的 softmmu 需要的内容
+  - configure_accelerators
+    - qemu_opts_foreach
+      - do_configure_accelerator
+        - accel_init_machine : 在 tcg_accel_class_init 的位置初始化
+          - tcg_init
+            - tcg_exec_init
+              - cpu_gen_init
+                - tcg_context_init
+              - page_init
+              - tb_htable_init
+              - alloc_code_gen_buffer
+                - alloc_code_gen_buffer_anon
+              - tcg_prologue_init
+            - tcg_region_init
   - qmp_x_exit_preconfig
     - qemu_init_board
       - create_default_memdev : 比想象的复杂一点，是因为实际上，RAM 还可以是 filebased
@@ -78,12 +92,15 @@ huxueshi:qdev_device_add virtio-9p-pci
                       - cpu_list_add
                       - cpu_exec_realizefn
                         - accel_cpu_realizefn
-                          - tcg_cpu_realizefn
+                          - kvm_cpu_realizefn
+                          - tcg_cpu_realizefn : 主要就是 address space 的初始化
                             - cpu_address_space_init 
                               - memory_listener_register
                                 - tcg_commit
                         - tcg_exec_realizefn
-                          - tcg_x86_init: 这是 CPUClass 上注册的函数，进行一些 tcg 相关的的初始化, 例如 regs
+                          - TCGCPUOps::initialize => tcg_x86_init: 这是 CPUClass 上注册的函数，进行一些 tcg 相关的的初始化, 例如 regs
+                          - tlb_init
+                            - tlb_mmu_init
                       - x86_cpu_expand_features
                       - x86_cpu_filter_features
                       - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了, mce 参考[^2]
@@ -167,6 +184,26 @@ huxueshi:qdev_device_add virtio-9p-pci
               - 依赖于 acpi 的 `x86ms->fw_cfg` 和 pcms->acpi_build_enabled, 否则都会失败
           - tcg_cpu_machine_done : 注册 smram 相关的工作
           - [ ] machine_init_notify
+    - qmp_cont : qmp_cont 可以作为一个通用的 qmp 函数来调用，让系统继续运行，当然也可以作为系统刚刚启动的效果
+      - vm_start
+        - vm_prepare_start
+        - resume_all_vcpus
+  - qemu_init_displays
+  - accel_setup_post 
+  - os_setup_post
+  - resume_mux_open
+- qemu_main_loop
+  - qemu_debug_requested
+  - qemu_suspend_requested
+  - qemu_shutdown_requested
+  - qemu_reset_requested
+  - qemu_wakeup_requested
+
+## [ ] list all 启动要素
+1. CPU 和 machine 的启动: instance_init 和 class_init
+2. tcg_x86_init
+3. tcg_cpu_realizefn
+3. tcg_init
 
 ## e820
 - 信息是如何构造出来的
@@ -271,8 +308,6 @@ static const TypeInfo i440fx_pcihost_info = {
     .class_init    = i440fx_pcihost_class_init,
 };
 ```
-
-## [ ] Assemble the code
 
 ## BUS
 - pci host bridge 和 pcibus 的关系?
