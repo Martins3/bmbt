@@ -1495,6 +1495,11 @@ typedef struct CPUX86State {
   struct {
   } end_init_save;
 
+  // FIXME put here randomly
+  /* Fields up to this point are cleared by a CPU reset */
+  struct {
+  } end_reset_fields;
+
   uint32_t smbase;
   uint64_t msr_smi_count;
 
@@ -1772,6 +1777,10 @@ void do_smm_enter(X86CPU *cpu);
 
 // FIXME implemented in cpu.c
 int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request);
+
+// FIXME what the fuck is bsp, copy the implementation later
+/* cpu.c */
+bool cpu_is_bsp(X86CPU *cpu);
 
 // FIXME do_cpu_init ?
 // what's sipi
