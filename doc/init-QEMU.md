@@ -199,12 +199,6 @@ huxueshi:qdev_device_add virtio-9p-pci
   - qemu_reset_requested
   - qemu_wakeup_requested
 
-## [ ] list all 启动要素
-1. CPU 和 machine 的启动: instance_init 和 class_init
-2. tcg_x86_init
-3. tcg_cpu_realizefn
-3. tcg_init
-
 ## e820
 - 信息是如何构造出来的
   - 在  pc_memory_init 调用两次 e820_add_entry, 分别添加 below_4g_mem_size 和 above_4g_mem_size

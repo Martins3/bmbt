@@ -1496,7 +1496,7 @@ typedef struct X86CPU {
   CPUNegativeOffsetState neg;
   CPUX86State env;
 
-  // FIXME wow device state
+  // FIXME wow device state works?
   /* in order to simplify APIC support, we leave this pointer to the
      user */
   struct DeviceState *apic_state;
