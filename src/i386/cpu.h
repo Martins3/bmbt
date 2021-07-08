@@ -1559,7 +1559,6 @@ typedef struct DeviceState {
 
 } DeviceState;
 
-// TODO I don't know how X86CPU works
 /**
  * X86CPU:
  * @env: #CPUX86State
@@ -1834,6 +1833,11 @@ static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
 
 void x86_cpu_exec_enter(CPUState *cpu);
 void x86_cpu_exec_exit(CPUState *cpu);
+
+/* apic.c */
+void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
+void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
+                                   TPRAccess access);
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
