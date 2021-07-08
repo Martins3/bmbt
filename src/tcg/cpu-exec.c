@@ -472,19 +472,22 @@ static inline bool cpu_handle_interrupt(CPUState *cpu,
   return false;
 }
 
+static inline bool cpu_handle_halt(CPUState *cpu) {
+  // FIXME implement it later
+}
+
 int cpu_exec(CPUState *cpu) {
   int ret;
 
-  // FIXME is user mode come to here too?
-  //
+  // FIXME how SyncClocks works
   // SyncClocks sc = { 0 };
 
   /* replay_interrupt may need current_cpu */
-  // current_cpu = cpu;
+  current_cpu = cpu;
 
-  // if (cpu_handle_halt(cpu)) {
-  // return EXCP_HALTED;
-  // }
+  if (cpu_handle_halt(cpu)) {
+    return EXCP_HALTED;
+  }
 
   rcu_read_lock();
   x86_cpu_exec_enter(cpu);

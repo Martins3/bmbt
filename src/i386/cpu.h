@@ -1739,10 +1739,9 @@ static inline int32_t x86_get_a20_mask(CPUX86State *env) {
 
 static inline uint32_t cpu_compute_eflags(CPUX86State *env) {
   uint32_t eflags = env->eflags;
-  // FIXME tcg_enabled ?
-  // if (tcg_enabled()) {
-  eflags |= cpu_cc_compute_all(env, CC_OP) | (env->df & DF_MASK);
-  // }
+  if (tcg_enabled()) {
+    eflags |= cpu_cc_compute_all(env, CC_OP) | (env->df & DF_MASK);
+  }
   return eflags;
 }
 

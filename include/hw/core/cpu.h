@@ -91,7 +91,6 @@ typedef struct CPUState {
 
 // FIXME
 // 1. this is originally a per thread value
-// 2. haven't be defined yet
 /* current CPU in the current thread. It is only valid inside
    cpu_exec() */
 extern CPUState *current_cpu;
