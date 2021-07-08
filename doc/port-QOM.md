@@ -287,6 +287,54 @@ qdev_prop_set_bit(dev, "dma_enabled", false);
                 - object_get_class
                 - object_class_property_find : 从上向下property
                 - g_hash_table_lookup(obj->properties, name) : 首先查找完成 parent 然后查找 child 的部分
+
+
+```c
+static Property x86_cpu_properties[] = {
+    DEFINE_PROP_BOOL("tcg-cpuid", X86CPU, expose_tcg, true),
+}
+
+GlobalProperty pc_compat_2_8[] = {
+    { TYPE_X86_CPU, "tcg-cpuid", "off" },
+    { "kvmclock", "x-mach-use-reliable-get-clock", "off" },
+    { "ICH9-LPC", "x-smi-broadcast", "off" },
+    { TYPE_X86_CPU, "vmware-cpuid-freq", "off" },
+    { "Haswell-" TYPE_X86_CPU, "stepping", "1" },
+};
+```
+```diff
+History:        #0
+Commit:         1ce36bfe6424243082d3d7c2330e1a0a4ff72a43
+Author:         Daniel P. Berrangé <berrange@redhat.com>
+Committer:      Eduardo Habkost <ehabkost@redhat.com>
+Author Date:    Tue 09 May 2017 09:27:36 PM CST
+Committer Date: Tue 18 Jul 2017 02:41:30 AM CST
+
+i386: expose "TCGTCGTCGTCG" in the 0x40000000 CPUID leaf
+
+Currently when running KVM, we expose "KVMKVMKVM\0\0\0" in
+the 0x40000000 CPUID leaf. Other hypervisors (VMWare,
+HyperV, Xen, BHyve) all do the same thing, which leaves
+TCG as the odd one out.
+
+The CPUID signature is used by software to detect which
+virtual environment they are running in and (potentially)
+change behaviour in certain ways. For example, systemd
+supports a ConditionVirtualization= setting in unit files.
+The virt-what command can also report the virt type it is
+running on
+
+Currently both these apps have to resort to custom hacks
+like looking for 'fw-cfg' entry in the /proc/device-tree
+file to identify TCG.
+
+This change thus proposes a signature "TCGTCGTCGTCG" to be
+reported when running under TCG.
+
+To hide this, the -cpu option tcg-cpuid=off can be used.
+```
+
+
                 
 #### object_property_add_alias
 - [ ] 干啥用的啊

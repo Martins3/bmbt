@@ -916,11 +916,57 @@ struct CPUState {
 ```
 #### X86CPU
 
-| fields     | 初始化的位置                             |
-|------------|------------------------------------------|
-| neg        | tlb_init                                 |
-| env        | x86_cpu_reset                            |
-| apic_state | x86_cpu_realizefn => x86_cpu_apic_create |
+| fields                        | 初始化的位置                                                   |
+|-------------------------------|----------------------------------------------------------------|
+| neg                           | tlb_init                                                       |
+| env                           | x86_cpu_reset                                                  |
+| apic_state                    | x86_cpu_realizefn => x86_cpu_apic_create                       |
+| apic_id                       | x86_cpu_new 使用 CPUArchId::arch_id 初始化                     |
+| expose_tcg                    | 应该是可以直接去掉, 默认是打开的，*但是不知道打开的效果是什么* |
+| phys_bits                     | x86_cpu_realizefn                                              |
+| enable_l3_cache / enable_lmce | 和 expose_tcg 的操作方式类似, 理解了 GlobalProperty 在说吧     |
+
+```c
+/*
+#0  x86_find_cpu_slot (ms=0x555556095510 <__func__.35759>, id=32767, idx=0x555555d79f55 <trace_object_dynamic_cast_assert+57>) at ../hw/i386/x86.c:172
+#1  0x0000555555b5e714 in x86_cpu_pre_plug (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/x86.c:357
+#2  0x0000555555b96ced in pc_machine_device_pre_plug_cb (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/pc.c:1380
+#3  0x0000555555d70dd8 in hotplug_handler_pre_plug (plug_handler=0x5555569069e0, plugged_dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/core/hotplug.c:23
+#4  0x0000555555d757f6 in device_set_realized (obj=0x555556d00c00, value=true, errp=0x7fffffffd198) at ../hw/core/qdev.c:754
+#5  0x0000555555d7f28d in property_set_bool (obj=0x555556d00c00, v=0x555556c07c60, name=0x5555560f1e79 "realized", opaque=0x555556884f70, errp=0x7fffffffd198) at ../qom
+/object.c:2257
+#6  0x0000555555d7d2ae in object_property_set (obj=0x555556d00c00, name=0x5555560f1e79 "realized", v=0x555556c07c60, errp=0x5555567a1f68 <error_fatal>) at ../qom/object
+.c:1402
+#7  0x0000555555d79b63 in object_property_set_qobject (obj=0x555556d00c00, name=0x5555560f1e79 "realized", value=0x555556bc6e50, errp=0x5555567a1f68 <error_fatal>) at .
+./qom/qom-qobject.c:28
+#8  0x0000555555d7d626 in object_property_set_bool (obj=0x555556d00c00, name=0x5555560f1e79 "realized", value=true, errp=0x5555567a1f68 <error_fatal>) at ../qom/object.
+c:1472
+#9  0x0000555555d7484e in qdev_realize (dev=0x555556d00c00, bus=0x0, errp=0x5555567a1f68 <error_fatal>) at ../hw/core/qdev.c:389
+#10 0x0000555555b5db48 in x86_cpu_new (x86ms=0x5555569069e0, apic_id=0, errp=0x5555567a1f68 <error_fatal>) at ../hw/i386/x86.c:113
+#11 0x0000555555b5dc1b in x86_cpus_init (x86ms=0x5555569069e0, default_cpu_version=1) at ../hw/i386/x86.c:140
+#12 0x0000555555b627cb in pc_init1 (machine=0x5555569069e0, host_type=0x555556095eaa "i440FX-pcihost", pci_type=0x555556095ea3 "i440FX") at ../hw/i386/pc_piix.c:157
+#13 0x0000555555b6337e in pc_init_v6_1 (machine=0x5555569069e0) at ../hw/i386/pc_piix.c:425
+#14 0x0000555555963cc6 in machine_run_board_init (machine=0x5555569069e0) at ../hw/core/machine.c:1239
+#15 0x0000555555c67acd in qemu_init_board () at ../softmmu/vl.c:2526
+#16 0x0000555555c67cac in qmp_x_exit_preconfig (errp=0x5555567a1f68 <error_fatal>) at ../softmmu/vl.c:2600
+#17 0x0000555555c6a384 in qemu_init (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/vl.c:3635
+#18 0x000055555582c575 in main (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/main.c:49
+```
+和
+```c
+/*
+#0  x86_possible_cpu_arch_ids (ms=0x555555b5da43 <x86_cpu_apic_id_from_index+86>) at ../hw/i386/x86.c:451
+#1  0x0000555555b5dbd3 in x86_cpus_init (x86ms=0x5555569069e0, default_cpu_version=1) at ../hw/i386/x86.c:138
+#2  0x0000555555b627cb in pc_init1 (machine=0x5555569069e0, host_type=0x555556095eaa "i440FX-pcihost", pci_type=0x555556095ea3 "i440FX") at ../hw/i386/pc_piix.c:157
+#3  0x0000555555b6337e in pc_init_v6_1 (machine=0x5555569069e0) at ../hw/i386/pc_piix.c:425
+#4  0x0000555555963cc6 in machine_run_board_init (machine=0x5555569069e0) at ../hw/core/machine.c:1239
+#5  0x0000555555c67acd in qemu_init_board () at ../softmmu/vl.c:2526
+#6  0x0000555555c67cac in qmp_x_exit_preconfig (errp=0x5555567a1f68 <error_fatal>) at ../softmmu/vl.c:2600
+#7  0x0000555555c6a384 in qemu_init (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/vl.c:3635
+#8  0x000055555582c575 in main (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/main.c:49
+```
+
+
 
 #####  CPUX86State
 ```c
@@ -1529,47 +1575,29 @@ typedef struct CPUClass {
 ```
 
 #### X86CPUClass
-- [ ] model 如何处理的
-- [ ] parent_realize 处理的
+- [x] model 如何处理的 : 用于 list 所有可选 cpu 的, 参考 x86_cpu_list
+- [x] parent_realize 处理的
 
+在 x86_cpu_common_class_init 中，将通过 
+```
+    device_class_set_parent_realize(dc, x86_cpu_realizefn,
+                                    &xcc->parent_realize);
+```
 
 ```c
-/**
- * X86CPUClass:
- * @cpu_def: CPU model definition
- * @host_cpuid_required: Whether CPU model requires cpuid from host.
- * @ordering: Ordering on the "-cpu help" CPU model list.
- * @migration_safe: See CpuDefinitionInfo::migration_safe
- * @static_model: See CpuDefinitionInfo::static
- * @parent_realize: The parent class' realize handler.
- * @parent_reset: The parent class' reset handler.
- *
- * An x86 CPU model or family.
- */
-typedef struct X86CPUClass {
-    /*< private >*/
-    CPUClass parent_class;
-    /*< public >*/
-
-    /* CPU definition, automatically loaded by instance_init if not NULL.
-     * Should be eventually replaced by subclass-specific property defaults.
-     */
-    X86CPUModel *model;
-
-    bool host_cpuid_required;
-    int ordering;
-    bool migration_safe;
-    bool static_model;
-
-    /* Optional description of CPU model.
-     * If unavailable, cpu_def->model_id is used */
-    const char *model_description;
-
-    DeviceRealize parent_realize;
-    DeviceUnrealize parent_unrealize;
-    void (*parent_reset)(CPUState *cpu);
-} X86CPUClass;
+void device_class_set_parent_realize(DeviceClass *dc,
+                                     DeviceRealize dev_realize,
+                                     DeviceRealize *parent_realize)
+{
+    *parent_realize = dc->realize;
+    dc->realize = dev_realize;
+}
 ```
+同时初始化一下 parent_realize 和 realize
+
+
+所以，最后 x86_cpu_realizefn 会调用 cpu_common_realizefn
+
 
 [^1]: https://wiki.qemu.org/Features/PC_System_Flash
 [^2]: https://en.wikipedia.org/wiki/Machine-check_exception

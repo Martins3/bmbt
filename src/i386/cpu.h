@@ -1588,8 +1588,6 @@ typedef struct X86CPU {
    * socket share an virtual l3 cache.
    */
   bool enable_l3_cache;
-
-  // FIXME mce again
   /* LMCE support can be enabled/disabled via cpu option 'lmce=on/off'. It is
    * disabled by default to avoid breaking migration between QEMU with
    * different LMCE configurations.
