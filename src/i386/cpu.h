@@ -1388,6 +1388,7 @@ typedef struct CPUX86State {
   // I found vregs are defined multiple times under different macros
   // why ?
   //
+  // FIXME
   // ccls doesn't work well here
   // CONFIG_LATX, CONFIG_X86toMIPS, who is valid ?
   // 1. in config-host.h : both of them are defined
@@ -1574,7 +1575,6 @@ typedef struct X86CPU {
   CPUNegativeOffsetState neg;
   CPUX86State env;
 
-  // FIXME wow device state works?
   /* in order to simplify APIC support, we leave this pointer to the
      user */
   struct DeviceState *apic_state;

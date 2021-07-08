@@ -917,6 +917,12 @@ struct CPUState {
 
 
 #### X86CPU
+| fields     | 初始化的位置        |
+|------------|---------------------|
+| neg        | tlb_init            |
+| env        | x86_cpu_reset       |
+| apic_state | x86_cpu_realizefn => x86_cpu_apic_create |
+
 ```c
 /**
  * X86CPU:
@@ -1649,6 +1655,10 @@ typedef struct CPUClass {
 ```
 
 #### X86CPUClass
+- [ ] model 如何处理的
+- [ ] parent_realize 处理的
+
+
 ```c
 /**
  * X86CPUClass:

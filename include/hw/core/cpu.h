@@ -3,8 +3,8 @@
 
 // FIXME can I include this in kernel mode?
 #include "../../exec/memattrs.h"
-#include "../../qemu/queue.h"
 #include "../../qemu/bitmap.h"
+#include "../../qemu/queue.h"
 #include "../../types.h"
 #include <setjmp.h>
 
