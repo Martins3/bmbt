@@ -12,10 +12,6 @@
 
 - [ ] qemu_tcg_init_vcpu : 在 cpus.c 中还存在一些代码
 
-- [ ] memory_ldst.c 的结构分析
-  - [ ] 分析一下文件结构
-  - [ ] 分析一下调用路径
-
 - [ ] atomic 机制谁在使用啊
 - [ ] qemu_mutex 机制 ?
 
@@ -96,7 +92,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
 - [ ] tb_gen_code 的 cflags 是做什么的 ?
   - compile flags
   - 来控制什么 ?
-  - CPUState 中间的 cpu_index, cluster_index 做啥的 ?
 
 - [ ] page_find_alloc 中间为什么需要使用 rcu
 

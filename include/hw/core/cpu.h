@@ -36,6 +36,63 @@ struct CPUWatchpoint {
 #define TB_JMP_CACHE_BITS 12
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
 
+// FIXME maybe we have copy too many comments here, remove them later
+/**
+ * CPUState:
+ * @cpu_index: CPU index (informative).
+ * @cluster_index: Identifies which cluster this CPU is in.
+ *   For boards which don't define clusters or for "loose" CPUs not assigned
+ *   to a cluster this will be UNASSIGNED_CLUSTER_INDEX; otherwise it will
+ *   be the same as the cluster-id property of the CPU object's TYPE_CPU_CLUSTER
+ *   QOM parent.
+ * @tcg_cflags: Pre-computed cflags for this cpu.
+ * @nr_cores: Number of cores within this CPU package.
+ * @nr_threads: Number of threads within this CPU.
+ * @running: #true if CPU is currently running (lockless).
+ * @has_waiter: #true if a CPU is currently waiting for the cpu_exec_end;
+ * valid under cpu_list_lock.
+ * @created: Indicates whether the CPU thread has been successfully created.
+ * @interrupt_request: Indicates a pending interrupt request.
+ * @halted: Nonzero if the CPU is in suspended state.
+ * @stop: Indicates a pending stop request.
+ * @stopped: Indicates the CPU has been artificially stopped.
+ * @unplug: Indicates a pending CPU unplug request.
+ * @crash_occurred: Indicates the OS reported a crash (panic) for this CPU
+ * @singlestep_enabled: Flags for single-stepping.
+ * @icount_extra: Instructions until next timer event.
+ * @can_do_io: Nonzero if memory-mapped IO is safe. Deterministic execution
+ * requires that IO only be performed on the last instruction of a TB
+ * so that interrupts take effect immediately.
+ * @cpu_ases: Pointer to array of CPUAddressSpaces (which define the
+ *            AddressSpaces this CPU has)
+ * @num_ases: number of CPUAddressSpaces in @cpu_ases
+ * @as: Pointer to the first AddressSpace, for the convenience of targets which
+ *      only have a single AddressSpace
+ * @env_ptr: Pointer to subclass-specific CPUArchState field.
+ * @icount_decr_ptr: Pointer to IcountDecr field within subclass.
+ * @gdb_regs: Additional GDB registers.
+ * @gdb_num_regs: Number of total registers accessible to GDB.
+ * @gdb_num_g_regs: Number of registers in GDB 'g' packets.
+ * @next_cpu: Next CPU sharing TB cache.
+ * @opaque: User data.
+ * @mem_io_pc: Host Program Counter at which the memory was accessed.
+ * @kvm_fd: vCPU file descriptor for KVM.
+ * @work_mutex: Lock to prevent multiple access to @work_list.
+ * @work_list: List of pending asynchronous work.
+ * @trace_dstate_delayed: Delayed changes to trace_dstate (includes all changes
+ *                        to @trace_dstate).
+ * @trace_dstate: Dynamic tracing state of events for this vCPU (bitmask).
+ * @plugin_mask: Plugin event bitmap. Modified only via async work.
+ * @ignore_memory_transaction_failures: Cached copy of the MachineState
+ *    flag of the same name: allows the board to suppress calling of the
+ *    CPU do_transaction_failed hook function.
+ * @kvm_dirty_gfns: Points to the KVM dirty ring for this CPU when KVM dirty
+ *    ring is enabled.
+ * @kvm_fetch_index: Keeps the index that we last fetched from the per-vCPU
+ *    dirty ring structure.
+ *
+ * State of one CPU core or thread.
+ */
 typedef struct CPUState {
   // FIXME cores
   int nr_cores;
@@ -52,7 +109,7 @@ typedef struct CPUState {
   // what does index mean?
   // - cpu_index, only one cpu
 
-  /* TODO Move common fields from CPUArchState here. */
+  /* Move common fields from CPUArchState here. */
   int cpu_index;
   int cluster_index;
   uint32_t halted;
