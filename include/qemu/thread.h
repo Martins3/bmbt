@@ -1,6 +1,7 @@
 #ifndef THREAD_H_P9X05SBE
 #define THREAD_H_P9X05SBE
 
+#include <stdbool.h>
 #include "thread-posix.h"
 
 typedef struct QemuSpin {

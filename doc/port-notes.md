@@ -54,24 +54,6 @@ x86_cpu_common_class_init 中注册的函数:
 | trace                      |                                                                                                                                                                                                |
 | 存在好几个数据结构需要重构 | queue.h, qht.h 和 glib 的 qtree                                                                                                                                                                |
 
-| TODO                     | 问题描述                                                                                                                                                       |
-|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `#include <stdbool>`     | 如何让 acpi / kernel / tcg 使用同一个 header                                                                                                                   |
-| 清理 types 的定义        | target_ulong 和各种 u32 i32, 以及 ram_addr_t 定义在 cpu-common.h 中，感觉很随意                                                                                |
-| 分析如何支持多核         | 虽然现在不考虑支持多核，但是也应该进行埋点，为之后支持多核进行分析 </br> 各种调用 CPU_FOREACH 之类的如何处理                                                   |
-| 清理头文件的依赖         | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h                                                                                                              |
-| NEED_CPU_H               | 这个 macro 是干啥的，猜测真正的操作是，一个头文件 a.h，其中的一部分被 NEED_CPU_H 包围，a.h 被不同的 c 文件包含，b.c 和 c.c, 那么 b.c 和 c.c 看到的内容可以不同 |
-| 写一个所有头文件功能描述 | cpu-all.h exec-all.h cpu.h cpu-defs.h 中间到底有什么，根本不清楚啊                                                                                             |
-
-6. 需要被重新设计的头文件
-  1. seglock.h
-  2. thread-posix.h
-  3. qht.h
-  4. qdist.h
-
-7. cpu-defs.h osdep.h 和 config-host.h / config-target.h 的内容分析整理一下
-  - cpu-paras.h
-
 8. 多核:
   1. 感觉 Qemu 关于多核的接口不是很统一啊
       1. QemuSpin
@@ -95,7 +77,6 @@ x86_cpu_common_class_init 中注册的函数:
 - [ ] dirty page
 - [ ] 一个 tb 分布在两个 page 上
 - [ ] 为什么需要使用 glib 来维护 tb
-- [ ] tcg.c 中的 jit
 - [ ] 那些数据结构需要 RCU 来保护 
 
 - [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下

@@ -1,17 +1,13 @@
 #ifndef CPU_DEFS_H_QNWQEKKO
 #define CPU_DEFS_H_QNWQEKKO
 
+#include "../hw/core/cpu.h"
 #include "../qemu/config-host.h"
 #include "../qemu/config-target.h"
 #include "../qemu/thread.h"
-#include "../hw/core/cpu.h"
 #include "../types.h"
 #include "cpu-para.h"
 #include "memattrs.h"
-
-// Remove it later
-// typedef int target_long;
-// typedef u32 target_ulong ;
 
 #ifndef TARGET_LONG_BITS
 #error TARGET_LONG_BITS must be defined in cpu-param.h
