@@ -31,3 +31,11 @@ mkdir build
 
 ## 调试环境搭建
 [如何增大 dmesg buffer 的大小](https://unix.stackexchange.com/questions/412182/how-to-increase-dmesg-buffer-size-in-centos-7-2)
+
+## 处理 QEMU 的 macro
+
+生成中间文件 
+```
+../configure --target-list=x86_64-softmmu  --disable-werror --extra-cflags='-save-temps'
+```
+但是这似乎导致无法 `make -j10`, 只能串行编译
