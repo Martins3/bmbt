@@ -1965,61 +1965,6 @@ void helper_be_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
   store_helper(env, addr, val, oi, retaddr, MO_BEQ);
 }
 
-/* First set of helpers allows passing in of OI and RETADDR.  This makes
-   them callable from other helpers.  */
-
-#define EXTRA_ARGS , TCGMemOpIdx oi, uintptr_t retaddr
-#define ATOMIC_NAME(X) HELPER(glue(glue(glue(atomic_##X, SUFFIX), END), _mmu))
-#define ATOMIC_MMU_DECLS
-#define ATOMIC_MMU_LOOKUP atomic_mmu_lookup(env, addr, oi, retaddr)
-#define ATOMIC_MMU_CLEANUP
-#define ATOMIC_MMU_IDX get_mmuidx(oi)
-
-#include "atomic_common.inc.c"
-
-#define DATA_SIZE 1
-#include "atomic_template.h"
-
-#define DATA_SIZE 2
-#include "atomic_template.h"
-
-#define DATA_SIZE 4
-#include "atomic_template.h"
-
-#ifdef CONFIG_ATOMIC64
-#define DATA_SIZE 8
-#include "atomic_template.h"
-#endif
-
-#if HAVE_CMPXCHG128 || HAVE_ATOMIC128
-#define DATA_SIZE 16
-#include "atomic_template.h"
-#endif
-
-/* Second set of helpers are directly callable from TCG as helpers.  */
-
-#undef EXTRA_ARGS
-#undef ATOMIC_NAME
-#undef ATOMIC_MMU_LOOKUP
-#define EXTRA_ARGS , TCGMemOpIdx oi
-#define ATOMIC_NAME(X) HELPER(glue(glue(atomic_##X, SUFFIX), END))
-#define ATOMIC_MMU_LOOKUP atomic_mmu_lookup(env, addr, oi, GETPC())
-
-#define DATA_SIZE 1
-#include "atomic_template.h"
-
-#define DATA_SIZE 2
-#include "atomic_template.h"
-
-#define DATA_SIZE 4
-#include "atomic_template.h"
-
-#ifdef CONFIG_ATOMIC64
-#define DATA_SIZE 8
-#include "atomic_template.h"
-#endif
-#undef ATOMIC_MMU_IDX
-
 /* Code access functions.  */
 
 static uint64_t full_ldub_cmmu(CPUArchState *env, target_ulong addr,
