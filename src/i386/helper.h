@@ -222,7 +222,7 @@ DEF_HELPER_FLAGS_3(xsetbv, TCG_CALL_NO_WG, void, env, i32, i64)
 // #include "ops_sse_header.h"
 // #define SHIFT 1
 // #include "ops_sse_header.h"
-// 
+
 // DEF_HELPER_3(rclb, tl, env, tl, tl)
 // DEF_HELPER_3(rclw, tl, env, tl, tl)
 // DEF_HELPER_3(rcll, tl, env, tl, tl)

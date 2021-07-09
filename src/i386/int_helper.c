@@ -430,24 +430,6 @@ target_ulong helper_pext(target_ulong src, target_ulong mask)
     return dest;
 }
 
-#define SHIFT 0
-#include "shift_helper_template.h"
-#undef SHIFT
-
-#define SHIFT 1
-#include "shift_helper_template.h"
-#undef SHIFT
-
-#define SHIFT 2
-#include "shift_helper_template.h"
-#undef SHIFT
-
-#ifdef TARGET_X86_64
-#define SHIFT 3
-#include "shift_helper_template.h"
-#undef SHIFT
-#endif
-
 /* Test that BIT is enabled in CR4.  If not, raise an illegal opcode
    exception.  This reduces the requirements for rare CR4 bits being
    mapped into HFLAGS.  */
