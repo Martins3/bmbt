@@ -18,6 +18,9 @@ typedef struct AddressSpace {
 
 } AddressSpace;
 
+// FIXME define a empty one
+extern AddressSpace address_space_io;
+
 typedef struct MemoryRegionSection {
 
 } MemoryRegionSection;
@@ -29,7 +32,6 @@ static MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
                                              bool is_write, MemTxAttrs attrs);
 
 static bool memory_access_is_direct(MemoryRegion *mr, bool is_write);
-
 
 /**
  * memory_region_dispatch_read: perform a read directly to the specified
