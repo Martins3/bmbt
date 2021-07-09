@@ -10,6 +10,7 @@
 `include/hw/core/cpu.h`, 这是根，不应该依赖 `src/i386/cpu.h`
 `include/exec/cpu-defs.h` 不应该依赖 `src/i386/cpu.h`
 
+但是 `include/exec/exec-all.h` 是可以依赖 `src/i386/cpu.h` 的
 
 ## TODO
 | TODO                     | 问题描述                                                                                                                                                       |

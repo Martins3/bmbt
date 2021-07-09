@@ -33,7 +33,7 @@ $(info obj_files=$(obj_files))
 $(info DEP=$(DEP))
 
 all: $(kernel)
-	echo "finished"
+
 
 -include $(DEP)
 
@@ -54,7 +54,8 @@ $(kernel) : $(obj_files)
 	# Create build directories - same structure as sources.
 	mkdir -p $(@D)
 	# Just link all the object files.
-	$(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
+	echo "happy"
+	# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
 
 .PHONY: all clean
 

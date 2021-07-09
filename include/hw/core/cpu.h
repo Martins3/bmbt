@@ -3,6 +3,7 @@
 
 // FIXME can I include this in kernel mode?
 #include "../../exec/memattrs.h"
+#include "../../qemu/atomic.h"
 #include "../../qemu/bitmap.h"
 #include "../../qemu/queue.h"
 #include "../../types.h"
@@ -301,6 +302,25 @@ typedef struct CPUWatchpoint CPUWatchpoint;
  */
 static inline bool cpu_in_exclusive_context(const CPUState *cpu) {
   return cpu->in_exclusive_context;
+}
+
+static inline void cpu_tb_jmp_cache_clear(CPUState *cpu) {
+#if defined(CONFIG_X86toMIPS) && defined(CONFIG_USER_ONLY)
+  etb_cache_clear();
+#endif
+  unsigned int i;
+
+#ifdef CONFIG_X86toMIPS
+  xtm_pf_inc_jc_clear(cpu);
+  if (xtm_tblookup_opt() && cam_clear_func) {
+    ((void (*)(void))cam_clear_func)();
+  }
+  /* clear Code Page Table (cpt) */
+  xtm_cpt_flush();
+#endif
+  for (i = 0; i < TB_JMP_CACHE_SIZE; i++) {
+    atomic_set(&cpu->tb_jmp_cache[i], NULL);
+  }
 }
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
