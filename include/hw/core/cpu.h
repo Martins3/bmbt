@@ -323,4 +323,17 @@ static inline void cpu_tb_jmp_cache_clear(CPUState *cpu) {
   }
 }
 
+// FIXME implemented in ld/x86-qemu-mips/hw/core/cpu.c
+/**
+ * cpu_reset_interrupt:
+ * @cpu: The CPU to clear the interrupt on.
+ * @mask: The interrupt mask to clear.
+ *
+ * Resets interrupts on the vCPU @cpu.
+ */
+void cpu_reset_interrupt(CPUState *cpu, int mask);
+
+// FIXME relate with CPUClass
+bool cpu_has_work(CPUState *cpu);
+
 #endif /* end of include guard: CPU_H_5RAXENPS */
