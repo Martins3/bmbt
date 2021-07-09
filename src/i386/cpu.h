@@ -1790,12 +1790,15 @@ int cpu_get_pic_interrupt(CPUX86State *s);
 // I will copy it later
 /* this function must always be used to load data in the segment
    cache: it synchronizes the hflags with the segment cache values */
-static inline void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
+void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
                                           unsigned int selector,
                                           target_ulong base, unsigned int limit,
                                           unsigned int flags);
 /* hw/pc.c */
 uint64_t cpu_get_tsc(CPUX86State *env);
+
+/* seg_helper.c */
+void do_interrupt_x86_hardirq(CPUX86State *env, int intno, int is_hw);
 
 /* helper.c */
 bool x86_cpu_tlb_fill(CPUState *cs, vaddr address, int size,

@@ -359,7 +359,8 @@ void x86_cpu_exec_exit(CPUState *cs) {
   env->eflags = cpu_compute_eflags(env);
 }
 
-static inline AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs);
+// FIXME implement it later
+AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs);
 
 #ifndef CONFIG_USER_ONLY
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr) {

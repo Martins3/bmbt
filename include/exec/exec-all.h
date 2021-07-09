@@ -158,7 +158,7 @@ void tlb_flush(CPUState *cpu);
 // FIXME wanna cry
 void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
 
-// FIXME copied from log.h begin
+// FIXME copied from log.h begin ========================
 /* log only if a bit is set on the current loglevel mask:
  * @mask: bit to check in the mask
  * @fmt: printf-style format string
@@ -190,8 +190,9 @@ void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
 /* Return the number of characters emitted.  */
 int qemu_log(const char *fmt, ...);
 
-static inline void log_cpu_state(CPUState *cpu, int flags);
-// FIXME copied from log.h end
+// FIXME implement it
+void log_cpu_state(CPUState *cpu, int flags);
+// FIXME copied from log.h end ======================
 
 /**
  * cpu_restore_state:

@@ -1,4 +1,4 @@
-CFLAGS :=
+CFLAGS := -Werror
 BUILD_DIR := build
 kernel := $(BUILD_DIR)/kernel.bin
 linker_script := src/linker.ld
