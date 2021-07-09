@@ -4,8 +4,8 @@
 #include "../../include/exec/cpu-ldst.h"
 #include "../../include/exec/memop.h"
 #include "../../include/exec/memory.h"
-#include "../../include/exec/ramlist.h"
 #include "../../include/exec/ram_addr.h"
+#include "../../include/exec/ramlist.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bswap.h"
@@ -20,10 +20,6 @@
 #include <stdbool.h>
 #include <stdlib.h> // for abort
 #include <string.h>
-
-// FIXME get_memop belongs to tcg.h, but ccls can't distinguish c header
-// and cpp header, so it complains about `oi >> 4`, but if we have
-// compile_commands.json, the problem will be fix, put the
 
 /**
  * get_memop
@@ -44,9 +40,8 @@ static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 
 // FIXME I don't know why x86 doesn't register the handler
 // maybe it never been called
-void cpu_unaligned_access(CPUState *cpu, vaddr addr,
-                                        MMUAccessType access_type, int mmu_idx,
-                                        uintptr_t retaddr);
+void cpu_unaligned_access(CPUState *cpu, vaddr addr, MMUAccessType access_type,
+                          int mmu_idx, uintptr_t retaddr);
 
 #ifdef DEBUG_TLB
 #define DEBUG_TLB_GATE 1
@@ -92,7 +87,7 @@ static void tlb_window_reset(CPUTLBDesc *desc, int64_t ns, size_t max_entries) {
 }
 
 // FIXME a quick fix
-static inline int64_t get_clock_realtime(void);
+int64_t get_clock_realtime(void);
 
 static void tlb_dyn_init(CPUArchState *env) {
   int i;
