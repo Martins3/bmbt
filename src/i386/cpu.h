@@ -12,6 +12,12 @@
 #include "../../include/qemu/bitops.h"
 #include "../../include/types.h"
 
+// FIXME 
+// this is generic cpu header,
+// don't include too much thing here
+typedef struct TranslationBlock TranslationBlock;
+typedef struct CPUState CPUState;
+
 // FIXME copied from include/sysemu/tcg.h
 // it will be deleted later?
 extern bool tcg_allowed;
@@ -1315,10 +1321,6 @@ typedef struct X86XSaveArea {
 } X86XSaveArea;
 // ------------------------------ blindly copy end
 
-// FIXME it shall cause problems
-// put these two line here to make them happy
-struct TranslationBlock;
-struct CPUState;
 
 enum CacheType { DATA_CACHE, INSTRUCTION_CACHE, UNIFIED_CACHE };
 

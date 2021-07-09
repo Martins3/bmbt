@@ -3,7 +3,8 @@ BUILD_DIR := build
 kernel := $(BUILD_DIR)/kernel.bin
 linker_script := src/linker.ld
 assembly_source_files := src/head.S
-c_source_files := $(wildcard src/*.c)
+# c_source_files := $(wildcard src/*.c)
+c_source_files := src/tcg/tcg.c
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
 c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
@@ -11,10 +12,10 @@ c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
 obj_files := $(assembly_object_files) $(c_object_files)
 
 UNAME := $(shell uname -a)
-ifeq (,$(findstring loongson, $(UNAME)))
-ARCH_PREFIX=~/arch/LARCH_toolchain_root_newabi/bin/loongarch64-linux-gnu-
-QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
-endif
+# ifeq (,$(findstring loongson, $(UNAME)))
+# ARCH_PREFIX=~/arch/LARCH_toolchain_root_newabi/bin/loongarch64-linux-gnu-
+# QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
+# endif
 
 
 GCC=$(ARCH_PREFIX)gcc
@@ -69,5 +70,3 @@ defgdb: $(kernel)
 
 defrun: $(kernel)
 	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel) $(DEF)
-
-

@@ -2,13 +2,15 @@
 #define GLIB_STUB_H_78QYZX2K
 // FIXME I know the glib will be removed eventually
 // but #include <glib-2.0/glib/gtree.h> doesn't work
-// so create a empty stub for it
+// so create a empty stub for it.
+//
+// I will remvoe this with glib, but the glib will be replace later.
 
 #include <stdbool.h>
 
 typedef struct GTree {
-  GTree *left;
-  GTree *right;
+  struct GTree *left;
+  struct GTree *right;
 } GTree;
 
 typedef void *gpointer;
@@ -39,5 +41,8 @@ GTree *g_tree_new_full(GCompareDataFunc key_compare_func,
                        gpointer key_compare_data,
                        GDestroyNotify key_destroy_func,
                        GDestroyNotify value_destroy_func);
+
+typedef gint (*GCompareFunc)(gconstpointer a, gconstpointer b);
+GTree *g_tree_new(GCompareFunc key_compare_func);
 
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */

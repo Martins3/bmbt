@@ -10,7 +10,12 @@
 #define _CONST64_
 #else
 #define _CONST64_(x) x##l
-typedef unsigned int size_t;
+#include <stddef.h>
+#include <stdbool.h>
+// FIXME size_t conflicts with <stddef>, as for how to deal with glibc
+// no solution yet.
+
+// typedef unsigned int size_t;
 typedef unsigned long long u64;
 typedef unsigned char u8;
 typedef unsigned short u16;

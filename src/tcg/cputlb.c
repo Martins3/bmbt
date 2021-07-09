@@ -23,6 +23,7 @@
 // FIXME get_memop belongs to tcg.h, but ccls can't distinguish c header
 // and cpp header, so it complains about `oi >> 4`, but if we have
 // compile_commands.json, the problem will be fix, put the
+
 /**
  * get_memop
  * @oi: combined op/idx parameter
