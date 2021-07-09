@@ -4,10 +4,9 @@ kernel := $(BUILD_DIR)/kernel.bin
 linker_script := src/linker.ld
 # assembly_source_files := src/head.S
 assembly_source_files :=
-# c_source_files := $(wildcard src/*.c)
-c_source_files := src/tcg/tcg.c
-c_source_files += src/tcg/cputlb.c
-c_source_files += src/tcg/cpu-exec.c
+
+c_source_files := $(wildcard src/tcg/*.c)
+c_source_files += $(wildcard src/i386/*.c)
 
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
