@@ -5,6 +5,7 @@
 #include "../../include/exec/memop.h"
 #include "../../include/exec/memory.h"
 #include "../../include/exec/ramlist.h"
+#include "../../include/exec/ram_addr.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bswap.h"
@@ -43,7 +44,7 @@ static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 
 // FIXME I don't know why x86 doesn't register the handler
 // maybe it never been called
-static inline void cpu_unaligned_access(CPUState *cpu, vaddr addr,
+void cpu_unaligned_access(CPUState *cpu, vaddr addr,
                                         MMUAccessType access_type, int mmu_idx,
                                         uintptr_t retaddr);
 

@@ -1,9 +1,5 @@
 #ifndef CPU_H_CJEDABLV
 #define CPU_H_CJEDABLV
-// FIXME
-// included by "../../include/exec/exec-all.h"
-// Don't include anything here
-// what does you include the data?
 
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/hwaddr.h"
@@ -11,12 +7,6 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/bitops.h"
 #include "../../include/types.h"
-
-// FIXME 
-// this is generic cpu header,
-// don't include too much thing here
-typedef struct TranslationBlock TranslationBlock;
-typedef struct CPUState CPUState;
 
 // FIXME copied from include/sysemu/tcg.h
 // it will be deleted later?
@@ -1820,6 +1810,9 @@ bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 // FIXME
 // this is function in cpu.h, and originally registered by
 // x86_cpu_common_class_init,
+// 
+// we will construct CPUClass later, move x86_cpu_synchronize_from_tb to correct place
+typedef struct TranslationBlock TranslationBlock;
 void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb);
 
 static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
