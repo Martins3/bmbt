@@ -7,6 +7,7 @@ assembly_source_files :=
 # c_source_files := $(wildcard src/*.c)
 c_source_files := src/tcg/tcg.c
 c_source_files += src/tcg/cputlb.c
+c_source_files += src/tcg/cpu-exec.c
 
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
