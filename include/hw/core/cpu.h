@@ -8,8 +8,6 @@
 #include "../../types.h"
 #include <setjmp.h>
 
-typedef struct CPUState CPUState;
-
 /**
  * vaddr:
  * Type wide enough to contain any #target_ulong virtual address.
@@ -304,7 +302,5 @@ typedef struct CPUWatchpoint CPUWatchpoint;
 static inline bool cpu_in_exclusive_context(const CPUState *cpu) {
   return cpu->in_exclusive_context;
 }
-
-#include "../../../src/i386/cpu.h"
 
 #endif /* end of include guard: CPU_H_5RAXENPS */

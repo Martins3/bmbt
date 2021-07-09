@@ -2,16 +2,19 @@ CFLAGS :=
 BUILD_DIR := build
 kernel := $(BUILD_DIR)/kernel.bin
 linker_script := src/linker.ld
-assembly_source_files := src/head.S
+# assembly_source_files := src/head.S
+assembly_source_files :=
 # c_source_files := $(wildcard src/*.c)
 c_source_files := src/tcg/tcg.c
+c_source_files += src/tcg/cputlb.c
+
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
 c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
 
 obj_files := $(assembly_object_files) $(c_object_files)
 
-UNAME := $(shell uname -a)
+# UNAME := $(shell uname -a)
 # ifeq (,$(findstring loongson, $(UNAME)))
 # ARCH_PREFIX=~/arch/LARCH_toolchain_root_newabi/bin/loongarch64-linux-gnu-
 # QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
@@ -28,6 +31,9 @@ DEP = $(obj_files:%.o=%.d)
 $(info GCC=$(GCC))
 $(info obj_files=$(obj_files))
 $(info DEP=$(DEP))
+
+all: $(kernel)
+	echo "finished"
 
 -include $(DEP)
 
@@ -52,7 +58,6 @@ $(kernel) : $(obj_files)
 
 .PHONY: all clean
 
-all: $(kernel)
 
 clean:
 	rm -f $(assembly_object_files)

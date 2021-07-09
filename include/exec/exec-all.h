@@ -3,6 +3,7 @@
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
 #include "../types.h"
+#include "../../src/i386/cpu.h"
 #include "cpu-defs.h"
 #include "../sysemu/cpus.h"
 
