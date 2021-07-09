@@ -22,16 +22,17 @@ typedef struct CPUBreakpoint {
   QTAILQ_ENTRY(CPUBreakpoint) entry;
 } CPUBreakpoint;
 
-struct CPUWatchpoint {
+typedef struct CPUWatchpoint {
   vaddr vaddr;
   // FIXME  originally style warned by ccls
   // I don't know why ccls doesn't warn me in QEMU source code tree
-  ::vaddr len;
-  ::vaddr hitaddr;
+  // C doesn't warn on it.
+  vaddr len;
+  vaddr hitaddr;
   MemTxAttrs hitattrs;
   int flags; /* BP_* */
   QTAILQ_ENTRY(CPUWatchpoint) entry;
-};
+} CPUWatchpoint;
 
 #define TB_JMP_CACHE_BITS 12
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)

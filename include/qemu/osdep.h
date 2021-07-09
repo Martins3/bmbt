@@ -52,4 +52,23 @@ extern intptr_t qemu_real_host_page_mask;
 #define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
 #endif
 
+/* Round number down to multiple */
+#define QEMU_ALIGN_DOWN(n, m) ((n) / (m) * (m))
+
+/* Round number up to multiple. Safe when m is not a power of 2 (see
+ * ROUND_UP for a faster version when a power of 2 is guaranteed) */
+#define QEMU_ALIGN_UP(n, m) QEMU_ALIGN_DOWN((n) + (m) - 1, (m))
+
+/* n-byte align pointer up */
+#define QEMU_ALIGN_PTR_UP(p, n) \
+    ((typeof(p))QEMU_ALIGN_UP((uintptr_t)(p), (n)))
+
+/* n-byte align pointer down */
+#define QEMU_ALIGN_PTR_DOWN(p, n) \
+    ((typeof(p))QEMU_ALIGN_DOWN((uintptr_t)(p), (n)))
+
+// FIXME implement them
+int qemu_mprotect_none(void *addr, size_t size);
+void *qemu_memalign(size_t alignment, size_t size);
+
 #endif /* end of include guard: OSDEP_H_DXJTBG8M */
