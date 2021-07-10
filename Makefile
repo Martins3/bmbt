@@ -34,9 +34,9 @@ DEF = ../../qemu_bak/vmlinux
 
 DEP = $(obj_files:%.o=%.d)
 
-$(info GCC=$(GCC))
-$(info obj_files=$(obj_files))
-$(info DEP=$(DEP))
+# $(info GCC=$(GCC))
+# $(info obj_files=$(obj_files))
+# $(info DEP=$(DEP))
 
 all: $(kernel)
 
