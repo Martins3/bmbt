@@ -5,6 +5,7 @@
 #include "../../exec/memattrs.h"
 #include "../../qemu/atomic.h"
 #include "../../qemu/bitmap.h"
+#include "../../qemu/config-host.h"
 #include "../../qemu/queue.h"
 #include "../../types.h"
 #include <setjmp.h>
@@ -303,6 +304,28 @@ typedef struct CPUWatchpoint CPUWatchpoint;
 static inline bool cpu_in_exclusive_context(const CPUState *cpu) {
   return cpu->in_exclusive_context;
 }
+
+// FIXME
+// 1. maybe we should ask Niugene about why we need the function of LATX
+// 2. maybe list all the similar situation where general engine need LATX 
+#ifdef CONFIG_X86toMIPS
+#ifndef _X86toMIPS_PROFILE_SYS_H_
+extern void xtm_pf_inc_jc_clear(void *cpu);
+#define _X86toMIPS_PROFILE_SYS_INC_JC_CLEAR_
+#endif
+
+#ifndef _XTM_CAM_CLEAR_FUNC_
+#define _XTM_CAM_CLEAR_FUNC_
+extern uint64_t cam_clear_func;
+#endif
+
+#ifndef _XTM_TBLOOKUP_OPT_
+#define _XTM_TBLOOKUP_OPT_
+extern int xtm_tblookup_opt(void);
+#endif
+
+#include "../../../src/i386/LATX/include/cross-page-check.h"
+#endif /* CONFIG_X86toMIPS */
 
 static inline void cpu_tb_jmp_cache_clear(CPUState *cpu) {
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_USER_ONLY)

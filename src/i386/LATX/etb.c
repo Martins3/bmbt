@@ -3,6 +3,7 @@
 #include "include/env.h"
 #include "include/etb.h"
 #include "ir2/ir2.h"
+#include <string.h>
 
 IR1_INST *etb_ir1_inst_first(ETB *etb)
 {
