@@ -20,6 +20,24 @@ mkdir build
 - [ ] 这里的 ubuntu10s.test.img.full 和 vmlinuz-2.6.32 还没有自己编译过
 
 
+```sh
+#!/bin/bash
+
+xqm="qemu-system-i386"
+DISKIMG=ubuntu10s.img
+
+taskset -c 1 ./${xqm} -hda ${DISKIMG} \
+    -kernel vmlinuz-2.6.32 \
+    -m 2048 \
+    --nographic \
+    -xtm select,tblink,lbt \
+    -append "console=ttyS0 root=/dev/sda1 ro tsc=reliable init=/bin/bash rw"
+
+# all optimizations option for xtm
+# -xtm select,tblink,lbt,trbh,staticcs,njc,lsfpu
+```
+
+
 ## 学习 QEMU
 | 资料                                                               | 主要内容            |
 |--------------------------------------------------------------------|---------------------|
