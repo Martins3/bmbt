@@ -84,7 +84,7 @@ huxueshi:qdev_device_add virtio-9p-pci
       - machine_run_board_init
         - `machine_class->init` : DEFINE_I440FX_MACHINE 这个封装出来 pc_init_v6_1 来调用
           - pc_init1
-            - x86_cpus_init
+            - x86_cpus_init : 在主线程中间多次调用 x86_cpu_new , 可能会创建新的 CPU 来
               - x86_cpu_new
                 - qdev_realize : 经过 QOM 的 object_property 机制，最后调用到 device_set_realized :
                   - device_set_realized : 
@@ -105,6 +105,7 @@ huxueshi:qdev_device_add virtio-9p-pci
                       - x86_cpu_filter_features
                       - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了, mce 参考[^2]
                       - qemu_init_vcpu : 创建执行线程
+                        - rr_cpu_thread_fn : 进行一些基本的注册工作，然后等待
                       - x86_cpu_apic_realize 
                         - 通过 QOM 调用到 apic_common_realize
                            - 通过 QOM 调用 apic_realize

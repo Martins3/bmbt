@@ -99,6 +99,8 @@ typedef struct CPUState {
   int nr_cores;
   int nr_threads;
 
+  bool created;
+
   sigjmp_buf jmp_env;
   u32 cflags_next_tb; // FIXME why I need this ?
 
