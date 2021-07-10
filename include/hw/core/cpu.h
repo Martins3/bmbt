@@ -123,6 +123,8 @@ typedef struct CPUState {
   QTAILQ_HEAD(, CPUWatchpoint) watchpoints;
   CPUWatchpoint *watchpoint_hit;
 
+  QTAILQ_ENTRY(CPUState) node;
+
   uint32_t interrupt_request;
 
   /* In order to avoid passing too many arguments to the MMIO helpers,
@@ -288,11 +290,13 @@ typedef struct CPUWatchpoint CPUWatchpoint;
 #define CPU_UNSET_NUMA_NODE_ID -1
 #define CPU_TRACE_DSTATE_MAX_EVENTS 32
 
-#define first_cpu QTAILQ_FIRST_RCU(&cpus)
-#define CPU_NEXT(cpu) QTAILQ_NEXT_RCU(cpu, node)
-#define CPU_FOREACH(cpu) QTAILQ_FOREACH_RCU(cpu, &cpus, node)
-#define CPU_FOREACH_SAFE(cpu, next_cpu)                                        \
-  QTAILQ_FOREACH_SAFE_RCU(cpu, &cpus, node, next_cpu)
+
+typedef QTAILQ_HEAD(CPUTailQ, CPUState) CPUTailQ;
+extern CPUTailQ cpus;
+
+#define first_cpu QTAILQ_FIRST(&cpus)
+#define CPU_NEXT(cpu) QTAILQ_NEXT(cpu, node)
+#define CPU_FOREACH(cpu) QTAILQ_FOREACH(cpu, &cpus, node)
 
 /**
  * cpu_in_exclusive_context()
@@ -358,5 +362,16 @@ void cpu_reset_interrupt(CPUState *cpu, int mask);
 
 // FIXME relate with CPUClass
 bool cpu_has_work(CPUState *cpu);
+
+/**
+ * async_run_on_cpu:
+ * @cpu: The vCPU to run on.
+ * @func: The function to be executed.
+ * @data: Data to pass to the function.
+ *
+ * Schedules the function @func for execution on the vCPU @cpu asynchronously.
+ */
+void async_run_on_cpu(CPUState *cpu, run_on_cpu_func func, run_on_cpu_data data);
+
 
 #endif /* end of include guard: CPU_H_5RAXENPS */

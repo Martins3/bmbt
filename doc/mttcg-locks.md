@@ -255,6 +255,22 @@ extern CPUState *current_cpu;
 #19 0x00007ffff61bd293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
 
+## first_cpu / CPU_NEXT / CPU_FOREACH 的移植
+- [x] 这些 cpus 是如何初始化的
+  - cpu_list_add 和 cpu_list_remove, 通过 CPUState::node 实现的
+
+- [x] 为什么又要采用 RCU 的机制 : 因为 cpu_list_remove 的原因
+
+- [x] first_cpu 和 CPU_NEXT 都是只有一个使用位置的
+  - first_cpu 和 CPU_NEXT 场景分析之后，无论如何，将 RCU 去掉后，其语义不变
+
+在 pic_irq_request 中，利用 first_cpu 来访问 apic_state, 猜测是因为
+apic_state 要么在每一个 cpu 都有，要都没有，所以随便选一个就可以了
+
+- [ ] 关于 CPU_FOREACH 的问题，这里存在一个一致都在思考的问题, 为什么不能直接让这个线程持有 CPUState 直接调用
+  - [ ] 其实可以找到最开始的 run_on_cpu 的例子的
+  - [ ] 如何移除掉整个 run_on_cpu 的机制
+    - [ ] 现在的系统到底是如何使用的
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql

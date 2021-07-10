@@ -257,26 +257,24 @@ static void flush_all_helper(CPUState *src, run_on_cpu_func fn,
                              run_on_cpu_data d) {
   CPUState *cpu;
 
-  // FIXME
-  // CPU_FOREACH(cpu) {
-  // if (cpu != src) {
-  // async_run_on_cpu(cpu, fn, d);
-  // }
-  // }
+  CPU_FOREACH(cpu) {
+    if (cpu != src) {
+      async_run_on_cpu(cpu, fn, d);
+    }
+  }
 }
 
 void tlb_flush_counts(size_t *pfull, size_t *ppart, size_t *pelide) {
   CPUState *cpu;
   size_t full = 0, part = 0, elide = 0;
 
-  // FIXME
-  // CPU_FOREACH(cpu) {
-  // CPUArchState *env = cpu->env_ptr;
-  //
-  // full += atomic_read(&env_tlb(env)->c.full_flush_count);
-  // part += atomic_read(&env_tlb(env)->c.part_flush_count);
-  // elide += atomic_read(&env_tlb(env)->c.elide_flush_count);
-  // }
+  CPU_FOREACH(cpu) {
+    CPUArchState *env = cpu->env_ptr;
+
+    full += atomic_read(&env_tlb(env)->c.full_flush_count);
+    part += atomic_read(&env_tlb(env)->c.part_flush_count);
+    elide += atomic_read(&env_tlb(env)->c.elide_flush_count);
+  }
   *pfull = full;
   *ppart = part;
   *pelide = elide;

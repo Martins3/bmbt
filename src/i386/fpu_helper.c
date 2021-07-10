@@ -42,12 +42,9 @@
 #define floatx80_l2t make_floatx80(0x4000, 0xd49a784bcd1b8afeLL)
 
 #if defined(CONFIG_X86toMIPS) && !defined(CONFIG_USER_ONLY)
-// TODO why need to include this?
-// #include "x86tomips-config.h"
 extern int xtm_lsfpu_opt(void);
 #endif
 
-// TODO wired, maybe unused code
 #if !defined(CONFIG_USER_ONLY)
 
 #if 0
@@ -61,13 +58,8 @@ void x86_register_ferr_irq(qemu_irq irq)
 
 static void cpu_clear_ignne(void)
 {
-    // FIXME
-    // quick fix by comment the code
-    // 
-    // 1. X86_CPU ?
-    // 2. a list of cpu
-    // CPUX86State *env = &X86_CPU(first_cpu)->env;
-    // env->hflags2 &= ~HF2_IGNNE_MASK;
+    CPUX86State *env = &X86_CPU(first_cpu)->env;
+    env->hflags2 &= ~HF2_IGNNE_MASK;
 }
 
 #if 0

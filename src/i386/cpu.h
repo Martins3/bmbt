@@ -1570,7 +1570,6 @@ typedef struct X86CPU {
      user */
   struct DeviceState *apic_state;
 
-  // FIXME how to initialize, thse four bits are used by cpuid
   uint32_t apic_id;
   bool expose_tcg;
   /* Number of physical address bits supported */
@@ -1585,7 +1584,6 @@ typedef struct X86CPU {
    * different LMCE configurations.
    */
   bool enable_lmce;
-
 } X86CPU;
 
 #define X86_CPU(ptr) container_of(ptr, X86CPU, parent_obj)

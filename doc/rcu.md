@@ -143,7 +143,7 @@ reader 获取了指针 p 之后，之后通过 p 进行各种操作可以保证 
 ## [^1] 
 In QEMU, when a lock is used, this will often be the "iothread mutex", also known as the "big QEMU lock" (BQL). 
 
-## 分析一下在当前项目中使用到的 RCU
+## [ ] 分析一下在当前项目中使用到的 RCU
 ```
 ➜  src git:(xqm) ✗ ag rcu
 qemu/memory_ldst.c.inc
@@ -179,6 +179,48 @@ tcg/cpu-exec.c
 tcg/translate-all.c
 525:        void **p = atomic_rcu_read(lp);
 544:    pd = atomic_rcu_read(lp);
+```
+
+## [x] QTAILQ_INSERT_TAIL 和 QTAILQ_INSERT_TAIL_RCU 版本差异是什么?
+回答，几乎没有任何的区别啊
+
+对比这两个，只是在写的时候是 atomic 的
+```c
+#define QTAILQ_INSERT_TAIL(head, elm, field) do {                       \
+        (elm)->field.tqe_next = NULL;                                   \
+        (elm)->field.tqe_circ.tql_prev = (head)->tqh_circ.tql_prev;     \
+        (head)->tqh_circ.tql_prev->tql_next = (elm);                    \
+        (head)->tqh_circ.tql_prev = &(elm)->field.tqe_circ;             \
+} while (/*CONSTCOND*/0)
+
+#define QTAILQ_INSERT_TAIL_RCU(head, elm, field) do {                   \
+    (elm)->field.tqe_next = NULL;                                       \
+    (elm)->field.tqe_circ.tql_prev = (head)->tqh_circ.tql_prev;         \
+    qatomic_rcu_set(&(head)->tqh_circ.tql_prev->tql_next, (elm));       \
+    (head)->tqh_circ.tql_prev = &(elm)->field.tqe_circ;                 \
+} while (/*CONSTCOND*/0)
+```
+
+- [ ] 算了，分析一屁，以后再说了
+
+顺便分析一下，QTAILQ 的实现方式
+```c
+typedef struct QTailQLink {
+    void *tql_next;
+    struct QTailQLink *tql_prev;
+} QTailQLink;
+
+#define QTAILQ_ENTRY(type)                                              \
+union {                                                                 \
+        struct type *tqe_next;        /* next element */                \
+        QTailQLink tqe_circ;          /* link for circular backwards list */ \
+}
+
+struct CPUState {
+    // ...
+    QTAILQ_ENTRY(CPUState) node;
+
+    // ...
 ```
 
 

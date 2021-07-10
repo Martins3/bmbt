@@ -1293,10 +1293,9 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count)
     tcg_tb_foreach(x86_to_mips_free_etb, 0);
 #endif
 
-    // FIXME cpus
-    // CPU_FOREACH(cpu) {
-        // cpu_tb_jmp_cache_clear(cpu);
-    // }
+    CPU_FOREACH(cpu) {
+        cpu_tb_jmp_cache_clear(cpu);
+    }
 
     qht_reset_size(&tb_ctx.htable, CODE_GEN_HTABLE_SIZE);
     page_flush_tb();
@@ -1550,12 +1549,11 @@ static void do_tb_phys_invalidate(TranslationBlock *tb, bool rm_from_page_list)
         ((void(*)(uint64_t))cam_clear_key_func)((uint64_t)tb->pc);
     }
 #endif
-    // FIXME cpus
-    // CPU_FOREACH(cpu) {
-        // if (atomic_read(&cpu->tb_jmp_cache[h]) == tb) {
-            // atomic_set(&cpu->tb_jmp_cache[h], NULL);
-        // }
-    // }
+    CPU_FOREACH(cpu) {
+        if (atomic_read(&cpu->tb_jmp_cache[h]) == tb) {
+            atomic_set(&cpu->tb_jmp_cache[h], NULL);
+        }
+    }
 
     /* suppress this TB from the two jump lists */
     tb_remove_from_jmp_list(tb, 0);

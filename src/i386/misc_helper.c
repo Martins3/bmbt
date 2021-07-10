@@ -570,13 +570,11 @@ void helper_mwait(CPUX86State *env, int next_eip_addend)
     env->eip += next_eip_addend;
 
     /* XXX: not complete but not completely erroneous */
-    // FIXME how to handle multiple cpu
-    // CPU_NEXT, first_cpu and ....
-    // if (cs->cpu_index != 0 || CPU_NEXT(cs) != NULL) {
-        // do_pause(cpu);
-    // } else {
-        // do_hlt(cpu);
-    // }
+    if (cs->cpu_index != 0 || CPU_NEXT(cs) != NULL) {
+        do_pause(cpu);
+    } else {
+        do_hlt(cpu);
+    }
 }
 
 void helper_pause(CPUX86State *env, int next_eip_addend)
