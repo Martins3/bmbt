@@ -38,10 +38,6 @@ static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 #define DIRTY_CLIENTS_ALL ((1 << DIRTY_MEMORY_NUM) - 1)
 #define DIRTY_CLIENTS_NOCODE (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
 
-// FIXME I don't know why x86 doesn't register the handler
-// maybe it never been called
-void cpu_unaligned_access(CPUState *cpu, vaddr addr, MMUAccessType access_type,
-                          int mmu_idx, uintptr_t retaddr);
 
 #ifdef DEBUG_TLB
 #define DEBUG_TLB_GATE 1
@@ -60,9 +56,11 @@ void cpu_unaligned_access(CPUState *cpu, vaddr addr, MMUAccessType access_type,
   do {                                                                         \
   } while (0)
 
-// FIXME just remove the content to avoid error
 #define assert_cpu_is_self(cpu)                                                \
   do {                                                                         \
+    if (DEBUG_TLB_GATE) {                                                      \
+      g_assert(!(cpu)->created || qemu_cpu_is_self(cpu));                      \
+    }                                                                          \
   } while (0)
 
 target_ulong a;

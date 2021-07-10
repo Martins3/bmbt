@@ -2,6 +2,7 @@
 #define CPU_H_5RAXENPS
 
 // FIXME can I include this in kernel mode?
+#include "../../exec/hwaddr.h"
 #include "../../exec/memattrs.h"
 #include "../../qemu/atomic.h"
 #include "../../qemu/bitmap.h"
@@ -33,6 +34,12 @@ typedef struct CPUWatchpoint {
   int flags; /* BP_* */
   QTAILQ_ENTRY(CPUWatchpoint) entry;
 } CPUWatchpoint;
+
+typedef enum MMUAccessType {
+  MMU_DATA_LOAD = 0,
+  MMU_DATA_STORE = 1,
+  MMU_INST_FETCH = 2
+} MMUAccessType;
 
 #define TB_JMP_CACHE_BITS 12
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
@@ -95,6 +102,7 @@ typedef struct CPUWatchpoint {
  * State of one CPU core or thread.
  */
 typedef struct CPUState {
+  struct CPUClass *cc;
   // FIXME cores
   int nr_cores;
   int nr_threads;
@@ -151,6 +159,134 @@ typedef struct CPUState {
   DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
 } CPUState;
 
+/**
+ * CPUClass:
+ * @class_by_name: Callback to map -cpu command line model name to an
+ * instantiatable CPU type.
+ * @parse_features: Callback to parse command line arguments.
+ * @reset: Callback to reset the #CPUState to its initial state.
+ * @reset_dump_flags: #CPUDumpFlags to use for reset logging.
+ * @has_work: Callback for checking if there is work to do.
+ * @do_interrupt: Callback for interrupt handling.
+ * @do_unaligned_access: Callback for unaligned access handling, if
+ * the target defines #TARGET_ALIGNED_ONLY.
+ * @do_transaction_failed: Callback for handling failed memory transactions
+ * (ie bus faults or external aborts; not MMU faults)
+ * @virtio_is_big_endian: Callback to return %true if a CPU which supports
+ * runtime configurable endianness is currently big-endian. Non-configurable
+ * CPUs can use the default implementation of this method. This method should
+ * not be used by any callers other than the pre-1.0 virtio devices.
+ * @memory_rw_debug: Callback for GDB memory access.
+ * @dump_state: Callback for dumping state.
+ * @dump_statistics: Callback for dumping statistics.
+ * @get_arch_id: Callback for getting architecture-dependent CPU ID.
+ * @get_paging_enabled: Callback for inquiring whether paging is enabled.
+ * @get_memory_mapping: Callback for obtaining the memory mappings.
+ * @set_pc: Callback for setting the Program Counter register. This
+ *       should have the semantics used by the target architecture when
+ *       setting the PC from a source such as an ELF file entry point;
+ *       for example on Arm it will also set the Thumb mode bit based
+ *       on the least significant bit of the new PC value.
+ *       If the target behaviour here is anything other than "set
+ *       the PC register to the value passed in" then the target must
+ *       also implement the synchronize_from_tb hook.
+ * @synchronize_from_tb: Callback for synchronizing state from a TCG
+ *       #TranslationBlock. This is called when we abandon execution
+ *       of a TB before starting it, and must set all parts of the CPU
+ *       state which the previous TB in the chain may not have updated.
+ *       This always includes at least the program counter; some targets
+ *       will need to do more. If this hook is not implemented then the
+ *       default is to call @set_pc(tb->pc).
+ * @tlb_fill: Callback for handling a softmmu tlb miss or user-only
+ *       address fault.  For system mode, if the access is valid, call
+ *       tlb_set_page and return true; if the access is invalid, and
+ *       probe is true, return false; otherwise raise an exception and
+ *       do not return.  For user-only mode, always raise an exception
+ *       and do not return.
+ * @get_phys_page_debug: Callback for obtaining a physical address.
+ * @get_phys_page_attrs_debug: Callback for obtaining a physical address and the
+ *       associated memory transaction attributes to use for the access.
+ *       CPUs which use memory transaction attributes should implement this
+ *       instead of get_phys_page_debug.
+ * @asidx_from_attrs: Callback to return the CPU AddressSpace to use for
+ *       a memory access with the specified memory transaction attributes.
+ * @gdb_read_register: Callback for letting GDB read a register.
+ * @gdb_write_register: Callback for letting GDB write a register.
+ * @debug_check_watchpoint: Callback: return true if the architectural
+ *       watchpoint whose address has matched should really fire.
+ * @debug_excp_handler: Callback for handling debug exceptions.
+ * @write_elf64_note: Callback for writing a CPU-specific ELF note to a
+ * 64-bit VM coredump.
+ * @write_elf32_qemunote: Callback for writing a CPU- and QEMU-specific ELF
+ * note to a 32-bit VM coredump.
+ * @write_elf32_note: Callback for writing a CPU-specific ELF note to a
+ * 32-bit VM coredump.
+ * @write_elf32_qemunote: Callback for writing a CPU- and QEMU-specific ELF
+ * note to a 32-bit VM coredump.
+ * @vmsd: State description for migration.
+ * @gdb_num_core_regs: Number of core registers accessible to GDB.
+ * @gdb_core_xml_file: File name for core registers GDB XML description.
+ * @gdb_stop_before_watchpoint: Indicates whether GDB expects the CPU to stop
+ *           before the insn which triggers a watchpoint rather than after it.
+ * @gdb_arch_name: Optional callback that returns the architecture name known
+ * to GDB. The caller must free the returned string with g_free.
+ * @gdb_get_dynamic_xml: Callback to return dynamically generated XML for the
+ *   gdb stub. Returns a pointer to the XML contents for the specified XML file
+ *   or NULL if the CPU doesn't have a dynamically generated content for it.
+ * @cpu_exec_enter: Callback for cpu_exec preparation.
+ * @cpu_exec_exit: Callback for cpu_exec cleanup.
+ * @cpu_exec_interrupt: Callback for processing interrupts in cpu_exec.
+ * @disas_set_info: Setup architecture specific components of disassembly info
+ * @adjust_watchpoint_address: Perform a target-specific adjustment to an
+ * address before attempting to match it against watchpoints.
+ *
+ * Represents a CPU family or model.
+ */
+typedef struct CPUClass {
+  void (*reset)(CPUState *cpu);
+  int reset_dump_flags;
+  bool (*has_work)(CPUState *cpu);
+  void (*do_interrupt)(CPUState *cpu);
+  void (*do_unaligned_access)(CPUState *cpu, vaddr addr,
+                              MMUAccessType access_type, int mmu_idx,
+                              uintptr_t retaddr);
+  void (*do_transaction_failed)(CPUState *cpu, hwaddr physaddr, vaddr addr,
+                                unsigned size, MMUAccessType access_type,
+                                int mmu_idx, MemTxAttrs attrs,
+                                MemTxResult response, uintptr_t retaddr);
+
+  bool (*virtio_is_big_endian)(CPUState *cpu);
+  int (*memory_rw_debug)(CPUState *cpu, vaddr addr, uint8_t *buf, int len,
+                         bool is_write);
+  void (*dump_state)(CPUState *cpu, FILE *, int flags);
+
+  void (*dump_statistics)(CPUState *cpu, int flags);
+  int64_t (*get_arch_id)(CPUState *cpu);
+  bool (*get_paging_enabled)(const CPUState *cpu);
+
+  void (*set_pc)(CPUState *cpu, vaddr value);
+  void (*synchronize_from_tb)(CPUState *cpu, struct TranslationBlock *tb);
+
+  bool (*tlb_fill)(CPUState *cpu, vaddr address, int size,
+                   MMUAccessType access_type, int mmu_idx, bool probe,
+                   uintptr_t retaddr);
+
+  int (*asidx_from_attrs)(CPUState *cpu, MemTxAttrs attrs);
+  int (*gdb_read_register)(CPUState *cpu, uint8_t *buf, int reg);
+  int (*gdb_write_register)(CPUState *cpu, uint8_t *buf, int reg);
+  bool (*debug_check_watchpoint)(CPUState *cpu, CPUWatchpoint *wp);
+  void (*debug_excp_handler)(CPUState *cpu);
+
+  void (*cpu_exec_enter)(CPUState *cpu);
+  void (*cpu_exec_exit)(CPUState *cpu);
+  bool (*cpu_exec_interrupt)(CPUState *cpu, int interrupt_request);
+
+  vaddr (*adjust_watchpoint_address)(CPUState *cpu, vaddr addr, int len);
+  void (*tcg_initialize)(void);
+} CPUClass;
+
+#define CPU_GET_CLASS(cpu) cpu->cc
+
 // FIXME
 // 1. this is originally a per thread value
 /* current CPU in the current thread. It is only valid inside
@@ -188,12 +324,6 @@ void cpu_watchpoint_remove_all(CPUState *cpu, int mask);
 void cpu_check_watchpoint(CPUState *cpu, vaddr addr, vaddr len,
                           MemTxAttrs attrs, int flags, uintptr_t ra);
 int cpu_watchpoint_address_matches(CPUState *cpu, vaddr addr, vaddr len);
-
-typedef enum MMUAccessType {
-  MMU_DATA_LOAD = 0,
-  MMU_DATA_STORE = 1,
-  MMU_INST_FETCH = 2
-} MMUAccessType;
 
 /* Since this macro is used a lot in hot code paths and in conjunction with
  * FooCPU *foo_env_get_cpu(), we deviate from usual QOM practice by using
@@ -292,7 +422,6 @@ typedef struct CPUWatchpoint CPUWatchpoint;
 #define CPU_UNSET_NUMA_NODE_ID -1
 #define CPU_TRACE_DSTATE_MAX_EVENTS 32
 
-
 typedef QTAILQ_HEAD(CPUTailQ, CPUState) CPUTailQ;
 extern CPUTailQ cpus;
 
@@ -313,7 +442,7 @@ static inline bool cpu_in_exclusive_context(const CPUState *cpu) {
 
 // FIXME
 // 1. maybe we should ask Niugene about why we need the function of LATX
-// 2. maybe list all the similar situation where general engine need LATX 
+// 2. maybe list all the similar situation where general engine need LATX
 #ifdef CONFIG_X86toMIPS
 #ifndef _X86toMIPS_PROFILE_SYS_H_
 extern void xtm_pf_inc_jc_clear(void *cpu);
@@ -373,7 +502,17 @@ bool cpu_has_work(CPUState *cpu);
  *
  * Schedules the function @func for execution on the vCPU @cpu asynchronously.
  */
-void async_run_on_cpu(CPUState *cpu, run_on_cpu_func func, run_on_cpu_data data);
+void async_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
+                      run_on_cpu_data data);
 
+// FIXME I don't know why x86 doesn't register the handler
+// maybe it never been called
+static inline void cpu_unaligned_access(CPUState *cpu, vaddr addr,
+                                        MMUAccessType access_type, int mmu_idx,
+                                        uintptr_t retaddr) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+
+  cc->do_unaligned_access(cpu, addr, access_type, mmu_idx, retaddr);
+}
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
