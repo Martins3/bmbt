@@ -1,10 +1,6 @@
 #ifndef TYPES_H_OZP1YQJN
 #define TYPES_H_OZP1YQJN
 
-#undef NULL
-#define NULL ((void *)0)
-
-#define EOF -1
 
 #ifdef __ASSEMBLY__
 #define _CONST64_
@@ -12,6 +8,8 @@
 #define _CONST64_(x) x##l
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h> // for EOF
+
 // FIXME size_t conflicts with <stddef>, as for how to deal with glibc
 // no solution yet.
 

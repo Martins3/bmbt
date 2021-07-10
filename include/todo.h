@@ -19,3 +19,5 @@ void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr);
 
 // FIXME tcg.c is more useful than expected
 TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr);
+
+int qemu_printf(const char *fmt, ...);

@@ -29,3 +29,8 @@
 
 7. cpu-defs.h osdep.h 和 config-host.h / config-target.h 的内容分析整理一下
   - cpu-paras.h
+
+# 头文件的依赖和 macro 的问题
+在 `include/hw/core/cpu.h`
+的函数 cpu_tb_jmp_cache_clear 的 CONFIG_X86toMIPS 
+在是否依赖 qemu/config-host.h 产生差别，但是实际上，一直没有注意到

@@ -12,6 +12,11 @@
 
 #include "include/test-def.h"
 
+// FIXME I don't how CONFIG_XTM_TEST works,
+// add one line here to disable this file
+// I'll back later
+#ifdef CONFIG_XTM_TEST
+
 TESTCFG tt_cfg;
 TESTENV tt_env_reset;
 char   *tt_inst_str;
@@ -347,3 +352,4 @@ int tt_get_ir1_array(IR1_INST *ir1_array, int ir1_max)
 
     return ir1_nr;
 }
+#endif

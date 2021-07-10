@@ -11,6 +11,8 @@
 #include "include/profile.h"
 #include <signal.h>
 #include <ucontext.h>
+#include <string.h>
+#include <pthread.h>
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
 #include "x86tomips-profile-sys.h"
@@ -886,9 +888,6 @@ void xtm_tb_relink(TranslationBlock *utb)
         x86_to_mips_tb_set_jmp_target(utb, 1, utb_next);
     }
 }
-
-// FIXME this is temporary fix
-#define CONFIG_LATX
 
 static
 void xtm_interrupt_signal_handler(
