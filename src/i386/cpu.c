@@ -485,8 +485,7 @@ void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
 /* CPUClass::reset() */
 static void x86_cpu_reset(CPUState *s) {
   X86CPU *cpu = X86_CPU(s);
-  // FIXME anchor
-  // X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
+  X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
   CPUX86State *env = &cpu->env;
   target_ulong cr4;
   uint64_t xcr0;
@@ -496,8 +495,7 @@ static void x86_cpu_reset(CPUState *s) {
   xtm_pf_inc_tbf_cpu_reset();
 #endif
 
-  // FIXME we want to remove the X86CPUClass, it's fairly simple
-  // xcc->parent_reset(s);
+  xcc->parent_reset(s);
 
   memset(env, 0, offsetof(CPUX86State, end_reset_fields));
 
@@ -667,4 +665,42 @@ int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request) {
   }
 
   return 0;
+}
+
+static void x86_cpu_common_class_init(CPUState *cpu) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+
+  // device_class_set_parent_realize(dc, x86_cpu_realizefn,
+  // &xcc->parent_realize);
+  // device_class_set_parent_unrealize(dc, x86_cpu_unrealizefn,
+  // &xcc->parent_unrealize);
+  // dc->props = x86_cpu_properties;
+
+  // xcc->parent_reset = cc->reset;
+  cc->reset = x86_cpu_reset;
+  cc->reset_dump_flags = CPU_DUMP_FPU | CPU_DUMP_CCOP;
+
+#ifdef CONFIG_TCG
+  cc->cpu_exec_interrupt = x86_cpu_exec_interrupt;
+#endif
+  cc->set_pc = x86_cpu_set_pc;
+  cc->synchronize_from_tb = x86_cpu_synchronize_from_tb;
+  cc->get_paging_enabled = x86_cpu_get_paging_enabled;
+#ifndef CONFIG_USER_ONLY
+
+#endif
+
+#ifdef TARGET_X86_64
+  cc->gdb_core_xml_file = "i386-64bit.xml";
+  cc->gdb_num_core_regs = 66;
+#else
+#endif
+#if defined(CONFIG_TCG) && !defined(CONFIG_USER_ONLY)
+  cc->debug_excp_handler = breakpoint_handler;
+#endif
+  cc->cpu_exec_enter = x86_cpu_exec_enter;
+  cc->cpu_exec_exit = x86_cpu_exec_exit;
+#ifdef CONFIG_TCG
+  cc->tlb_fill = x86_cpu_tlb_fill;
+#endif
 }
