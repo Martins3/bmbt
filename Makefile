@@ -8,6 +8,8 @@ assembly_source_files :=
 c_source_files := $(wildcard src/tcg/*.c)
 c_source_files += $(wildcard src/i386/*.c)
 c_source_files += $(wildcard src/i386/LATX/*.c)
+c_source_files += $(wildcard src/i386/LATX/translator/*.c)
+c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
 
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)

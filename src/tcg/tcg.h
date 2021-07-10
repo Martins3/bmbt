@@ -539,6 +539,25 @@ static inline TCGv_ptr temp_tcgv_ptr(TCGTemp *t) {
   return (TCGv_ptr)temp_tcgv_i32(t);
 }
 
+/**
+ * make_memop_idx
+ * @op: memory operation
+ * @idx: mmu index
+ *
+ * Encode these values into a single parameter.
+ */
+static inline TCGMemOpIdx make_memop_idx(MemOp op, unsigned idx) {
+  tcg_debug_assert(idx <= 15);
+  return (op << 4) | idx;
+}
+
+// FIXME does I implement it, can I change
 void tcg_prologue_init(TCGContext *s);
+
+// FIXME this is function maybe lead to atomic_template.h ?
+// I event can't find the definition in the original QEMU
+uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
+                                       uint64_t cmpv, uint64_t newv,
+                                       TCGMemOpIdx oi, uintptr_t retaddr);
 
 #endif
