@@ -38,7 +38,6 @@ static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 #define DIRTY_CLIENTS_ALL ((1 << DIRTY_MEMORY_NUM) - 1)
 #define DIRTY_CLIENTS_NOCODE (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
 
-
 #ifdef DEBUG_TLB
 #define DEBUG_TLB_GATE 1
 #ifdef DEBUG_TLB_LOG
@@ -1185,10 +1184,9 @@ void *tlb_vaddr_to_host(CPUArchState *env, abi_ptr addr,
 
     if (!victim_tlb_hit(env, mmu_idx, index, elt_ofs, page)) {
       CPUState *cs = env_cpu(env);
-      // FIXME CPUClass anchor for later review
-      // CPUClass *cc = CPU_GET_CLASS(cs);
+      CPUClass *cc = CPU_GET_CLASS(cs);
 
-      if (!x86_cpu_tlb_fill(cs, addr, 0, access_type, mmu_idx, true, 0)) {
+      if (!cc->tlb_fill(cs, addr, 0, access_type, mmu_idx, true, 0)) {
         /* Non-faulting page table read failed.  */
         return NULL;
       }

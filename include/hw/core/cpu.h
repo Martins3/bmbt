@@ -159,6 +159,7 @@ typedef struct CPUState {
   DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
 } CPUState;
 
+// FIXME clear the comments
 /**
  * CPUClass:
  * @class_by_name: Callback to map -cpu command line model name to an

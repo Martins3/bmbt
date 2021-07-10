@@ -76,7 +76,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
   if (itb->pc == breakpoint_addrx) {
     breakpoint_hit_count += 1;
     if (breakpoint_hit_count >= breakpoint_ignore_count) {
-      // FIXME of course, this is a quick fix
       fprintf(stderr,
               "[debug] break point TB exec" TARGET_FMT_lx " cnt = %d.\n",
               itb->pc, breakpoint_hit_count);
@@ -105,23 +104,19 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
      * counter hit zero); we must restore the guest PC to the address
      * of the start of the TB.
      */
-    // FIXME anchor
     x86_cpu_synchronize_from_tb(cpu, last_tb);
-    /**
     CPUClass *cc = CPU_GET_CLASS(cpu);
-    qemu_log_mask_and_addr(CPU_LOG_EXEC, last_tb->pc,
-                           "Stopped execution of TB chain before %p ["
-                           TARGET_FMT_lx "] %s\n",
-                           last_tb->tc.ptr, last_tb->pc,
-                           lookup_symbol(last_tb->pc));
+    qemu_log_mask_and_addr(
+        CPU_LOG_EXEC, last_tb->pc,
+        "Stopped execution of TB chain before %p [" TARGET_FMT_lx "] %s\n",
+        last_tb->tc.ptr, last_tb->pc, lookup_symbol(last_tb->pc));
 
     if (cc->synchronize_from_tb) {
-        cc->synchronize_from_tb(cpu, last_tb);
+      cc->synchronize_from_tb(cpu, last_tb);
     } else {
-        assert(cc->set_pc);
-        cc->set_pc(cpu, last_tb->pc);
+      assert(cc->set_pc);
+      cc->set_pc(cpu, last_tb->pc);
     }
-    */
   }
   return ret;
 }
@@ -306,8 +301,7 @@ static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
 #endif
 
 static inline void cpu_handle_debug_exception(CPUState *cpu) {
-  // FIXME anchor
-  // CPUClass *cc = CPU_GET_CLASS(cpu);
+  CPUClass *cc = CPU_GET_CLASS(cpu);
   CPUWatchpoint *wp;
 
   if (!cpu->watchpoint_hit) {
@@ -316,10 +310,7 @@ static inline void cpu_handle_debug_exception(CPUState *cpu) {
     }
   }
 
-  // FIXME maybe change a better name, like x86_cpu_breakpoint_handler
-  breakpoint_handler(cpu);
-
-  // cc->debug_excp_handler(cpu);
+  cc->debug_excp_handler(cpu);
 }
 
 // FIXME I don't know how cpu_handle_exception works,
@@ -381,8 +372,8 @@ static inline bool cpu_handle_exception(CPUState *cpu, int *ret) {
 
 static inline bool cpu_handle_interrupt(CPUState *cpu,
                                         TranslationBlock **last_tb) {
-  // FIXME anchor
-  // CPUClass *cc = CPU_GET_CLASS(cpu);
+
+  CPUClass *cc = CPU_GET_CLASS(cpu);
 
   /* Clear the interrupt flag now since we're processing
    * cpu->interrupt_request and cpu->exit_request.
@@ -439,7 +430,7 @@ static inline bool cpu_handle_interrupt(CPUState *cpu,
        True when it is, and we should restart on a new TB,
        and via longjmp via cpu_loop_exit.  */
     else {
-      if (x86_cpu_exec_interrupt(cpu, interrupt_request)) {
+      if (cc->cpu_exec_interrupt(cpu, interrupt_request)) {
         replay_interrupt();
         cpu->exception_index = -1;
         *last_tb = NULL;
@@ -469,7 +460,6 @@ static inline bool cpu_handle_interrupt(CPUState *cpu,
     }
     return true;
   }
-
   return false;
 }
 

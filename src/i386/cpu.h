@@ -1479,7 +1479,7 @@ typedef struct CPUX86State {
 
   int32_t a20_mask;
 
-  // FIXME this is anchor, put here randomly, fix it later
+  // FIXME put here randomly, fix it later
   /* Beginning of state preserved by INIT (dummy marker).  */
   struct {
   } start_init_save;
@@ -1551,6 +1551,24 @@ typedef struct DeviceState {
 
 } DeviceState;
 
+
+// FIXME clear the comments
+/**
+ * X86CPUClass:
+ * @cpu_def: CPU model definition
+ * @host_cpuid_required: Whether CPU model requires cpuid from host.
+ * @ordering: Ordering on the "-cpu help" CPU model list.
+ * @migration_safe: See CpuDefinitionInfo::migration_safe
+ * @static_model: See CpuDefinitionInfo::static
+ * @parent_realize: The parent class' realize handler.
+ * @parent_reset: The parent class' reset handler.
+ *
+ * An x86 CPU model or family.
+ */
+typedef struct X86CPUClass {
+    void (*parent_reset)(CPUState *cpu);
+} X86CPUClass;
+
 /**
  * X86CPU:
  * @env: #CPUX86State
@@ -1561,6 +1579,7 @@ typedef struct DeviceState {
  * An x86 CPU.
  */
 typedef struct X86CPU {
+  X86CPUClass * xcc;
   CPUState parent_obj;
 
   CPUNegativeOffsetState neg;
@@ -1585,6 +1604,7 @@ typedef struct X86CPU {
    */
   bool enable_lmce;
 } X86CPU;
+#define X86_CPU_GET_CLASS(cpu) cpu->xcc
 
 #define X86_CPU(ptr) container_of(ptr, X86CPU, parent_obj)
 
@@ -1824,6 +1844,8 @@ static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
   *flags = env->hflags |
            (env->eflags & (IOPL_MASK | TF_MASK | RF_MASK | VM_MASK | AC_MASK));
 }
+
+void breakpoint_handler(CPUState *cs);
 
 void x86_cpu_exec_enter(CPUState *cpu);
 void x86_cpu_exec_exit(CPUState *cpu);
