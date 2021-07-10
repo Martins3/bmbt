@@ -4,6 +4,9 @@
 #include "../translator/translate.h"
 #include "../include/flag_usedef.h"
 
+// FIXME maybe this is bug of original QEMU
+// this is function/file is used by the usermode
+#if 0
 uint8 pending_use_of_succ(ETB* etb, int max_depth)
 {
     if((!etb->succ[0] && !etb->succ[1]) || max_depth==0)
@@ -117,3 +120,4 @@ void tb_flag_reduction(TranslationBlock *tb)
     //free_etb(etb->succ[0]);
     //free_etb(etb->succ[1]);
 }
+#endif
