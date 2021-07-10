@@ -24,7 +24,10 @@ obj_files := $(assembly_object_files) $(c_object_files)
 # endif
 
 
-GCC=$(ARCH_PREFIX)gcc
+CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use
+CXX=gcc
+
+GCC=$(ARCH_PREFIX)${CXX}
 LD=$(ARCH_PREFIX)ld
 
 DEF = ../../qemu_bak/vmlinux
