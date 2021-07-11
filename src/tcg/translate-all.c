@@ -1715,7 +1715,6 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
     max_insns = TCG_MAX_INSNS;
   }
 
-  // FIXME is it possible to support singlestep?
   if (cpu->singlestep_enabled || singlestep) {
     max_insns = 1;
   }
@@ -1743,8 +1742,7 @@ buffer_overflow:
   tb->flags = flags;
   tb->cflags = cflags;
   tb->orig_tb = NULL;
-  // FIXME how trace works ?
-  // tb->trace_vcpu_dstate = *cpu->trace_dstate;
+  tb->trace_vcpu_dstate = *cpu->trace_dstate;
 
   // FIXME what's tcg_ctx's role ?
   tcg_ctx->tb_cflags = cflags;
@@ -1775,8 +1773,7 @@ tb_overflow:
       xtm_is_bo = 1;
       goto buffer_overflow;
     case -2:
-      // FIXME what's icount
-      // max_insns = tb->icount;
+      max_insns = tb->icount;
       assert(max_insns > 1);
       max_insns /= 2;
       goto tb_overflow;
@@ -1791,7 +1788,7 @@ tb_overflow:
                        CODE_GEN_ALIGN));
 
   /* init jump list */
-  // qemu_spin_init(&tb->jmp_lock); // TODO no spin lock
+  qemu_spin_init(&tb->jmp_lock);
   tb->jmp_list_head = (uintptr_t)NULL;
   tb->jmp_list_next[0] = (uintptr_t)NULL;
   tb->jmp_list_next[1] = (uintptr_t)NULL;

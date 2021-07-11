@@ -21,4 +21,5 @@ This project is fairly tricky for beginner, we also write some [documents for ne
 - [ ] memory model 的接口
 - [ ] fw_cfg / loader 之类的 : 其实就是 machine 启动相关的部分
 
+
 任务具体细节参考 [#34](https://github.com/Martins3/BMBT/issues/34)
