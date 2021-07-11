@@ -46,7 +46,7 @@
    function which takes a TCGv_i64, and so on. Only the internals of
    TCG need to care about the actual contents of the types.  */
 
-// FIXME interesting desing
+// FIXME interesting design
 typedef struct TCGv_i32_d *TCGv_i32;
 typedef struct TCGv_i64_d *TCGv_i64;
 typedef struct TCGv_ptr_d *TCGv_ptr;
@@ -559,5 +559,8 @@ void tcg_prologue_init(TCGContext *s);
 uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
                                        uint64_t cmpv, uint64_t newv,
                                        TCGMemOpIdx oi, uintptr_t retaddr);
+
+TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr);
+void tcg_tb_insert(TranslationBlock *tb);
 
 #endif

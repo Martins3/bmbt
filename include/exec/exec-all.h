@@ -517,4 +517,6 @@ void assert_no_pages_locked(void);
 static inline void assert_no_pages_locked(void) {}
 #endif
 
+void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr);
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

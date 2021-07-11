@@ -32,20 +32,20 @@ LD=$(ARCH_PREFIX)ld
 
 DEF = ../../qemu_bak/vmlinux
 
-DEP = $(obj_files:%.o=%.d)
+dependency_files = $(obj_files:%.o=%.d)
 
 # $(info GCC=$(GCC))
 # $(info obj_files=$(obj_files))
-# $(info DEP=$(DEP))
+# $(info dependency_files=$(dependency_files))
 
 all: $(kernel)
 
 
--include $(DEP)
+-include $(dependency_files)
 
 # Build target for every single object file.
 # The potential dependency on header files is covered
-# by calling `-include $(DEP)`.
+# by calling `-include $(dependency_files)`.
 $(BUILD_DIR)/%.o : %.c
 	mkdir -p $(@D)
 	$(GCC) $(CFLAGS) -MMD -c $< -o $@
@@ -67,6 +67,7 @@ $(kernel) : $(obj_files)
 
 
 clean:
+	rm -f $(dependency_files)
 	rm -f $(assembly_object_files)
 	rm -f $(c_object_files)
 	rm -f $(kernel)

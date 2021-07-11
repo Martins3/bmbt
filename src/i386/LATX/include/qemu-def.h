@@ -8,8 +8,9 @@
 // #include "../../../../include/disas/disas.h"
 #include "../../../../include/exec/exec-all.h"
 // #include "../../../../include/tcg-op.h"
-#include "../../../../include/exec/memop.h"
 #include "../../../../include/exec/cpu-ldst.h"
+#include "../../../../include/exec/memop.h"
+#include "../../../../include/exec/tb-hash.h"
 // #include "../../../../include/exec/helper-proto.h"
 // #include "../../../../include/exec/helper-gen.h"
 // #include "../../../../include/trace-tcg.h"
@@ -17,10 +18,10 @@
 // #include "../../../../include/qemu/qht.h"
 
 #include "../../../../include/qemu/queue.h"
+#include "../../../../include/qemu/qemu-printf.h"
 
-#include "../../../../include/todo.h"
-#include "../../../tcg/tcg.h"
 #include "../../../i386/helper.h"
+#include "../../../tcg/tcg.h"
 
 /*#include "exec/gen-icount.h"*/
 
