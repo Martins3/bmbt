@@ -516,4 +516,6 @@ static inline void cpu_unaligned_access(CPUState *cpu, vaddr addr,
   cc->do_unaligned_access(cpu, addr, access_type, mmu_idx, retaddr);
 }
 
+#define qemu_tcg_mttcg_enabled() (0)
+
 #endif /* end of include guard: CPU_H_5RAXENPS */

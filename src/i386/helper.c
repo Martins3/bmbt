@@ -300,17 +300,14 @@ void cpu_report_tpr_access(CPUX86State *env, TPRAccess access) {
   X86CPU *cpu = env_archcpu(env);
   CPUState *cs = env_cpu(env);
 
-  // FIXME is tcg_enabled ?
+  if (kvm_enabled() || whpx_enabled()) {
+    // env->tpr_access_type = access;
+    cpu_interrupt(cs, CPU_INTERRUPT_TPR);
+  } else if (tcg_enabled()) {
+    cpu_restore_state(cs, cs->mem_io_pc, false);
 
-  // if (kvm_enabled() || whpx_enabled()) {
-  // env->tpr_access_type = access;
-
-  // cpu_interrupt(cs, CPU_INTERRUPT_TPR);
-  // } else if (tcg_enabled()) {
-  cpu_restore_state(cs, cs->mem_io_pc, false);
-
-  apic_handle_tpr_access_report(cpu->apic_state, env->eip, access);
-  // }
+    apic_handle_tpr_access_report(cpu->apic_state, env->eip, access);
+  }
 }
 #endif /* !CONFIG_USER_ONLY */
 

@@ -14,9 +14,23 @@ extern bool tcg_allowed;
 void tcg_exec_init(unsigned long tb_size);
 #ifdef CONFIG_TCG
 #define tcg_enabled() (tcg_allowed)
+#define kvm_enabled() 0
+#define whpx_enabled() 0
 #else
 #define tcg_enabled() 0
 #endif
+
+#define qemu_tcg_mttcg_enabled() (0)
+
+/**
+ * qemu_tcg_mttcg_enabled:
+ * Check whether we are running MultiThread TCG or not.
+ *
+ * Returns: %true if we are in MTTCG mode %false otherwise.
+ */
+extern bool mttcg_enabled;
+
+
 
 // FIXME copy a lot of macros without checking
 // ------------------------------ blindly copy started
@@ -1311,7 +1325,6 @@ typedef struct X86XSaveArea {
 } X86XSaveArea;
 // ------------------------------ blindly copy end
 
-
 enum CacheType { DATA_CACHE, INSTRUCTION_CACHE, UNIFIED_CACHE };
 
 typedef struct CPUCacheInfo {
@@ -1551,7 +1564,6 @@ typedef struct DeviceState {
 
 } DeviceState;
 
-
 // FIXME clear the comments
 /**
  * X86CPUClass:
@@ -1566,7 +1578,7 @@ typedef struct DeviceState {
  * An x86 CPU model or family.
  */
 typedef struct X86CPUClass {
-    void (*parent_reset)(CPUState *cpu);
+  void (*parent_reset)(CPUState *cpu);
 } X86CPUClass;
 
 /**
@@ -1579,7 +1591,7 @@ typedef struct X86CPUClass {
  * An x86 CPU.
  */
 typedef struct X86CPU {
-  X86CPUClass * xcc;
+  X86CPUClass *xcc;
   CPUState parent_obj;
 
   CPUNegativeOffsetState neg;
@@ -1624,18 +1636,16 @@ void update_mxcsr_status(CPUX86State *env);
 
 static inline void cpu_set_mxcsr(CPUX86State *env, uint32_t mxcsr) {
   env->mxcsr = mxcsr;
-  // FIXME is tcg_enabled ?
-  // if (tcg_enabled()) {
-  update_mxcsr_status(env);
-  // }
+  if (tcg_enabled()) {
+    update_mxcsr_status(env);
+  }
 }
 
 static inline void cpu_set_fpuc(CPUX86State *env, uint16_t fpuc) {
   env->fpuc = fpuc;
-  // FIXME is tcg_enabled, what does it mean?
-  // if (tcg_enabled()) {
-  update_fp_status(env);
-  // }
+  if (tcg_enabled()) {
+    update_fp_status(env);
+  }
 }
 
 // FIXME helper.c not handle yet, only define it
@@ -1809,9 +1819,8 @@ int cpu_get_pic_interrupt(CPUX86State *s);
 /* this function must always be used to load data in the segment
    cache: it synchronizes the hflags with the segment cache values */
 void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
-                                          unsigned int selector,
-                                          target_ulong base, unsigned int limit,
-                                          unsigned int flags);
+                            unsigned int selector, target_ulong base,
+                            unsigned int limit, unsigned int flags);
 /* hw/pc.c */
 uint64_t cpu_get_tsc(CPUX86State *env);
 
@@ -1831,8 +1840,9 @@ bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 // FIXME
 // this is function in cpu.h, and originally registered by
 // x86_cpu_common_class_init,
-// 
-// we will construct CPUClass later, move x86_cpu_synchronize_from_tb to correct place
+//
+// we will construct CPUClass later, move x86_cpu_synchronize_from_tb to correct
+// place
 typedef struct TranslationBlock TranslationBlock;
 void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb);
 
