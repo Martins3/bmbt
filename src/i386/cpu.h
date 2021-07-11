@@ -20,17 +20,6 @@ void tcg_exec_init(unsigned long tb_size);
 #define tcg_enabled() 0
 #endif
 
-#define qemu_tcg_mttcg_enabled() (0)
-
-/**
- * qemu_tcg_mttcg_enabled:
- * Check whether we are running MultiThread TCG or not.
- *
- * Returns: %true if we are in MTTCG mode %false otherwise.
- */
-extern bool mttcg_enabled;
-
-
 
 // FIXME copy a lot of macros without checking
 // ------------------------------ blindly copy started

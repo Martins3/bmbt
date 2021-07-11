@@ -98,6 +98,12 @@ typedef enum MMUAccessType {
  *
  * State of one CPU core or thread.
  */
+
+// FIXME oh shit address space
+struct CPUAddressSpace {
+  struct AddressSpace *as;
+};
+
 typedef struct CPUState {
   struct CPUClass *cc;
   int nr_cores;
@@ -146,6 +152,9 @@ typedef struct CPUState {
 
   // FIXME currently, this field is only referenced by tb_lookup__cpu_state
   DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
+
+  struct CPUAddressSpace *cpu_ases;
+  int num_ases;
 } CPUState;
 
 // FIXME clear the comments
@@ -260,6 +269,9 @@ typedef struct CPUClass {
   bool (*tlb_fill)(CPUState *cpu, vaddr address, int size,
                    MMUAccessType access_type, int mmu_idx, bool probe,
                    uintptr_t retaddr);
+  hwaddr (*get_phys_page_debug)(CPUState *cpu, vaddr addr);
+  hwaddr (*get_phys_page_attrs_debug)(CPUState *cpu, vaddr addr,
+                                      MemTxAttrs *attrs);
 
   int (*asidx_from_attrs)(CPUState *cpu, MemTxAttrs attrs);
   int (*gdb_read_register)(CPUState *cpu, uint8_t *buf, int reg);
@@ -273,12 +285,13 @@ typedef struct CPUClass {
 
   vaddr (*adjust_watchpoint_address)(CPUState *cpu, vaddr addr, int len);
   void (*tcg_initialize)(void);
+
+
 } CPUClass;
 
 #define CPU_GET_CLASS(cpu) cpu->cc
 
-// FIXME
-// 1. this is originally a per thread value
+// FIXME initialize it
 /* current CPU in the current thread. It is only valid inside
    cpu_exec() */
 extern CPUState *current_cpu;
@@ -296,16 +309,12 @@ extern CPUState *current_cpu;
 #define BP_WATCHPOINT_HIT_WRITE 0x80
 #define BP_WATCHPOINT_HIT (BP_WATCHPOINT_HIT_READ | BP_WATCHPOINT_HIT_WRITE)
 
-// FIXME wanna cry
-// breakpoint will jump to ./exec.c
-// so deep, dark, fantasy
 int cpu_breakpoint_insert(CPUState *cpu, vaddr pc, int flags,
                           CPUBreakpoint **breakpoint);
 int cpu_breakpoint_remove(CPUState *cpu, vaddr pc, int flags);
 void cpu_breakpoint_remove_by_ref(CPUState *cpu, CPUBreakpoint *breakpoint);
 void cpu_breakpoint_remove_all(CPUState *cpu, int mask);
 
-// FIXME add a bunch of prototype
 int cpu_watchpoint_insert(CPUState *cpu, vaddr addr, vaddr len, int flags,
                           CPUWatchpoint **watchpoint);
 int cpu_watchpoint_remove(CPUState *cpu, vaddr addr, vaddr len, int flags);
@@ -488,12 +497,11 @@ void cpu_reset_interrupt(CPUState *cpu, int mask);
  *
  * Returns: %true if the CPU has work, %false otherwise.
  */
-static inline bool cpu_has_work(CPUState *cpu)
-{
-    CPUClass *cc = CPU_GET_CLASS(cpu);
+static inline bool cpu_has_work(CPUState *cpu) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
 
-    assert(cc->has_work);
-    return cc->has_work(cpu);
+  assert(cc->has_work);
+  return cc->has_work(cpu);
 }
 
 /**
@@ -518,5 +526,48 @@ static inline void cpu_unaligned_access(CPUState *cpu, vaddr addr,
 }
 
 #define qemu_tcg_mttcg_enabled() (0)
+
+/** cpu_asidx_from_attrs:
+ * @cpu: CPU
+ * @attrs: memory transaction attributes
+ *
+ * Returns the address space index specifying the CPU AddressSpace
+ * to use for a memory access with the given transaction attributes.
+ */
+static inline int cpu_asidx_from_attrs(CPUState *cpu, MemTxAttrs attrs) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+  int ret = 0;
+
+  if (cc->asidx_from_attrs) {
+    ret = cc->asidx_from_attrs(cpu, attrs);
+    assert(ret < cpu->num_ases && ret >= 0);
+  }
+  return ret;
+}
+
+/**
+ * cpu_get_phys_page_attrs_debug:
+ * @cpu: The CPU to obtain the physical page address for.
+ * @addr: The virtual address.
+ * @attrs: Updated on return with the memory transaction attributes to use
+ *         for this access.
+ *
+ * Obtains the physical page corresponding to a virtual one, together
+ * with the corresponding memory transaction attributes to use for the access.
+ * Use it only for debugging because no protection checks are done.
+ *
+ * Returns: Corresponding physical page address or -1 if no page found.
+ */
+static inline hwaddr cpu_get_phys_page_attrs_debug(CPUState *cpu, vaddr addr,
+                                                   MemTxAttrs *attrs) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+
+  if (cc->get_phys_page_attrs_debug) {
+    return cc->get_phys_page_attrs_debug(cpu, addr, attrs);
+  }
+  /* Fallback for CPUs which don't implement the _attrs_ hook */
+  *attrs = MEMTXATTRS_UNSPECIFIED;
+  return cc->get_phys_page_debug(cpu, addr);
+}
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
