@@ -2,11 +2,11 @@
 #define RAM_ADDR_H_ACNMERX5
 #include "cpu-common.h"
 
-// FIXME this file, along with memory.h ram_addr.h
-// will be redesinged
 typedef struct RAMBlock {
 
 } RAMBlock;
+
+// FIXME this file, along with memory.h will be redesinged
 
 /* Note: start and end must be within the same ram block.  */
 bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,

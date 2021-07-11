@@ -3,9 +3,6 @@
 #include "../../include/exec/memory.h"
 #include <errno.h>
 
-// FIXME
-void tb_invalidate_phys_addr(AddressSpace *as, hwaddr addr, MemTxAttrs attrs);
-
 static void breakpoint_invalidate(CPUState *cpu, target_ulong pc) {
   MemTxAttrs attrs;
   hwaddr phys = cpu_get_phys_page_attrs_debug(cpu, pc, &attrs);

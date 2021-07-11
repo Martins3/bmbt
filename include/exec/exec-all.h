@@ -6,6 +6,7 @@
 #include "../sysemu/cpus.h"
 #include "../types.h"
 #include "cpu-defs.h"
+#include "memop.h"
 
 // FIXME it seems this is the hacking of xqm
 // copy here blindly
@@ -507,16 +508,23 @@ static inline uint32_t tb_cflags(const TranslationBlock *tb) {
   return atomic_read(&tb->cflags);
 }
 
-TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
-                                   target_ulong cs_base, uint32_t flags,
-                                   uint32_t cf_mask);
-
 #if !defined(CONFIG_USER_ONLY) && defined(CONFIG_DEBUG_TCG)
 void assert_no_pages_locked(void);
 #else
 static inline void assert_no_pages_locked(void) {}
 #endif
 
+/* TranslationBlock invalidate API */
+#if defined(CONFIG_USER_ONLY)
+void tb_invalidate_phys_addr(target_ulong addr);
+void tb_invalidate_phys_range(target_ulong start, target_ulong end);
+#else
+void tb_invalidate_phys_addr(AddressSpace *as, hwaddr addr, MemTxAttrs attrs);
+#endif
+
 void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr);
+TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
+                                   target_ulong cs_base, uint32_t flags,
+                                   uint32_t cf_mask);
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
