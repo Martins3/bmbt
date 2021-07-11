@@ -482,7 +482,6 @@ static inline void cpu_tb_jmp_cache_clear(CPUState *cpu) {
   }
 }
 
-// FIXME implemented in ld/x86-qemu-mips/hw/core/cpu.c
 /**
  * cpu_reset_interrupt:
  * @cpu: The CPU to clear the interrupt on.
@@ -492,8 +491,21 @@ static inline void cpu_tb_jmp_cache_clear(CPUState *cpu) {
  */
 void cpu_reset_interrupt(CPUState *cpu, int mask);
 
-// FIXME relate with CPUClass
-bool cpu_has_work(CPUState *cpu);
+/**
+ * cpu_has_work:
+ * @cpu: The vCPU to check.
+ *
+ * Checks whether the CPU has work to do.
+ *
+ * Returns: %true if the CPU has work, %false otherwise.
+ */
+static inline bool cpu_has_work(CPUState *cpu)
+{
+    CPUClass *cc = CPU_GET_CLASS(cpu);
+
+    assert(cc->has_work);
+    return cc->has_work(cpu);
+}
 
 /**
  * async_run_on_cpu:
