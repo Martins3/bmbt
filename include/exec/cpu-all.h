@@ -14,9 +14,8 @@
 
 #define TARGET_PAGE_BITS_MIN TARGET_PAGE_BITS
 #define TARGET_PAGE_SIZE (1 << TARGET_PAGE_BITS)
-// FIXME this is a bug, I just want to make ccls happy, will be fixed later
-// #define TARGET_PAGE_MASK   ((target_long)-1 << TARGET_PAGE_BITS)
-#define TARGET_PAGE_MASK ((target_long)1 << TARGET_PAGE_BITS)
+
+#define TARGET_PAGE_MASK   ((target_long)-1 << TARGET_PAGE_BITS)
 
 static inline CPUState *env_cpu(CPUArchState *env) { return env->cpu; }
 
