@@ -1,7 +1,5 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
-// FIXME why ?
-// we define the types here again
 
 #include <inttypes.h>
 
@@ -29,7 +27,6 @@ typedef unsigned long ADDR;
 #define N64
 #endif
 
-// FIXME which arch does we support ?
 #if defined N64
 #define X86_MEMORY_LIMIT (0xc0000000)
 #elif defined N32 || defined O32

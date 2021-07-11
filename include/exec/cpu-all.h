@@ -4,7 +4,7 @@
 #include "exec-all.h"
 #include "memory.h"
 
-// TODO need deeper understanding for this macros
+// FIXME need deeper understanding for this macros
 #define EXCP_INTERRUPT 0x10000 /* async interruption */
 #define EXCP_HLT 0x10001       /* hlt instruction reached */
 #define EXCP_DEBUG 0x10002  /* cpu stopped after a breakpoint or singlestep */
@@ -15,7 +15,9 @@
 #define TARGET_PAGE_BITS_MIN TARGET_PAGE_BITS
 #define TARGET_PAGE_SIZE (1 << TARGET_PAGE_BITS)
 
-#define TARGET_PAGE_MASK   ((target_long)-1 << TARGET_PAGE_BITS)
+// FIXME https://stackoverflow.com/questions/40508958/shifting-a-negative-signed-value-is-undefined
+// shifting a negative signed value is undefined
+#define TARGET_PAGE_MASK   ((-1u) << TARGET_PAGE_BITS)
 
 static inline CPUState *env_cpu(CPUArchState *env) { return env->cpu; }
 

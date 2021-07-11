@@ -1,8 +1,6 @@
 #ifndef _IR1_H_
 #define _IR1_H_
 
-// FIXME just make ccls happy
-// #include <capstone/capstone.h>
 #include "../capstone/capstone.h"
 #include "../include/common.h"
 

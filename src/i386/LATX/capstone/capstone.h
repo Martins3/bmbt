@@ -1,4 +1,3 @@
-// FIXME just make ccls happy
 #ifndef CAPSTONE_ENGINE_H
 #define CAPSTONE_ENGINE_H
 
