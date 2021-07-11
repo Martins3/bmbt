@@ -1,7 +1,6 @@
 #ifndef MEMORY_H_E0UHP2JS
 #define MEMORY_H_E0UHP2JS
 
-#include "cpu-common.h"
 #include "hwaddr.h"
 #include "memattrs.h"
 #include "memop.h"

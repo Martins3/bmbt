@@ -3,6 +3,7 @@
 
 #include "../../exec/hwaddr.h"
 #include "../../exec/memattrs.h"
+#include "../../exec/memory.h"
 #include "../../qemu/atomic.h"
 #include "../../qemu/bitmap.h"
 #include "../../qemu/config-host.h"
@@ -101,7 +102,7 @@ typedef enum MMUAccessType {
 
 // FIXME oh shit address space
 struct CPUAddressSpace {
-  struct AddressSpace *as;
+  AddressSpace *as;
 };
 
 typedef struct CPUState {
@@ -286,7 +287,6 @@ typedef struct CPUClass {
   vaddr (*adjust_watchpoint_address)(CPUState *cpu, vaddr addr, int len);
   void (*tcg_initialize)(void);
 
-
 } CPUClass;
 
 #define CPU_GET_CLASS(cpu) cpu->cc
@@ -388,6 +388,11 @@ typedef union {
 #define RUN_ON_CPU_NULL RUN_ON_CPU_HOST_PTR(NULL)
 
 typedef void (*run_on_cpu_func)(CPUState *cpu, run_on_cpu_data data);
+
+static inline void async_safe_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
+                                         run_on_cpu_data data) {
+  // FIXME
+}
 
 // FIXME take care of, it seems the highlight is misleading
 static inline void cpu_tb_jmp_cache_clear(CPUState *cpu);
