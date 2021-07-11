@@ -26,7 +26,7 @@ uint32_t ir2_assemble(IR2_INST *pir2)
         int start = bit_field.bit_range_0.start;
         int end = bit_field.bit_range_0.end;
         int bit_len = end - start + 1;
-        //FIXME: this is a unoin here.
+        //XXX: this is a unoin here.
         int val = pir2->_opnd[i].val;
         int mask = (1 << bit_len) - 1;
 

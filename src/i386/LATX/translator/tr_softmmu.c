@@ -575,10 +575,10 @@ void __tr_gen_softmmu_sp_rcd(softmmu_sp_rcd_t *sp)
     case LISA_ST_H : tr_gen_call_to_helper((ADDR)helper_le_stw_mmu  );break;
     case LISA_ST_W : tr_gen_call_to_helper((ADDR)helper_le_stl_mmu  );break;
     case LISA_ST_D : tr_gen_call_to_helper((ADDR)helper_le_stq_mmu  );break;
-    case LISA_LD_B : tr_gen_call_to_helper((ADDR)helper_ret_ldsb_mmu);break; // FIXME undefined yet
-    case LISA_LD_BU: tr_gen_call_to_helper((ADDR)helper_ret_ldub_mmu);break; // 
-    case LISA_LD_H : tr_gen_call_to_helper((ADDR)helper_le_ldsw_mmu );break; // 
-    case LISA_LD_HU: tr_gen_call_to_helper((ADDR)helper_le_lduw_mmu );break; //
+    case LISA_LD_B : tr_gen_call_to_helper((ADDR)helper_ret_ldsb_mmu);break;
+    case LISA_LD_BU: tr_gen_call_to_helper((ADDR)helper_ret_ldub_mmu);break;
+    case LISA_LD_H : tr_gen_call_to_helper((ADDR)helper_le_ldsw_mmu );break; 
+    case LISA_LD_HU: tr_gen_call_to_helper((ADDR)helper_le_lduw_mmu );break;
     case LISA_LD_W : tr_gen_call_to_helper((ADDR)helper_le_ldsl_mmu );break;
     case LISA_LD_WU: tr_gen_call_to_helper((ADDR)helper_le_ldul_mmu );break;
     case LISA_LD_D : tr_gen_call_to_helper((ADDR)helper_le_ldq_mmu  );break;

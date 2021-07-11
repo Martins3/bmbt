@@ -1,7 +1,6 @@
 #ifndef _X86toMIPS_PROFILE_SYS_H_
 #define _X86toMIPS_PROFILE_SYS_H_
 
-// FIXME just make ccls happy
 // #include <capstone/capstone.h>
 #include "capstone/capstone.h"
 
