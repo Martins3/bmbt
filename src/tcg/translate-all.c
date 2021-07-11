@@ -836,8 +836,7 @@ page_collection_lock(tb_page_addr_t start, tb_page_addr_t end)
     set->tree = g_tree_new_full(tb_page_addr_cmp, NULL, NULL,
                                 page_entry_destroy);
     set->max = NULL;
-    // FIXME quick fix
-    // assert_no_pages_locked();
+    assert_no_pages_locked();
 
  retry:
     g_tree_foreach(set->tree, page_entry_lock, NULL);
@@ -1140,7 +1139,7 @@ static inline void *alloc_code_gen_buffer(void)
 #endif
 
     /* Request large pages for the buffer.  */
-    // FIXME a quick fix
+    // FIXME change to bare mental version later
     // qemu_madvise(buf, size, QEMU_MADV_HUGEPAGE);
 
     return buf;
@@ -2308,10 +2307,9 @@ static void print_qht_statistics(struct qht_stats hst)
     if (!hst.head_buckets) {
         return;
     }
-    // FIXME quick fix
-    // qemu_printf("TB hash buckets     %zu/%zu (%0.2f%% head buckets used)\n",
-                // hst.used_head_buckets, hst.head_buckets,
-                // (double)hst.used_head_buckets / hst.head_buckets * 100);
+    qemu_printf("TB hash buckets     %zu/%zu (%0.2f%% head buckets used)\n",
+                hst.used_head_buckets, hst.head_buckets,
+                (double)hst.used_head_buckets / hst.head_buckets * 100);
 
     hgram_opts =  QDIST_PR_BORDER | QDIST_PR_LABELS;
     hgram_opts |= QDIST_PR_100X   | QDIST_PR_PERCENT;
