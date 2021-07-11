@@ -55,8 +55,11 @@ int target_x86_to_mips_host(
     }
 #endif
 
-    trace_xtm_tr_tb((void *)tb, (void *)tb->tc.ptr,
-                    (void *)(unsigned long long)tb->pc);
+    // FIXME rework trace mechanism ?
+    // this function is auto generated from ./trace-events
+    //
+    // trace_xtm_tr_tb((void *)tb, (void *)tb->tc.ptr,
+                    // (void *)(unsigned long long)tb->pc);
 
     if (option_dump && whether_print_cpu_info(cpu->cpu_index)) {
         fprintf(stderr, "=====================================\n");
