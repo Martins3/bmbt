@@ -32,7 +32,6 @@ static inline uint64_t pow2ceil(uint64_t value) {
   return 0x8000000000000000ull >> (n - 1);
 }
 
-// FIXME a quick fix
 /**
  * ctz32 - count trailing zeros in a 32-bit value.
  * @val: The value to search
@@ -40,6 +39,6 @@ static inline uint64_t pow2ceil(uint64_t value) {
  * Returns 32 if the value is zero.  Note that the GCC builtin is
  * undefined if the value is zero.
  */
-inline int ctz32(uint32_t val) { return val ? __builtin_ctz(val) : 32; }
+static inline int ctz32(uint32_t val) { return val ? __builtin_ctz(val) : 32; }
 
 #endif /* end of include guard: HOST_UTILS_H_0IEAPEGH */

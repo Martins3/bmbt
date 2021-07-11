@@ -83,7 +83,7 @@ static void tlb_window_reset(CPUTLBDesc *desc, int64_t ns, size_t max_entries) {
   desc->window_max_entries = max_entries;
 }
 
-// FIXME a quick fix
+// FIXME i don't know why we need time
 int64_t get_clock_realtime(void);
 
 static void tlb_dyn_init(CPUArchState *env) {

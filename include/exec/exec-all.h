@@ -1,11 +1,11 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
+#include "../../src/i386/cpu.h"
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
-#include "../types.h"
-#include "../../src/i386/cpu.h"
-#include "cpu-defs.h"
 #include "../sysemu/cpus.h"
+#include "../types.h"
+#include "cpu-defs.h"
 
 // FIXME it seems this is the hacking of xqm
 // copy here blindly
@@ -510,5 +510,11 @@ static inline uint32_t tb_cflags(const TranslationBlock *tb) {
 TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
                                    target_ulong cs_base, uint32_t flags,
                                    uint32_t cf_mask);
+
+#if !defined(CONFIG_USER_ONLY) && defined(CONFIG_DEBUG_TCG)
+void assert_no_pages_locked(void);
+#else
+static inline void assert_no_pages_locked(void) {}
+#endif
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
