@@ -26,24 +26,20 @@ int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
                             void *code_hightwater, int *search_size);
 
 // FIXME copied from /usr/include/x86_64-linux-gnu/bits/mman-linux.h
-// maybe move to a better location
-// whatever it takes, mmap is invalid in furture framework
+// maybe move to a better location whatever it takes, mmap is invalid in furture framework
 // The macros will be removed
+#define PROT_NONE 0x0  /* Page can not be accessed.  */
 #define PROT_READ 0x1  /* Page can be read.  */
 #define PROT_WRITE 0x2 /* Page can be written.  */
 #define PROT_EXEC 0x4  /* Page can be executed.  */
-#define PROT_NONE 0x0  /* Page can not be accessed.  */
 
 /* Sharing types (must choose one and only one of these).  */
 #define MAP_SHARED 0x01  /* Share changes.  */
 #define MAP_PRIVATE 0x02 /* Changes are private.  */
 
-// FIXME I'm not sure about the value
 #define MAP_ANONYMOUS 0x20
 
-// FIXME belongs to
-// /home/maritns3/core/ld/x86-qemu-mips/accel/tcg/cpu-exec-common.c In previous
-// commitment, we defined comment the code.
+// defined in accel/tcg/cpu-exec-common.c, which is simple file
 bool tcg_allowed;
 
 // FIXME defined in vl.c
