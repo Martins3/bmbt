@@ -1,7 +1,6 @@
 #ifndef CPU_H_5RAXENPS
 #define CPU_H_5RAXENPS
 
-// FIXME can I include this in kernel mode?
 #include "../../exec/hwaddr.h"
 #include "../../exec/memattrs.h"
 #include "../../qemu/atomic.h"
@@ -25,9 +24,6 @@ typedef struct CPUBreakpoint {
 
 typedef struct CPUWatchpoint {
   vaddr vaddr;
-  // FIXME  originally style warned by ccls
-  // I don't know why ccls doesn't warn me in QEMU source code tree
-  // C doesn't warn on it.
   vaddr len;
   vaddr hitaddr;
   MemTxAttrs hitattrs;
@@ -43,6 +39,7 @@ typedef enum MMUAccessType {
 
 #define TB_JMP_CACHE_BITS 12
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
+#define CPU_TRACE_DSTATE_MAX_EVENTS 32
 
 // FIXME maybe we have copy too many comments here, remove them later
 /**
@@ -103,7 +100,6 @@ typedef enum MMUAccessType {
  */
 typedef struct CPUState {
   struct CPUClass *cc;
-  // FIXME cores
   int nr_cores;
   int nr_threads;
 
@@ -115,10 +111,6 @@ typedef struct CPUState {
   void *env_ptr; /* CPUArchState */
 
   int singlestep_enabled;
-
-  // FIXME
-  // what does index mean?
-  // - cpu_index, only one cpu
 
   /* Move common fields from CPUArchState here. */
   int cpu_index;
@@ -152,10 +144,7 @@ typedef struct CPUState {
 
   bool in_exclusive_context;
 
-  // FIXME the macros defines here temporarily
-#define CPU_TRACE_DSTATE_MAX_EVENTS 32
   // FIXME currently, this field is only referenced by tb_lookup__cpu_state
-  // it's weird, find how it works in original qemu
   DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
 } CPUState;
 
