@@ -3,7 +3,7 @@
 
 #include "softfloat-types.h"
 
-// TODO I don't want copy fpu/softfloat.c yet
+// FIXME I don't want copy fpu/softfloat.c yet
 int floatx80_compare(floatx80, floatx80, float_status *status);
 int floatx80_compare_quiet(floatx80, floatx80, float_status *status);
 

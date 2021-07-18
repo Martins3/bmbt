@@ -932,6 +932,7 @@ void xtm_interrupt_signal_handler(
 // FIXME this is a temporary fix
 #include "../../tcg/tcg.h"
 
+// FIXME no more signal anymore
 void x86_to_mips_init_thread_signal(CPUState *cpu)
 {
     if (!xtm_sigint_opt()) return;

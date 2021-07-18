@@ -3,7 +3,7 @@
 git add -A
 DIR=/home/maritns3/core/ld/DuckBuBi
 num=$(ag FIXME "${DIR}" | wc -l)
-num=$((num - 2))
+num=$((num - 3)) # 这个文件两个 scrpit/show-fixme.py 一个
 echo "$num"
 
 read -r -p "Enter msg: " fullname
