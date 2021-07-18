@@ -3,8 +3,8 @@
 #include "ir1/ir1.h"
 #include "include/common.h"
 #include <string.h>
+#include "option.h"
 
-#if 0
 int option_by_hand;
 int option_flag_pattern;
 int option_flag_reduction;
@@ -653,7 +653,8 @@ void x86_to_mips_parse_options(QemuOpts *opts)
     }
 
     if (verbose) {
-        qemu_opts_print(opts,"\n");
+        // FIXME
+        // qemu_opts_print(opts,"\n");
         printf("\n");
     }
 
@@ -811,6 +812,4 @@ _OUT:
 
     return;
 }
-#endif
-
 #endif
