@@ -26,8 +26,8 @@ int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
                             void *code_hightwater, int *search_size);
 
 // FIXME copied from /usr/include/x86_64-linux-gnu/bits/mman-linux.h
-// maybe move to a better location whatever it takes, mmap is invalid in furture framework
-// The macros will be removed
+// maybe move to a better location whatever it takes, mmap is invalid in furture
+// framework The macros will be removed
 #define PROT_NONE 0x0  /* Page can not be accessed.  */
 #define PROT_READ 0x1  /* Page can be read.  */
 #define PROT_WRITE 0x2 /* Page can be written.  */

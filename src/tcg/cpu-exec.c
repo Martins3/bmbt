@@ -20,7 +20,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-// FIXME qemu log
 #define qemu_log_mask_and_addr(MASK, ADDR, FMT, ...)                           \
   do {                                                                         \
   } while (0)
@@ -96,21 +95,18 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
   cpu->can_do_io = 1;
   last_tb = (TranslationBlock *)(ret & ~TB_EXIT_MASK);
   tb_exit = ret & TB_EXIT_MASK;
-  // FIXME trace it later
-  // trace_exec_tb_exit(last_tb, tb_exit);
 
+  // fuck_trace_exec_tb_exit(last_tb, tb_exit);
   if (tb_exit > TB_EXIT_IDX1) {
     /* We didn't start executing this TB (eg because the instruction
      * counter hit zero); we must restore the guest PC to the address
      * of the start of the TB.
      */
-    x86_cpu_synchronize_from_tb(cpu, last_tb);
     CPUClass *cc = CPU_GET_CLASS(cpu);
     qemu_log_mask_and_addr(
         CPU_LOG_EXEC, last_tb->pc,
         "Stopped execution of TB chain before %p [" TARGET_FMT_lx "] %s\n",
         last_tb->tc.ptr, last_tb->pc, lookup_symbol(last_tb->pc));
-
     if (cc->synchronize_from_tb) {
       cc->synchronize_from_tb(cpu, last_tb);
     } else {
@@ -165,13 +161,48 @@ out_unlock_next:
   return;
 }
 
+#ifndef CONFIG_USER_ONLY
+/* Execute the code without caching the generated code. An interpreter
+   could be used if available. */
+static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
+                             TranslationBlock *orig_tb, bool ignore_icount) {
+  TranslationBlock *tb;
+  uint32_t cflags = curr_cflags() | CF_NOCACHE;
+
+  if (ignore_icount) {
+    cflags &= ~CF_USE_ICOUNT;
+  }
+
+  /* Should never happen.
+     We only end up here when an existing TB is too long.  */
+  cflags |= MIN(max_cycles, CF_COUNT_MASK);
+
+  mmap_lock();
+  tb = tb_gen_code(cpu, orig_tb->pc, orig_tb->cs_base, orig_tb->flags, cflags);
+  tb->orig_tb = orig_tb;
+  mmap_unlock();
+
+  /* execute the generated code */
+  // fuck_trace_exec_tb_nocache(tb, tb->pc);
+  cpu_tb_exec(cpu, tb);
+
+  mmap_lock();
+  tb_phys_invalidate(tb, -1);
+  mmap_unlock();
+  tcg_tb_remove(tb);
+}
+#endif
+
+static void cpu_update_icount(CPUState *cpu) {
+  // FIXME
+}
+
 static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
                                     TranslationBlock **last_tb, int *tb_exit) {
   uintptr_t ret;
   int32_t insns_left;
 
-  // FIXME fix trace later
-  // trace_exec_tb(tb, tb->pc);
+  // fuck_trace_exec_tb(tb, tb->pc);
   ret = cpu_tb_exec(cpu, tb);
   tb = (TranslationBlock *)(ret & ~TB_EXIT_MASK);
   *tb_exit = ret & TB_EXIT_MASK;
@@ -193,26 +224,23 @@ static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
     return;
   }
 
-  // FIXME I don't understand icount
-#if 0
-    /* Instruction counter expired.  */
-    assert(use_icount);
+  /* Instruction counter expired.  */
+  assert(use_icount);
 #ifndef CONFIG_USER_ONLY
-    /* Ensure global icount has gone forward */
-    cpu_update_icount(cpu);
-    /* Refill decrementer and continue execution.  */
-    insns_left = MIN(0xffff, cpu->icount_budget);
-    cpu_neg(cpu)->icount_decr.u16.low = insns_left;
-    cpu->icount_extra = cpu->icount_budget - insns_left;
-    if (!cpu->icount_extra) {
-        /* Execute any remaining instructions, then let the main loop
-         * handle the next event.
-         */
-        if (insns_left > 0) {
-            cpu_exec_nocache(cpu, insns_left, tb, false);
-        }
+  /* Ensure global icount has gone forward */
+  cpu_update_icount(cpu);
+  /* Refill decrementer and continue execution.  */
+  insns_left = MIN(0xffff, cpu->icount_budget);
+  cpu_neg(cpu)->icount_decr.u16.low = insns_left;
+  cpu->icount_extra = cpu->icount_budget - insns_left;
+  if (!cpu->icount_extra) {
+    /* Execute any remaining instructions, then let the main loop
+     * handle the next event.
+     */
+    if (insns_left > 0) {
+      cpu_exec_nocache(cpu, insns_left, tb, false);
     }
-#endif
+  }
 #endif
 }
 
@@ -264,42 +292,6 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
   return tb;
 }
 
-#ifndef CONFIG_USER_ONLY
-// FIXME why we want to recreate TB, why cache should be discarded?
-/* Execute the code without caching the generated code. An interpreter
-   could be used if available. */
-static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
-                             TranslationBlock *orig_tb, bool ignore_icount) {
-  TranslationBlock *tb;
-  uint32_t cflags = curr_cflags() | CF_NOCACHE;
-
-  if (ignore_icount) {
-    cflags &= ~CF_USE_ICOUNT;
-  }
-
-  /* Should never happen.
-     We only end up here when an existing TB is too long.  */
-  cflags |= MIN(max_cycles, CF_COUNT_MASK);
-
-  mmap_lock();
-  tb = tb_gen_code(cpu, orig_tb->pc, orig_tb->cs_base, orig_tb->flags, cflags);
-  tb->orig_tb = orig_tb;
-  mmap_unlock();
-
-  /* execute the generated code */
-  // FIXME trace it
-  // trace_exec_tb_nocache(tb, tb->pc);
-  cpu_tb_exec(cpu, tb);
-
-  mmap_lock();
-  // FIXME defined in translate-all.c
-  tb_phys_invalidate(tb, -1);
-  mmap_unlock();
-  // FIXME defined tcg.c
-  tcg_tb_remove(tb);
-}
-#endif
-
 static inline void cpu_handle_debug_exception(CPUState *cpu) {
   CPUClass *cc = CPU_GET_CLASS(cpu);
   CPUWatchpoint *wp;
@@ -350,20 +342,17 @@ static inline bool cpu_handle_exception(CPUState *cpu, int *ret) {
     cpu->exception_index = -1;
     return true;
 #else
-    // FIXME review this later, I skip icount and record replay
-#if 0
-        if (replay_exception()) {
-            CPUClass *cc = CPU_GET_CLASS(cpu);
-            qemu_mutex_lock_iothread();
-            cc->do_interrupt(cpu);
-            qemu_mutex_unlock_iothread();
-            cpu->exception_index = -1;
-        } else if (!replay_has_interrupt()) {
-            /* give a chance to iothread in replay mode */
-            *ret = EXCP_INTERRUPT;
-            return true;
-        }
-#endif
+    if (replay_exception()) {
+      CPUClass *cc = CPU_GET_CLASS(cpu);
+      qemu_mutex_lock_iothread();
+      cc->do_interrupt(cpu);
+      qemu_mutex_unlock_iothread();
+      cpu->exception_index = -1;
+    } else if (!replay_has_interrupt()) {
+      /* give a chance to iothread in replay mode */
+      *ret = EXCP_INTERRUPT;
+      return true;
+    }
 #endif
   }
 
