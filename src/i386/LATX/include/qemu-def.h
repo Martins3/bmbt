@@ -19,6 +19,7 @@
 
 #include "../../../../include/qemu/qemu-printf.h"
 #include "../../../../include/qemu/queue.h"
+#include "../../../../include/fpu/softfloat.h"
 
 #include "../../../i386/helper.h"
 #include "../../../tcg/tcg.h"

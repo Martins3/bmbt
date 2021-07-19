@@ -1,7 +1,7 @@
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/cpu-ldst.h"
 #include "../../include/fpu/softfloat.h"
-#include "../../include/fpu/softfloat-helper.h"
+#include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/host-utils.h"
 #include "cpu.h"

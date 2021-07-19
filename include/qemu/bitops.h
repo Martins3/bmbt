@@ -79,4 +79,23 @@ static inline uint64_t deposit64(uint64_t value, int start, int length,
     return (value & ~mask) | ((fieldval << start) & mask);
 }
 
+/**
+ * extract64:
+ * @value: the value to extract the bit field from
+ * @start: the lowest bit in the bit field (numbered from 0)
+ * @length: the length of the bit field
+ *
+ * Extract from the 64 bit input @value the bit field specified by the
+ * @start and @length parameters, and return it. The bit field must
+ * lie entirely within the 64 bit word. It is valid to request that
+ * all 64 bits are returned (ie @length 64 and @start 0).
+ *
+ * Returns: the value of the bit field extracted from the input value.
+ */
+static inline uint64_t extract64(uint64_t value, int start, int length)
+{
+    assert(start >= 0 && length > 0 && length <= 64 - start);
+    return (value >> start) & (~0ULL >> (64 - length));
+}
+
 #endif /* end of include guard: BITOPS_H_Z29X3LYD */
