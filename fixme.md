@@ -21,6 +21,7 @@
 
 5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
   1. tlb_debug
+  2. do_tb_flush 中间又是直接使用 printf 的
 
 ## 代码分析工作
 1. --enable-x86tomips-flag-int 是干什么的 ?
