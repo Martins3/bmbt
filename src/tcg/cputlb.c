@@ -14,6 +14,7 @@
 #include "../../include/types.h"
 #include "../i386/cpu.h"
 #include "tcg.h"
+#include "translate-all.h"
 
 #include "tcg.h"
 #include <assert.h>
@@ -894,10 +895,6 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr, hwaddr paddr, int prot,
 static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr) {
   ram_addr_t ram_addr;
 
-  // FIXME soft tlb translate gva to hva, but sometimes we need gpa
-  // so find them from ram block
-  // We will return back when resolving issue #39
-  ram_addr_t qemu_ram_addr_from_host(void *ptr);
   ram_addr = qemu_ram_addr_from_host(ptr);
   if (ram_addr == RAM_ADDR_INVALID) {
     error_report("Bad ram pointer %p", ptr);
@@ -914,18 +911,14 @@ static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr) {
 static void tlb_fill(CPUState *cpu, target_ulong addr, int size,
                      MMUAccessType access_type, int mmu_idx,
                      uintptr_t retaddr) {
-  // FIXME
-
-  // CPUClass *cc = CPU_GET_CLASS(cpu);
+  CPUClass *cc = CPU_GET_CLASS(cpu);
   bool ok;
 
   // This is not a probe, so only valid return is success; failure
   // should result in exception + longjmp to the cpu loop.
-  // ok = cc->tlb_fill(cpu, addr, size, access_type, mmu_idx, false, retaddr);
+  ok = cc->tlb_fill(cpu, addr, size, access_type, mmu_idx, false, retaddr);
 
-  ok = x86_cpu_tlb_fill(cpu, addr, size, access_type, mmu_idx, false, retaddr);
-
-  // assert(ok);
+  assert(ok);
 }
 
 static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
@@ -1052,29 +1045,26 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
                            CPUIOTLBEntry *iotlbentry, uintptr_t retaddr) {
   ram_addr_t ram_addr = mem_vaddr + iotlbentry->addr;
 
-  // FIXME fix later
-#if 0
-    trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
+  // fuck_trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
 
-    if (!cpu_physical_memory_get_dirty_flag(ram_addr, DIRTY_MEMORY_CODE)) {
-        struct page_collection *pages
-            = page_collection_lock(ram_addr, ram_addr + size);
-        tb_invalidate_phys_page_fast(pages, ram_addr, size, retaddr);
-        page_collection_unlock(pages);
-    }
+  if (!cpu_physical_memory_get_dirty_flag(ram_addr, DIRTY_MEMORY_CODE)) {
+    struct page_collection *pages =
+        page_collection_lock(ram_addr, ram_addr + size);
+    tb_invalidate_phys_page_fast(pages, ram_addr, size, retaddr);
+    page_collection_unlock(pages);
+  }
 
-    /*
-     * Set both VGA and migration bits for simplicity and to remove
-     * the notdirty callback faster.
-     */
-    cpu_physical_memory_set_dirty_range(ram_addr, size, DIRTY_CLIENTS_NOCODE);
+  /*
+   * Set both VGA and migration bits for simplicity and to remove
+   * the notdirty callback faster.
+   */
+  cpu_physical_memory_set_dirty_range(ram_addr, size, DIRTY_CLIENTS_NOCODE);
 
-    /* We remove the notdirty callback only if the code has been flushed. */
-    if (!cpu_physical_memory_is_clean(ram_addr)) {
-        trace_memory_notdirty_set_dirty(mem_vaddr);
-        tlb_set_dirty(cpu, mem_vaddr);
-    }
-#endif
+  /* We remove the notdirty callback only if the code has been flushed. */
+  if (!cpu_physical_memory_is_clean(ram_addr)) {
+    // fuck_trace_memory_notdirty_set_dirty(mem_vaddr);
+    tlb_set_dirty(cpu, mem_vaddr);
+  }
 }
 
 /*
