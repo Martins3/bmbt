@@ -6,6 +6,41 @@
 #include "LATX/x86tomips-config.h"
 #include "cpu.h"
 
+const uint8_t parity_table[256] = {
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    CC_P, 0, 0, CC_P, 0, CC_P, CC_P, 0,
+    0, CC_P, CC_P, 0, CC_P, 0, 0, CC_P,
+};
+
 target_ulong helper_read_eflags(CPUX86State *env) {
   uint32_t eflags;
 

@@ -175,7 +175,6 @@ asmlinkage void __weak plat_irq_dispatch(void)
 
 	while (pending) {
 		irq = fls(pending) - 1;
-    // FIXME 如果打开了 ipi，ipi_domain 是没有初始化的，立刻就存在 dump
 		if (IS_ENABLED(CONFIG_GENERIC_IRQ_IPI) && irq < 2)
 			virq = irq_linear_revmap(ipi_domain, irq);
 		else

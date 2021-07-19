@@ -6,25 +6,10 @@
 #include "../../include/fpu/softfloat-types.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/bitops.h"
+#include "../../include/sysemu/tcg.h"
 #include "../../include/types.h"
 
-// FIXME copied from include/sysemu/tcg.h
-// it will be deleted later?
-extern bool tcg_allowed;
-void tcg_exec_init(unsigned long tb_size);
-#ifdef CONFIG_TCG
-#define tcg_enabled() (tcg_allowed)
-#define kvm_enabled() 0
-#define whpx_enabled() 0
-#else
-#define tcg_enabled() 0
-#endif
-
-
-// FIXME copy a lot of macros without checking
 // ------------------------------ blindly copy started
-// ---------------------------------- //
-
 /* The x86 has a strong memory model with some store-after-load re-ordering */
 #define TCG_GUEST_DEFAULT_MO (TCG_MO_ALL & ~TCG_MO_ST_LD)
 
@@ -1366,7 +1351,6 @@ typedef struct CPUCaches {
   CPUCacheInfo *l3_cache;
 } CPUCaches;
 
-// FIXME target_ulong isn't highlighted by ccls
 // FIXME we need to take care how the variable initialized one by one
 typedef struct CPUX86State {
   CPUState *cpu;
@@ -1377,22 +1361,13 @@ typedef struct CPUX86State {
   ZMMReg xmm_t0;
   MMXReg mmx_t0;
 
-  // FIXME
-  // When copy code following three lines of code,
-  // I found vregs are defined multiple times under different macros
-  // why ?
-  //
-  // FIXME
-  // ccls doesn't work well here
-  // CONFIG_LATX, CONFIG_X86toMIPS, who is valid ?
-  // 1. in config-host.h : both of them are defined
-  // 2. if CONFIG_X86toMIPS not defined, the warning would complaint
-  //
+#ifdef CONFIG_LATX
   /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
   uint64_t vregs[6];
   /* mips_iregs: mips context backup when calling helper */
   uint64_t mips_iregs[32];
   uint32_t xtm_fpu;
+#endif
 
   target_ulong regs[CPU_NB_REGS];
   target_ulong eip;
@@ -1500,7 +1475,6 @@ typedef struct CPUX86State {
 
   uint64_t tsc_aux;
 
-  // FIXME what's mtrr ?
   /* MTRRs */
   uint64_t mtrr_fixed[11];
   uint64_t mtrr_deftype;
@@ -1537,11 +1511,69 @@ typedef struct CPUX86State {
   CPUCaches cache_info_cpuid2, cache_info_cpuid4, cache_info_amd;
 
   uint32_t cpuid_model[12];
+
+#ifdef CONFIG_X86toMIPS
+#ifndef CONFIG_LATX
+  /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
+  uint64_t vregs[6];
+  /* mips_iregs: mips context backup when calling helper */
+  uint64_t mips_iregs[32];
+  /*
+   * xtm_fpu: flag for FPU
+   *
+   * [0:2]: TOP in status word
+   *        (fldenv will clear TOP in status and set the fpstt)
+   *
+   * [7]: = 0: status word is not loaded from memory
+   *      = 1: status word loaded from memory
+   *           (fldenv, frstor, fxrstor, xrstor)
+   *
+   * [6]: = 0: FPU state is not reset
+   *      = 1: FPU state is reset (fninit, fnsave)
+   *
+   * [7] and [6] cannot all be 1 at same time.
+   *
+   * [08:10]: TOP out of last executed TB
+   *
+   * [11:13]: TOP in of last executed TB
+   *
+   * [14]: = 1: TOP out is valid
+   *       = 0: TOP out is not valid and should not be used
+   *
+   * [15]: = 1: TOP in  is valid
+   *       = 0: TOP in  is not valid and should not be used
+   *
+   * For now, this is only used in system-mode.
+   * */
+  uint32_t xtm_fpu;
+#endif
+  /*
+   * X86toMIPS Flag is only useful when configure with
+   *
+   *      --enable-x86tomips-flag-int     # CONFIG_XTM_FLAG_INT
+   *
+   * If not, the value of flag will always be zero.
+   *
+   * is_in_int = 0: CPU is not handling interrupt
+   *  > is_int_inst: meaningless
+   *
+   * is_in_int >= 1: CPU is handling interrupt
+   *                 if nested interrupt, this will be greater than 1
+   *  > is_int_inst = 0: this interrupt is NOT an int instruction
+   *  > is_int_inst = 1: this interrupt is an int instruction
+   *
+   * is_top_int_inst: only useful in nested interrupt
+   *  = 0: the first interrupt is not INT instruction
+   *  = 1: the first interrupt is INT instruction
+   */
+  struct {
+    int is_in_int;
+    int is_int_inst;
+    int is_top_int_inst; /* for nested interrupt */
+  } xtm_flags;
+#endif
 } CPUX86State;
 
-// FIXME copied from
-// /home/maritns3/core/ld/x86-qemu-mips/include/hw/qdev-core.h
-// device related will be rethink later
 /**
  * DeviceState:
  * @realized: Indicates whether the device has been fully constructed.
@@ -1550,10 +1582,10 @@ typedef struct CPUX86State {
  * so that it can be embedded in individual device state structures.
  */
 typedef struct DeviceState {
-
+  // originally defined in
+  // /home/maritns3/core/ld/x86-qemu-mips/include/hw/qdev-core.h
 } DeviceState;
 
-// FIXME clear the comments
 /**
  * X86CPUClass:
  * @cpu_def: CPU model definition
@@ -1615,7 +1647,6 @@ typedef struct X86CPU {
 #define ST(n) (env->fpregs[(env->fpstt + (n)) & 7].d)
 #define ST1 ST(1)
 
-// FIXME I don't what the fuck the cc helper doing
 /* cc_helper.c */
 extern const uint8_t parity_table[256];
 uint32_t cpu_cc_compute_all(CPUX86State *env1, int op);
@@ -1637,11 +1668,9 @@ static inline void cpu_set_fpuc(CPUX86State *env, uint16_t fpuc) {
   }
 }
 
-// FIXME helper.c not handle yet, only define it
 /* mpx_helper.c */
 void cpu_sync_bndcs_hflags(CPUX86State *env);
 
-// FIXME out of control
 /* excp_helper.c */
 void QEMU_NORETURN raise_exception(CPUX86State *env, int exception_index);
 void QEMU_NORETURN raise_exception_ra(CPUX86State *env, int exception_index,
@@ -1681,15 +1710,12 @@ static inline int cpu_mmu_index_kernel(CPUX86State *env) {
 void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
                    uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 
-// FIXME what do you mean by "will be suppressed"
-// FIXME functions in helper.c have not been ported yet
 /* will be suppressed */
 void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0);
 void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3);
 void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4);
 void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
 
-// FIXME it's really fuck tidious to handle bits of host and target bits.
 /* XXX: This value should match the one returned by CPUID
  * and in exec.c */
 #if defined(TARGET_X86_64)
@@ -1708,7 +1734,6 @@ void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
 #define MMU_USER_IDX 1
 #define MMU_KNOSMAP_IDX 2
 
-// FIXME these functions are defined at helper.c
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr);
 uint32_t x86_lduw_phys(CPUState *cs, hwaddr addr);
 uint32_t x86_ldl_phys(CPUState *cs, hwaddr addr);
@@ -1789,27 +1814,98 @@ void do_smm_enter(X86CPU *cpu);
 
 int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request);
 
-// FIXME what the fuck is bsp, copy the implementation later
 /* cpu.c */
 bool cpu_is_bsp(X86CPU *cpu);
 
-// FIXME do_cpu_init ?
-// what's sipi
 void do_cpu_init(X86CPU *cpu);
 void do_cpu_sipi(X86CPU *cpu);
 
-// FIXME the true honor
-// I even don't know what's happening in pc.c
 // defined in hw/i386/pc.c
 int cpu_get_pic_interrupt(CPUX86State *s);
 
-// FIXME this is a huge function but in line,
-// I will copy it later
 /* this function must always be used to load data in the segment
    cache: it synchronizes the hflags with the segment cache values */
-void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
-                            unsigned int selector, target_ulong base,
-                            unsigned int limit, unsigned int flags);
+static inline void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
+                                          unsigned int selector,
+                                          target_ulong base, unsigned int limit,
+                                          unsigned int flags) {
+  SegmentCache *sc;
+  unsigned int new_hflags;
+
+  sc = &env->segs[seg_reg];
+  sc->selector = selector;
+  sc->base = base;
+  sc->limit = limit;
+  sc->flags = flags;
+
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_XTM_PROFILE)
+  int old_cs32 = (env->hflags & HF_CS32_MASK) >> HF_CS32_SHIFT;
+  int old_ss32 = (env->hflags & HF_SS32_MASK) >> HF_SS32_SHIFT;
+
+  int new_cs32 = 0;
+  int new_ss32 = 0;
+
+  int to_rcd = seg_reg == R_CS || seg_reg == R_SS;
+#endif
+  /* update the hidden flags */
+  {
+    if (seg_reg == R_CS) {
+#ifdef TARGET_X86_64
+      if ((env->hflags & HF_LMA_MASK) && (flags & DESC_L_MASK)) {
+        /* long mode */
+        env->hflags |= HF_CS32_MASK | HF_SS32_MASK | HF_CS64_MASK;
+        env->hflags &= ~(HF_ADDSEG_MASK);
+      } else
+#endif
+      {
+        /* legacy / compatibility case */
+        new_hflags = (env->segs[R_CS].flags & DESC_B_MASK) >>
+                     (DESC_B_SHIFT - HF_CS32_SHIFT);
+        env->hflags =
+            (env->hflags & ~(HF_CS32_MASK | HF_CS64_MASK)) | new_hflags;
+      }
+    }
+    if (seg_reg == R_SS) {
+      int cpl = (flags >> DESC_DPL_SHIFT) & 3;
+#if HF_CPL_MASK != 3
+#error HF_CPL_MASK is hardcoded
+#endif
+      env->hflags = (env->hflags & ~HF_CPL_MASK) | cpl;
+      /* Possibly switch between BNDCFGS and BNDCFGU */
+      cpu_sync_bndcs_hflags(env);
+    }
+    new_hflags =
+        (env->segs[R_SS].flags & DESC_B_MASK) >> (DESC_B_SHIFT - HF_SS32_SHIFT);
+    if (env->hflags & HF_CS64_MASK) {
+      /* zero base assumed for DS, ES and SS in long mode */
+    } else if (!(env->cr[0] & CR0_PE_MASK) || (env->eflags & VM_MASK) ||
+               !(env->hflags & HF_CS32_MASK)) {
+      /* XXX: try to avoid this test. The problem comes from the
+         fact that is real mode or vm86 mode we only modify the
+         'base' and 'selector' fields of the segment cache to go
+         faster. A solution may be to force addseg to one in
+         translate-i386.c. */
+      new_hflags |= HF_ADDSEG_MASK;
+    } else {
+      new_hflags |= ((env->segs[R_DS].base | env->segs[R_ES].base |
+                      env->segs[R_SS].base) != 0)
+                    << HF_ADDSEG_SHIFT;
+    }
+    env->hflags = (env->hflags & ~(HF_SS32_MASK | HF_ADDSEG_MASK)) | new_hflags;
+  }
+
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_XTM_PROFILE)
+  new_cs32 = (env->hflags & HF_CS32_MASK) >> HF_CS32_SHIFT;
+  new_ss32 = (env->hflags & HF_SS32_MASK) >> HF_SS32_SHIFT;
+
+  if (to_rcd) {
+    // if (to_rcd && !xtm_pf_tbf_has_prefix()) {
+    xtm_pf_inc_tbf_cs32(old_cs32, new_cs32);
+    xtm_pf_inc_tbf_ss32(old_ss32, new_ss32);
+    xtm_pf_dump_tbf_short();
+  }
+#endif
+}
 /* hw/pc.c */
 uint64_t cpu_get_tsc(CPUX86State *env);
 

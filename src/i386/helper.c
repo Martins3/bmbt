@@ -14,11 +14,7 @@
 #include <stddef.h>
 #include <string.h>
 
-// FIXME
-// notes:
-// 1. remove dump related code
-// 2. remove mce related code
-//
+// notes: dump and mce related code not copied
 // it seems they are useless, but further investigation is needed
 
 void cpu_sync_bndcs_hflags(CPUX86State *env) {
