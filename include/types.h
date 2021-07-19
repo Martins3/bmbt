@@ -98,6 +98,17 @@ typedef unsigned long int uint64_t;
     assert(0);                                                                 \
   } while (0);
 
+/*
+ * GCC doesn't provide __has_attribute() until GCC 5, but we know all the GCC
+ * versions we support have the "flatten" attribute. Clang may not have the
+ * "flatten" attribute but always has __has_attribute() to check for it.
+ */
+#if __has_attribute(flatten) || !defined(__clang__)
+# define QEMU_FLATTEN __attribute__((flatten))
+#else
+# define QEMU_FLATTEN
+#endif
+
 #endif
 
 #endif /* end of include guard: TYPES_H_OZP1YQJN */

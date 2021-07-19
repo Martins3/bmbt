@@ -3,7 +3,7 @@
 #include "../../include/exec/address-space.h"
 #include "../../include/exec/cpu-ldst.h"
 #include "../../include/fpu/softfloat.h"
-#include "../../include/fpu/softfloat-helper.h"
+#include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/hw/i386/apic.h"
 #include "cpu.h"

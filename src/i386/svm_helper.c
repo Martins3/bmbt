@@ -2,7 +2,7 @@
 #include "../../include/exec/cpu-ldst.h"
 #include "../../include/exec/hwaddr.h"
 #include "../../include/fpu/softfloat.h"
-#include "../../include/fpu/softfloat-helper.h"
+#include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
 #include "cpu.h"
 #include "../../include/exec/cpu-all.h"

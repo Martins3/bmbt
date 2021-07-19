@@ -391,7 +391,7 @@ void tlb_set_page(CPUState *cpu, target_ulong vaddr, hwaddr paddr, int prot,
 #define g_assert(expr)                                                         \
   {}
 #define g_assert_not_reached()                                                 \
-  {}
+  { exit(0); }
 
 #define g_new0(struct_type, n_structs) (struct_type *)NULL
 #define g_malloc(size) NULL

@@ -12,6 +12,7 @@ c_source_files += $(wildcard src/i386/LATX/translator/*.c)
 c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
 c_source_files += $(wildcard src/hw/core/*.c)
 c_source_files += $(wildcard src/hw/qemu/*.c)
+c_source_files += $(wildcard src/fpu/*.c)
 
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
