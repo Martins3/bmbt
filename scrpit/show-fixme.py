@@ -15,6 +15,8 @@ for m in commits:
         except Exception as e:
             print(m.message)
             raise e
+
+fixme_array = fixme_array[::-1]
 print(fixme_array)
 
 plt.plot(range(0, len(fixme_array)),fixme_array)
