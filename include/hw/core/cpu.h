@@ -10,12 +10,19 @@
 #include "../../qemu/queue.h"
 #include "../../types.h"
 #include <setjmp.h>
+#include <inttypes.h> // for VADDR_PRIx 
 
 /**
  * vaddr:
  * Type wide enough to contain any #target_ulong virtual address.
  */
 typedef uint64_t vaddr;
+#define VADDR_PRId PRId64
+#define VADDR_PRIu PRIu64
+#define VADDR_PRIo PRIo64
+#define VADDR_PRIx PRIx64
+#define VADDR_PRIX PRIX64
+#define VADDR_MAX UINT64_MAX
 
 typedef struct CPUBreakpoint {
   vaddr pc;
