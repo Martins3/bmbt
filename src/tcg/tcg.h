@@ -161,6 +161,7 @@ typedef struct TCGTemp {
 } TCGTemp;
 
 #define TCG_MAX_TEMPS 512
+#define TCG_MAX_INSNS 512
 
 typedef struct TCGContext {
 
@@ -549,5 +550,6 @@ uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
 
 TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr);
 void tcg_tb_insert(TranslationBlock *tb);
+
 
 #endif

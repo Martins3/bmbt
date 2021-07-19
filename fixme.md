@@ -33,5 +33,6 @@
     - tcg_context_init : 这里初始化了一堆 tcg_op ，不是很确定这个是否真的有用的
 7. qemu_log_mask_and_addr
 8. cpu_exec_nocache : 为什么需要将所有的 tb 清空然后来运行
-
 10. `__builtin___clear_cache` 还可以用吗 ?
+
+11. tb_gen_code 是如何运行的 ?
