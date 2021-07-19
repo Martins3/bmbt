@@ -17,7 +17,6 @@ typedef struct AddressSpace {
 
 } AddressSpace;
 
-// FIXME define a empty one
 extern AddressSpace address_space_io;
 
 typedef struct MemoryRegionSection {
@@ -101,11 +100,7 @@ static inline MemOp devend_memop(enum device_endian end) {
 
 // FIXME originally defined in exec.c
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr);
-
-// FIXME originally defined in exec.c
 void invalidate_and_set_dirty(MemoryRegion *mr, hwaddr addr, hwaddr length);
-
-// FIXME originally defined in exec.c
 bool prepare_mmio_access(MemoryRegion *mr);
 
 /**
@@ -151,6 +146,5 @@ static inline void *memory_region_get_ram_ptr(MemoryRegion *mr) {
   // FIXME
   return NULL;
 }
-
 
 #endif /* end of include guard: MEMORY_H_E0UHP2JS */
