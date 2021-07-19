@@ -30,4 +30,9 @@ typedef uintptr_t ram_addr_t;
 #define DEVICE_HOST_ENDIAN DEVICE_LITTLE_ENDIAN
 #endif
 
+static inline ram_addr_t qemu_ram_addr_from_host(void *ptr){
+  // FIXME
+  return 0;
+}
+
 #endif /* end of include guard: CPU_COMMON_H_OF49R186 */

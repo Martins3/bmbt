@@ -18,7 +18,7 @@
 4. icount 机制
   -  cpu_exec
 
-5. log debug 和 trace : 其实暂时可以补全的
+5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
   1. tlb_debug
 
 ## 代码分析工作
