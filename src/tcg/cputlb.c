@@ -10,6 +10,7 @@
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/host-utils.h"
+#include "../../include/qemu/error-report.h"
 #include "../../include/types.h"
 #include "../i386/cpu.h"
 #include "tcg.h"
@@ -904,8 +905,6 @@ static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr) {
   ram_addr_t qemu_ram_addr_from_host(void *ptr);
   ram_addr = qemu_ram_addr_from_host(ptr);
   if (ram_addr == RAM_ADDR_INVALID) {
-    // FIXME fix this later
-    void error_report(const char *fmt, ...);
     error_report("Bad ram pointer %p", ptr);
     abort();
   }

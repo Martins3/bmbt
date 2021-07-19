@@ -1,6 +1,8 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/memory.h"
+#include "../../include/hw/core/cpu.h"
+#include "../../include/qemu/error-report.h"
 #include <errno.h>
 
 static void breakpoint_invalidate(CPUState *cpu, target_ulong pc) {
@@ -22,10 +24,9 @@ int cpu_watchpoint_insert(CPUState *cpu, vaddr addr, vaddr len, int flags,
 
   /* forbid ranges which are empty or run off the end of the address space */
   if (len == 0 || (addr + len - 1) < addr) {
-    // FIXME a quick fix, comment the code
-    // error_report("tried to set invalid watchpoint at %" VADDR_PRIx
-                 // ", len=%" VADDR_PRIu,
-                 // addr, len);
+    error_report("tried to set invalid watchpoint at %" VADDR_PRIx
+                 ", len=%" VADDR_PRIu,
+                 addr, len);
     return -EINVAL;
   }
   wp = g_malloc(sizeof(*wp));
