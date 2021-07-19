@@ -30,4 +30,9 @@ void cpu_physical_memory_set_dirty_range(ram_addr_t start, ram_addr_t length,
   // FIXME
 }
 
+static inline bool cpu_physical_memory_is_clean(ram_addr_t addr) {
+  // FIXME
+  return false;
+}
+
 #endif /* end of include guard: RAM_ADDR_H_ACNMERX5 */

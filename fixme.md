@@ -18,6 +18,9 @@
 4. icount 机制
   -  cpu_exec
 
+5. log debug 和 trace : 其实暂时可以补全的
+  1. tlb_debug
+
 ## 代码分析工作
 1. --enable-x86tomips-flag-int 是干什么的 ?
 2. cpu_cc_compute_all 是做什么 ?
@@ -31,3 +34,4 @@
 7. qemu_log_mask_and_addr
 
 8. cpu_exec_nocache : 为什么需要将所有的 tb 清空然后来运行
+

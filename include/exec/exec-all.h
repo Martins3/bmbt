@@ -514,6 +514,14 @@ void assert_no_pages_locked(void);
 static inline void assert_no_pages_locked(void) {}
 #endif
 
+static inline MemoryRegionSection *
+address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
+                                  hwaddr *xlat, hwaddr *plen, MemTxAttrs attrs,
+                                  int *prot) {
+  // FIXME
+  return NULL;
+}
+
 /* TranslationBlock invalidate API */
 #if defined(CONFIG_USER_ONLY)
 void tb_invalidate_phys_addr(target_ulong addr);
@@ -526,5 +534,8 @@ void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr);
 TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
                                    target_ulong cs_base, uint32_t flags,
                                    uint32_t cf_mask);
+
+hwaddr memory_region_section_get_iotlb(CPUState *cpu,
+                                       MemoryRegionSection *section);
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
