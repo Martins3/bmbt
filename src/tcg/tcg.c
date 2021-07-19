@@ -16,7 +16,6 @@
 #include <stddef.h>
 #include <string.h>
 
-// FIXME we define similar functios at head of cpu-tlb.c
 #define qemu_mutex_lock(m) ({})
 #define qemu_mutex_unlock(m) ({})
 
@@ -528,7 +527,6 @@ static void reloc_pc_0_10_10_16_s2(tcg_insn_unit *pc, tcg_insn_unit *target) {
   *pc = deposit32(*pc, 0, 10, (offs & 0x3ff0000) >> 16);
 }
 
-// FIXME so confused, why we need reloc ?
 static bool patch_reloc(tcg_insn_unit *code_ptr, int type, intptr_t value,
                         intptr_t addend) {
 
@@ -540,7 +538,8 @@ static bool patch_reloc(tcg_insn_unit *code_ptr, int type, intptr_t value,
   case R_LARCH_SOP_POP_32_S_0_10_10_16_S2:
     reloc_pc_0_10_10_16_s2(code_ptr, (tcg_insn_unit *)value);
     break;
-  // FIXME why loongarch has RISCV option, ask the author
+  // FIXME Niugenen say xqm doesn't need this, but the code flow has
+  // a different idea
   // case R_RISCV_CALL:
   // return reloc_call(code_ptr, (tcg_insn_unit *)value);
   default:
@@ -552,7 +551,6 @@ static bool patch_reloc(tcg_insn_unit *code_ptr, int type, intptr_t value,
   return true;
 }
 
-// FIXME review this function
 static int tcg_out_pool_finalize(TCGContext *s) {
   TCGLabelPoolData *p = s->pool_labels;
   TCGLabelPoolData *l = NULL;
@@ -668,7 +666,6 @@ void tcg_prologue_init(TCGContext *s) {
   /* Generate the prologue.  */
   tcg_target_qemu_prologue(s);
 
-  // FIXME what does this macro mean ?
 #ifdef TCG_TARGET_NEED_POOL_LABELS
   /* Allow the prologue to put e.g. guest_base into a pool entry.  */
   {
@@ -1219,7 +1216,6 @@ void tcg_context_init(TCGContext *s) {
     indirect_reg_alloc_order[i] = tcg_target_reg_alloc_order[i];
   }
 
-  // FIXME plugin is empty (2)
   // alloc_tcg_plugin_context(s);
 
   tcg_ctx = s;

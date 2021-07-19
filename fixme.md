@@ -11,6 +11,9 @@
     4. qemu_irq_raise : 在 fpu_raise_exception 中需要被调用
     5. hw/irq.h 中的东西似乎只会被 fpu_helper 使用，其他的位置在哪里呀
 
+3. locks
+  1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
+    - 关注一下，为什么单独这里是需要处理 lock 的
 
 ## 代码分析工作
 1. --enable-x86tomips-flag-int 是干什么的 ?
@@ -18,3 +21,5 @@
 3. cpu_is_bsp
 4. do_cpu_sipi
 5. do_cpu_init
+6. tcg.c 中间的
+    - patch_reloc  / tcg_out_pool_finalize / TCG_TARGET_NEED_POOL_LABELS
