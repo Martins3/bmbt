@@ -3,6 +3,7 @@
 #include "../../include/fpu/softfloat.h"
 #include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
+#include "../../include/hw/irq.h"
 #include "cpu.h"
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
@@ -47,14 +48,12 @@ extern int xtm_lsfpu_opt(void);
 
 #if !defined(CONFIG_USER_ONLY)
 
-#if 0
 static qemu_irq ferr_irq;
 
 void x86_register_ferr_irq(qemu_irq irq)
 {
     ferr_irq = irq;
 }
-#endif
 
 static void cpu_clear_ignne(void)
 {
@@ -158,12 +157,12 @@ static void fpu_raise_exception(CPUX86State *env, uintptr_t retaddr)
     if (env->cr[0] & CR0_NE_MASK) {
         raise_exception_ra(env, EXCP10_COPR, retaddr);
     }
-    // FIXME maybe a bit of complex for me, handle it later
-// #if !defined(CONFIG_USER_ONLY)
-    // else if (ferr_irq && !(env->hflags2 & HF2_IGNNE_MASK)) {
-        // qemu_irq_raise(ferr_irq);
-    // }
-// #endif
+
+#if !defined(CONFIG_USER_ONLY)
+    else if (ferr_irq && !(env->hflags2 & HF2_IGNNE_MASK)) {
+        qemu_irq_raise(ferr_irq);
+    }
+#endif
 }
 
 #if 0
