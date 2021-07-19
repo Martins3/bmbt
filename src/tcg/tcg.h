@@ -551,5 +551,7 @@ uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
 TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr);
 void tcg_tb_insert(TranslationBlock *tb);
 
+size_t tcg_code_size(void);
+
 
 #endif

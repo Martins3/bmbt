@@ -10,9 +10,9 @@
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bitmap.h"
 #include "../../include/qemu/osdep.h"
+#include "../../include/qemu/plugin.h"
 #include "../../include/qemu/qemu-printf.h"
 #include "../../include/qemu/thread.h"
-#include "../../include/qemu/plugin.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
@@ -328,7 +328,7 @@ static int encode_search(TranslationBlock *tb, uint8_t *block) {
 }
 #endif
 
-// copied from i386/translate.c which is useless 
+// copied from i386/translate.c which is useless
 void restore_state_to_opc(CPUX86State *env, TranslationBlock *tb,
                           target_ulong *data) {
   int cc_op = data[1];
@@ -1213,9 +1213,9 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count) {
     size_t host_size = 0;
 
     tcg_tb_foreach(tb_host_size_iter, &host_size);
-    // FIXME change to a better style
-    // printf("qemu: flush code_size=%zu nb_tbs=%zu avg_tb_size=%zu\n",
-    // tcg_code_size(), nb_tbs, nb_tbs > 0 ? host_size / nb_tbs : 0);
+
+    printf("qemu: flush code_size=%zu nb_tbs=%zu avg_tb_size=%zu\n",
+           tcg_code_size(), nb_tbs, nb_tbs > 0 ? host_size / nb_tbs : 0);
   }
 
 #ifdef CONFIG_X86toMIPS
@@ -2212,9 +2212,8 @@ static void print_qht_statistics(struct qht_stats hst) {
     hgram_opts |= QDIST_PR_NODECIMAL;
   }
   hgram = qdist_pr(&hst.occupancy, 10, hgram_opts);
-  // FIXME debug
-  // qemu_printf("TB hash occupancy   %0.2f%% avg chain occ. Histogram: %s\n",
-  // qdist_avg(&hst.occupancy) * 100, hgram);
+  qemu_printf("TB hash occupancy   %0.2f%% avg chain occ. Histogram: %s\n",
+              qdist_avg(&hst.occupancy) * 100, hgram);
   g_free(hgram);
 
   hgram_opts = QDIST_PR_BORDER | QDIST_PR_LABELS;
@@ -2226,9 +2225,8 @@ static void print_qht_statistics(struct qht_stats hst) {
     hgram_opts |= QDIST_PR_NODECIMAL | QDIST_PR_NOBINRANGE;
   }
   hgram = qdist_pr(&hst.chain, hgram_bins, hgram_opts);
-  // FIXME debug
-  // qemu_printf("TB hash avg chain   %0.3f buckets. Histogram: %s\n",
-  // qdist_avg(&hst.chain), hgram);
+  qemu_printf("TB hash avg chain   %0.3f buckets. Histogram: %s\n",
+  qdist_avg(&hst.chain), hgram);
   g_free(hgram);
 }
 
