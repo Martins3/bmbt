@@ -531,9 +531,7 @@ int cpu_exec(CPUState *cpu) {
 
       tb = tb_find(cpu, last_tb, tb_exit, cflags);
 
-      // FIXME
-      // defined at target/i386/LATX/x86tomips-config.c
-      // trace_tb_execution(cpu, tb);
+      trace_tb_execution(cpu, tb);
 
       cpu_loop_exec_tb(cpu, tb, &last_tb, &tb_exit);
 
