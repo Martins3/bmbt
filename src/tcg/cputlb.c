@@ -23,14 +23,6 @@
 #include <stdlib.h> // for abort
 #include <string.h>
 
-/**
- * get_memop
- * @oi: combined op/idx parameter
- *
- * Extract the memory operation from the combined value.
- */
-
-static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 
 #define DIRTY_MEMORY_VGA 0
 #define DIRTY_MEMORY_CODE 1

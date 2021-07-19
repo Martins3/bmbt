@@ -2,11 +2,12 @@
 #define TCG_H_FXBBEZAS
 
 #include "../../include/exec/exec-all.h"
+#include "../../include/exec/cpu-all.h"
 #include "../../include/exec/memop.h"
 #include "../../include/qemu/config-target.h"
 #include "../../src/tcg/loongarch/tcg-target.h"
-#include "loongarch/tcg-target.h"
 #include "glib_stub.h"
+#include "loongarch/tcg-target.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -222,8 +223,6 @@ typedef uint32_t TCGMemOpIdx;
 
 TranslationBlock *tcg_tb_alloc(TCGContext *s);
 
-// FIXME I include too many prototype here
-// remove unnecessary ones later
 /*
  * Memory helpers that will be used by TCG generated code.
  */
@@ -300,8 +299,21 @@ uint64_t helper_le_ldq_cmmu(CPUArchState *env, target_ulong addr,
  */
 static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
 
-// FIXME cputlb.c
-// static inline MemOp get_memop(TCGMemOpIdx oi)
+/**
+ * get_memop
+ * @oi: combined op/idx parameter
+ *
+ * Extract the memory operation from the combined value.
+ */
+static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
+
+#if defined CONFIG_DEBUG_TCG || defined QEMU_STATIC_ANALYSIS
+# define tcg_debug_assert(X) do { assert(X); } while (0)
+#else
+# define tcg_debug_assert(X) \
+    do { if (!(X)) { __builtin_unreachable(); } } while (0)
+#endif
+
 
 /**
  * get_alignment_bits
@@ -324,8 +336,7 @@ static inline unsigned get_alignment_bits(MemOp memop) {
   }
 #if defined(CONFIG_SOFTMMU)
   /* The requested alignment cannot overlap the TLB flags.  */
-  // FIXME later
-  // tcg_debug_assert((TLB_FLAGS_MASK & ((1 << a) - 1)) == 0);
+  tcg_debug_assert((TLB_FLAGS_MASK & ((1 << a) - 1)) == 0);
 #endif
   return a;
 }
@@ -396,21 +407,6 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
 #endif
 
 void tcg_tb_remove(TranslationBlock *tb);
-
-// FIXME
-#if defined CONFIG_DEBUG_TCG || defined QEMU_STATIC_ANALYSIS
-#define tcg_debug_assert(X)                                                    \
-  do {                                                                         \
-    assert(X);                                                                 \
-  } while (0)
-#else
-#define tcg_debug_assert(X)                                                    \
-  do {                                                                         \
-    if (!(X)) {                                                                \
-      __builtin_unreachable();                                                 \
-    }                                                                          \
-  } while (0)
-#endif
 
 /**
  * tcg_ptr_byte_diff
@@ -544,11 +540,9 @@ static inline TCGMemOpIdx make_memop_idx(MemOp op, unsigned idx) {
   return (op << 4) | idx;
 }
 
-// FIXME does I implement it, can I change
 void tcg_prologue_init(TCGContext *s);
 
 // FIXME this is function maybe lead to atomic_template.h ?
-// I event can't find the definition in the original QEMU
 uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
                                        uint64_t cmpv, uint64_t newv,
                                        TCGMemOpIdx oi, uintptr_t retaddr);
