@@ -538,4 +538,6 @@ TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
 hwaddr memory_region_section_get_iotlb(CPUState *cpu,
                                        MemoryRegionSection *section);
 
+void page_size_init(void);
+
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

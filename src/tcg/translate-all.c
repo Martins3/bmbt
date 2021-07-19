@@ -53,9 +53,6 @@ int qemu_icache_linesize_log;
 int qemu_dcache_linesize = 0;
 int qemu_dcache_linesize_log;
 
-// FIXME /home/maritns3/core/ld/x86-qemu-mips/tcg/tcg.h
-#define TCG_MAX_INSNS 512
-
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
 #include "../i386/LATX/x86tomips-profile-sys.h"
 // FIXME why xqm take special attention cross page
@@ -331,7 +328,7 @@ static int encode_search(TranslationBlock *tb, uint8_t *block) {
 }
 #endif
 
-// FIXME copied from i386/translate.c
+// copied from i386/translate.c which is useless 
 void restore_state_to_opc(CPUX86State *env, TranslationBlock *tb,
                           target_ulong *data) {
   int cc_op = data[1];
@@ -429,8 +426,7 @@ bool cpu_restore_state(CPUState *cpu, uintptr_t host_pc, bool will_exit) {
 }
 
 static void page_init(void) {
-  // FIXME this function is easy
-  // page_size_init();
+  page_size_init();
   page_table_config_init();
 
 #if defined(CONFIG_BSD) && defined(CONFIG_USER_ONLY)
@@ -499,7 +495,6 @@ static void page_init(void) {
 #endif
 }
 
-// FIXME understand the workflow, what does page mean?
 static PageDesc *page_find_alloc(tb_page_addr_t index, int alloc) {
   PageDesc *pd;
   void **lp;
@@ -883,9 +878,6 @@ static void page_lock_pair(PageDesc **ret_p1, tb_page_addr_t phys1,
    but not so small that we can't have a fair number of TB's live.  */
 #define MIN_CODE_GEN_BUFFER_SIZE (1024u * 1024)
 
-// FIXME where does the macro defined ?
-// maybe if the we wil have generated compile_commands.json, it would be fixed
-
 /* Maximum size of the code gen buffer we'd like to use.  Unless otherwise
    indicated, this is constrained by the range of direct branches on the
    host cpu, as used by the TCG implementation of goto_tb.  */
@@ -1089,7 +1081,6 @@ static inline void *alloc_code_gen_buffer(void) {
 #endif
 
   /* Request large pages for the buffer.  */
-  // FIXME change to bare mental version later
   // qemu_madvise(buf, size, QEMU_MADV_HUGEPAGE);
 
   return buf;
@@ -2390,13 +2381,6 @@ void dump_exec_info(void)
     tcg_dump_info();
 }
 #endif
-
-void dump_opcount_info(void) {
-  // FIXME debug
-#if 0
-    tcg_dump_op_count();
-#endif
-}
 
 #else /* CONFIG_USER_ONLY */
 
