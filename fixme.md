@@ -15,6 +15,8 @@
   1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
     - 关注一下，为什么单独这里是需要处理 lock 的
 
+4. 
+
 ## 代码分析工作
 1. --enable-x86tomips-flag-int 是干什么的 ?
 2. cpu_cc_compute_all 是做什么 ?
@@ -23,3 +25,8 @@
 5. do_cpu_init
 6. tcg.c 中间的
     - patch_reloc  / tcg_out_pool_finalize / TCG_TARGET_NEED_POOL_LABELS
+    - tcg_context_init : 这里初始化了一堆，不是很确定这个是否真的有用的
+
+7. qemu_log_mask_and_addr
+
+8. cpu_exec_nocache : 为什么需要将所有的 tb 清空然后来运行
