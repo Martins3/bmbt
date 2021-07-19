@@ -1,8 +1,8 @@
 #ifndef TCG_H_FXBBEZAS
 #define TCG_H_FXBBEZAS
 
-#include "../../include/exec/exec-all.h"
 #include "../../include/exec/cpu-all.h"
+#include "../../include/exec/exec-all.h"
 #include "../../include/exec/memop.h"
 #include "../../include/qemu/config-target.h"
 #include "../../src/tcg/loongarch/tcg-target.h"
@@ -309,12 +309,18 @@ static inline unsigned get_mmuidx(TCGMemOpIdx oi) { return oi & 15; }
 static inline MemOp get_memop(TCGMemOpIdx oi) { return oi >> 4; }
 
 #if defined CONFIG_DEBUG_TCG || defined QEMU_STATIC_ANALYSIS
-# define tcg_debug_assert(X) do { assert(X); } while (0)
+#define tcg_debug_assert(X)                                                    \
+  do {                                                                         \
+    assert(X);                                                                 \
+  } while (0)
 #else
-# define tcg_debug_assert(X) \
-    do { if (!(X)) { __builtin_unreachable(); } } while (0)
+#define tcg_debug_assert(X)                                                    \
+  do {                                                                         \
+    if (!(X)) {                                                                \
+      __builtin_unreachable();                                                 \
+    }                                                                          \
+  } while (0)
 #endif
-
 
 /**
  * get_alignment_bits
@@ -552,6 +558,5 @@ TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr);
 void tcg_tb_insert(TranslationBlock *tb);
 
 size_t tcg_code_size(void);
-
 
 #endif

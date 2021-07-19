@@ -3,6 +3,7 @@
 1. memory model
     1. include/sysemu/cpus.h : 定义的为空函数啊
     2. include/exec/ram_addr.h
+    3. memory.h
 
 2. apic
     1. DeviceState 中定义为空
@@ -37,3 +38,7 @@
 10. `__builtin___clear_cache` 还可以用吗 ?
 
 11. tb_gen_code 是如何运行的 ?
+
+## header 的终极挑战
+
+NEED_CPU_H

@@ -136,7 +136,6 @@
 
 #define dh_arg_decl(t, n) glue(TCGv_, dh_alias(t)) glue(arg, n)
 
-// FIXME I have little understand of how helper works
 // DEF_HELPER_FLAGS_* copied from include/exec/helper-proto.h
 #define DEF_HELPER_FLAGS_0(name, flags, ret) dh_ctype(ret) HELPER(name)(void);
 
