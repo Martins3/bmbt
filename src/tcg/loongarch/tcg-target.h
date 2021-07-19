@@ -29,8 +29,6 @@
 
 #include "../../../include/types.h"
 
-// FIXME I don't know why ABI is important
-
 #ifndef _ABILP32
 #define _ABILP32 1
 #endif
@@ -39,11 +37,6 @@
 #define _ABILPX32 2
 #endif
 
-// FIXME where does the _LOONGARCH_SIM defined?
-// Apparently, TCG_TARGET_REG_BITS is not 64,
-// if sizeof(target_long) = 4
-//
-// by the way, who is target ? x86_32 ?
 #if _LOONGARCH_SIM == _ABILP32
 # define TCG_TARGET_REG_BITS 32
 #elif _LOONGARCH_SIM == _ABILPX32 || _LOONGARCH_SIM == _ABILP64
@@ -134,7 +127,7 @@ typedef enum {
 #define TCG_TARGET_HAS_div_i64          1
 #define TCG_TARGET_HAS_rem_i64          1
 #define TCG_TARGET_HAS_not_i64          1
-#define TCG_TARGET_HAS_nor_i64       1
+#define TCG_TARGET_HAS_nor_i64          1
 #define TCG_TARGET_HAS_andc_i64         1
 #define TCG_TARGET_HAS_orc_i64          1
 #define TCG_TARGET_HAS_eqv_i64          0

@@ -5,16 +5,10 @@
 #include "../../include/exec/memop.h"
 #include "../../include/qemu/config-target.h"
 #include "../../src/tcg/loongarch/tcg-target.h"
+#include "loongarch/tcg-target.h"
 #include "glib_stub.h"
 #include <stddef.h>
 #include <stdint.h>
-
-// FIXME
-// wow, it almost destoried me
-// tcg_target_reg_bits is defined at
-// /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch/tcg-target.h
-// FIXME it here
-#define TCG_TARGET_REG_BITS 64
 
 /* Define type and accessor macros for TCG variables.
 
@@ -46,7 +40,6 @@
    function which takes a TCGv_i64, and so on. Only the internals of
    TCG need to care about the actual contents of the types.  */
 
-// FIXME interesting design
 typedef struct TCGv_i32_d *TCGv_i32;
 typedef struct TCGv_i64_d *TCGv_i64;
 typedef struct TCGv_ptr_d *TCGv_ptr;
@@ -60,7 +53,7 @@ typedef TCGv_ptr TCGv_env;
 #error Unhandled TARGET_LONG_BITS value
 #endif
 
-#if tcg_target_reg_bits == 32
+#if TCG_TARGET_REG_BITS == 32
 typedef int32_t tcg_target_long;
 typedef uint32_t tcg_target_ulong;
 #define TCG_PRIlx PRIx32
