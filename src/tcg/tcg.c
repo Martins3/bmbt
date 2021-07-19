@@ -1152,6 +1152,8 @@ static void tcg_target_init(TCGContext *s) {
   tcg_regset_set_reg(s->reserved_regs, TCG_REG_FP);
 }
 
+static void alloc_tcg_plugin_context(TCGContext *s) {}
+
 void tcg_context_init(TCGContext *s) {
   int op, total_args, n, i;
   TCGOpDef *def;
@@ -1216,7 +1218,7 @@ void tcg_context_init(TCGContext *s) {
     indirect_reg_alloc_order[i] = tcg_target_reg_alloc_order[i];
   }
 
-  // alloc_tcg_plugin_context(s);
+  alloc_tcg_plugin_context(s);
 
   tcg_ctx = s;
   /*

@@ -1811,8 +1811,6 @@ typedef enum TPRAccess {
 /* smm_helper.c */
 void do_smm_enter(X86CPU *cpu);
 
-int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request);
-
 /* cpu.c */
 bool cpu_is_bsp(X86CPU *cpu);
 
@@ -1821,6 +1819,14 @@ void do_cpu_sipi(X86CPU *cpu);
 
 // defined in hw/i386/pc.c
 int cpu_get_pic_interrupt(CPUX86State *s);
+
+/**
+ * x86_cpu_do_interrupt:
+ * @cpu: vCPU the interrupt is to be handled by.
+ */
+void x86_cpu_do_interrupt(CPUState *cpu);
+bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
+int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request);
 
 /* this function must always be used to load data in the segment
    cache: it synchronizes the hflags with the segment cache values */

@@ -12,6 +12,7 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/qemu-printf.h"
 #include "../../include/qemu/thread.h"
+#include "../../include/qemu/plugin.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
@@ -1243,8 +1244,7 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count) {
 done:
   mmap_unlock();
   if (did_flush) {
-    // FIXME what's plugin, it's empty
-    // qemu_plugin_flush_cb();
+    qemu_plugin_flush_cb();
   }
 }
 

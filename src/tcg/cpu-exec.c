@@ -9,6 +9,7 @@
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
+#include "../../include/qemu/plugin.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
@@ -503,9 +504,9 @@ int cpu_exec(CPUState *cpu) {
     if (qemu_mutex_iothread_locked()) {
       qemu_mutex_unlock_iothread();
     }
-    // FIXME they are empty
-    // qemu_plugin_disable_mem_helpers(cpu);
-    // assert_no_pages_locked();
+
+    qemu_plugin_disable_mem_helpers(cpu);
+    assert_no_pages_locked();
   }
 
   /* if an exception is pending, we execute it here */
