@@ -704,3 +704,7 @@ static void x86_cpu_common_class_init(CPUState *cpu) {
   cc->tlb_fill = x86_cpu_tlb_fill;
 #endif
 }
+
+bool cpu_is_bsp(X86CPU *cpu) {
+  return cpu_get_apic_base(cpu->apic_state) & MSR_IA32_APICBASE_BSP;
+}

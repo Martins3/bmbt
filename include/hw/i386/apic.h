@@ -2,8 +2,6 @@
 #define APIC_H_JOIQEZ9X
 #include "../../exec/cpu-all.h"
 
-// FIXME I don't know how to handle apic yet
-
 // void apic_deliver_irq(uint8_t dest, uint8_t dest_mode, uint8_t delivery_mode, uint8_t vector_num, uint8_t trigger_mode);
 // int apic_accept_pic_intr(DeviceState *s);
 // void apic_deliver_pic_intr(DeviceState *s, int level);

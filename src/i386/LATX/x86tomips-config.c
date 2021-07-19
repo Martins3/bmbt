@@ -821,7 +821,7 @@ void x86_to_mips_tb_set_jmp_target(TranslationBlock *tb, int n,
 
 // FIXME comment this, vregs defined in CPUX86State ?
 /* This is used in target/i386/fpu_helper.c */
-// int xtm_get_top_bias_from_env(CPUX86State *env) { return (int)env->vregs[3]; }
+int xtm_get_top_bias_from_env(CPUX86State *env) { return (int)env->vregs[3]; }
 
 void qm_flush_icache(ADDR s, ADDR e)
 {
