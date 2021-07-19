@@ -9,8 +9,8 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bswap.h"
-#include "../../include/qemu/host-utils.h"
 #include "../../include/qemu/error-report.h"
+#include "../../include/qemu/host-utils.h"
 #include "../../include/types.h"
 #include "../i386/cpu.h"
 #include "tcg.h"
@@ -293,8 +293,7 @@ static void tlb_flush_by_mmuidx_async_work(CPUState *cpu,
   uint16_t asked = data.host_int;
   uint16_t all_dirty, work, to_clean;
 
-  // FIXME
-  // assert_cpu_is_self(cpu);
+  assert_cpu_is_self(cpu);
 
   tlb_debug("mmu_idx:0x%04" PRIx16 "\n", asked);
 
@@ -366,8 +365,7 @@ void tlb_flush_by_mmuidx_all_cpus_synced(CPUState *src_cpu, uint16_t idxmap) {
   tlb_debug("mmu_idx: 0x%" PRIx16 "\n", idxmap);
 
   flush_all_helper(src_cpu, fn, RUN_ON_CPU_HOST_INT(idxmap));
-  // FIXME fix it later
-  // async_safe_run_on_cpu(src_cpu, fn, RUN_ON_CPU_HOST_INT(idxmap));
+  async_safe_run_on_cpu(src_cpu, fn, RUN_ON_CPU_HOST_INT(idxmap));
 }
 
 void tlb_flush_all_cpus_synced(CPUState *src_cpu) {
@@ -483,14 +481,13 @@ void tlb_flush_page_by_mmuidx(CPUState *cpu, target_ulong addr,
   addr_and_mmu_idx = addr & TARGET_PAGE_MASK;
   addr_and_mmu_idx |= idxmap;
 
-  // FIXME this later
-  // if (!qemu_cpu_is_self(cpu)) {
-  // async_run_on_cpu(cpu, tlb_flush_page_by_mmuidx_async_work,
-  // RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
-  // } else {
-  // tlb_flush_page_by_mmuidx_async_work(
-  // cpu, RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
-  // }
+  if (!qemu_cpu_is_self(cpu)) {
+    async_run_on_cpu(cpu, tlb_flush_page_by_mmuidx_async_work,
+                     RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
+  } else {
+    tlb_flush_page_by_mmuidx_async_work(
+        cpu, RUN_ON_CPU_TARGET_PTR(addr_and_mmu_idx));
+  }
 }
 
 void tlb_flush_page(CPUState *cpu, target_ulong addr) {
@@ -707,168 +704,167 @@ static void tlb_add_large_page(CPUArchState *env, int mmu_idx,
 void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
                              MemTxAttrs attrs, int prot, int mmu_idx,
                              target_ulong size) {
-  // FIXME uncomment this code
-#if 0
-    CPUArchState *env = cpu->env_ptr;
-    CPUTLB *tlb = env_tlb(env);
-    CPUTLBDesc *desc = &tlb->d[mmu_idx];
-    MemoryRegionSection *section;
-    unsigned int index;
-    target_ulong address;
-    target_ulong write_address;
-    uintptr_t addend;
-    CPUTLBEntry *te, tn;
-    hwaddr iotlb, xlat, sz, paddr_page;
-    target_ulong vaddr_page;
-    int asidx = cpu_asidx_from_attrs(cpu, attrs);
-    int wp_flags;
-    bool is_ram, is_romd;
+  CPUArchState *env = cpu->env_ptr;
+  CPUTLB *tlb = env_tlb(env);
+  CPUTLBDesc *desc = &tlb->d[mmu_idx];
+  MemoryRegionSection *section;
+  unsigned int index;
+  target_ulong address;
+  target_ulong write_address;
+  uintptr_t addend;
+  CPUTLBEntry *te, tn;
+  hwaddr iotlb, xlat, sz, paddr_page;
+  target_ulong vaddr_page;
+  int asidx = cpu_asidx_from_attrs(cpu, attrs);
+  int wp_flags;
+  bool is_ram, is_romd;
 
-    assert_cpu_is_self(cpu);
+  assert_cpu_is_self(cpu);
 
-    if (size <= TARGET_PAGE_SIZE) {
-        sz = TARGET_PAGE_SIZE;
-    } else {
-        tlb_add_large_page(env, mmu_idx, vaddr, size);
-        sz = size;
-    }
-    vaddr_page = vaddr & TARGET_PAGE_MASK;
-    paddr_page = paddr & TARGET_PAGE_MASK;
+  if (size <= TARGET_PAGE_SIZE) {
+    sz = TARGET_PAGE_SIZE;
+  } else {
+    tlb_add_large_page(env, mmu_idx, vaddr, size);
+    sz = size;
+  }
+  vaddr_page = vaddr & TARGET_PAGE_MASK;
+  paddr_page = paddr & TARGET_PAGE_MASK;
 
-    section = address_space_translate_for_iotlb(cpu, asidx, paddr_page,
-                                                &xlat, &sz, attrs, &prot);
-    assert(sz >= TARGET_PAGE_SIZE);
+  section = address_space_translate_for_iotlb(cpu, asidx, paddr_page, &xlat,
+                                              &sz, attrs, &prot);
+  assert(sz >= TARGET_PAGE_SIZE);
 
-    tlb_debug("vaddr=" TARGET_FMT_lx " paddr=0x" TARGET_FMT_plx
-              " prot=%x idx=%d\n",
-              vaddr, paddr, prot, mmu_idx);
+  tlb_debug("vaddr=" TARGET_FMT_lx " paddr=0x" TARGET_FMT_plx
+            " prot=%x idx=%d\n",
+            vaddr, paddr, prot, mmu_idx);
 
-    address = vaddr_page;
-    if (size < TARGET_PAGE_SIZE) {
-        /* Repeat the MMU check and TLB fill on every access.  */
-        address |= TLB_INVALID_MASK;
-    }
-    if (attrs.byte_swap) {
-        address |= TLB_BSWAP;
-    }
+  address = vaddr_page;
+  if (size < TARGET_PAGE_SIZE) {
+    /* Repeat the MMU check and TLB fill on every access.  */
+    address |= TLB_INVALID_MASK;
+  }
+  if (attrs.byte_swap) {
+    address |= TLB_BSWAP;
+  }
 
-    is_ram = memory_region_is_ram(section->mr);
-    is_romd = memory_region_is_romd(section->mr);
+  is_ram = memory_region_is_ram(section->mr);
+  is_romd = memory_region_is_romd(section->mr);
 
-    if (is_ram || is_romd) {
-        /* RAM and ROMD both have associated host memory. */
-        addend = (uintptr_t)memory_region_get_ram_ptr(section->mr) + xlat;
-    } else {
-        /* I/O does not; force the host address to NULL. */
-        addend = 0;
-    }
+  if (is_ram || is_romd) {
+    /* RAM and ROMD both have associated host memory. */
+    addend = (uintptr_t)memory_region_get_ram_ptr(section->mr) + xlat;
+  } else {
+    /* I/O does not; force the host address to NULL. */
+    addend = 0;
+  }
 
-    write_address = address;
-    if (is_ram) {
-        iotlb = memory_region_get_ram_addr(section->mr) + xlat;
-        /*
-         * Computing is_clean is expensive; avoid all that unless
-         * the page is actually writable.
-         */
-        if (prot & PAGE_WRITE) {
-            if (section->readonly) {
-                write_address |= TLB_DISCARD_WRITE;
-            } else if (cpu_physical_memory_is_clean(iotlb)) {
-                write_address |= TLB_NOTDIRTY;
-            }
-        }
-    } else {
-        /* I/O or ROMD */
-        iotlb = memory_region_section_get_iotlb(cpu, section) + xlat;
-        /*
-         * Writes to romd devices must go through MMIO to enable write.
-         * Reads to romd devices go through the ram_ptr found above,
-         * but of course reads to I/O must go through MMIO.
-         */
-        write_address |= TLB_MMIO;
-        if (!is_romd) {
-            address = write_address;
-        }
-    }
-
-    wp_flags = cpu_watchpoint_address_matches(cpu, vaddr_page,
-                                              TARGET_PAGE_SIZE);
-
-    index = tlb_index(env, mmu_idx, vaddr_page);
-    te = tlb_entry(env, mmu_idx, vaddr_page);
-
+  write_address = address;
+  if (is_ram) {
+    iotlb = memory_region_get_ram_addr(section->mr) + xlat;
     /*
-     * Hold the TLB lock for the rest of the function. We could acquire/release
-     * the lock several times in the function, but it is faster to amortize the
-     * acquisition cost by acquiring it just once. Note that this leads to
-     * a longer critical section, but this is not a concern since the TLB lock
-     * is unlikely to be contended.
+     * Computing is_clean is expensive; avoid all that unless
+     * the page is actually writable.
      */
-    qemu_spin_lock(&tlb->c.lock);
-
-    /* Note that the tlb is no longer clean.  */
-    tlb->c.dirty |= 1 << mmu_idx;
-
-    /* Make sure there's no cached translation for the new page.  */
-    tlb_flush_vtlb_page_locked(env, mmu_idx, vaddr_page);
-
-    /*
-     * Only evict the old entry to the victim tlb if it's for a
-     * different page; otherwise just overwrite the stale data.
-     */
-    if (!tlb_hit_page_anyprot(te, vaddr_page) && !tlb_entry_is_empty(te)) {
-        unsigned vidx = desc->vindex++ % CPU_VTLB_SIZE;
-        CPUTLBEntry *tv = &desc->vtable[vidx];
-
-        /* Evict the old entry into the victim tlb.  */
-        copy_tlb_helper_locked(tv, te);
-        desc->viotlb[vidx] = desc->iotlb[index];
-        tlb_n_used_entries_dec(env, mmu_idx);
-    }
-
-    /* refill the tlb */
-    /*
-     * At this point iotlb contains a physical section number in the lower
-     * TARGET_PAGE_BITS, and either
-     *  + the ram_addr_t of the page base of the target RAM (RAM)
-     *  + the offset within section->mr of the page base (I/O, ROMD)
-     * We subtract the vaddr_page (which is page aligned and thus won't
-     * disturb the low bits) to give an offset which can be added to the
-     * (non-page-aligned) vaddr of the eventual memory access to get
-     * the MemoryRegion offset for the access. Note that the vaddr we
-     * subtract here is that of the page base, and not the same as the
-     * vaddr we add back in io_readx()/io_writex()/get_page_addr_code().
-     */
-    desc->iotlb[index].addr = iotlb - vaddr_page;
-    desc->iotlb[index].attrs = attrs;
-
-    /* Now calculate the new entry */
-    tn.addend = addend - vaddr_page;
-    if (prot & PAGE_READ) {
-        tn.addr_read = address;
-        if (wp_flags & BP_MEM_READ) {
-            tn.addr_read |= TLB_WATCHPOINT;
-        }
-    } else {
-        tn.addr_read = -1;
-    }
-
-    if (prot & PAGE_EXEC) {
-        tn.addr_code = address;
-    } else {
-        tn.addr_code = -1;
-    }
-
-    tn.addr_write = -1;
     if (prot & PAGE_WRITE) {
-        tn.addr_write = write_address;
-        if (prot & PAGE_WRITE_INV) {
-            tn.addr_write |= TLB_INVALID_MASK;
-        }
-        if (wp_flags & BP_MEM_WRITE) {
-            tn.addr_write |= TLB_WATCHPOINT;
-        }
+      if (section->readonly) {
+        write_address |= TLB_DISCARD_WRITE;
+      } else if (cpu_physical_memory_is_clean(iotlb)) {
+        write_address |= TLB_NOTDIRTY;
+      }
     }
+  } else {
+    /* I/O or ROMD */
+    iotlb = memory_region_section_get_iotlb(cpu, section) + xlat;
+    /*
+     * Writes to romd devices must go through MMIO to enable write.
+     * Reads to romd devices go through the ram_ptr found above,
+     * but of course reads to I/O must go through MMIO.
+     */
+    write_address |= TLB_MMIO;
+    if (!is_romd) {
+      address = write_address;
+    }
+  }
+
+  wp_flags = cpu_watchpoint_address_matches(cpu, vaddr_page, TARGET_PAGE_SIZE);
+
+  index = tlb_index(env, mmu_idx, vaddr_page);
+  te = tlb_entry(env, mmu_idx, vaddr_page);
+
+  /*
+   * Hold the TLB lock for the rest of the function. We could acquire/release
+   * the lock several times in the function, but it is faster to amortize the
+   * acquisition cost by acquiring it just once. Note that this leads to
+   * a longer critical section, but this is not a concern since the TLB lock
+   * is unlikely to be contended.
+   */
+  qemu_spin_lock(&tlb->c.lock);
+
+  /* Note that the tlb is no longer clean.  */
+  tlb->c.dirty |= 1 << mmu_idx;
+
+  /* Make sure there's no cached translation for the new page.  */
+  tlb_flush_vtlb_page_locked(env, mmu_idx, vaddr_page);
+
+  /*
+   * Only evict the old entry to the victim tlb if it's for a
+   * different page; otherwise just overwrite the stale data.
+   */
+  if (!tlb_hit_page_anyprot(te, vaddr_page) && !tlb_entry_is_empty(te)) {
+    unsigned vidx = desc->vindex++ % CPU_VTLB_SIZE;
+    CPUTLBEntry *tv = &desc->vtable[vidx];
+
+    /* Evict the old entry into the victim tlb.  */
+    copy_tlb_helper_locked(tv, te);
+    desc->viotlb[vidx] = desc->iotlb[index];
+    tlb_n_used_entries_dec(env, mmu_idx);
+  }
+
+  /* refill the tlb */
+  /*
+   * At this point iotlb contains a physical section number in the lower
+   * TARGET_PAGE_BITS, and either
+   *  + the ram_addr_t of the page base of the target RAM (RAM)
+   *  + the offset within section->mr of the page base (I/O, ROMD)
+   * We subtract the vaddr_page (which is page aligned and thus won't
+   * disturb the low bits) to give an offset which can be added to the
+   * (non-page-aligned) vaddr of the eventual memory access to get
+   * the MemoryRegion offset for the access. Note that the vaddr we
+   * subtract here is that of the page base, and not the same as the
+   * vaddr we add back in io_readx()/io_writex()/get_page_addr_code().
+   */
+  desc->iotlb[index].addr = iotlb - vaddr_page;
+  desc->iotlb[index].attrs = attrs;
+
+  /* Now calculate the new entry */
+  tn.addend = addend - vaddr_page;
+  if (prot & PAGE_READ) {
+    tn.addr_read = address;
+    if (wp_flags & BP_MEM_READ) {
+      tn.addr_read |= TLB_WATCHPOINT;
+    }
+  } else {
+    tn.addr_read = -1;
+  }
+
+  if (prot & PAGE_EXEC) {
+    tn.addr_code = address;
+  } else {
+    tn.addr_code = -1;
+  }
+
+  tn.addr_write = -1;
+  if (prot & PAGE_WRITE) {
+    tn.addr_write = write_address;
+    if (prot & PAGE_WRITE_INV) {
+      tn.addr_write |= TLB_INVALID_MASK;
+    }
+    if (wp_flags & BP_MEM_WRITE) {
+      tn.addr_write |= TLB_WATCHPOINT;
+    }
+  }
+
+  // FIXME remove btmmu related code
 #if 0 // def CONFIG_BTMMU
     if (btmmu_enabled()) {
         if ((memory_region_is_ram(section->mr) || memory_region_is_romd(section->mr))) {
@@ -881,10 +877,9 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
     }
 #endif
 
-    copy_tlb_helper_locked(te, &tn);
-    tlb_n_used_entries_inc(env, mmu_idx);
-    qemu_spin_unlock(&tlb->c.lock);
-#endif
+  copy_tlb_helper_locked(te, &tn);
+  tlb_n_used_entries_inc(env, mmu_idx);
+  qemu_spin_unlock(&tlb->c.lock);
 }
 
 /* Add a new TLB entry, but without specifying the memory
