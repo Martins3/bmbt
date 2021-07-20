@@ -194,9 +194,7 @@ void x86_cpu_synchronize_from_tb(CPUState *cs, TranslationBlock *tb) {
 }
 
 /*
-FIXME, only these are necessary, so I only copy them
-
-FIXME cpuid get the information form env, I don't know how to init them
+FIXME, only necessary case are copied
 
 0
 1
@@ -395,11 +393,6 @@ void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
     break;
   case 0x80000005:
     /* cache info (L1 cache) */
-    // FIXME I guess it's useless, verify it later
-    // if (cpu->cache_info_passthrough) {
-    // host_cpuid(index, 0, eax, ebx, ecx, edx);
-    // break;
-    // }
     *eax = (L1_DTLB_2M_ASSOC << 24) | (L1_DTLB_2M_ENTRIES << 16) |
            (L1_ITLB_2M_ASSOC << 8) | (L1_ITLB_2M_ENTRIES);
     *ebx = (L1_DTLB_4K_ASSOC << 24) | (L1_DTLB_4K_ENTRIES << 16) |
@@ -408,12 +401,7 @@ void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
     *edx = encode_cache_cpuid80000005(env->cache_info_amd.l1i_cache);
     break;
   case 0x80000006:
-    // FIXME similar problem
     /* cache info (L2 cache) */
-    // if (cpu->cache_info_passthrough) {
-    // host_cpuid(index, 0, eax, ebx, ecx, edx);
-    // break;
-    // }
     *eax = (AMD_ENC_ASSOC(L2_DTLB_2M_ASSOC) << 28) |
            (L2_DTLB_2M_ENTRIES << 16) |
            (AMD_ENC_ASSOC(L2_ITLB_2M_ASSOC) << 12) | (L2_ITLB_2M_ENTRIES);
@@ -473,6 +461,7 @@ void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
   case 0x8000001F:
     bmbt_assert();
   default:
+    g_assert(0);
     /* reserved values: zero */
     *eax = 0;
     *ebx = 0;

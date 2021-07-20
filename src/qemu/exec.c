@@ -173,7 +173,6 @@ void cpu_breakpoint_remove_all(CPUState *cpu, int mask) {
   }
 }
 
-// FIXME maybe I need it later
 #if 0
 /* enable or disable single step mode. EXCP_DEBUG is returned by the
    CPU loop after each instruction */
