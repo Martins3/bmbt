@@ -1,4 +1,3 @@
-// FIXME 
 /*
  * Internal memory management interfaces
  *

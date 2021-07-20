@@ -4,10 +4,6 @@
 #include "../types.h"
 #include <stdint.h>
 
-// FIXME we need these so that HOST_LONG_BITS works
-// host and target int types is twisted
-
-
 /* Round number up to multiple. Requires that d be a power of 2 (see
  * QEMU_ALIGN_UP for a safer but slower version on arbitrary
  * numbers); works even if d is a smaller type than n.  */
@@ -68,7 +64,6 @@ extern intptr_t qemu_real_host_page_mask;
 #define QEMU_ALIGN_PTR_DOWN(p, n) \
     ((typeof(p))QEMU_ALIGN_DOWN((uintptr_t)(p), (n)))
 
-// FIXME implement them
 int qemu_mprotect_none(void *addr, size_t size);
 void *qemu_memalign(size_t alignment, size_t size);
 
