@@ -78,7 +78,7 @@ uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr);
  */
 ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr);
 
-// FIXME the stupid NEED_CPU_H
+#define NEED_CPU_H
 #ifdef NEED_CPU_H
 /* enum device_endian to MemOp.  */
 static inline MemOp devend_memop(enum device_endian end) {
@@ -97,6 +97,7 @@ static inline MemOp devend_memop(enum device_endian end) {
 #endif
 }
 #endif
+#undef NEED_CPU_H
 
 // FIXME originally defined in exec.c
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr);

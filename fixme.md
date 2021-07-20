@@ -39,6 +39,3 @@
 
 11. tb_gen_code 是如何运行的 ?
 
-## header 的终极挑战
-
-NEED_CPU_H

@@ -2,9 +2,7 @@
 #define MEMOP_H_BRBWZAQH
 #include "../qemu/host-utils.h"
 
-// FIXME check the macros carefully
-// 1. NEED_CPU_H is defined temporarily, it should be passed by compile command
-// line
+// FIXME
 // 2. where is TARGET_WORDS_BIGENDIAN / HOST_WORDS_BIGENDIAN ?
 //    1. include the header, don't define them here manually
 
@@ -121,5 +119,6 @@ static inline MemOp size_memop(unsigned size) {
 static inline bool memop_big_endian(MemOp op) {
   return (op & MO_BSWAP) == MO_BE;
 }
+#undef NEED_CPU_H
 
 #endif /* end of include guard: MEMOP_H_BRBWZAQH */
