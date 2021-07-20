@@ -98,4 +98,14 @@ static inline uint64_t extract64(uint64_t value, int start, int length)
     return (value >> start) & (~0ULL >> (64 - length));
 }
 
+/**
+ * rol32 - rotate a 32-bit value left
+ * @word: value to rotate
+ * @shift: bits to roll
+ */
+static inline uint32_t rol32(uint32_t word, unsigned int shift)
+{
+    return (word << shift) | (word >> ((32 - shift) & 31));
+}
+
 #endif /* end of include guard: BITOPS_H_Z29X3LYD */
