@@ -11,8 +11,6 @@
 #include <string.h>
 #include <math.h>
 
-// FIXME remove unused functions
-
 /* modulo 9 table */
 static const uint8_t rclb_table[32] = {
     0, 1, 2, 3, 4, 5, 6, 7,
