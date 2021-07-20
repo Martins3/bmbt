@@ -41,3 +41,5 @@
 11. tb_gen_code 是如何运行的 ?
 12. bswap.h 中间的，当 CONFIG_MACHINE_BSWAP_H 可以调查一下 C 库中间是否存在 bswap 的支持，因为是用于 reference C 库的
 13. cpu_unaligned_access : x86 对应的 handler 没有赋值啊
+14. how cross page works?
+    - cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
