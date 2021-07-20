@@ -4,6 +4,7 @@
     1. include/sysemu/cpus.h : 定义的为空函数啊
     2. include/exec/ram_addr.h
     3. memory.h
+    4. 在 exec-all.h 中间 memory_region_section_get_iotlb
 
 2. apic
     1. DeviceState 中定义为空
@@ -24,6 +25,9 @@
 5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
   1. tlb_debug
   2. do_tb_flush 中间又是直接使用 printf 的
+
+6. 处理一下满天飞羽的各种 type 定义
+  1. ExtraBlock 是 LATX 中特殊需求的，其中 `_top_in` 的类型是 int8, 而 int8 又是定义在 src/i386/LATX/include/types.h 中间了，着很难受啊
 
 ## 代码分析工作
 1. --enable-x86tomips-flag-int 是干什么的 ?

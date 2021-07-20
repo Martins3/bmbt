@@ -1,5 +1,6 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
+#include "../../src/i386/LATX/include/types.h" // for int8, stupid
 #include "../../src/i386/cpu.h"
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
@@ -8,12 +9,8 @@
 #include "cpu-defs.h"
 #include "memop.h"
 
-// FIXME it seems this is the hacking of xqm
-// copy here blindly
-// maybe mvoe ExtraBlock to LATX
-// 1. typedef char int8; defined by LATX
-// 2. use by _top_in and _top_out
-
+#ifdef CONFIG_X86toMIPS
+struct IR1_INST;
 /* extra attributes we need in TB */
 typedef struct ExtraBlock {
   /* @pc: ID of a ETB.
@@ -26,7 +23,40 @@ typedef struct ExtraBlock {
   /* record the last instruction if TB is too large */
   struct IR1_INST *tb_too_large_pir1;
 
+/* Fields in user-mode only */
+#ifndef CONFIG_SOFTMMU
+  int8_t _tb_type;
+  /* @succ: successors of this ETB */
+  struct ExtraBlock *succ[2];
+  /* @pending_use: indicate which eflags are used
+   *               but hasn't defined yet */
+  uint8_t pending_use;
+  /* @flags: used to indicate the state of this ETB
+   *         bit[0] set if succ[2] are set
+   *         bit[1] set if pending_use is set */
+  uint8 flags;
+#define SUCC_IS_SET_MASK 0x01
+#define PENDING_USE_IS_SET_MASK 0x02
+  /* Execution time of this TB */
+  int64 _execution_times;
+#endif
+
+/* Fields in system-mode only */
+#ifdef CONFIG_SOFTMMU
+  /* TB ends because of special situation in system-mode */
   struct IR1_INST *sys_eob_pir1;
+#if defined(CONFIG_XTM_PROFILE) || defined(CONFIG_XTM_FAST_CS)
+#define XTM_FAST_CS_SHIFT_FPU 0
+#define XTM_FAST_CS_SHIFT_XMM 1
+#define XTM_FAST_CS_MASK_FPU (1 << XTM_FAST_CS_SHIFT_FPU)
+#define XTM_FAST_CS_MASK_XMM (1 << XTM_FAST_CS_SHIFT_XMM)
+#define XTM_FAST_CS_MASK (XTM_FAST_CS_MASK_FPU | XTM_FAST_CS_MASK_XMM)
+#define XTM_FAST_CS_MASK_ZERO 0x0
+  /* mask[0]: this TB use FPU
+   * mask[1]: this TB use XMM */
+  uint8_t fast_cs_mask;
+#endif
+#endif
 
   bool tb_need_cpc[2]; /* cross page check */
 
@@ -35,13 +65,12 @@ typedef struct ExtraBlock {
   bool branch_to_target_direct_in_mips_branch;
   uint32_t mips_branch_backup;
 
-  // TODO what do you mean by historical field
-  // FIXME change type from char to int8 back
   /* historical field */
-  char _top_in;
-  char _top_out;
+  int8 _top_in;
+  int8 _top_out;
   void *next_tb[2];
 } ETB;
+#endif
 
 // TODO ???
 /*
@@ -484,21 +513,21 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr);
 tb_page_addr_t get_page_addr_code_hostp(CPUArchState *env, target_ulong addr,
                                         void **hostp);
 
-// FIXME I don't know who needs them and where they are defined.
-#if 0
 void tlb_reset_dirty(CPUState *cpu, ram_addr_t start1, ram_addr_t length);
 void tlb_set_dirty(CPUState *cpu, target_ulong vaddr);
 
 /* exec.c */
 void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr);
 
-MemoryRegionSection *
+static inline MemoryRegionSection *
 address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
-                                  hwaddr *xlat, hwaddr *plen,
-                                  MemTxAttrs attrs, int *prot);
+                                  hwaddr *xlat, hwaddr *plen, MemTxAttrs attrs,
+                                  int *prot) {
+  // FIXME interface
+  return NULL;
+}
 hwaddr memory_region_section_get_iotlb(CPUState *cpu,
                                        MemoryRegionSection *section);
-#endif
 #endif
 
 void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr);
@@ -514,14 +543,6 @@ void assert_no_pages_locked(void);
 static inline void assert_no_pages_locked(void) {}
 #endif
 
-static inline MemoryRegionSection *
-address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
-                                  hwaddr *xlat, hwaddr *plen, MemTxAttrs attrs,
-                                  int *prot) {
-  // FIXME
-  return NULL;
-}
-
 /* TranslationBlock invalidate API */
 #if defined(CONFIG_USER_ONLY)
 void tb_invalidate_phys_addr(target_ulong addr);
@@ -534,9 +555,6 @@ void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr);
 TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
                                    target_ulong cs_base, uint32_t flags,
                                    uint32_t cf_mask);
-
-hwaddr memory_region_section_get_iotlb(CPUState *cpu,
-                                       MemoryRegionSection *section);
 
 void page_size_init(void);
 
