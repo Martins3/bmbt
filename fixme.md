@@ -5,6 +5,7 @@
     2. include/exec/ram_addr.h
     3. memory.h
     4. 在 exec-all.h 中间 memory_region_section_get_iotlb
+    5. /home/maritns3/core/ld/DuckBuBi/include/exec/address-space.h 中一堆接口
 
 2. apic
     1. DeviceState 中定义为空
@@ -30,6 +31,8 @@
 
 6. 处理一下满天飞羽的各种 type 定义
   1. ExtraBlock 是 LATX 中特殊需求的，其中 `_top_in` 的类型是 int8, 而 int8 又是定义在 src/i386/LATX/include/types.h 中间了，着很难受啊
+  2. HOST_LONG_BITS 和 TARGET_LONG_BITS 的定义位置
+  3. target_long 的定义
 
 ## 代码分析工作
 1. --enable-x86tomips-flag-int 是干什么的 ?
@@ -57,5 +60,5 @@ In another word, why mmap_lock is necessary for user mode ?
   - 至少，我感觉，应该是宏来计算出来，而不是直接说是 16
 
 18. /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 和 /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 是啥关系，为啥非要搞出来两个文件。
-
-log_cpu_state_mask ??
+19. 为什么 cpu_handle_interrupt 需要调用 
+do_cpu_init

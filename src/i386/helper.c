@@ -308,7 +308,6 @@ void cpu_report_tpr_access(CPUX86State *env, TPRAccess access) {
 }
 #endif /* !CONFIG_USER_ONLY */
 
-// FIXME this is called by cpu_handle_interrupt, it's impressive
 #if !defined(CONFIG_USER_ONLY)
 void do_cpu_init(X86CPU *cpu) {
   CPUState *cs = CPU(cpu);
