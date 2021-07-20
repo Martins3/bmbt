@@ -109,7 +109,6 @@ typedef struct TranslationBlock {
 
   struct tb_tc tc;
 
-  // FIXME deeper
   /* original tb when cflags has CF_NOCACHE */
   struct TranslationBlock *orig_tb;
 
@@ -193,7 +192,6 @@ void tlb_flush(CPUState *cpu);
  * code. If the searched_pc is not in translated code no state is
  * restored and the function returns false.
  */
-// FIXME translate-all.c will be supported soon, maybe not every one is needed
 bool cpu_restore_state(CPUState *cpu, uintptr_t searched_pc, bool will_exit);
 
 void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
