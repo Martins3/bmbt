@@ -55,3 +55,7 @@ In another word, why mmap_lock is necessary for user mode ?
 16. tb_tc 是做啥的 ?
 17. 为什么 CODE_GEN_ALIGN 的大小是 16
   - 至少，我感觉，应该是宏来计算出来，而不是直接说是 16
+
+18. /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 和 /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 是啥关系，为啥非要搞出来两个文件。
+
+log_cpu_state_mask ??

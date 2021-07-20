@@ -3,6 +3,7 @@
 #include "../../include/fpu/softfloat.h"
 #include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
+#include "../../include/qemu/log.h"
 #include "../../include/qemu/log-for-trace.h"
 #include "cpu.h"
 #include "svm.h"
@@ -44,8 +45,7 @@ void do_smm_enter(X86CPU *cpu)
 #endif
 
     qemu_log_mask(CPU_LOG_INT, "SMM: enter\n");
-    // FIXME log again, ~~~~~ 
-    // log_cpu_state_mask(CPU_LOG_INT, CPU(cpu), CPU_DUMP_CCOP);
+    log_cpu_state_mask(CPU_LOG_INT, CPU(cpu), CPU_DUMP_CCOP);
 
     env->msr_smi_count++;
     env->hflags |= HF_SMM_MASK;
@@ -326,8 +326,7 @@ void helper_rsm(CPUX86State *env)
     env->hflags &= ~HF_SMM_MASK;
 
     qemu_log_mask(CPU_LOG_INT, "SMM: after RSM\n");
-    // FIXME log again
-    // log_cpu_state_mask(CPU_LOG_INT, CPU(cpu), CPU_DUMP_CCOP);
+    log_cpu_state_mask(CPU_LOG_INT, CPU(cpu), CPU_DUMP_CCOP);
 #if defined(CONFIG_SOFTMMU) && defined(CONFIG_XTM_PROFILE)
     xtm_pf_tbf_clr_prefix();
 #endif
