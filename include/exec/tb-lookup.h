@@ -5,7 +5,6 @@
 #include "../hw/core/cpu.h"
 #include "../types.h"
 
-// FIXME how cross page works?
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
 #ifdef CONFIG_XTM_PROFILE
 #include "x86tomips-profile-sys.h"
