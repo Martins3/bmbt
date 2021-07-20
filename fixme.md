@@ -39,4 +39,4 @@
 10. `__builtin___clear_cache` 还可以用吗 ?
 
 11. tb_gen_code 是如何运行的 ?
-
+12. bswap.h 中间的，当 CONFIG_MACHINE_BSWAP_H 可以调查一下 C 库中间是否存在 bswap 的支持，因为是用于 reference C 库的

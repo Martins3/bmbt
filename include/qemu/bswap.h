@@ -33,8 +33,6 @@ typedef union {
      } l;
 } CPU_LDoubleU;
 
-// FIXME I  don't know the story of this macro
-// more investigation is needed
 #ifdef CONFIG_MACHINE_BSWAP_H
 # include <sys/endian.h>
 # include <machine/bswap.h>
