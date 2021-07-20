@@ -3,7 +3,6 @@
 
 #include "../../include/exec/helper-head.h"
 #include "../../src/i386/cpu.h" // CPUArchState
-// TODO maybe group this helper by name
 
 // DEF_HELPER_FLAGS_4(cc_compute_all, TCG_CALL_NO_RWG_SE, tl, tl, tl, tl, int)
 // DEF_HELPER_FLAGS_4(cc_compute_c, TCG_CALL_NO_RWG_SE, tl, tl, tl, tl, int)
@@ -20,28 +19,28 @@ DEF_HELPER_1(read_eflags, tl, env)
 // DEF_HELPER_2(idivq_EAX, void, env, tl)
 // #endif
 // DEF_HELPER_FLAGS_2(cr4_testbit, TCG_CALL_NO_WG, void, env, i32)
-// 
+//
 // DEF_HELPER_FLAGS_2(bndck, TCG_CALL_NO_WG, void, env, i32)
 // DEF_HELPER_FLAGS_3(bndldx32, TCG_CALL_NO_WG, i64, env, tl, tl)
 // DEF_HELPER_FLAGS_3(bndldx64, TCG_CALL_NO_WG, i64, env, tl, tl)
 // DEF_HELPER_FLAGS_5(bndstx32, TCG_CALL_NO_WG, void, env, tl, tl, i64, i64)
 // DEF_HELPER_FLAGS_5(bndstx64, TCG_CALL_NO_WG, void, env, tl, tl, i64, i64)
 // DEF_HELPER_1(bnd_jmp, void, env)
-// 
+//
 DEF_HELPER_2(aam, void, env, int)
 DEF_HELPER_2(aad, void, env, int)
 DEF_HELPER_1(aaa, void, env)
 DEF_HELPER_1(aas, void, env)
 DEF_HELPER_1(daa, void, env)
 DEF_HELPER_1(das, void, env)
-// 
+//
 // DEF_HELPER_2(lsl, tl, env, tl)
 // DEF_HELPER_2(lar, tl, env, tl)
 DEF_HELPER_2(verr, void, env, tl)
 DEF_HELPER_2(verw, void, env, tl)
 DEF_HELPER_2(lldt, void, env, int)
 DEF_HELPER_2(ltr, void, env, int)
-DEF_HELPER_3(load_seg, void, env, int, int) // TODO
+DEF_HELPER_3(load_seg, void, env, int, int)
 DEF_HELPER_4(ljmp_protected, void, env, int, tl, tl)
 DEF_HELPER_5(lcall_real, void, env, int, tl, int, int)
 DEF_HELPER_5(lcall_protected, void, env, int, tl, int, tl)
@@ -55,7 +54,7 @@ DEF_HELPER_2(lmsw, void, env, tl)
 DEF_HELPER_FLAGS_3(set_dr, TCG_CALL_NO_WG, void, env, int, tl)
 DEF_HELPER_FLAGS_2(get_dr, TCG_CALL_NO_WG, tl, env, int)
 DEF_HELPER_2(invlpg, void, env, tl)
-// 
+//
 DEF_HELPER_1(sysenter, void, env)
 DEF_HELPER_2(sysexit, void, env, int)
 // #ifdef TARGET_X86_64
@@ -69,7 +68,7 @@ DEF_HELPER_2(pause, void, env, int)
 DEF_HELPER_1(debug, void, env)
 // DEF_HELPER_1(reset_rf, void, env)
 DEF_HELPER_3(raise_interrupt, void, env, int, int)
-DEF_HELPER_2(raise_exception, void, env, int) // TODO
+DEF_HELPER_2(raise_exception, void, env, int)
 // DEF_HELPER_1(cli, void, env)
 // DEF_HELPER_1(sti, void, env)
 // DEF_HELPER_1(clac, void, env)
@@ -103,7 +102,7 @@ DEF_HELPER_2(inw, tl, env, i32)
 DEF_HELPER_3(outl, void, env, i32, i32)
 DEF_HELPER_2(inl, tl, env, i32)
 DEF_HELPER_FLAGS_4(bpt_io, TCG_CALL_NO_WG, void, env, i32, i32, tl)
-// 
+//
 // DEF_HELPER_3(svm_check_intercept_param, void, env, i32, i64)
 // DEF_HELPER_4(svm_check_io, void, env, i32, i32, i32)
 DEF_HELPER_3(vmrun, void, env, int, int)
@@ -114,9 +113,9 @@ DEF_HELPER_1(stgi, void, env)
 DEF_HELPER_1(clgi, void, env)
 DEF_HELPER_1(skinit, void, env)
 DEF_HELPER_2(invlpga, void, env, int)
-// 
+//
 // /* x86 FPU */
-// 
+//
 // DEF_HELPER_2(flds_FT0, void, env, i32)
 // DEF_HELPER_2(fldl_FT0, void, env, i64)
 // DEF_HELPER_2(fildl_FT0, void, env, s32)
@@ -200,24 +199,23 @@ DEF_HELPER_3(frstor, void, env, tl, int)
 DEF_HELPER_FLAGS_2(fxsave, TCG_CALL_NO_WG, void, env, tl)
 DEF_HELPER_FLAGS_2(fxrstor, TCG_CALL_NO_WG, void, env, tl)
 DEF_HELPER_FLAGS_3(xsave, TCG_CALL_NO_WG, void, env, tl, i64)
-// TODO xsaveopt is special
 DEF_HELPER_FLAGS_3(xsaveopt, TCG_CALL_NO_WG, void, env, tl, i64)
 DEF_HELPER_FLAGS_3(xrstor, TCG_CALL_NO_WG, void, env, tl, i64)
 DEF_HELPER_FLAGS_2(xgetbv, TCG_CALL_NO_WG, i64, env, i32)
 DEF_HELPER_FLAGS_3(xsetbv, TCG_CALL_NO_WG, void, env, i32, i64)
 // DEF_HELPER_FLAGS_2(rdpkru, TCG_CALL_NO_WG, i64, env, i32)
 // DEF_HELPER_FLAGS_3(wrpkru, TCG_CALL_NO_WG, void, env, i32, i64)
-// 
+//
 // DEF_HELPER_FLAGS_2(pdep, TCG_CALL_NO_RWG_SE, tl, tl, tl)
 // DEF_HELPER_FLAGS_2(pext, TCG_CALL_NO_RWG_SE, tl, tl, tl)
-// 
+//
 // /* MMX/SSE */
-// 
+//
 // DEF_HELPER_2(ldmxcsr, void, env, i32)
 // DEF_HELPER_1(enter_mmx, void, env)
 // DEF_HELPER_1(emms, void, env)
 // DEF_HELPER_3(movq, void, env, ptr, ptr)
-// 
+//
 // #define SHIFT 0
 // #include "ops_sse_header.h"
 // #define SHIFT 1
@@ -233,10 +231,7 @@ DEF_HELPER_FLAGS_3(xsetbv, TCG_CALL_NO_WG, void, env, i32, i64)
 // DEF_HELPER_3(rclq, tl, env, tl, tl)
 // DEF_HELPER_3(rcrq, tl, env, tl, tl)
 // #endif
-// 
+//
 // DEF_HELPER_1(rdrand, tl, env)
-
-// FIXME copied from tcg-runtime.h
-DEF_HELPER_FLAGS_1(lookup_tb, TCG_CALL_NO_WG_SE, ptr, env)
 
 #endif /* end of include guard: HELPER_H_9BLYUHYU */
