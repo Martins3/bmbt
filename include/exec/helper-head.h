@@ -51,8 +51,8 @@
 #define dh_ctype_noreturn void QEMU_NORETURN
 #define dh_ctype(t) dh_ctype_##t
 
-// FIXME how, header problem
-// #ifdef NEED_CPU_H
+#define NEED_CPU_H
+#ifdef NEED_CPU_H
 #ifdef TARGET_LONG_BITS
 #if TARGET_LONG_BITS == 32
 #define dh_alias_tl i32
@@ -63,7 +63,8 @@
 #define dh_alias_env ptr
 #define dh_ctype_tl target_ulong
 #define dh_ctype_env CPUArchState *
-// #endif
+#endif
+#undef NEED_CPU_H
 
 /* We can't use glue() here because it falls foul of C preprocessor
    recursive expansion rules.  */

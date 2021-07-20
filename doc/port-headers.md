@@ -18,7 +18,6 @@
 | `#include <stdbool>`     | 如何让 acpi / kernel / tcg 使用同一个 header                                                                                                                   |
 | 清理 types 的定义        | target_ulong 和各种 u32 i32, 以及 ram_addr_t 定义在 cpu-common.h 中，感觉很随意                                                                                |
 | 清理头文件的依赖         | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h                                                                                                              |
-| NEED_CPU_H               | 这个 macro 是干啥的，猜测真正的操作是，一个头文件 a.h，其中的一部分被 NEED_CPU_H 包围，a.h 被不同的 c 文件包含，b.c 和 c.c, 那么 b.c 和 c.c 看到的内容可以不同 |
 | 写一个所有头文件功能描述 | cpu-all.h exec-all.h cpu.h cpu-defs.h 中间到底有什么，根本不清楚啊                                                                                             |
 
 6. 需要被重新设计的头文件
