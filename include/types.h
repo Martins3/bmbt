@@ -72,6 +72,7 @@ typedef unsigned long int uint64_t;
 
 // FIXME This line is belongs to compiler.h
 #define QEMU_NORETURN __attribute__((__noreturn__))
+#define GCC_FMT_ATTR(n, m) __attribute__((format(printf, n, m)))
 
 #define QEMU_PACKED __attribute__((packed))
 
@@ -86,6 +87,7 @@ typedef unsigned long int uint64_t;
   struct {                                                                     \
     int : (x) ? -1 : 1;                                                        \
   }
+
 
 #define QEMU_BUILD_BUG_ON_ZERO(x)                                              \
   (sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)) - sizeof(QEMU_BUILD_BUG_ON_STRUCT(x)))
