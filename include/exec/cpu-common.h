@@ -10,9 +10,6 @@ enum device_endian {
   DEVICE_LITTLE_ENDIAN,
 };
 
-// FIXME what's the purpose of this header
-
-// FIXME CONFIG_XEN_BACKEND why affect ram_addr_t ?
 /* address in the RAM (different from a physical address) */
 #if defined(CONFIG_XEN_BACKEND)
 typedef uint64_t ram_addr_t;
