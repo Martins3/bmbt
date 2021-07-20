@@ -11,7 +11,7 @@
 
 /* ACPICA external files should not include ACPICA headers directly. */
 
-// FIXME make following warning happy
+// TODO make following warning happy
 #define BUILDING_ACPICA
 
 #if !defined(BUILDING_ACPICA) && !defined(_LINUX_ACPI_H)
@@ -60,7 +60,7 @@
 #include <asm/acenv.h>
 #endif
 
-// FIXME remove this ?
+// TODO remove this ?
 #define ACPI_INIT_FUNCTION __init
 
 /* Use a specific bugging default separate from ACPICA */
@@ -68,7 +68,7 @@
 #undef ACPI_DEBUG_DEFAULT
 #define ACPI_DEBUG_DEFAULT          (ACPI_LV_INFO | ACPI_LV_REPAIR)
 
-// FIXME tmp fix
+// TODO tmp fix
 #define CONFIG_ACPI
 
 #ifndef CONFIG_ACPI
@@ -104,12 +104,12 @@
 
 /* Host-dependent types and defines for in-kernel ACPICA */
 
-// FIXME define this variable
+// TODO define this variable
 #define ACPI_MACHINE_WIDTH          BITS_PER_LONG
 #define ACPI_USE_NATIVE_MATH64
-// FIXME me
+// TODO me
 #define ACPI_EXPORT_SYMBOL(symbol)  EXPORT_SYMBOL(symbol);
-// FIXME copy code from kernel is enough
+// TODO copy code from kernel is enough
 #define strtoul                     simple_strtoul
 
 #define acpi_cache_t                        struct kmem_cache
@@ -120,7 +120,7 @@
 
 #define USE_NATIVE_ALLOCATE_ZEROED
 
-// FIXME about define variable
+// TODO about define variable
 /*
  * Overrides for in-kernel ACPICA
  */
