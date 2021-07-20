@@ -2,10 +2,6 @@
 #define MEMOP_H_BRBWZAQH
 #include "../qemu/host-utils.h"
 
-// FIXME
-// 2. where is TARGET_WORDS_BIGENDIAN / HOST_WORDS_BIGENDIAN ?
-//    1. include the header, don't define them here manually
-
 #define NEED_CPU_H
 
 typedef enum MemOp {
