@@ -20,12 +20,3 @@ Please contact huxueshi@loongson.cn
 As for collaboration, please follow [these instructions](./CONTRIBUTING.md)
 
 This project is fairly tricky for beginner, we also write some [documents for newbie](./doc/newbie.md)
-
-## 任务进度
-- [ ] 锁，多核
-- [ ] 启动, 初始化
-- [ ] memory model 的接口
-- [ ] fw_cfg / loader 之类的 : 其实就是 machine 启动相关的部分
-
-
-任务具体细节参考 [#34](https://github.com/Martins3/BMBT/issues/34)

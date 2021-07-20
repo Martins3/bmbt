@@ -60,5 +60,4 @@ In another word, why mmap_lock is necessary for user mode ?
   - 至少，我感觉，应该是宏来计算出来，而不是直接说是 16
 
 18. /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 和 /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 是啥关系，为啥非要搞出来两个文件。
-19. 为什么 cpu_handle_interrupt 需要调用 
-do_cpu_init
+19. 为什么 cpu_handle_interrupt 需要调用 do_cpu_init
