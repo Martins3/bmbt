@@ -55,4 +55,3 @@ Date:   Wed Apr 14 13:20:01 2021 +0200
     Reviewed-by: Philippe Mathieu-Daudé <philmd@redhat.com>
     Signed-off-by: Thomas Huth <thuth@redhat.com>
 ```
-
