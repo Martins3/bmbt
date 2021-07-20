@@ -9,8 +9,8 @@
 #include "../../qemu/config-host.h"
 #include "../../qemu/queue.h"
 #include "../../types.h"
+#include <inttypes.h> // for VADDR_PRIx
 #include <setjmp.h>
-#include <inttypes.h> // for VADDR_PRIx 
 
 /**
  * vaddr:
@@ -349,12 +349,13 @@ enum CPUDumpFlags {
   CPU_DUMP_CCOP = 0x00040000,
 };
 
-// FIXME implement later
 /**
  * cpu_reset:
  * @cpu: The CPU whose state is to be reset.
  */
-void cpu_reset(CPUState *cpu);
+static inline void cpu_reset(CPUState *cpu) {
+  // FIXME interface
+}
 
 // FIXME initialize cpu_interrupt_handler
 // surely, we can simplify it.
@@ -372,9 +373,8 @@ static inline void cpu_interrupt(CPUState *cpu, int mask) {
   cpu_interrupt_handler(cpu, mask);
 }
 
-// FIXME will redesing cpu_abort,
-// GCC_FMT_ATTR(2, 3) ??
-void QEMU_NORETURN cpu_abort(CPUState *cpu, const char *fmt, ...);
+void QEMU_NORETURN cpu_abort(CPUState *cpu, const char *fmt, ...)
+    GCC_FMT_ATTR(2, 3);
 
 /* work queue */
 
@@ -398,11 +398,8 @@ typedef void (*run_on_cpu_func)(CPUState *cpu, run_on_cpu_data data);
 
 static inline void async_safe_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
                                          run_on_cpu_data data) {
-  // FIXME
+  // FIXME interface
 }
-
-// FIXME take care of, it seems the highlight is misleading
-static inline void cpu_tb_jmp_cache_clear(CPUState *cpu);
 
 /*
  * Low 16 bits: number of cycles left, used only in icount mode.
