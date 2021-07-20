@@ -42,4 +42,22 @@ GTree *g_tree_new(GCompareFunc key_compare_func);
 
 gpointer g_try_malloc0(int n_bytes);
 
+#define g_new(type, num) (type *)NULL
+#define g_try_new(type, num) (type *)NULL
+#define g_free(type)                                                           \
+  {}
+#define g_assert(expr)                                                         \
+  {}
+#define g_assert_not_reached()                                                 \
+  { exit(0); }
+
+#define g_new0(struct_type, n_structs) (struct_type *)NULL
+#define g_malloc(size) NULL
+
+#undef MAX
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+#undef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */

@@ -411,26 +411,6 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
 void tlb_set_page(CPUState *cpu, target_ulong vaddr, hwaddr paddr, int prot,
                   int mmu_idx, target_ulong size);
 
-// FIXME copied from /usr/include/glib-2.0/glib/gmem.h
-// of course, we will rewrite all the
-#define g_new(type, num) (type *)NULL
-#define g_try_new(type, num) (type *)NULL
-#define g_free(type)                                                           \
-  {}
-#define g_assert(expr)                                                         \
-  {}
-#define g_assert_not_reached()                                                 \
-  { exit(0); }
-
-#define g_new0(struct_type, n_structs) (struct_type *)NULL
-#define g_malloc(size) NULL
-
-#undef MAX
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-
-#undef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
 /* The true return address will often point to a host insn that is part of
    the next translated guest insn.  Adjust the address backward to point to
    the middle of the call insn.  Subtracting one would do the job except for
