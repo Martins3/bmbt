@@ -170,7 +170,6 @@ static inline u32 curr_cflags(void) {
   return (parallel_cpus ? CF_PARALLEL : 0) | (use_icount ? CF_USE_ICOUNT : 0);
 }
 
-// FIXME why is 16 ?
 #define CODE_GEN_ALIGN 16 /* must be >= of the size of a icache line */
 
 /* vl.c */

@@ -53,3 +53,5 @@
 In another word, why mmap_lock is necessary for user mode ?
 实际上，mmap 的使用位置相当有限
 16. tb_tc 是做啥的 ?
+17. 为什么 CODE_GEN_ALIGN 的大小是 16
+  - 至少，我感觉，应该是宏来计算出来，而不是直接说是 16
