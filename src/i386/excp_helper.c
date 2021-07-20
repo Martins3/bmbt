@@ -4,6 +4,7 @@
 #include "../../include/fpu/softfloat.h"
 #include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
+#include "../../include/qemu/log.h"
 #include "cpu.h"
 #include "svm.h"
 #include "LATX/x86tomips-config.h"
