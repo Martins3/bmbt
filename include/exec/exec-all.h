@@ -72,7 +72,7 @@ typedef struct ExtraBlock {
 } ETB;
 #endif
 
-// TODO ???
+// FIXME ???
 /*
  * Translation Cache-related fields of a TB.
  * This struct exists just for convenience; we keep track of TB's in a binary
@@ -113,7 +113,7 @@ typedef struct TranslationBlock {
 
   struct tb_tc tc;
 
-  // TODO deeper
+  // FIXME deeper
   /* original tb when cflags has CF_NOCACHE */
   struct TranslationBlock *orig_tb;
 
