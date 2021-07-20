@@ -20,7 +20,9 @@
   3. big qemu lock
 
 4. icount 机制
-  -  cpu_exec
+  - cpu_exec
+  - TranslationBlock::icount
+  - 在 CPUX86State::neg 似乎也有这个东西
 
 5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
   1. tlb_debug
@@ -47,3 +49,7 @@
 13. cpu_unaligned_access : x86 对应的 handler 没有赋值啊
 14. how cross page works?
     - cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
+15. why is mmap_lock empty in system mode?
+In another word, why mmap_lock is necessary for user mode ?
+实际上，mmap 的使用位置相当有限
+16. tb_tc 是做啥的 ?

@@ -9,6 +9,18 @@
 #include "cpu-defs.h"
 #include "memop.h"
 
+/*
+ * Translation Cache-related fields of a TB.
+ * This struct exists just for convenience; we keep track of TB's in a binary
+ * search tree, and the only fields needed to compare TB's in the tree are
+ * @ptr and @size.
+ * Note: the address of search data can be obtained by adding @size to @ptr.
+ */
+struct tb_tc {
+  void *ptr; /* pointer to the translated code */
+  size_t size;
+};
+
 #ifdef CONFIG_X86toMIPS
 struct IR1_INST;
 /* extra attributes we need in TB */
@@ -72,19 +84,6 @@ typedef struct ExtraBlock {
 } ETB;
 #endif
 
-// FIXME ???
-/*
- * Translation Cache-related fields of a TB.
- * This struct exists just for convenience; we keep track of TB's in a binary
- * search tree, and the only fields needed to compare TB's in the tree are
- * @ptr and @size.
- * Note: the address of search data can be obtained by adding @size to @ptr.
- */
-struct tb_tc {
-  void *ptr; /* pointer to the translated code */
-  size_t size;
-};
-
 typedef struct TranslationBlock {
 
   /* simulated PC corresponding to this block (EIP + CS base) */
@@ -93,9 +92,6 @@ typedef struct TranslationBlock {
   u32 flags; /* flags defining in which context the code was generated */
   u16 size;  /* size of target code for this block (1 <=
                      size <= TARGET_PAGE_SIZE) */
-  // FIXME
-  // What's icount, how to handle it?
-  // what's the relatetion with icount_decr?
   uint16_t icount;
   u32 cflags; /* compile flags */
 
@@ -185,9 +181,6 @@ extern int singlestep;
 
 void tlb_flush(CPUState *cpu);
 
-// FIXME wanna cry
-void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
-
 // FIXME copied from log.h begin ========================
 /* log only if a bit is set on the current loglevel mask:
  * @mask: bit to check in the mask
@@ -223,6 +216,7 @@ int qemu_log(const char *fmt, ...);
 // FIXME implement it
 void log_cpu_state(CPUState *cpu, int flags);
 // FIXME copied from log.h end ======================
+
 
 /**
  * cpu_restore_state:
@@ -458,8 +452,6 @@ get_page_addr_code_hostp(CPUArchState *env, target_ulong addr, void **hostp) {
   return addr;
 }
 #else
-// FIXME why is mmap_lock empty in system mode?
-// In another word, why mmap_lock is necessary for user mode ?
 static inline void mmap_lock(void) {}
 static inline void mmap_unlock(void) {}
 
