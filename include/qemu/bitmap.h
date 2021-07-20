@@ -1,13 +1,14 @@
 #ifndef BITMAP_H_ENRPTXFD
 #define BITMAP_H_ENRPTXFD
 
+#include "../../src/tcg/glib_stub.h"
 #include "bitops.h"
+
 #include <stdlib.h>
 
 static inline unsigned long *bitmap_try_new(long nbits) {
-  // FIXME fix later
-  // long len = BITS_TO_LONGS(nbits) * sizeof(unsigned long);
-  // return g_try_malloc0(len);
+  long len = BITS_TO_LONGS(nbits) * sizeof(unsigned long);
+  return g_try_malloc0(len);
   return 0;
 }
 
@@ -19,8 +20,9 @@ static inline unsigned long *bitmap_new(long nbits) {
   return ptr;
 }
 
-// FIXME fix later, I'm fucking tired
-void bitmap_set(unsigned long *map, long i, long len);
+static inline void bitmap_set(unsigned long *map, long i, long len) {
+  // FIXME interface
+}
 
 #define DECLARE_BITMAP(name, bits) unsigned long name[BITS_TO_LONGS(bits)]
 

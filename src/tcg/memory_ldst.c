@@ -197,8 +197,6 @@ uint32_t address_space_lduw(AddressSpace *as, hwaddr addr, MemTxAttrs attrs,
                                      DEVICE_NATIVE_ENDIAN);
 }
 
-// FIXME it references so many dirty related function
-// maybe I don't need it
 void address_space_stl_notdirty(AddressSpace *as, hwaddr addr, uint32_t val,
                                 MemTxAttrs attrs, MemTxResult *result) {
   uint8_t *ptr;
@@ -313,10 +311,6 @@ void address_space_stb(AddressSpace *as, hwaddr addr, uint32_t val,
   rcu_read_unlock();
 }
 
-// FIXME there's one scaring questions:
-// 1. get the QBL when entering cpu_exec
-// 2. but here, we are trying to know is lock locked
-// 3. so, in some helper, we unlocked the BQL, or the assumption is wrong
 static inline void address_space_stw_internal(AddressSpace *as, hwaddr addr,
                                               uint32_t val, MemTxAttrs attrs,
                                               MemTxResult *result,

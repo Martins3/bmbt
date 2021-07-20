@@ -1,10 +1,5 @@
 #ifndef GLIB_STUB_H_78QYZX2K
 #define GLIB_STUB_H_78QYZX2K
-// FIXME I know the glib will be removed eventually
-// but #include <glib-2.0/glib/gtree.h> doesn't work
-// so create a empty stub for it.
-//
-// I will remvoe this with glib, but the glib will be replace later.
 
 #include <stdbool.h>
 
@@ -44,5 +39,7 @@ GTree *g_tree_new_full(GCompareDataFunc key_compare_func,
 
 typedef gint (*GCompareFunc)(gconstpointer a, gconstpointer b);
 GTree *g_tree_new(GCompareFunc key_compare_func);
+
+gpointer g_try_malloc0(int n_bytes);
 
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */

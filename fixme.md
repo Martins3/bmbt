@@ -16,6 +16,7 @@
   1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
     - 关注一下，为什么单独这里是需要处理 lock 的
   2. helper_atomic_cmpxchgq_le_mmu : 这个最后会导入一个很烦人的 lock 中间去
+  3. big qemu lock
 
 4. icount 机制
   -  cpu_exec
