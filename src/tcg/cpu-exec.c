@@ -7,9 +7,9 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/hw/i386/apic.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/plugin.h"
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
-#include "../../include/qemu/plugin.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
@@ -498,7 +498,6 @@ int cpu_exec(CPUState *cpu) {
    */
   // init_delay_params(&sc, cpu);
 
-  // FIXME find out from where the code flow jump to here
   if (sigsetjmp(cpu->jmp_env, 0) != 0) {
     // FIXME some checks for sigsetjmp bugs, review it later
 

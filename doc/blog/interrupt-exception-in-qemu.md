@@ -12,6 +12,7 @@ CPUState::interrupt_request
 - [ ] 我的印象当中，exception 似乎是和 setjmp 相关的，找到
   - [ ] 上下文的保存
   - [ ] 恢复
+- [ ] 为什么需要采用 setjmp 的操作 ？
 
 - cpu_handle_interrupt
   - 首先处理和架构无关的，类似 halt reset 之类的
@@ -23,3 +24,6 @@ CPUState::interrupt_request
 exception_index 和负数的关系是什么 ?
 
 总体来说，
+
+从 cpu_loop_exit_noexc 的注释来说，似乎是离开的原因没有什么的时候的，
+就采用这种。
