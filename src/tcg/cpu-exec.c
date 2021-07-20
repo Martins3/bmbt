@@ -306,8 +306,6 @@ static inline void cpu_handle_debug_exception(CPUState *cpu) {
   cc->debug_excp_handler(cpu);
 }
 
-// FIXME I don't know how cpu_handle_exception works,
-// it seems some thing important has happened somewhere else.
 static inline bool cpu_handle_exception(CPUState *cpu, int *ret) {
   if (cpu->exception_index < 0) {
 #ifndef CONFIG_USER_ONLY
@@ -445,6 +443,9 @@ static inline bool cpu_handle_interrupt(CPUState *cpu,
       (use_icount &&
        cpu_neg(cpu)->icount_decr.u16.low + cpu->icount_extra == 0)) {
     atomic_set(&cpu->exit_request, 0);
+    // @todo: how exception_index works ?
+    // 1. what does it mean by = -1 ?
+    // 2. what's exception interrupt ?
     if (cpu->exception_index == -1) {
       cpu->exception_index = EXCP_INTERRUPT;
     }

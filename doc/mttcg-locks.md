@@ -59,7 +59,7 @@ Load-link/store-conditional instruction support via SoftMMU,
 Link helpers and instrumented stores,
 中应该是分析了在 TCG 需要增加的工作
 
-在 Memory coherency 分析的东西，暂时有点迷茫，不知道想要表达什么东西。 @todo
+在 Memory coherency 分析的东西，暂时有点迷茫，不知道想要表达什么东西。 // TODO
 
 ## global_locking
 ```c

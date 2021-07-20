@@ -11,7 +11,7 @@
 | X86CPU           |                                                                                         |
 | TranslationBlock | 1. size x86 代码的 size 还是 la 代码段的 size </br> 2.                                  |
 | TBContext        | 一个统计，一个 qht, 似乎只是定义了一个全局变量                                                                        |
-| TCGContext       | @todo 每一个 thread 定义了一个，同时存在一个全局的 tcg_init_ctx                         |
+| TCGContext       | TODO 每一个 thread 定义了一个，同时存在一个全局的 tcg_init_ctx                         |
 
 x86_cpu_common_class_init 中注册的函数:
 本来在 CPUState 中持有 CPUClass 的指针，并且可以通过 CPU_GET_CLASS 来获取

@@ -19,11 +19,13 @@
     - 关注一下，为什么单独这里是需要处理 lock 的
   2. helper_atomic_cmpxchgq_le_mmu : 这个最后会导入一个很烦人的 lock 中间去
   3. big qemu lock
+  4. include/qemu/atomic.h : 这里定义了一堆空函数
 
 4. icount 机制
   - cpu_exec
   - TranslationBlock::icount
   - 在 CPUX86State::neg 似乎也有这个东西
+  - 在 /home/maritns3/core/ld/DuckBuBi/include/sysemu/replay.h 中间定义一些 reply 相关的函数，和 icount 到底是什么关系
 
 5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
   1. tlb_debug
