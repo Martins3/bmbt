@@ -3,7 +3,11 @@
 ![](./doc/img/fixme.png)
 
 ## Introduction
-`target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
+这个项目的想法是，一个 3A5000 电脑开机之后，然后开机之后就是 Windows 。
+基本思路是让 BIOS 启动之后，然后执行 BMBT，进而让 guest OS 来引导启动。
+这样就可以:
+1. 在二进制翻译上充分利用硬件资源加速
+2. 避免 QEMU 和 Linux 的软件栈的复杂性
 
 ## LoongArch Manual
 Please contact huxueshi@loongson.cn

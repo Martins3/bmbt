@@ -1706,15 +1706,17 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
     max_insns = 1;
   }
 
-  // FIXME this is temporary bug fix from xqm
-  // see commit of xqm : 17da52287dadf474622523b110c02fb16f785b7d
+#ifdef CONFIG_X86toMIPS
   int xtm_is_bo = 0;
+#endif
 
 buffer_overflow:
   tb = tcg_tb_alloc(tcg_ctx);
-
+#ifdef CONFIG_X86toMIPS
   if (unlikely(!tb) || xtm_is_bo) {
-    /* flush must be done */
+#else
+  if (unlikely(!tb)) {
+#endif
     tb_flush(cpu);
     /* Make the execution loop process the flush as soon as possible.  */
     cpu->exception_index = EXCP_INTERRUPT;
@@ -1753,9 +1755,21 @@ tb_overflow:
   if (unlikely(gen_code_size < 0)) {
     switch (gen_code_size) {
     case -1:
+      /*
+       * Overflow of code_gen_buffer, or the current slice of it.
+       */
       xtm_is_bo = 1;
       goto buffer_overflow;
     case -2:
+      /*
+       * The code generated for the TranslationBlock is too large.
+       * The maximum size allowed by the unwind info is 64k.
+       * There may be stricter constraints from relocations
+       * in the tcg backend.
+       *
+       * Try again with half as many insns as we attempted this time.
+       * If a single insn overflows, there's a bug somewhere...
+       */
       max_insns = tb->icount;
       assert(max_insns > 1);
       max_insns /= 2;

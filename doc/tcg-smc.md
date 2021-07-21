@@ -1,6 +1,7 @@
 # SMC 
+- [ ] TARGET_HAS_PRECISE_SMC : 这个东西是啥效果，对应的支持是什么?
 
-
+## 流程
 - tb_invalidate_phys_page_fast
   - page_find
     - [ ] page_find_alloc(tb_page_addr_t index, int alloc)

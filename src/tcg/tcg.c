@@ -321,12 +321,8 @@ static inline TCGTemp *tcg_global_alloc(TCGContext *s) {
   return ts;
 }
 
-#ifndef CONFIG_DIRECT_REGS
-static
-#endif
-    TCGTemp *
-    tcg_global_reg_new_internal(TCGContext *s, TCGType type, TCGReg reg,
-                                const char *name) {
+static TCGTemp *tcg_global_reg_new_internal(TCGContext *s, TCGType type,
+                                            TCGReg reg, const char *name) {
   TCGTemp *ts;
 
   if (TCG_TARGET_REG_BITS == 32 && type != TCG_TYPE_I32) {

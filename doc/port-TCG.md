@@ -1,3 +1,6 @@
+# TCG
+`target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
+
 ## [ ] TCGContext : 如何工作的，如何维护的，作用是什么
 - [ ] tcg_context_init 的参数写死了是: tcg_init_ctx, 那么其他都是怎么初始化的啊
 
@@ -131,12 +134,6 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
 
 ## tb_gen_code : 让我们来分析一下这个狗东西
 - [ ] tb_gen_code 中间有两个 label ： buffer_overflow tb_overflow 分别表示发生了什么事情
-- [ ] cflags 是做啥使用的
-  - [ ] CPUState::cflags_next_tb
-  - [ ] tb_gen_code 中使用 cflags & CF_COUNT_MASK 来构建 cflags
-    - compile flags
-
-
 
 - [ ] 来解释一下这个东西是什么意思啊
 ```c
@@ -146,7 +143,8 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
                        CODE_GEN_ALIGN));
 ```
 
-1. 了解一下 TCGContext::tb_cflags : 这个只是在 tcg/tcg-op.c 中间使用
+1. 了解一下 TCGContext::tb_cflags
+    - 这个只是在 tcg/tcg-op.c 中间使用, 但是现在 xqm 中，这个东西直接被移除掉了, 暂时不用考虑
 
 2. cflags 相关的 macro 的引用位置吧
 
@@ -157,7 +155,7 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
 | CF_COUNT_MASK                      | 似乎存储是这个 TB 中间到底有多少指令                                                          |
 | CF_USE_ICOUNT                      |                                                                                               |
 | CF_PARALLEL                        | mttcg 相关的，还没有开始支持                                                                  |
-| CF_CLUSTER_MASK / CF_CLUSTER_SHIFT | 就是用于存储 cluster idx 的，但是不知道为什么不去存储  cpu idx 啊                             |
+| CF_CLUSTER_MASK / CF_CLUSTER_SHIFT |                                                                                               |
 | CF_INVALID                         | - [ ] 应该追查一下到底什么时候，以及 invalid 一个 tb 所需要进行的操作是什么                   |
 
 3. CPUState::cflags_next_tb 作用?
@@ -170,10 +168,18 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
          have CF_INVALID set, -1 is a convenient invalid value that
          does not require tcg headers for cpu_common_reset.  */
 ```
+此外，cflags_next_tb 将会 tb_find 的参数
+而 tb_find 可能会查询以及生成 tb
+只有 cpu_io_recompile 和 TARGET_HAS_PRECISE_SMC 特别的初始化这个东西
 
 4. 如何理解 curr_cflags ? 
   - 其实就是封装 parallel_cpus 和 icount 在目前的配置，因为 mttcg 和 icount 都不支持，只是返回 0 了
-  - 其实是相当于标准 
+  - 其实是相当于标准 cflags 了
+
+5. CF_CLUSTER_MASK 的作用
+  - 在 tb_gen_code 和 tb_lookup__cpu_state 中都有一个要求将 cflags 的 mask 初始化为当前 cpu 的 cluster 的操作
+  - [ ] 加深一下 cluster index 的理解之后再说
+
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg
