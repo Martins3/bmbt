@@ -135,6 +135,7 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
   - [ ] CPUState::cflags_next_tb
   - [ ] tb_gen_code 中使用 cflags & CF_COUNT_MASK 来构建 cflags
     - compile flags
+  - [ ] `tcg_ctx->tb_cflags = cflags;` : cflags of the current TB
 
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops

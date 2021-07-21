@@ -1730,7 +1730,6 @@ buffer_overflow:
   tb->orig_tb = NULL;
   tb->trace_vcpu_dstate = *cpu->trace_dstate;
 
-  // FIXME what's tcg_ctx's role ?
   tcg_ctx->tb_cflags = cflags;
 
 tb_overflow:

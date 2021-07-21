@@ -60,7 +60,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
 创建 bitmap 的作用是为了精准定位出来到底是哪一个 page 需要被 invalid。
 ```
 
-
 - [ ] page_flush_tb
   - [ ] tb 和 page 大致是怎么关联起来的
 
