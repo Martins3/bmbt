@@ -166,6 +166,9 @@ ADDR cpu_get_guest_base(void) { lsassert(0); return 0; }
 ADDR cpu_get_guest_base(void) { return guest_base; }
 #endif
 
+// FIXME this is called after tb_find
+// x86tomips-config.c is a wired name
+// maybe changed to xqm-hacking.c, our extra hacking for qemu
 void trace_tb_execution(CPUState *cpu, TranslationBlock *tb)
 {
     if (!xtm_trace_enabled()) return;

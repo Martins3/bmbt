@@ -1730,7 +1730,7 @@ buffer_overflow:
   tb->orig_tb = NULL;
   tb->trace_vcpu_dstate = *cpu->trace_dstate;
 
-  tcg_ctx->tb_cflags = cflags;
+  // tcg_ctx->tb_cflags = cflags;
 
 tb_overflow:
   /* generate machine code */

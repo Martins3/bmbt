@@ -6,6 +6,7 @@
     3. memory.h
     4. 在 exec-all.h 中间 memory_region_section_get_iotlb
     5. /home/maritns3/core/ld/DuckBuBi/include/exec/address-space.h 中一堆接口
+    6. 实际上，io_readx 和 io_writex 中间的还是存在一些骚操作的啊
 
 2. apic
     1. DeviceState 中定义为空
@@ -26,6 +27,8 @@
   - TranslationBlock::icount
   - 在 CPUX86State::neg 似乎也有这个东西
   - 在 /home/maritns3/core/ld/DuckBuBi/include/sysemu/replay.h 中间定义一些 reply 相关的函数，和 icount 到底是什么关系
+  - CF_USE_ICOUNT ?
+  - use_icount : 这个变量的解释似乎很清晰，不过可以和具体的效果对比一下
 
 5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
   1. tlb_debug

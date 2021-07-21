@@ -171,7 +171,8 @@ typedef struct TCGContext {
   uintptr_t *tb_jmp_insn_offset; /* tb->jmp_target_arg if direct_jump */
   uintptr_t *tb_jmp_target_addr; /* tb->jmp_target_arg if !direct_jump */
 
-  u32 tb_cflags; /* cflags of the current TB */
+  // xqm doesn't need it
+  // u32 tb_cflags; /* cflags of the current TB */
 
   /* Code generation.  Note that we specifically do not use tcg_insn_unit
      here, because there's too much arithmetic throughout that relies

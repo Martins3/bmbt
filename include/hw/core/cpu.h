@@ -120,7 +120,7 @@ typedef struct CPUState {
   bool created;
 
   sigjmp_buf jmp_env;
-  u32 cflags_next_tb; // FIXME why I need this ?
+  u32 cflags_next_tb;
 
   void *env_ptr; /* CPUArchState */
 

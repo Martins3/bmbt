@@ -135,8 +135,45 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
   - [ ] CPUState::cflags_next_tb
   - [ ] tb_gen_code 中使用 cflags & CF_COUNT_MASK 来构建 cflags
     - compile flags
-  - [ ] `tcg_ctx->tb_cflags = cflags;` : cflags of the current TB
 
+
+
+- [ ] 来解释一下这个东西是什么意思啊
+```c
+  atomic_set(
+      &tcg_ctx->code_gen_ptr,
+      (void *)ROUND_UP((uintptr_t)gen_code_buf + gen_code_size + search_size,
+                       CODE_GEN_ALIGN));
+```
+
+1. 了解一下 TCGContext::tb_cflags : 这个只是在 tcg/tcg-op.c 中间使用
+
+2. cflags 相关的 macro 的引用位置吧
+
+| FLAGS                              | desc                                                                                          |
+|------------------------------------|-----------------------------------------------------------------------------------------------|
+| CF_LAST_IO                         | 在 cpu_io_recompile 插入，而 cpu_io_recompile 需要在 io_readx 和 io_writex 两个函数的地方使用 |
+| CF_NOCACHE                         | cpu_exec_nocache 中插入，检测位置都是在 translate-all.h 中间的                                |
+| CF_COUNT_MASK                      | 似乎存储是这个 TB 中间到底有多少指令                                                          |
+| CF_USE_ICOUNT                      |                                                                                               |
+| CF_PARALLEL                        | mttcg 相关的，还没有开始支持                                                                  |
+| CF_CLUSTER_MASK / CF_CLUSTER_SHIFT | 就是用于存储 cluster idx 的，但是不知道为什么不去存储  cpu idx 啊                             |
+| CF_INVALID                         | - [ ] 应该追查一下到底什么时候，以及 invalid 一个 tb 所需要进行的操作是什么                   |
+
+3. CPUState::cflags_next_tb 作用?
+
+在 cpu_handle_exception 的下面，是这个数值唯一读取的时候: 
+```c
+      /* When requested, use an exact setting for cflags for the next
+         execution.  This is used for icount, precise smc, and stop-
+         after-access watchpoints.  Since this request should never
+         have CF_INVALID set, -1 is a convenient invalid value that
+         does not require tcg headers for cpu_common_reset.  */
+```
+
+4. 如何理解 curr_cflags ? 
+  - 其实就是封装 parallel_cpus 和 icount 在目前的配置，因为 mttcg 和 icount 都不支持，只是返回 0 了
+  - 其实是相当于标准 
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg

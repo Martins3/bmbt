@@ -4,7 +4,6 @@
 #include "../hw/core/cpu.h"
 #include <stdbool.h>
 
-// FIXME how to handle use_icount ?
 extern int use_icount;
 
 static inline void qemu_mutex_lock_iothread() {
