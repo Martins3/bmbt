@@ -1679,8 +1679,6 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
   TranslationBlock *tb, *existing_tb;
   tb_page_addr_t phys_pc, phys_page2;
   target_ulong virt_page2;
-  // FIXME  in xqm, tcg has been removed,
-  // so, why there are tcg instructions?
   tcg_insn_unit *gen_code_buf;
   int max_insns;
   int gen_code_size, search_size;
@@ -1693,8 +1691,6 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
     cflags |= CF_NOCACHE | 1;
   }
 
-  // FIXME wow, cflags define max_insns !
-  // check how it get initiated
   cflags &= ~CF_CLUSTER_MASK;
   cflags |= cpu->cluster_index << CF_CLUSTER_SHIFT;
 
@@ -1714,7 +1710,6 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
   // see commit of xqm : 17da52287dadf474622523b110c02fb16f785b7d
   int xtm_is_bo = 0;
 
-  // FIXME what does buffer and tb overflow means?
 buffer_overflow:
   tb = tcg_tb_alloc(tcg_ctx);
 

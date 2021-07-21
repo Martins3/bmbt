@@ -130,6 +130,11 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
 ```
 
 ## tb_gen_code : 让我们来分析一下这个狗东西
+- [ ] tb_gen_code 中间有两个 label ： buffer_overflow tb_overflow 分别表示发生了什么事情
+- [ ] cflags 是做啥使用的
+  - [ ] CPUState::cflags_next_tb
+  - [ ] tb_gen_code 中使用 cflags & CF_COUNT_MASK 来构建 cflags
+    - compile flags
 
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops

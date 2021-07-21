@@ -71,9 +71,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
     - 记录了一个 TB 所在的页面
     - 如果页面是连续的，就不应该申请两个
 
-
-
-
 - [ ] SMC_BITMAP_USE_THRESHOLD
   - 和 highwater 什么关系?
 
@@ -89,9 +86,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
       - tlb_protect_code : 指向 exec.c 中间，应该是通过 dirty / clean 的方式来防止代码被修改 ?
         - [ ] 原则上，guest 代码段被修改必然需要让对应的 tb 也是被 invalidate 的呀
 
-- [ ] tb_gen_code 的 cflags 是做什么的 ?
-  - compile flags
-  - 来控制什么 ?
 
 - [ ] page_find_alloc 中间为什么需要使用 rcu
 
