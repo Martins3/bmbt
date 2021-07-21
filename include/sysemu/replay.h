@@ -34,7 +34,7 @@ static inline bool replay_interrupt(void) {
     exception processing events. */
 static inline bool replay_exception(void) {
   // FIXME
-  return false;
+  return true;
 }
 
 #endif /* end of include guard: REPLAY_H_HBHMKZQ3 */

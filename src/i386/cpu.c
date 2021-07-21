@@ -670,6 +670,7 @@ static void x86_cpu_common_class_init(CPUState *cpu) {
   cc->reset_dump_flags = CPU_DUMP_FPU | CPU_DUMP_CCOP;
 
 #ifdef CONFIG_TCG
+  cc->do_interrupt = x86_cpu_do_interrupt;
   cc->cpu_exec_interrupt = x86_cpu_exec_interrupt;
 #endif
   cc->set_pc = x86_cpu_set_pc;

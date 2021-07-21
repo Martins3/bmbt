@@ -2,7 +2,6 @@
 
 - [ ] 如果不方便，可以使用 x86 来测试一下
 
-
 检测这两个赋值位置
 CPUState::exception_index
 CPUState::interrupt_request
@@ -14,6 +13,10 @@ CPUState::interrupt_request
   - [ ] 恢复
 - [ ] 为什么需要采用 setjmp 的操作 ？
 
+
+- cpu_handle_exception
+  - x86_cpu_do_interrupt
+
 - cpu_handle_interrupt
   - 首先处理和架构无关的，类似 halt reset 之类的
   - 通过 CPUClass 进入 x86_cpu_exec_interrupt
@@ -23,7 +26,7 @@ CPUState::interrupt_request
 ## CPUState::exception_index
 exception_index 和负数的关系是什么 ?
 
-总体来说，
-
 从 cpu_loop_exit_noexc 的注释来说，似乎是离开的原因没有什么的时候的，
-就采用这种。
+就赋值为 -1
+
+- 在 tcg_qemu_tb_exec 的位置发生跳转, 利用变量 context_switch_bt_to_native 来进行
