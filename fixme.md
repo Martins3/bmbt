@@ -36,6 +36,10 @@
   2. HOST_LONG_BITS 和 TARGET_LONG_BITS 的定义位置
   3. target_long 的定义
 
+7. log printf 和 qemu printf
+    1. include/qemu/log-for-trace.h 和 include/qemu/log-for-trace.h : 一起搞出来 mask 基于日志的角度
+    2. qemu_printf 和printf 的区别在于当前是否存在 monitor
+
 ## 代码分析工作
 1. --enable-x86tomips-flag-int 是干什么的 ?
 2. cpu_cc_compute_all 是做什么 ?
@@ -60,9 +64,6 @@ In another word, why mmap_lock is necessary for user mode ?
 16. tb_tc 是做啥的 ?
 17. 为什么 CODE_GEN_ALIGN 的大小是 16
   - 至少，我感觉，应该是宏来计算出来，而不是直接说是 16
-
-18. /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 和 /home/maritns3/core/ld/DuckBuBi/include/qemu/log-for-trace.h 是啥关系，为啥非要搞出来两个文件。
-19. 为什么 cpu_handle_interrupt 需要调用 do_cpu_init
 
 20. [ ] 有件事情没有想明白，调用 helper 的时候就进入到 qemu 中间了，是什么时候调用的 prologue 的离开 tb 执行的环境的。(heler_inw 之类的) (写一个进入 tb 环境 和 离开的小专题，顺便分析一下如何是 setjmp 的使用方法)
    - Niugene 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的

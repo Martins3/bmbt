@@ -92,7 +92,7 @@ int target_x86_to_mips_host(
 #endif
 
     if (!option_lsfpu) {
-        // TODO how etb works ?
+        // FIXME how etb works ?
         etb_check_top_in(tb->extra_tb, env->fpstt);
     }
 

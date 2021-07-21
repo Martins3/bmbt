@@ -4,14 +4,20 @@
 #include "../hw/core/cpu.h"
 #include "log-for-trace.h"
 
+/* Return the number of characters emitted.  */
+int qemu_log(const char *fmt, ...);
+
 /* log only if a bit is set on the current loglevel mask:
  * @mask: bit to check in the mask
  * @fmt: printf-style format string
  * @args: optional arguments for format string
  */
-#define qemu_log_mask(MASK, FMT, ...)                                          \
-  do {                                                                         \
-  } while (0)
+#define qemu_log_mask(MASK, FMT, ...)                   \
+    do {                                                \
+        if (unlikely(qemu_loglevel_mask(MASK))) {       \
+            qemu_log(FMT, ## __VA_ARGS__);              \
+        }                                               \
+    } while (0)
 
 #define CPU_LOG_TB_OUT_ASM (1 << 0)
 #define CPU_LOG_TB_IN_ASM (1 << 1)
@@ -31,9 +37,6 @@
 #define CPU_LOG_TB_OP_IND (1 << 16)
 #define CPU_LOG_TB_FPU (1 << 17)
 #define CPU_LOG_PLUGIN (1 << 18)
-
-/* Return the number of characters emitted.  */
-int qemu_log(const char *fmt, ...);
 
 void log_cpu_state(CPUState *cpu, int flags);
 

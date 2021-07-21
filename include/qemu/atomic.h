@@ -10,6 +10,7 @@
 
 #define atomic_set(ptr, i)                                                     \
   do {                                                                         \
+    *ptr = i;                                                                  \
   } while (0)
 
 #define atomic_cmpxchg(ptr, old, new) ({ (old); })
@@ -23,6 +24,6 @@
 
 #define atomic_and(ptr, n) (*ptr &= n)
 
-#define atomic_or_fetch(ptr, n)  __atomic_or_fetch(ptr, n, __ATOMIC_SEQ_CST)
+#define atomic_or_fetch(ptr, n) __atomic_or_fetch(ptr, n, __ATOMIC_SEQ_CST)
 
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

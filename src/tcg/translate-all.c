@@ -1744,8 +1744,6 @@ tb_overflow:
   tb->jmp_reset_offset[1] = TB_JMP_RESET_OFFSET_INVALID;
   tcg_ctx->tb_jmp_reset_offset = tb->jmp_reset_offset;
 
-  // FIXME maybe move this macro to proper locations
-#define TCG_TARGET_HAS_direct_jump 1
   if (TCG_TARGET_HAS_direct_jump) {
     tcg_ctx->tb_jmp_insn_offset = tb->jmp_target_arg;
     tcg_ctx->tb_jmp_target_addr = NULL;
@@ -2226,7 +2224,7 @@ static void print_qht_statistics(struct qht_stats hst) {
   }
   hgram = qdist_pr(&hst.chain, hgram_bins, hgram_opts);
   qemu_printf("TB hash avg chain   %0.3f buckets. Histogram: %s\n",
-  qdist_avg(&hst.chain), hgram);
+              qdist_avg(&hst.chain), hgram);
   g_free(hgram);
 }
 

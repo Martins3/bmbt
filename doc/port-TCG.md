@@ -129,6 +129,8 @@ ts = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, TCG_AREG0, "env"); // 从 TCGC
 cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽然不是完全清楚，但是
 ```
 
+## tb_gen_code : 让我们来分析一下这个狗东西
+
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg
