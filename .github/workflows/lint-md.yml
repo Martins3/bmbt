@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-configFile: .lintmdrc
-
 jobs:
   lint-markdown:
     runs-on: ubuntu-latest
