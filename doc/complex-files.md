@@ -89,43 +89,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
 
 - [ ] page_find_alloc 中间为什么需要使用 rcu
 
-# tcg.c 的代码分析
-
-- [ ] tcg_region_state
-  - [ ] tcg_region_reset_all
-
-- [ ] tcg_target_qemu_prologue
-  - [ ] buf0 和 buf1 在做什么
-  - target_x86_to_mips_static_codes
-  - tcg_set_frame
-  - tcg_out_pool_finalize
-  - flush_icache_range : qemu 本身作为用户态的程序，为什么需要进行 flush icache
-  - tcg_register_jit
-
-- [ ] tcg_tb_alloc
-
-- [ ] 应该存在一个直接分配一个连续空间才对，之后的将所有分配的 tb 都是放到哪里就可以了
-
-`s->code_gen_highwater` 
-
-`s->code_gen_ptr`
-
-- tcg_exec_init
-  - cpu_gen_init
-    - tcg_context_init : 各种 ops 的初始化
-  - page_init
-  - tb_htable_init : 应该是用来处理
-  - code_gen_alloc
-  - tcg_prologue_init
-
-tcg_region 到底是什么东西呀?
-
-code_gen_ptr 和 data_gen_ptr 都是意思啊
-  - [ ] 从 tcg_tb_alloc 中看，就是连续分配的啊
-  - 从 tcg_code_size 看， code_gen_ptr  code_gen_buffer 分别是缓冲区的尾和头
-
-将 code_gen_buffer 划分为大小相等的 regions，
-
 ## cputlb.c
 在 notdirty_write 的作用是什么?
 

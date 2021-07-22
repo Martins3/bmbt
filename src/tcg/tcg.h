@@ -468,11 +468,6 @@ typedef struct TCGLabelPoolData {
   tcg_target_ulong data[];
 } TCGLabelPoolData;
 
-static void tcg_register_jit_int(void *buf, size_t size,
-                                 const void *debug_frame,
-                                 size_t debug_frame_size)
-    __attribute__((unused));
-
 static TCGContext **tcg_ctxs;
 static unsigned int n_tcg_ctxs;
 
