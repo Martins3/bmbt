@@ -1947,4 +1947,14 @@ void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
 
+/* n must be a constant to be efficient */
+static inline target_long lshift(target_long x, int n)
+{
+    if (n >= 0) {
+        return x << n;
+    } else {
+        return x >> (-n);
+    }
+}
+
 #endif /* end of include guard: CPU_H_CJEDABLV */
