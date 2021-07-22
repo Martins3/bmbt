@@ -655,20 +655,8 @@ void tcg_prologue_init(TCGContext *s) {
      than we expect the code generation for any one opcode to require.  */
   s->code_gen_highwater = s->code_gen_buffer + (total_size - TCG_HIGHWATER);
 
-#ifdef TCG_TARGET_NEED_POOL_LABELS
-  s->pool_labels = NULL;
-#endif
-
   /* Generate the prologue.  */
   tcg_target_qemu_prologue(s);
-
-#ifdef TCG_TARGET_NEED_POOL_LABELS
-  /* Allow the prologue to put e.g. guest_base into a pool entry.  */
-  {
-    int result = tcg_out_pool_finalize(s);
-    tcg_debug_assert(result == 0);
-  }
-#endif
 
   buf1 = s->code_ptr;
   flush_icache_range((uintptr_t)buf0, (uintptr_t)buf1);

@@ -190,10 +190,6 @@ typedef struct TCGContext {
 
   tcg_insn_unit *code_ptr;
 
-#ifdef TCG_TARGET_NEED_POOL_LABELS
-  struct TCGLabelPoolData *pool_labels;
-#endif
-
   intptr_t frame_start;
   intptr_t frame_end;
   TCGTemp *frame_temp;

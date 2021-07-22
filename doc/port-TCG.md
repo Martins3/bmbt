@@ -180,6 +180,40 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
   - 在 tb_gen_code 和 tb_lookup__cpu_state 中都有一个要求将 cflags 的 mask 初始化为当前 cpu 的 cluster 的操作
   - [ ] 加深一下 cluster index 的理解之后再说
 
+## `TCGContext::code_gen_*`
+
+TCGContext::
+tcg_target_qemu_prologue
+
+```c
+typedef struct TCGContext {
+
+  /* Code generation.  Note that we specifically do not use tcg_insn_unit
+     here, because there's too much arithmetic throughout that relies
+     on addition and subtraction working on bytes.  Rely on the GCC
+     extension that allows arithmetic on void*.  */
+  void *code_gen_prologue;
+  void *code_gen_epilogue;
+  void *code_gen_buffer;
+  size_t code_gen_buffer_size;
+  void *code_gen_ptr;
+  void *data_gen_ptr;
+
+  /* Threshold to flush the translated code buffer.  */
+  void *code_gen_highwater;
+
+  tcg_insn_unit *code_ptr;
+```
+
+| field             | desc |
+|-------------------|------|
+| code_gen_prologue |      |
+
+code_gen_prologue 的分析
+- tcg_prologue_init
+  - tcg_target_qemu_prologue
+
+不如深入理解一下 tcg_prologue_init 在干什么 ?
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg
