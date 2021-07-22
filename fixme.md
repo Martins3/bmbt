@@ -29,6 +29,7 @@
 5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
     1. tlb_debug
     2. do_tb_flush 中间又是直接使用 printf 的
+    7. qemu_log_mask_and_addr : 和 qemu_log_mask 的区别在于只有在地址范围内才会打印日志
 6. 处理一下满天飞羽的各种 type 定义
     1. ExtraBlock 是 LATX 中特殊需求的，其中 `_top_in` 的类型是 int8, 而 int8 又是定义在 src/i386/LATX/include/types.h 中间了，着很难受啊
     2. HOST_LONG_BITS 和 TARGET_LONG_BITS 的定义位置
@@ -45,7 +46,6 @@
 5. do_cpu_init
 6. tcg.c 中间的
     - tcg_context_init : 这里初始化了一堆 tcg_op ，不是很确定这个是否真的有用的
-7. qemu_log_mask_and_addr
 8. cpu_exec_nocache : 为什么需要将所有的 tb 清空然后来运行
 10. `__builtin___clear_cache` 在系统态还可以用吗 ?
 11. tb_gen_code 是如何运行的 ?
