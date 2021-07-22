@@ -41,8 +41,6 @@ struct tcg_region_tree {
 #define ELF_DATA ELFDATA2LSB
 #endif
 
-#include "../../include/qemu/elf.h"
-
 /* Stack frame parameters.  */
 #define REG_SIZE (TCG_TARGET_REG_BITS / 8)
 #define SAVE_SIZE ((int)ARRAY_SIZE(tcg_target_callee_save_regs) * REG_SIZE)
