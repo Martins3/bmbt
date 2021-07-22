@@ -540,6 +540,7 @@ void tcg_prologue_init(TCGContext *s) {
   s->code_ptr = buf0;
   s->code_buf = buf0;
   s->data_gen_ptr = NULL;
+  // @todo useless assignment, assigned again in tcg_target_qemu_prologue
   s->code_gen_prologue = buf0;
 
   /* Compute a high-water mark, at which we voluntarily flush the buffer

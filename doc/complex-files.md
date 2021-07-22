@@ -102,8 +102,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
   - flush_icache_range : qemu 本身作为用户态的程序，为什么需要进行 flush icache
   - tcg_register_jit
 
-- [ ] TCG_TARGET_NEED_POOL_LABELS
-
 - [ ] tcg_tb_alloc
 
 - [ ] 应该存在一个直接分配一个连续空间才对，之后的将所有分配的 tb 都是放到哪里就可以了
@@ -127,7 +125,6 @@ code_gen_ptr 和 data_gen_ptr 都是意思啊
   - 从 tcg_code_size 看， code_gen_ptr  code_gen_buffer 分别是缓冲区的尾和头
 
 将 code_gen_buffer 划分为大小相等的 regions，
-
 
 ## cputlb.c
 在 notdirty_write 的作用是什么?
@@ -176,12 +173,6 @@ TLB 才可以返回。
     - cpu_exit : 如果是 qemu_tcg_mttcg_enabled 那么就对于所有的 cpu 进行 cpu_exit
       - `atomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);` : 猜测这个会导致接下来 tb 执行退出 ?
         - [ ] icount_decr 只是在 TB 开始的位置检查，怎么办 ? (tr_gen_tb_start)
-
-## 其他
-- [ ] tb_jmp_cache 是个啥
-  - [ ] tb_flush_jmp_cache
-
-## 分析 memory_ldst.c.inc
 
 [^1]: https://lwn.net/Articles/517475/
 [^2]: https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html

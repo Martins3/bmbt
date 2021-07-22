@@ -105,7 +105,7 @@ huxueshi:qdev_device_add virtio-9p-pci
                       - x86_cpu_filter_features
                       - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了, mce 参考[^2]
                       - qemu_init_vcpu : 创建执行线程
-                        - rr_cpu_thread_fn : 进行一些基本的注册工作，然后等待
+                        - rr_cpu_thread_fn : 进行一些基本的注册工作，然后等待, 注意，此时在另一个线程中间了
                       - x86_cpu_apic_realize 
                         - 通过 QOM 调用到 apic_common_realize
                            - 通过 QOM 调用 apic_realize

@@ -133,15 +133,6 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
 ```
 
 ## tb_gen_code : 让我们来分析一下这个狗东西
-- [ ] tb_gen_code 中间有两个 label ： buffer_overflow tb_overflow 分别表示发生了什么事情
-
-- [ ] 来解释一下这个东西是什么意思啊
-```c
-  atomic_set(
-      &tcg_ctx->code_gen_ptr,
-      (void *)ROUND_UP((uintptr_t)gen_code_buf + gen_code_size + search_size,
-                       CODE_GEN_ALIGN));
-```
 
 1. 了解一下 TCGContext::tb_cflags
     - 这个只是在 tcg/tcg-op.c 中间使用, 但是现在 xqm 中，这个东西直接被移除掉了, 暂时不用考虑
@@ -180,10 +171,12 @@ cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽�
   - 在 tb_gen_code 和 tb_lookup__cpu_state 中都有一个要求将 cflags 的 mask 初始化为当前 cpu 的 cluster 的操作
   - [ ] 加深一下 cluster index 的理解之后再说
 
-## `TCGContext::code_gen_*`
 
-TCGContext::
-tcg_target_qemu_prologue
+6. tb_gen_code 中间有两个 label ： buffer_overflow tb_overflow 分别表示发生了什么事情
+    - buffer_overflow : 表示 tb 块太多了，该刷新了
+    - tb_overflow : 一个 tb 中间的指令太多了
+
+## `TCGContext::code_gen_*`
 
 ```c
 typedef struct TCGContext {
@@ -202,18 +195,39 @@ typedef struct TCGContext {
   /* Threshold to flush the translated code buffer.  */
   void *code_gen_highwater;
 
-  tcg_insn_unit *code_ptr;
+  /* goto_tb support */
+  tcg_insn_unit *code_buf;
 ```
 
-| field             | desc |
-|-------------------|------|
-| code_gen_prologue |      |
-
-code_gen_prologue 的分析
 - tcg_prologue_init
   - tcg_target_qemu_prologue
 
 不如深入理解一下 tcg_prologue_init 在干什么 ?
+
+- code_ptr 和 code_buf 出现的位置相当有限，应该是删除的
+- data_gen_ptr : 只有两次赋值为 NULL
+
+
+#### code_gen_buffer 
+赋值的地方:
+- code_gen_alloc <- tcg_exec_init : 这个位置初始化是需要调用到 mmap 的, 这是发生在主线程中间的, 其实实际上，这是分配一个全局的
+- tcg_prologue_init : 因为生成 prologue 和 epilogue 所以需要调整属性
+- tcg_region_assign : 在 tcg_tb_alloc 的路径下调用, 这是每一个 thread 获取到 region 之后，来初始化自己的 memory region
+
+
+#### code_gen_ptr
+code_gen_ptr : 下一个 tb 应该存放的位置
+
+从下面可以得到验证:
+```c
+  atomic_set(
+      &tcg_ctx->code_gen_ptr,
+      (void *)ROUND_UP((uintptr_t)gen_code_buf + gen_code_size + search_size,
+                       CODE_GEN_ALIGN));
+```
+
+- 上面的 search_size 是做啥的? 
+  - 用于实现精确异常的, 具体可以参考 tb_encode_search 
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg

@@ -1048,6 +1048,7 @@ static inline void *alloc_code_gen_buffer(void) {
   if (buf == MAP_FAILED) {
     return NULL;
   }
+  // FIXME is mips restriction still valid ?
 #ifdef __mips__
   if (cross_256mb(buf, size)) {
     /* Try again, with the original still mapped, to avoid re-acquiring
