@@ -60,6 +60,8 @@ notdirty_write : 每次调用，都是存在检查到 TLB_NOTDIRTY 的时候，�
 
 - [ ] 是否存在一个 page 有一部分是代码，一部分是数据，然后数据的那一部分老是在修改
 
+## - [ ] 类似的问题，如何处理 watchpoint 的
+
 ## 参考
 [^1]: https://github.com/azru0512/slide/tree/master/QEMU
 [^2]: https://qemu.weilnetz.de/w64/2012/2012-06-28/qemu-tech.html#Self_002dmodifying-code-and-translated-code-invalidation

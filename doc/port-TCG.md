@@ -282,7 +282,8 @@ struct tb_tc {
 也就是，根据 tb 所在地址和大小。
 
 为什么会出现这种需求，根据 tb 所在的地址有啥意义啊 ?
-  
+- 首先，一个 tb 总是对应一个  TranslationBlock 的，通过 tb_tc 可以将生成的代码和 TranslationBlock 联系起来
+- 其次，从 tb 离开的时候，会保存下当时的地址，通过这个地址从而知道当时发生在哪一个 TranslationBlock 上了，这是极好的
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg
