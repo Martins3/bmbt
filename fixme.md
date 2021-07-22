@@ -54,11 +54,7 @@
 14. how cross page works?
       - cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
 15. why is mmap_lock empty in system mode? In another word, why mmap_lock is necessary for user mode ? 实际上，mmap 的使用位置相当有限
-16. tb_tc 是做啥的 ?
-17. 为什么 CODE_GEN_ALIGN 的大小是 16
-    - 至少，我感觉，应该是宏来计算出来，而不是直接说是 16
 20. [ ] 有件事情没有想明白，调用 helper 的时候就进入到 qemu 中间了，是什么时候调用的 prologue 的离开 tb 执行的环境的。(heler_inw 之类的) (写一个进入 tb 环境 和 离开的小专题，顺便分析一下如何是 setjmp 的使用方法)
      - Niugenen 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的
-
 21. tb_jmp_cache 是个啥
     - [ ] tb_flush_jmp_cache

@@ -6,20 +6,14 @@
   - [ ] tcg_region_reset_all
 
 - [ ] tcg_target_qemu_prologue
-  - [ ] buf0 和 buf1 在做什么
   - target_x86_to_mips_static_codes
   - tcg_set_frame
   - tcg_out_pool_finalize
   - flush_icache_range : qemu 本身作为用户态的程序，为什么需要进行 flush icache
-  - tcg_register_jit
 
 - [ ] tcg_tb_alloc
 
 - [ ] 应该存在一个直接分配一个连续空间才对，之后的将所有分配的 tb 都是放到哪里就可以了
-
-`s->code_gen_highwater` 
-
-`s->code_gen_ptr`
 
 - tcg_exec_init
   - cpu_gen_init
@@ -263,11 +257,32 @@ code_gen_ptr : 下一个 tb 应该存放的位置
                        CODE_GEN_ALIGN));
 ```
 
-- 上面的 search_size 是做啥的? 
+- [ ] 上面的 search_size 是做啥的? 
   - 用于实现精确异常的, 具体可以参考 tb_encode_search 
 
-## tcg_register_jit
+## tb_tc
 
+```c
+/*
+ * Translation Cache-related fields of a TB.
+ * This struct exists just for convenience; we keep track of TB's in a binary
+ * search tree, and the only fields needed to compare TB's in the tree are
+ * @ptr and @size.
+ * Note: the address of search data can be obtained by adding @size to @ptr.
+ */
+struct tb_tc {
+  void *ptr; /* pointer to the translated code */
+  size_t size;
+};
+```
+- TB 是在二叉树中间
+
+在 tb_gen_code 中 `tb->tc.ptr = gen_code_buf;` 和
+`tb->tc.size = gen_code_size;`
+也就是，根据 tb 所在地址和大小。
+
+为什么会出现这种需求，根据 tb 所在的地址有啥意义啊 ?
+  
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg
