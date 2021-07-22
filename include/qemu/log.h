@@ -6,18 +6,27 @@
 
 /* Return the number of characters emitted.  */
 int qemu_log(const char *fmt, ...);
+bool qemu_log_in_addr_range(uint64_t addr);
 
 /* log only if a bit is set on the current loglevel mask:
  * @mask: bit to check in the mask
  * @fmt: printf-style format string
  * @args: optional arguments for format string
  */
-#define qemu_log_mask(MASK, FMT, ...)                   \
-    do {                                                \
-        if (unlikely(qemu_loglevel_mask(MASK))) {       \
+#define qemu_log_mask(MASK, FMT, ...)                                          \
+  do {                                                                         \
+    if (unlikely(qemu_loglevel_mask(MASK))) {                                  \
+      qemu_log(FMT, ##__VA_ARGS__);                                            \
+    }                                                                          \
+  } while (0)
+
+#define qemu_log_mask_and_addr(MASK, ADDR, FMT, ...)                           \
+  do {                                                                         \
+        if (unlikely(qemu_loglevel_mask(MASK)) &&       \
+                     qemu_log_in_addr_range(ADDR)) {    \
             qemu_log(FMT, ## __VA_ARGS__);              \
         }                                               \
-    } while (0)
+  } while (0)
 
 #define CPU_LOG_TB_OUT_ASM (1 << 0)
 #define CPU_LOG_TB_IN_ASM (1 << 1)

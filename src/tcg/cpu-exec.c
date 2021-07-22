@@ -1,3 +1,4 @@
+#include "../../include/disas/disas.h"
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/cpu-defs.h"
 #include "../../include/exec/exec-all.h"
@@ -7,6 +8,7 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/hw/i386/apic.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/log.h"
 #include "../../include/qemu/plugin.h"
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
@@ -20,10 +22,6 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
-
-#define qemu_log_mask_and_addr(MASK, ADDR, FMT, ...)                           \
-  do {                                                                         \
-  } while (0)
 
 target_ulong breakpoint_addrx = 0;
 int breakpoint_hit_count = 0;
