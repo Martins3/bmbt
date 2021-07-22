@@ -7,9 +7,9 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/hw/i386/apic.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/plugin.h"
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
-#include "../../include/qemu/plugin.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
@@ -306,8 +306,6 @@ static inline void cpu_handle_debug_exception(CPUState *cpu) {
   cc->debug_excp_handler(cpu);
 }
 
-// FIXME I don't know how cpu_handle_exception works,
-// it seems some thing important has happened somewhere else.
 static inline bool cpu_handle_exception(CPUState *cpu, int *ret) {
   if (cpu->exception_index < 0) {
 #ifndef CONFIG_USER_ONLY
@@ -445,6 +443,9 @@ static inline bool cpu_handle_interrupt(CPUState *cpu,
       (use_icount &&
        cpu_neg(cpu)->icount_decr.u16.low + cpu->icount_extra == 0)) {
     atomic_set(&cpu->exit_request, 0);
+    // @todo: how exception_index works ?
+    // 1. what does it mean by = -1 ?
+    // 2. what's exception interrupt ?
     if (cpu->exception_index == -1) {
       cpu->exception_index = EXCP_INTERRUPT;
     }
@@ -497,7 +498,6 @@ int cpu_exec(CPUState *cpu) {
    */
   // init_delay_params(&sc, cpu);
 
-  // FIXME find out from where the code flow jump to here
   if (sigsetjmp(cpu->jmp_env, 0) != 0) {
     // FIXME some checks for sigsetjmp bugs, review it later
 

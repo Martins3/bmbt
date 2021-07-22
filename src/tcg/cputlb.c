@@ -997,7 +997,6 @@ tb_page_addr_t get_page_addr_code_hostp(CPUArchState *env, target_ulong addr,
   void *p;
 
   if (unlikely(!tlb_hit(entry->addr_code, addr))) {
-    // @todo how victim tlb works?
     if (!VICTIM_TLB_HIT(addr_code, addr)) {
       tlb_fill(env_cpu(env), addr, 0, MMU_INST_FETCH, mmu_idx, 0);
       index = tlb_index(env, mmu_idx, addr);

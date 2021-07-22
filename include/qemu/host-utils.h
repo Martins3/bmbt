@@ -50,4 +50,10 @@ static inline int ctz32(uint32_t val) { return val ? __builtin_ctz(val) : 32; }
  */
 static inline int clz32(uint32_t val) { return val ? __builtin_clz(val) : 32; }
 
+/**
+ * ctpop16 - count the population of one bits in a 16-bit value.
+ * @val: The value to search
+ */
+static inline int ctpop16(uint16_t val) { return __builtin_popcount(val); }
+
 #endif /* end of include guard: HOST_UTILS_H_0IEAPEGH */

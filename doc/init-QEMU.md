@@ -105,7 +105,7 @@ huxueshi:qdev_device_add virtio-9p-pci
                       - x86_cpu_filter_features
                       - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了, mce 参考[^2]
                       - qemu_init_vcpu : 创建执行线程
-                        - rr_cpu_thread_fn : 进行一些基本的注册工作，然后等待
+                        - rr_cpu_thread_fn : 进行一些基本的注册工作，然后等待, 注意，此时在另一个线程中间了
                       - x86_cpu_apic_realize 
                         - 通过 QOM 调用到 apic_common_realize
                            - 通过 QOM 调用 apic_realize
@@ -726,7 +726,6 @@ struct PCMachineState {
 | nr_cores       | cpu_common_initfn 中初始化为 1, 而在 qemu_init_vcpu 中初始化为 ms->smp.cores, 默认初始化为 1 |
 | nr_threads     |                                                                                              |
 | jmp_env        | 无需初始化, 使用的位置就是哪里                                                               |
-| cflags_next_tb |
 
 ```c
     /* TODO Move common fields from CPUArchState here. */
@@ -809,7 +808,6 @@ c:1472
 ```
 
 ##### cpu_index / cluster_index
-- [ ] tb_gen_code 中使用 cflags & CF_COUNT_MASK 来构建 cflags
 
 - [ ] cluster_index : 应该是没有被重新初始化过，具体需要使用 xqm 分析一下
 

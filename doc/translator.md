@@ -1,10 +1,9 @@
 # accel/tcg/
 
 ## 基本文件摸底
+
 | Filename           | desc                                                           |
 |--------------------|----------------------------------------------------------------|
-| tcg-runtime-gvec.c |                                                                |
-| translator.c       | 只有一个函数，但是其调用者是 gen_intermediate_code(deprecated) |
 | cpu-exec.c         | tb 的执行                                                      |
 | translate-all.c    | tb 的管理, tb 和 page 的关系 以及 ..., 总之是核心文件          |
 | cpu-tlb.c          | softmmu 管理                                                   |
@@ -13,13 +12,8 @@
 - [ ] 再问一次, ./tcg/ 下真的有作用吗?
   - [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/tcg.c : 这就是那个包含两个 in.c 的
     - [ ] 这个会被使用上吗 ?
-- [ ] 是不是只是支持 x86 32 的指令，其实关系不大 ?
-- [ ] xqm 还是支持 user mode 的吗?
 - [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch 是什么作用呀 ? 
 - [ ] 中断之前不是说和 信号 存在关联吗?
-- [ ] 连 translate_vmrun 都要运行，真的有必要在二进制翻译中间还支持模拟虚拟机吗，有进行过测试吗?
-  - [ ] 但是 translate_vmcall 又是支持的，真的让人迷惑啊
-- [ ] qemu_tcg_mttcg_enabled 支持吗
 
 ## flow 
 - qemu_tcg_rr_cpu_thread_fn
@@ -45,15 +39,8 @@ tb_lookup__cpu_state
 - [ ] 第一级: `cpu->tb_jmp_cache`
 - [ ] 第二级: 没看懂, 也没看是怎么添加进去的
 
-- [ ] 如何处理中断的
-  - [ ] 这两个函数分别干什么 ?
-      - cpu_handle_exception
-      - cpu_handle_interrupt
-  - [ ] 每次执行完成一个 tb 就进行检查吗?
-      - [ ] 对应的检查代码在哪里?
-      - [ ] 检查一下 tb 
-  - [ ] 为什么 cpu_handle_exception 是在内部的，cpu_handle_interrupt 在循环的外部
-    - [ ] 实际上，根本不知道再说什么
+- [ ] 每次执行完成一个 tb 就进行检查中断吗?
+    - [ ] 对应的检查代码在哪里?
 
 ## interrupt 机制
 - apic_local_deliver : 在 apic 中存在大量的模拟

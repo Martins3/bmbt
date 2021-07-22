@@ -71,9 +71,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
     - 记录了一个 TB 所在的页面
     - 如果页面是连续的，就不应该申请两个
 
-
-
-
 - [ ] SMC_BITMAP_USE_THRESHOLD
   - 和 highwater 什么关系?
 
@@ -89,51 +86,8 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
       - tlb_protect_code : 指向 exec.c 中间，应该是通过 dirty / clean 的方式来防止代码被修改 ?
         - [ ] 原则上，guest 代码段被修改必然需要让对应的 tb 也是被 invalidate 的呀
 
-- [ ] tb_gen_code 的 cflags 是做什么的 ?
-  - compile flags
-  - 来控制什么 ?
 
 - [ ] page_find_alloc 中间为什么需要使用 rcu
-
-# tcg.c 的代码分析
-
-- [ ] tcg_region_state
-  - [ ] tcg_region_reset_all
-
-- [ ] tcg_target_qemu_prologue
-  - [ ] buf0 和 buf1 在做什么
-  - target_x86_to_mips_static_codes
-  - tcg_set_frame
-  - tcg_out_pool_finalize
-  - flush_icache_range : qemu 本身作为用户态的程序，为什么需要进行 flush icache
-  - tcg_register_jit
-
-- [ ] TCG_TARGET_NEED_POOL_LABELS
-
-- [ ] tcg_tb_alloc
-
-- [ ] 应该存在一个直接分配一个连续空间才对，之后的将所有分配的 tb 都是放到哪里就可以了
-
-`s->code_gen_highwater` 
-
-`s->code_gen_ptr`
-
-- tcg_exec_init
-  - cpu_gen_init
-    - tcg_context_init : 各种 ops 的初始化
-  - page_init
-  - tb_htable_init : 应该是用来处理
-  - code_gen_alloc
-  - tcg_prologue_init
-
-tcg_region 到底是什么东西呀?
-
-code_gen_ptr 和 data_gen_ptr 都是意思啊
-  - [ ] 从 tcg_tb_alloc 中看，就是连续分配的啊
-  - 从 tcg_code_size 看， code_gen_ptr  code_gen_buffer 分别是缓冲区的尾和头
-
-将 code_gen_buffer 划分为大小相等的 regions，
-
 
 ## cputlb.c
 在 notdirty_write 的作用是什么?
@@ -182,12 +136,6 @@ TLB 才可以返回。
     - cpu_exit : 如果是 qemu_tcg_mttcg_enabled 那么就对于所有的 cpu 进行 cpu_exit
       - `atomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);` : 猜测这个会导致接下来 tb 执行退出 ?
         - [ ] icount_decr 只是在 TB 开始的位置检查，怎么办 ? (tr_gen_tb_start)
-
-## 其他
-- [ ] tb_jmp_cache 是个啥
-  - [ ] tb_flush_jmp_cache
-
-## 分析 memory_ldst.c.inc
 
 [^1]: https://lwn.net/Articles/517475/
 [^2]: https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html

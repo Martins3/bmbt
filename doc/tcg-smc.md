@@ -1,6 +1,7 @@
 # SMC 
+- [ ] TARGET_HAS_PRECISE_SMC : 这个东西是啥效果，对应的支持是什么?
 
-
+## 流程
 - tb_invalidate_phys_page_fast
   - page_find
     - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
@@ -58,6 +59,8 @@ notdirty_write : 每次调用，都是存在检查到 TLB_NOTDIRTY 的时候，�
             - tlb_reset_dirty_range_locked : 这就是设置保护的位置
 
 - [ ] 是否存在一个 page 有一部分是代码，一部分是数据，然后数据的那一部分老是在修改
+
+## - [ ] 类似的问题，如何处理 watchpoint 的
 
 ## 参考
 [^1]: https://github.com/azru0512/slide/tree/master/QEMU

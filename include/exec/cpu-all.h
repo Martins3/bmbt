@@ -4,7 +4,6 @@
 #include "exec-all.h"
 #include "memory.h"
 
-// FIXME need deeper understanding for this macros
 #define EXCP_INTERRUPT 0x10000 /* async interruption */
 #define EXCP_HLT 0x10001       /* hlt instruction reached */
 #define EXCP_DEBUG 0x10002  /* cpu stopped after a breakpoint or singlestep */

@@ -2,7 +2,7 @@ import git
 import matplotlib.pyplot as plt
 
 repo = git.Repo("/home/maritns3/core/ld/DuckBuBi")
-commits = list(repo.iter_commits("make-linker-happy"))
+commits = list(repo.iter_commits("main"))
 
 
 fixme_array = [ ]

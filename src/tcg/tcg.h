@@ -171,7 +171,8 @@ typedef struct TCGContext {
   uintptr_t *tb_jmp_insn_offset; /* tb->jmp_target_arg if direct_jump */
   uintptr_t *tb_jmp_target_addr; /* tb->jmp_target_arg if !direct_jump */
 
-  u32 tb_cflags; /* cflags of the current TB */
+  // xqm doesn't need it
+  // u32 tb_cflags; /* cflags of the current TB */
 
   /* Code generation.  Note that we specifically do not use tcg_insn_unit
      here, because there's too much arithmetic throughout that relies
@@ -188,10 +189,6 @@ typedef struct TCGContext {
   void *code_gen_highwater;
 
   tcg_insn_unit *code_ptr;
-
-#ifdef TCG_TARGET_NEED_POOL_LABELS
-  struct TCGLabelPoolData *pool_labels;
-#endif
 
   intptr_t frame_start;
   intptr_t frame_end;
@@ -221,8 +218,6 @@ typedef uint32_t TCGMemOpIdx;
 #else
 #define TARGET_INSN_START_WORDS (1 + TARGET_INSN_START_EXTRA_WORDS)
 #endif
-
-TranslationBlock *tcg_tb_alloc(TCGContext *s);
 
 /*
  * Memory helpers that will be used by TCG generated code.
@@ -413,8 +408,6 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
   ((uintptr_t(*)(void *, void *))tcg_ctx->code_gen_prologue)(env, tb_ptr)
 #endif
 
-void tcg_tb_remove(TranslationBlock *tb);
-
 /**
  * tcg_ptr_byte_diff
  * @a, @b: addresses to be differenced
@@ -454,8 +447,6 @@ static inline size_t tcg_current_code_size(TCGContext *s) {
 #define tcg_regset_reset_reg(d, r) ((d) &= ~((TCGRegSet)1 << (r)))
 #define tcg_regset_test_reg(d, r) (((d) >> (r)) & 1)
 
-void tcg_tb_foreach(GTraverseFunc func, gpointer user_data);
-
 size_t tcg_nb_tbs(void);
 
 void tcg_region_reset_all(void);
@@ -470,11 +461,6 @@ typedef struct TCGLabelPoolData {
   unsigned nlong;
   tcg_target_ulong data[];
 } TCGLabelPoolData;
-
-static void tcg_register_jit_int(void *buf, size_t size,
-                                 const void *debug_frame,
-                                 size_t debug_frame_size)
-    __attribute__((unused));
 
 static TCGContext **tcg_ctxs;
 static unsigned int n_tcg_ctxs;
@@ -555,7 +541,10 @@ uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
                                        TCGMemOpIdx oi, uintptr_t retaddr);
 
 TranslationBlock *tcg_tb_lookup(uintptr_t tc_ptr);
+TranslationBlock *tcg_tb_alloc(TCGContext *s);
 void tcg_tb_insert(TranslationBlock *tb);
+void tcg_tb_remove(TranslationBlock *tb);
+void tcg_tb_foreach(GTraverseFunc func, gpointer user_data);
 
 size_t tcg_code_size(void);
 

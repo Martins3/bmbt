@@ -17,7 +17,36 @@ make: *** 正在等待未完成的任务....
 ```
 doesn't sync the repo correctly.
 
+# [ ] 出现 loader 错误
+```
+➜  build git:(system-la) ✗ qsync && make -j10 && ~/run_xqm.sh
+sync x86-qemu-mips
+receiving incremental file list
+x86-qemu-mips/target/i386/cpu.c
+x86-qemu-mips/tcg/tcg.c
+
+sent 8.64K bytes  received 1.11M bytes  746.08K bytes/sec
+total size is 568.46M  speedup is 507.96
+make[1]: 进入目录“/home/loongson/ld/x86-qemu-mips/slirp”
+make[1]: 对“all”无需做任何事。
+make[1]: 离开目录“/home/loongson/ld/x86-qemu-mips/slirp”
+  LINK    vhost-user-input
+/usr/bin/ld: /lib/loongarch64-linux-gnu/crt1.o: in function `_start':
+(.text+0x4): undefined reference to `main'
+/usr/bin/ld: (.text+0x4): undefined reference to `main'
+/usr/bin/ld: (.text+0x8): undefined reference to `main'
+/usr/bin/ld: (.text+0x8): undefined reference to `main'
+/usr/bin/ld: (.text+0xc): undefined reference to `main'
+/usr/bin/ld: /lib/loongarch64-linux-gnu/crt1.o:(.text+0x10): more undefined references to `main' follow
+collect2: 错误：ld 返回 1
+make: *** [Makefile:683：vhost-user-input] 错误 1
+make: *** 正在等待未完成的任务....
+```
+
+
+
 # 复现 LOONGARCH QEMU 无法正确执行
+最后检查出来的原因，公司的魔改的 QEMU 运行 kernel 本身就是有问题的。
 
 ## QEMU version
 ```diff

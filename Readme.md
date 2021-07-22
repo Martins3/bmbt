@@ -1,10 +1,13 @@
 # BMBT(Bare Mental Binary Translator)
 
-## Introduction
-`target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
+![](./doc/img/fixme.png)
 
-- [ ] 有件事情没有想明白，调用 helper 的时候就进入到 qemu 中间了，是什么时候调用的 prologue 的离开 tb 执行的环境的。(heler_inw 之类的) (写一个进入 tb 环境 和 离开的小专题，顺便分析一下如何是 setjmp 的使用方法)
-   - Niugene 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的
+## Introduction
+这个项目的想法是，一个 3A5000 电脑开机之后，然后开机之后就是 Windows 。
+基本思路是让 BIOS 启动之后，然后执行 BMBT，进而让 guest OS 来引导启动。
+这样就可以:
+1. 在二进制翻译上充分利用硬件资源加速
+2. 避免 QEMU 和 Linux 的软件栈的复杂性
 
 ## LoongArch Manual
 Please contact huxueshi@loongson.cn
@@ -20,12 +23,3 @@ Please contact huxueshi@loongson.cn
 As for collaboration, please follow [these instructions](./CONTRIBUTING.md)
 
 This project is fairly tricky for beginner, we also write some [documents for newbie](./doc/newbie.md)
-
-## 任务进度
-- [ ] 锁，多核
-- [ ] 启动, 初始化
-- [ ] memory model 的接口
-- [ ] fw_cfg / loader 之类的 : 其实就是 machine 启动相关的部分
-
-
-任务具体细节参考 [#34](https://github.com/Martins3/BMBT/issues/34)
