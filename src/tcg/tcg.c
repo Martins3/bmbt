@@ -319,31 +319,6 @@ static inline TCGTemp *tcg_global_alloc(TCGContext *s) {
   return ts;
 }
 
-static TCGTemp *tcg_global_reg_new_internal(TCGContext *s, TCGType type,
-                                            TCGReg reg, const char *name) {
-  TCGTemp *ts;
-
-  if (TCG_TARGET_REG_BITS == 32 && type != TCG_TYPE_I32) {
-    tcg_abort();
-  }
-
-  ts = tcg_global_alloc(s);
-  ts->base_type = type;
-  ts->type = type;
-  ts->fixed_reg = 1;
-  ts->reg = reg;
-  ts->name = name;
-  tcg_regset_set_reg(s->reserved_regs, reg);
-
-  return ts;
-}
-
-void tcg_set_frame(TCGContext *s, TCGReg reg, intptr_t start, intptr_t size) {
-  s->frame_start = start;
-  s->frame_end = start + size;
-  s->frame_temp = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, reg, "_frame");
-}
-
 /* Generate global QEMU prologue and epilogue code */
 static void tcg_target_qemu_prologue(TCGContext *s) {
   int i;
@@ -351,8 +326,6 @@ static void tcg_target_qemu_prologue(TCGContext *s) {
 #ifdef LOONGARCH_DEBUG
   printf("Start tcg_target_qemu_prologue.\n");
 #endif
-
-  tcg_set_frame(s, TCG_REG_SP, TCG_STATIC_CALL_ARGS_SIZE, TEMP_SIZE);
 
 #ifdef CONFIG_LATX
   i = target_x86_to_mips_static_codes(s->code_ptr);
@@ -616,135 +589,11 @@ void tcg_region_reset_all(void) {
   tcg_region_tree_reset_all();
 }
 
-static const int tcg_target_reg_alloc_order[] = {
-    /* Call saved registers */
-    /* TCG_REG_S0 reservered for TCG_AREG0 */
-    TCG_REG_S1,
-    TCG_REG_S2,
-    TCG_REG_S3,
-    TCG_REG_S4,
-    TCG_REG_S5,
-    TCG_REG_S6,
-    TCG_REG_S7,
-    TCG_REG_S8,
-
-    /* Call clobbered registers */
-    TCG_REG_T0,
-    TCG_REG_T1,
-    TCG_REG_T2,
-    TCG_REG_T3,
-    TCG_REG_T4,
-    TCG_REG_T5,
-    TCG_REG_T6,
-
-    /* Argument registers */
-    TCG_REG_A0,
-    TCG_REG_A1,
-    TCG_REG_A2,
-    TCG_REG_A3,
-    TCG_REG_A4,
-    TCG_REG_A5,
-    TCG_REG_A6,
-    TCG_REG_A7,
-};
-
-static int indirect_reg_alloc_order[ARRAY_SIZE(tcg_target_reg_alloc_order)];
-
-static void tcg_target_init(TCGContext *s) {
-  tcg_target_available_regs[TCG_TYPE_I32] = 0xffffffff;
-  if (TCG_TARGET_REG_BITS == 64) {
-    tcg_target_available_regs[TCG_TYPE_I64] = 0xffffffff;
-  }
-
-  tcg_target_call_clobber_regs = -1u;
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S0);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S1);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S2);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S3);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S4);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S5);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S6);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S7);
-  tcg_regset_reset_reg(tcg_target_call_clobber_regs, TCG_REG_S8);
-
-  s->reserved_regs = 0;
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_ZERO);
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_TMP0);
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_TMP1);
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_TMP2);
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_TP);
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_SP);
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_X);
-  tcg_regset_set_reg(s->reserved_regs, TCG_REG_FP);
-}
-
 static void alloc_tcg_plugin_context(TCGContext *s) {}
 
 void tcg_context_init(TCGContext *s) {
-  int op, total_args, n, i;
-  TCGOpDef *def;
-  TCGArgConstraint *args_ct;
-  int *sorted_args;
-  TCGTemp *ts;
-
   memset(s, 0, sizeof(*s));
   s->nb_globals = 0;
-
-  /* Count total number of arguments and allocate the corresponding
-     space */
-  total_args = 0;
-
-  // FIXME why I still take care of tcg_op?
-  // why we still need helper table?
-#if 0
-    for(op = 0; op < NB_OPS; op++) {
-        def = &tcg_op_defs[op];
-        n = def->nb_iargs + def->nb_oargs;
-        total_args += n;
-    }
-
-    args_ct = g_malloc(sizeof(TCGArgConstraint) * total_args);
-    sorted_args = g_malloc(sizeof(int) * total_args);
-
-    for(op = 0; op < NB_OPS; op++) {
-        def = &tcg_op_defs[op];
-        def->args_ct = args_ct;
-        def->sorted_args = sorted_args;
-        n = def->nb_iargs + def->nb_oargs;
-        sorted_args += n;
-        args_ct += n;
-    }
-
-    /* Register helpers.  */
-    /* Use g_direct_hash/equal for direct pointer comparisons on func.  */
-    helper_table = g_hash_table_new(NULL, NULL);
-
-    for (i = 0; i < ARRAY_SIZE(all_helpers); ++i) {
-        g_hash_table_insert(helper_table, (gpointer)all_helpers[i].func,
-                            (gpointer)&all_helpers[i]);
-    }
-#endif
-
-  tcg_target_init(s);
-  // FIXME more investigation later
-  // process_op_defs(s);
-
-  /* Reverse the order of the saved registers, assuming they're all at
-     the start of tcg_target_reg_alloc_order.  */
-  for (n = 0; n < ARRAY_SIZE(tcg_target_reg_alloc_order); ++n) {
-    int r = tcg_target_reg_alloc_order[n];
-    if (tcg_regset_test_reg(tcg_target_call_clobber_regs, r)) {
-      break;
-    }
-  }
-  for (i = 0; i < n; ++i) {
-    indirect_reg_alloc_order[i] = tcg_target_reg_alloc_order[n - 1 - i];
-  }
-  for (; i < ARRAY_SIZE(tcg_target_reg_alloc_order); ++i) {
-    indirect_reg_alloc_order[i] = tcg_target_reg_alloc_order[i];
-  }
-
-  alloc_tcg_plugin_context(s);
 
   tcg_ctx = s;
   /*
@@ -764,8 +613,6 @@ void tcg_context_init(TCGContext *s) {
 #endif
 
   tcg_debug_assert(!tcg_regset_test_reg(s->reserved_regs, TCG_AREG0));
-  ts = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, TCG_AREG0, "env");
-  cpu_env = temp_tcgv_ptr(ts);
 }
 
 #ifdef CONFIG_USER_ONLY
