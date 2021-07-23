@@ -267,5 +267,16 @@ struct tb_tc {
 - 首先，一个 tb 总是对应一个  TranslationBlock 的，通过 tb_tc 可以将生成的代码和 TranslationBlock 联系起来
 - 其次，从 tb 离开的时候，会保存下当时的地址，通过这个地址从而知道当时发生在哪一个 TranslationBlock 上了，这是极好的
 
+## cpu_exec_nocache
+- [x] nocache 到底指的是什么东西?
+    - 这个容易，执行代码，当场翻译，这个 tb 不会给之后复用
+- [ ] 为什么会存在这种诡异的需求啊?
+    - 好吧，出现的位置都是和 icount / replay 有关啊
+
+调用位置
+- cpu_exec_nocache
+  - cpu_exec
+- cpu_handle_exception
+
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg
