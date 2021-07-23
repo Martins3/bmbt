@@ -227,8 +227,6 @@ static struct tcg_region_state region;
  */
 static void *region_trees;
 static size_t tree_size;
-static TCGRegSet tcg_target_available_regs[TCG_TYPE_COUNT];
-static TCGRegSet tcg_target_call_clobber_regs;
 
 static void tcg_region_bounds(size_t curr_region, void **pstart, void **pend) {
   void *start, *end;
