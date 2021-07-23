@@ -105,3 +105,4 @@ static const TypeInfo kvm_apic_info = {
 在 pc_basic_device_init 中间抉择
 
 ## MSI : 以后再说
+

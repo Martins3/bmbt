@@ -54,8 +54,6 @@
   - error_report
 
 ## 一些简单的代码分析工作
-3. cpu_is_bsp
-4. do_cpu_sipi
 5. do_cpu_init
 6. tcg.c 中间的
     - tcg_context_init : 这里初始化了一堆 tcg_op ，不是很确定这个是否真的有用的
