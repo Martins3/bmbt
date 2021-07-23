@@ -11,41 +11,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Define type and accessor macros for TCG variables.
-
-   TCG variables are the inputs and outputs of TCG ops, as described
-   in tcg/README. Target CPU front-end code uses these types to deal
-   with TCG variables as it emits TCG code via the tcg_gen_* functions.
-   They come in several flavours:
-    * TCGv_i32 : 32 bit integer type
-    * TCGv_i64 : 64 bit integer type
-    * TCGv_ptr : a host pointer type
-    * TCGv_vec : a host vector type; the exact size is not exposed
-                 to the CPU front-end code.
-    * TCGv : an integer type the same size as target_ulong
-             (an alias for either TCGv_i32 or TCGv_i64)
-   The compiler's type checking will complain if you mix them
-   up and pass the wrong sized TCGv to a function.
-
-   Users of tcg_gen_* don't need to know about any of the internal
-   details of these, and should treat them as opaque types.
-   You won't be able to look inside them in a debugger either.
-
-   Internal implementation details follow:
-
-   Note that there is no definition of the structs TCGv_i32_d etc anywhere.
-   This is deliberate, because the values we store in variables of type
-   TCGv_i32 are not really pointers-to-structures. They're just small
-   integers, but keeping them in pointer types like this means that the
-   compiler will complain if you accidentally pass a TCGv_i32 to a
-   function which takes a TCGv_i64, and so on. Only the internals of
-   TCG need to care about the actual contents of the types.  */
-
-typedef struct TCGv_i32_d *TCGv_i32;
-typedef struct TCGv_i64_d *TCGv_i64;
-typedef struct TCGv_ptr_d *TCGv_ptr;
-typedef struct TCGv_vec_d *TCGv_vec;
-typedef TCGv_ptr TCGv_env;
 #if TARGET_LONG_BITS == 32
 #define TCGv TCGv_i32
 #elif TARGET_LONG_BITS == 64
@@ -90,77 +55,6 @@ typedef uint64_t tcg_insn_unit;
 /* The port better have done this.  */
 #endif
 
-typedef enum TCGType {
-  TCG_TYPE_I32,
-  TCG_TYPE_I64,
-
-  TCG_TYPE_V64,
-  TCG_TYPE_V128,
-  TCG_TYPE_V256,
-
-  TCG_TYPE_COUNT, /* number of different types */
-
-/* An alias for the size of the host register.  */
-#if TCG_TARGET_REG_BITS == 32
-  TCG_TYPE_REG = TCG_TYPE_I32,
-#else
-  TCG_TYPE_REG = TCG_TYPE_I64,
-#endif
-
-/* An alias for the size of the native pointer.  */
-#if UINTPTR_MAX == UINT32_MAX
-  TCG_TYPE_PTR = TCG_TYPE_I32,
-#else
-  TCG_TYPE_PTR = TCG_TYPE_I64,
-#endif
-
-/* An alias for the size of the target "long", aka register.  */
-#if TARGET_LONG_BITS == 64
-  TCG_TYPE_TL = TCG_TYPE_I64,
-#else
-  TCG_TYPE_TL = TCG_TYPE_I32,
-#endif
-} TCGType;
-
-typedef enum TCGTempVal {
-  TEMP_VAL_DEAD,
-  TEMP_VAL_REG,
-  TEMP_VAL_MEM,
-  TEMP_VAL_CONST,
-} TCGTempVal;
-
-typedef struct TCGTemp {
-  TCGReg reg : 8;
-  TCGTempVal val_type : 8;
-  TCGType base_type : 8;
-  TCGType type : 8;
-  unsigned int fixed_reg : 1;
-  unsigned int indirect_reg : 1;
-  unsigned int indirect_base : 1;
-  unsigned int mem_coherent : 1;
-  unsigned int mem_allocated : 1;
-  /* If true, the temp is saved across both basic blocks and
-     translation blocks.  */
-  unsigned int temp_global : 1;
-  /* If true, the temp is saved across basic blocks but dead
-     at the end of translation blocks.  If false, the temp is
-     dead at the end of basic blocks.  */
-  unsigned int temp_local : 1;
-  unsigned int temp_allocated : 1;
-
-  tcg_target_long val;
-  struct TCGTemp *mem_base;
-  intptr_t mem_offset;
-  const char *name;
-
-  /* Pass-specific information that can be stored for a temporary.
-     One word worth of integer data, and one pointer to data
-     allocated separately.  */
-  uintptr_t state;
-  void *state_ptr;
-} TCGTemp;
-
-#define TCG_MAX_TEMPS 512
 #define TCG_MAX_INSNS 512
 
 typedef struct TCGContext {
@@ -198,7 +92,6 @@ typedef struct TCGContext {
 
 extern TCGContext tcg_init_ctx;
 extern TCGContext *tcg_ctx;
-TCGv_env cpu_env = 0;
 
 /* Combine the MemOp and mmu_idx parameters into a single value.  */
 typedef uint32_t TCGMemOpIdx;
