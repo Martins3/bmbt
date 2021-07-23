@@ -17,8 +17,6 @@ x86_cpu_common_class_init 中注册的函数:
 本来在 CPUState 中持有 CPUClass 的指针，并且可以通过 CPU_GET_CLASS 来获取
 | function                               | 使用位置                    |
 |----------------------------------------|-----------------------------|
-| x86_cpu_tlb_fill                       | tlb_fill, tlb_vaddr_to_host |
-| x86_cpu_synchronize_from_tb            | cpu_tb_exec                 |
 | x86_cpu_exec_exit & x86_cpu_exec_enter | cpu_exec                    |
 
 - [ ] 应该感到非常奇怪才对，注册了这么多函数，为什么只有这么一点点才在使用啊
@@ -39,8 +37,6 @@ x86_cpu_common_class_init 中注册的函数:
   2. 函数内容
   3. 结构体内容
   4. tcg 之后的设计一定会发生更多的演化，那么靠什么来实现两个
-
-3. 将 g_new 以及 MIN 之类的 macro 放到 exec-all.h 中间了
 4. 暂时将原来在 qemu 中放到顶层目录中的文件放到 qeum 下面了，为了防止破坏原来的一点点 firmware 的代码
   - 而且，将大量文件放到顶层本来就不好
 
@@ -53,25 +49,6 @@ x86_cpu_common_class_init 中注册的函数:
 | icount / record replay     | 没有 record replay 是不是很难调试，使用 record replay 会不会很难集成                                                                                                                           |
 | trace                      |                                                                                                                                                                                                |
 | 存在好几个数据结构需要重构 | queue.h, qht.h 和 glib 的 qtree                                                                                                                                                                |
-
-8. 多核:
-  1. 感觉 Qemu 关于多核的接口不是很统一啊
-      1. QemuSpin
-      2. QemuMutex
-      3. qemu_spin_lock
-      4. 在 include/qemu 下存在 thread.h thread-posix.h 等
-      5. seqlock.h
-      6. lockable
-  2. 据说处理 io 的 thread 和执行是两个 thread
-
-9. 非常不统一的 assert
-  - [ ] tcg_debug_assert
-  - [ ] assert
-  - [ ] 一些 unreachable 之类的
-  - [ ] tcg_abort
-  - [ ] 在 bitmap.c 中间是直接从
-  - [ ] g_assert
-  - error_report
 
 ## 应该被小心 review 一下的
 - [ ] dirty page

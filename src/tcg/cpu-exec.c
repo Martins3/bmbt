@@ -476,6 +476,8 @@ static inline bool cpu_handle_halt(CPUState *cpu) {
 int cpu_exec(CPUState *cpu) {
   int ret;
 
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+
   // FIXME how SyncClocks works
   // SyncClocks sc = { 0 };
 
@@ -487,7 +489,8 @@ int cpu_exec(CPUState *cpu) {
   }
 
   rcu_read_lock();
-  x86_cpu_exec_enter(cpu);
+
+  cc->cpu_exec_enter(cpu);
 
   /* Calculate difference between guest clock and host clock.
    * This delay includes the delay of the last cycle, so
@@ -540,7 +543,7 @@ int cpu_exec(CPUState *cpu) {
     }
   }
 
-  x86_cpu_exec_exit(cpu);
+  cc->cpu_exec_exit(cpu);
   rcu_read_unlock();
 
   return ret;
