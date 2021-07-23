@@ -302,23 +302,6 @@ static struct tcg_region_tree *tc_ptr_to_region_tree(void *p) {
   return region_trees + region_idx * tree_size;
 }
 
-static inline TCGTemp *tcg_temp_alloc(TCGContext *s) {
-  int n = s->nb_temps++;
-  tcg_debug_assert(n < TCG_MAX_TEMPS);
-  return memset(&s->temps[n], 0, sizeof(TCGTemp));
-}
-
-static inline TCGTemp *tcg_global_alloc(TCGContext *s) {
-  TCGTemp *ts;
-
-  tcg_debug_assert(s->nb_globals == s->nb_temps);
-  s->nb_globals++;
-  ts = tcg_temp_alloc(s);
-  ts->temp_global = 1;
-
-  return ts;
-}
-
 /* Generate global QEMU prologue and epilogue code */
 static void tcg_target_qemu_prologue(TCGContext *s) {
   int i;
@@ -593,8 +576,8 @@ static void alloc_tcg_plugin_context(TCGContext *s) {}
 
 void tcg_context_init(TCGContext *s) {
   memset(s, 0, sizeof(*s));
-  s->nb_globals = 0;
 
+  // FIXME multi thread style code will be changed
   tcg_ctx = s;
   /*
    * In user-mode we simply share the init context among threads, since we
