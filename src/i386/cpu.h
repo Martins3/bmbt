@@ -1936,6 +1936,9 @@ static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
 
 void breakpoint_handler(CPUState *cs);
 
+void x86_cpu_exec_enter(CPUState *cpu);
+void x86_cpu_exec_exit(CPUState *cpu);
+
 /* apic.c */
 void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
 void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
