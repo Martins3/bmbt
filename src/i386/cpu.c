@@ -656,6 +656,13 @@ int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request) {
   return 0;
 }
 
+void tcg_x86_init(void) {
+  // FIXME
+  // originally defined in translate.c
+  // we will put all the functions in translate.c together after close
+  // issue #115
+}
+
 static void x86_cpu_common_class_init(CPUState *cpu) {
   CPUClass *cc = CPU_GET_CLASS(cpu);
 
@@ -692,6 +699,7 @@ static void x86_cpu_common_class_init(CPUState *cpu) {
   cc->cpu_exec_exit = x86_cpu_exec_exit;
 #ifdef CONFIG_TCG
   cc->tlb_fill = x86_cpu_tlb_fill;
+  cc->tcg_initialize = tcg_x86_init;
 #endif
 }
 
