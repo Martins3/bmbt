@@ -39,7 +39,6 @@
     2. qemu_printf 和printf 的区别在于当前是否存在 monitor
 
 ## 一些简单的代码分析工作
-2. cpu_cc_compute_all 是做什么 ?
 3. cpu_is_bsp
 4. do_cpu_sipi
 5. do_cpu_init
