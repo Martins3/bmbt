@@ -19,6 +19,13 @@
     2. helper_atomic_cmpxchgq_le_mmu : 这个最后会导入一个很烦人的 lock 中间去
     3. big qemu lock
     4. include/qemu/atomic.h : 这里定义了一堆空函数
+    1. 感觉 Qemu 关于多核的接口不是很统一啊
+        1. QemuSpin
+        2. QemuMutex
+        3. qemu_spin_lock
+        4. 在 include/qemu 下存在 thread.h thread-posix.h 等
+        5. seqlock.h
+        6. lockable
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
@@ -37,6 +44,14 @@
 7. log printf 和 qemu printf
     1. include/qemu/log-for-trace.h 和 include/qemu/log-for-trace.h : 一起搞出来 mask 基于日志的角度
     2. qemu_printf 和printf 的区别在于当前是否存在 monitor
+8. 非常不统一的 assert
+  - [ ] tcg_debug_assert
+  - [ ] assert
+  - [ ] 一些 unreachable 之类的
+  - [ ] tcg_abort
+  - [ ] 在 bitmap.c 中间是直接从
+  - [ ] g_assert
+  - error_report
 
 ## 一些简单的代码分析工作
 3. cpu_is_bsp
