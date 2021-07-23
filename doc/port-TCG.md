@@ -145,24 +145,6 @@ static void tcg_region_assign(TCGContext *s, size_t curr_region)
 ## [ ] TCG_HIGHWATER
 似乎特别大的用途
 
-## [ ] TCGTemp
-NiuGene 说这个东西在 XQM 中移除掉的
-
-tcg_global_alloc 的调用者都是在哪里的 ?
-- tcg_target_qemu_prologue -> tcg_set_frame : 
-- tcg_context_init :  `ts = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, TCG_AREG0, "env");`
-- tcg_x86_init
-
-- tcg_set_frame 创建出来 `TCGTemp *frame_temp`，该成员的使用位置 : temp_allocate_frame 
-
-```c
-TCGv_env cpu_env = 0;
-
-// tcg_context_init 中
-ts = tcg_global_reg_new_internal(s, TCG_TYPE_PTR, TCG_AREG0, "env"); // 从 TCGContext::temps 分配并且初始化一个槽位
-cpu_env = temp_tcgv_ptr(ts); // cpu_env 现在是 TCGContext 的偏移量, 虽然不是完全清楚，但是
-```
-
 ## tb_gen_code : 让我们来分析一下这个狗东西
 
 1. 了解一下 TCGContext::tb_cflags
