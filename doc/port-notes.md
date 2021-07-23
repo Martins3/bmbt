@@ -1,7 +1,6 @@
 # Divergence between qemu
 
 ## 几个关键的结构体功能和移植差异说明
-- [ ] 暂时无法区分 CPUX86State 和 X86CPU 的关系
 
 | struct           | explaination                                                                            |
 |------------------|-----------------------------------------------------------------------------------------|
@@ -14,14 +13,7 @@
 | TCGContext       | TODO 每一个 thread 定义了一个，同时存在一个全局的 tcg_init_ctx                         |
 
 x86_cpu_common_class_init 中注册的函数:
-本来在 CPUState 中持有 CPUClass 的指针，并且可以通过 CPU_GET_CLASS 来获取
-| function                               | 使用位置                    |
-|----------------------------------------|-----------------------------|
-| x86_cpu_exec_exit & x86_cpu_exec_enter | cpu_exec                    |
-
 - [ ] 应该感到非常奇怪才对，注册了这么多函数，为什么只有这么一点点才在使用啊
-
-注意 : 这里是分析的是 CPUClass ，而 X86CPUClass 持有的内容很少
 
 ## 注意
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
@@ -29,7 +21,6 @@ x86_cpu_common_class_init 中注册的函数:
 
 2. 在文件夹的组织上
   1. 将原来的 tcg 和 accel/tcg 都合并到一个位置了
-  2. include/elf.h => include/qemu/elf.h
 
 ## TODO
 2. 写一个脚本，自动比对出现出入地方
@@ -53,7 +44,6 @@ x86_cpu_common_class_init 中注册的函数:
 ## 应该被小心 review 一下的
 - [ ] dirty page
 - [ ] 一个 tb 分布在两个 page 上
-- [ ] 为什么需要使用 glib 来维护 tb
 - [ ] 那些数据结构需要 RCU 来保护 
 
 - [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
