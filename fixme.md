@@ -63,24 +63,21 @@
   - error_report
 
 ## 一些简单的代码分析工作
-12. bswap.h 中间的，当 CONFIG_MACHINE_BSWAP_H 可以调查一下 C 库中间是否存在 bswap 的支持，因为是用于 reference C 库的
 13. cpu_unaligned_access : x86 对应的 handler 没有赋值啊
 14. how cross page works?
       - cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
 15. why is mmap_lock empty in system mode? In another word, why mmap_lock is necessary for user mode ? 实际上，mmap 的使用位置相当有限
 20. [ ] 有件事情没有想明白，调用 helper 的时候就进入到 qemu 中间了，是什么时候调用的 prologue 的离开 tb 执行的环境的。(heler_inw 之类的) (写一个进入 tb 环境 和 离开的小专题，顺便分析一下如何是 setjmp 的使用方法)
      - Niugenen 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的
+     - 这件事明明可以测试，为什么老是折磨我 ?
 21. tb_jmp_cache 是个啥
     - [ ] tb_flush_jmp_cache
 - [ ] dirty page
 - [ ] 一个 tb 分布在两个 page 上
 - [ ] 那些数据结构需要 RCU 来保护 
-
 - [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
   - tcg_context_init
   - tcg_prologue_init
-
-- [ ] tcg_op_defs : 在 tcg.c 中间定义，具体在 tcg_context_init 中间初始化了，但是按照道理来说，xqm 将这些事情都处理了
 
 - [ ] https://github.com/Martins3/BMBT/issues/32
 
