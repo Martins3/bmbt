@@ -63,7 +63,6 @@
   - error_report
 
 ## 一些简单的代码分析工作
-13. cpu_unaligned_access : x86 对应的 handler 没有赋值啊
 14. how cross page works?
       - cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
 15. why is mmap_lock empty in system mode? In another word, why mmap_lock is necessary for user mode ? 实际上，mmap 的使用位置相当有限
