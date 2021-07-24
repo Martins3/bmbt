@@ -1,4 +1,13 @@
 ## 主要需要分析的问题
+5. 关键的接口和重构
+
+| TODO                       | 描述                                                                                                                                                                                           |
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| apic                       | include/hw/i386/apic.h 中定义了一些列的函数，具体的还没有分析，但是 原来的 QEMU 中间                                                                                                           |
+| 多核                       | 现在为了代码的方便执行，也没有太搞清楚其中的作用，在 cputlb.c 的 async_run_on_cpu 以及各种 atomic 函数，qemu_spin_lock, 以及 RCU. 现在的操作是，先将接口保存下来，之后需要支持多核，有一个参考 |
+| icount / record replay     | 没有 record replay 是不是很难调试，使用 record replay 会不会很难集成                                                                                                                           |
+| trace                      |                                                                                                                                                                                                |
+| 存在好几个数据结构需要重构 | queue.h, qht.h 和 glib 的 qtree                                                                                                                                                                |
 
 1. memory model
     1. include/sysemu/cpus.h : 定义的为空函数啊
@@ -54,9 +63,6 @@
   - error_report
 
 ## 一些简单的代码分析工作
-8. cpu_exec_nocache : 为什么需要将所有的 tb 清空然后来运行
-10. `__builtin___clear_cache` 在系统态还可以用吗 ?
-11. tb_gen_code 是如何运行的 ?
 12. bswap.h 中间的，当 CONFIG_MACHINE_BSWAP_H 可以调查一下 C 库中间是否存在 bswap 的支持，因为是用于 reference C 库的
 13. cpu_unaligned_access : x86 对应的 handler 没有赋值啊
 14. how cross page works?
@@ -66,3 +72,15 @@
      - Niugenen 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的
 21. tb_jmp_cache 是个啥
     - [ ] tb_flush_jmp_cache
+- [ ] dirty page
+- [ ] 一个 tb 分布在两个 page 上
+- [ ] 那些数据结构需要 RCU 来保护 
+
+- [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
+  - tcg_context_init
+  - tcg_prologue_init
+
+- [ ] tcg_op_defs : 在 tcg.c 中间定义，具体在 tcg_context_init 中间初始化了，但是按照道理来说，xqm 将这些事情都处理了
+
+- [ ] https://github.com/Martins3/BMBT/issues/32
+
