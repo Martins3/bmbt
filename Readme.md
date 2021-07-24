@@ -1,4 +1,18 @@
-# BMBT(Bare Mental Binary Translator)
+# BMBT
+```
+ ______________________________________
+< BMBT is Bare Metal Binary Translator >
+ --------------------------------------
+   \
+    \
+        .--.
+       |o_o |
+       |:_/ |
+      //   \ \
+     (|     | )
+    /'\_   _/`\
+    \___)=(___/
+```
 
 ![](./doc/img/fixme.png)
 

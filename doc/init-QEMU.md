@@ -1,5 +1,21 @@
 # QEMU 启动代码
 
+
+## 几个关键的结构体功能和移植差异说明
+
+| struct           | explaination                                                                            |
+|------------------|-----------------------------------------------------------------------------------------|
+| CPUClass         | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
+| CPUState         |                                                                                         |
+| CPUX86State      | 和 CPUState 没有父子关系，而是靠 CPUState::env_ptr 决定的 |
+| X86CPU           |                                                                                         |
+| TranslationBlock | 1. size x86 代码的 size 还是 la 代码段的 size </br> 2.                                  |
+| TBContext        | 一个统计，一个 qht, 似乎只是定义了一个全局变量                                                                        |
+| TCGContext       | TODO 每一个 thread 定义了一个，同时存在一个全局的 tcg_init_ctx                         |
+
+x86_cpu_common_class_init 中注册的函数:
+- [ ] 应该感到非常奇怪才对，注册了这么多函数，为什么只有这么一点点才在使用啊
+
 ## 问题
 - [ ] qdev_device_add 是做什么的
 ```
