@@ -64,6 +64,60 @@ notdirty_write : 每次调用，都是存在检查到 TLB_NOTDIRTY 的时候，�
 
 ## - [ ] 类似的问题，如何处理 watchpoint 的
 
+#### SMC
+
+- tb_link_page (exec.c) 把新的 TB 加進 tb_phys_hash 和 l1_map 二級頁表。
+tb_find_slow 會用 pc 對映的 GPA 的哈希值索引 tb_phys_hash。
+
+- tb_page_add (exec.c) 設置 TB 的 page_addr 和 page_next，並在 l1_map 中配置 PageDesc 給 TB。
+
+似乎将 PageDesc 是将组织方式是靠 l1_map ，形成树状。
+page_lock_pair 告诉我们，通过 physics address 作为索引调用函数 page_find_alloc 来查询，
+而 page_find_alloc 的查询过程完全类似内核中 page table 的查询过程，只是现在的对象是 PageDesc 而已。
+
+PageDesc 會維護一個 bitmap，這是給 SMC 之用。
+
+在 /home/maritns3/core/notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-01.txt
+中，分析 PageDesc 的作用，可以通过 PageDesc 迅速找到这个 guest page 对应的所有的
+tb，从而将这些 tb 全部 invalidate 掉。
+
+- [ ] 居然 PageDesc 是给 SMC 用的
+  - 一共四个结构体, 去掉一个锁，first_tb 用于获取这个 page 上的所有 tb, 
+
+```c
+tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而是发现 tb_invalidate_phys_page_fast 多次被调用才会创建
+创建 bitmap 的作用是为了精准定位出来到底是哪一个 page 需要被 invalid。
+```
+
+
+- [ ] page_flush_tb
+  - [ ] tb 和 page 大致是怎么关联起来的
+
+- [ ] 结构体 PageDesc 的作用是什么 ?
+  - 难道时候首先分配 page，然后这些 tb 都是 page
+  - 对于连续的物理空间或者虚拟地址空间，感觉并没有必要如此必要吧
+  - TranslationBlock::page_addr
+    - 记录了一个 TB 所在的页面
+    - 如果页面是连续的，就不应该申请两个
+
+- [ ] SMC_BITMAP_USE_THRESHOLD
+  - 和 highwater 什么关系?
+
+- tb_gen_code : 这是一个关键核心
+  - get_page_addr_code : 将虚拟地址的 pc 装换为物理地址
+    - get_page_addr_code_hostp
+      - 如果命中，就是 TLB 的翻译 `p = (void *)((uintptr_t)addr + entry->addend);`
+      - qemu_ram_addr_from_host_nofail
+  - tb_link_page : 将 tb 纳入到 QEMU 的管理中
+    - tb_page_add
+      - [ ] invalidate_page_bitmap : 根本无法理解，link page 的时候为什么会将 bitmap disable 掉
+      - page_already_protected : 这个是什么逻辑
+      - tlb_protect_code : 指向 exec.c 中间，应该是通过 dirty / clean 的方式来防止代码被修改 ?
+        - [ ] 原则上，guest 代码段被修改必然需要让对应的 tb 也是被 invalidate 的呀
+
+
+- [ ] page_find_alloc 中间为什么需要使用 rcu
+
 ## 参考
 [^1]: https://github.com/azru0512/slide/tree/master/QEMU
 [^2]: https://qemu.weilnetz.de/w64/2012/2012-06-28/qemu-tech.html#Self_002dmodifying-code-and-translated-code-invalidation

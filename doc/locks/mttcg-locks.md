@@ -361,6 +361,9 @@ rrp@entry=0x5555564ece00 <error_fatal>) at ../qom/qom-qobject.c:28
 #35 0x0000555555829a7d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 
+[^6]: https://lwn.net/Articles/517475/
+[^7]: https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
+
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
