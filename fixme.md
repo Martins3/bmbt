@@ -16,6 +16,17 @@
     4. 在 exec-all.h 中间 memory_region_section_get_iotlb
     5. /home/maritns3/core/ld/DuckBuBi/include/exec/address-space.h 中一堆接口
     6. 实际上，io_readx 和 io_writex 中间的还是存在一些骚操作的啊
+    8. 在 translate-all.c 中的一些逻辑需要仔细分析一下
+        - page_unlock : 根本不理解为什么会出现将 page lock 的操作
+    9. 4k 和 16k 页的问题如何解决 ?
+    10. 在地址上，有没有什么骚操作:
+        1. TB 需要走 TLB 吗 ? 这样就可以进行自动属性检查
+        2. 但是核心代码不走 TLB 从而加速一下
+    11. 思考一下用户态和内核态的安全性如何
+        1. 地址空间的防护
+            - 在进程里面，访问总是自己的地址空间，如果 TLB 没有，那么让 QEMU page walk, 如果 walk 没有就是 page fault, 所以其实问题不大
+        2. 生成指令
+            - 生成的时候，就可以产生 exception 还是到执行 ？(精确异常，所以执行的时候吧)
 2. apic
     1. DeviceState 中定义为空
     2. /home/maritns3/core/ld/DuckBuBi/include/hw/i386/apic.h 都是空函数
@@ -35,6 +46,8 @@
         4. 在 include/qemu 下存在 thread.h thread-posix.h 等
         5. seqlock.h
         6. lockable
+    2. 那些数据结构需要 RCU 来保护 
+    4. 统计一下 `__thread` 出现的次数
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
@@ -63,20 +76,15 @@
   - error_report
 
 ## 一些简单的代码分析工作
-14. how cross page works?
-      - cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
 15. why is mmap_lock empty in system mode? In another word, why mmap_lock is necessary for user mode ? 实际上，mmap 的使用位置相当有限
+   - 首先，搞清楚 mmap_lock 的位置吧
 20. [ ] 有件事情没有想明白，调用 helper 的时候就进入到 qemu 中间了，是什么时候调用的 prologue 的离开 tb 执行的环境的。(heler_inw 之类的) (写一个进入 tb 环境 和 离开的小专题，顺便分析一下如何是 setjmp 的使用方法)
      - Niugenen 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的
      - 这件事明明可以测试，为什么老是折磨我 ?
+
 21. tb_jmp_cache 是个啥
     - [ ] tb_flush_jmp_cache
-- [ ] dirty page
-- [ ] 一个 tb 分布在两个 page 上
-- [ ] 那些数据结构需要 RCU 来保护 
 - [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
-  - tcg_context_init
-  - tcg_prologue_init
 
 - [ ] https://github.com/Martins3/BMBT/issues/32
 

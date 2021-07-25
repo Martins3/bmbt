@@ -1,6 +1,8 @@
 # SMC 
 - [ ] TARGET_HAS_PRECISE_SMC : 这个东西是啥效果，对应的支持是什么?
 
+- [ ] dirty page 只是和 smc 相关吗 ? 不存在其他的东西和 dirty page 也是相关的吗 ?
+
 ## 流程
 - tb_invalidate_phys_page_fast
   - page_find
