@@ -33,6 +33,8 @@
     3. cpu_get_pic_interrupt 定义在 pc.c 中间了
     4. qemu_irq_raise : 在 fpu_raise_exception 中需要被调用
     5. hw/irq.h 中的东西似乎只会被 fpu_helper 使用，其他的位置在哪里呀
+    6. tcg-all.c : 涉及到初始化 tcg engine, 很短的一个文件
+        - 虽然主要是处理 interrupt 的，也是很麻烦的啊
 3. locks
     1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
       - 关注一下，为什么单独这里是需要处理 lock 的
@@ -48,6 +50,11 @@
         6. lockable
     2. 那些数据结构需要 RCU 来保护 
     4. 统计一下 `__thread` 出现的次数
+    1. atomic 机制谁在使用啊
+    2. qemu_mutex 机制的出现位置
+    4. 多核机制分析其实不仅仅在于此
+      - cpus.h
+      - CPUState 中的 cpu_index, cluster_index 等
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
@@ -74,6 +81,7 @@
   - [ ] 在 bitmap.c 中间是直接从
   - [ ] g_assert
   - error_report
+9. 好好分析下 tcg 吧
 
 ## 一些简单的代码分析工作
 15. why is mmap_lock empty in system mode? In another word, why mmap_lock is necessary for user mode ? 实际上，mmap 的使用位置相当有限
@@ -82,30 +90,11 @@
      - Niugenen 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的
      - 这件事明明可以测试，为什么老是折磨我 ?
 
-21. tb_jmp_cache 是个啥
-    - [ ] tb_flush_jmp_cache
-- [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
-
 - [ ] https://github.com/Martins3/BMBT/issues/32
 
-- [ ] translate-all.c : tb 的各种管理工作, 但是管理了很多 page 相关的工作
 - tcg.c : 主要是 tb 的一些分配工作在使用，其实几乎没有什么用途了
-  - [ ] tcg_prologue_init
-  - [ ] 从 tcg_prologue_init 向外发散出来很多东西，不过大大的丰富了 TCGContext 的
   - [ ] tcg.c 在本来的涉及中间，是好几个文件和合集(因为 #include .c 的原因), 到时候拆开 ?
     - [ ] 最恐怖的是，发现这些文件基本处于没有被使用的状态
     - [ ] 实际上，将 tcg_prologue_init 包含进来，也只是花费了 1000 行而已，原来的设计中，剩下的代码在干什么 ?
-  - [ ] ELF_HOST_MACHINE 到底在干什么 ?
-- [ ] cpu.c : 感觉 helper 没有向这里调用，感觉很奇怪啊, 似乎只是一些配置函数 ?
-  - [ ] 哪里有问题，显然 i386/cpu.c 中间还是存在很多我们需要的东西的
-- [ ] tcg-all.c : 涉及到初始化 tcg engine, 很短的一个文件
 
 - [ ] qemu_tcg_init_vcpu : 在 cpus.c 中还存在一些代码
-
-- [ ] atomic 机制谁在使用啊
-- [ ] qemu_mutex 机制 ?
-
-- [ ] 多核机制分析其实不仅仅在于此
-  - cpus.h
-  - CPUState 中的 cpu_index, cluster_index 等
-
