@@ -13,7 +13,7 @@
 
 ## 1
 - [ ] 分析一下这里的调用规则是什么 ?
-```
+```plain
 [    1.348667] [<900000000020864c>] show_stack+0x2c/0x100
 [    1.348672] [<9000000000ec3988>] dump_stack+0x90/0xc0
 [    1.348676] [<900000000081f550>] pch_pic_alloc+0x48/0xf8
@@ -40,7 +40,7 @@
 [    1.348730] irq: irq_domain_set_mapping 33 33
 ```
 
-```
+```plain
 [    1.879533] Call Trace:
 [    1.879535] [<900000000020864c>] show_stack+0x2c/0x100
 [    1.879538] [<9000000000ec3948>] dump_stack+0x90/0xc0
@@ -280,7 +280,7 @@ static void extioi_irq_dispatch(struct irq_desc *desc)
 ```
 
 ## 动态的 mapping
-```
+```plain
 [    0.846098] pch-pic: huxueshi:pch_pic_alloc 18 47
 [    0.846099] extioi: huxueshi:extioi_domain_alloc 18 47
 [    0.846100] __irq_set_handler 18
@@ -313,7 +313,7 @@ static void extioi_irq_dispatch(struct irq_desc *desc)
 ## keyboard backtrace
 
 backtrace of input_event
-```
+```plain
 [ 1075.597597] CPU: 1 PID: 0 Comm: swapper/1 Not tainted 4.19.167 #48
 [ 1075.597598] Hardware name: Loongson Loongson-LS3A5000-7A1000-1w-V0.1-CRB/Loongson-LS3A5000-7A1000-1w-EVB-V1.21, BIOS Loongson-UDK2018-V2.0.04073-beta2 03/
 [ 1075.597599] Stack : 00000000000158b9 9000000000ec39c8 9000000477988000 900000047603ba30

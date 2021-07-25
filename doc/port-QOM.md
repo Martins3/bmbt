@@ -95,7 +95,7 @@ e=0x7fffffffd510) at ../qom/object.c:1091
 
 让我们看看 select_machine 中的  object_class_get_list 得到的结果: 
 
-```
+```plain
 - object_class_get_list
   - object_class_foreach --> object_class_get_list_tramp (将元素添加到后面) <------------
     - g_hash_table_foreach (对于 type_table 循环) ---> object_class_foreach_tramp       |
@@ -131,7 +131,7 @@ static const TypeInfo x86_cpu_type_info = {
 };
 ```
 
-#### instance 如何初始化 ?
+#### instance 如何初始化 
 通过 object_new 初始化的
 
 - x86_cpu_new
@@ -236,7 +236,7 @@ static const TypeInfo conventional_pci_interface_info = {
   - [ ] object_property_add_child (出现的位置: fw_cfg_init_io_dma)
 - [ ] 似乎 property 比想想的更加有趣，实际上，这个 property 关联上  parent_obj.dma_enabled 了
 
-```
+```plain
 static Property fw_cfg_io_properties[] = {
     DEFINE_PROP_BOOL("dma_enabled", FWCfgIoState, parent_obj.dma_enabled,
                      true),
@@ -285,7 +285,7 @@ qdev_prop_set_bit(dev, "dma_enabled", false);
          - object_property_find_err
             - object_property_find 
                 - object_get_class
-                - object_class_property_find : 从上向下property
+                - object_class_property_find : 从上向下 property
                 - g_hash_table_lookup(obj->properties, name) : 首先查找完成 parent 然后查找 child 的部分
 
 

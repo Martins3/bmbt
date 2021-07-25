@@ -48,7 +48,7 @@ RCU is a bulk reference-counting mechanism
 - [ ] 我感觉 RCU 在 QEMU 中间的作用是，如果 writer 已经释放了资源，但是这个资源真正释放的时间是 reader 不在使用的时候
 
 
-Virtio-blk-data-plane 允许块I/O处理操作与其他的虚拟设备并行运行，去除big-qemu-lock的影响，达到高I/O性能的结果。 [^4]
+Virtio-blk-data-plane 允许块 I/O 处理操作与其他的虚拟设备并行运行，去除 big-qemu-lock 的影响，达到高 I/O 性能的结果。 [^4]
 
 ## [^5]
 在 A TCG primer 很好的总结了 TCG 的工作模式以及退出的原因。

@@ -70,7 +70,7 @@
       - 这是 boot 的 cpu 调用的版本，还有一个 nonboot_cpu_trap_init
       - 完成 handler 空间的分配，ebase / refill_ebase / merror_ebase 的初始化
       - tlb_init : tlb handler 的构建以及其他的初始化
-- setup_command_line :  建立命令行参数。内核命令行参数可以写在启动配置文件 (boot.cfg 或 grub.cfg) 中，由BIOS 或者启动器传递给内核[^1]
+- setup_command_line :  建立命令行参数。内核命令行参数可以写在启动配置文件 (boot.cfg 或 grub.cfg) 中，由 BIOS 或者启动器传递给内核[^1]
 - setup_per_cpu_areas : percpu 的空间分配
 - [ ] build_all_zonelists : 内存系统初始化(2)
 - page_alloc_init

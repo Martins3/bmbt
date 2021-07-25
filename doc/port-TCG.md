@@ -189,7 +189,7 @@ static void tcg_region_assign(TCGContext *s, size_t curr_region)
     - buffer_overflow : 表示 tb 块太多了，该刷新了
     - tb_overflow : 一个 tb 中间的指令太多了
 
-## `TCGContext::code_gen_*`
+## TCGContext::code_gen_
 
 ```c
 typedef struct TCGContext {

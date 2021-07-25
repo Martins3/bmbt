@@ -23,7 +23,7 @@ question:
 - [ ] /home/maritns3/core/loongson-dune/la-4.19/arch/loongarch/la64/irq.c : 存在一些 vi 中断等东西
 - [ ] MSI 是怎么处理的 ?
 
-```
+```plain
 [    0.000000] PCH_PIC[0]: pch_pic_id 0, version 0, address 0xe0010000000, IRQ 64-127
 
 [    0.000000] irq: Added domain unknown-1

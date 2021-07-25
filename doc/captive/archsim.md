@@ -26,7 +26,7 @@
                     - BlockCompiler::compile
 
 /home/maritns3/core/captive-project/gensim/models/CMakeLists.txt
-```
+```plain
 		ADD_CUSTOM_COMMAND(
 			OUTPUT ${DLL_PATH}
 			COMMAND "sh" "-c" "make -C ${CMAKE_CURRENT_BINARY_DIR}/output-${arch-name} -j4"
@@ -140,7 +140,7 @@ Some trick to create class and it's singleton
 
 
 1. create class
-```
+```plain
 #define LowerType(X) class Lower ## X : public X86InstructionLowerer { public: Lower ## X() : X86InstructionLowerer() {} bool Lower(const captive::shared::IRInstruction *&insn) override; };
 #define LowerTypeTS(X) class Lower ## X;
 #include "blockjit/block-compiler/lowering/x86/LowerTypes.h"
@@ -149,7 +149,7 @@ Some trick to create class and it's singleton
 ```
 
 2. create singleton
-```
+```plain
 #define LowerType(X) Lower ## X Singleton_Lower ## X;
 #define LowerTypeTS(X) Lower ## X Singleton_Lower ## X;
 #include "blockjit/block-compiler/lowering/x86/LowerTypes.h"
@@ -175,7 +175,7 @@ IRBuilder provide all kinds of function to add IRInstruction to TranslationConte
 ## LLVM block JIT
 related dir src/translate, it really resembling how blockjit works.
 
-## Wow, the last question, how abi, arch works for them ?
+## Wow, the last question, how abi, arch works for them 
 - [ ] we even try to simulate syscall
 
 - abi is used for emulate device for system, and syscall for userspace

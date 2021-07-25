@@ -52,7 +52,7 @@ register_pch_pic 中初始化了 pch 的中断控制器。
 
 14.3.1 中可以可以 pch_pic_ack_irq 的行为
 
-## 分析 legacy 的 io controller 在被谁使用 ?
+## 分析 legacy 的 io controller 在被谁使用 
 当中断到了，根据路由规则，进入到 ip2 / ip3，然后 cpu 执行，
 然后在 liointc_chained_handle_irq 中检查，找到正确的 irq，然后继续向下。
 
@@ -434,7 +434,7 @@ irq_set_chained_handler_and_data(parent_irq[i], liointc_chained_handle_irq, &pri
 [    0.288765] irq: irq_domain_set_mapping  hwirq=17 virq=17
 ```
 
-## pch_pic 真的是 apic 吗 ?
+## pch_pic 真的是 apic 吗 
 
 # Loongarch irq
 - [ ] virq 的分配规则
