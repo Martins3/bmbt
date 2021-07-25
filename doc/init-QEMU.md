@@ -18,7 +18,7 @@ x86_cpu_common_class_init 中注册的函数:
 
 ## 问题
 - [ ] qdev_device_add 是做什么的
-```
+```plain
 huxueshi:qdev_device_add isa-debugcon
 huxueshi:qdev_device_add nvme
 huxueshi:qdev_device_add virtio-9p-pci

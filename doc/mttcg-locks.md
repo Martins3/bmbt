@@ -207,7 +207,7 @@ extern CPUState *current_cpu;
 
 ## do_run_on_cpu
 
-问题1: 真的需要 do_run_on_cpu，我的意思是，使用目标 cpu 作为参数调用一下函数，
+问题 1: 真的需要 do_run_on_cpu，我的意思是，使用目标 cpu 作为参数调用一下函数，
   - [ ] 猜测，最好不要让一个线程来访问另一个线程的 cpu
 ```c
 /*

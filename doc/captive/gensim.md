@@ -13,7 +13,7 @@ ISADescriptionParser::ParseFile
   
 - [x] so, how gensim is used for by ArcSim
 
-```
+```plain
 ------------------------------------------------------------------------
 1.0 The Gensim Compiler
 ------------------------------------------------------------------------
@@ -284,7 +284,7 @@ AC_ISA(arm)
 ```
 
 /home/maritns3/core/captive-project/gensim/models/armv7/decode.vfpv4
-```
+```plain
 decode(Type_vfpv3_dpi)
 {
 	if(sz) {
