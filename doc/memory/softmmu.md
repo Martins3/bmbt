@@ -1,5 +1,24 @@
 # qemu softmmu 设计
 
+## How softmmu works
+Q: 其实，访问存储也是隐藏的 load，是如何被 softmmu 处理的?
+
+A: 指令的读取都是 tb 的事情
+
+- gen_ldst_softmmu_helper
+  - `__gen_ldst_softmmu_helper_native`
+    - tr_gen_lookup_qemu_tlb : TLB 比较查询
+    - tr_gen_ldst_slow_path : 无奈，只能跳转到 slow path 去
+      - td_rcd_softmmu_slow_path
+
+- tr_ir2_generate
+  - tr_gen_softmmu_slow_path
+    - `__tr_gen_softmmu_sp_rcd`
+      - helper_ret_stb_mmu : 跳转的入口通过 helper_ret_stb_mmu 实现, 当前在 accel/tcg/cputlb.c 中
+        - store_helper
+          - io_writex
+            - memory_region_dispatch_write
+
 ## 基本调用关系
 - tlb_fill
   - x86_cpu_tlb_fill

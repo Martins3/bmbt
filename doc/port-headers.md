@@ -13,12 +13,12 @@
 但是 `include/exec/exec-all.h` 是可以依赖 `src/i386/cpu.h` 的
 
 ## TODO
-| TODO                     | 问题描述                                                                                                                                                       |
-|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `#include <stdbool>`     | 如何让 acpi / kernel / tcg 使用同一个 header                                                                                                                   |
-| 清理 types 的定义        | target_ulong 和各种 u32 i32, 以及 ram_addr_t 定义在 cpu-common.h 中，感觉很随意                                                                                |
-| 清理头文件的依赖         | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h                                                                                                              |
-| 写一个所有头文件功能描述 | cpu-all.h exec-all.h cpu.h cpu-defs.h 中间到底有什么，根本不清楚啊                                                                                             |
+| TODO                     | 问题描述                                                                        |
+|--------------------------|---------------------------------------------------------------------------------|
+| `#include <stdbool>`     | 如何让 acpi / kernel / tcg 使用同一个 header                                    |
+| 清理 types 的定义        | target_ulong 和各种 u32 i32, 以及 ram_addr_t 定义在 cpu-common.h 中，感觉很随意 |
+| 清理头文件的依赖         | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h                               |
+| 写一个所有头文件功能描述 | cpu-all.h exec-all.h cpu.h cpu-defs.h 中间到底有什么，根本不清楚啊              |
 
 6. 需要被重新设计的头文件
   1. seglock.h
