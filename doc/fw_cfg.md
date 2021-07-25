@@ -28,7 +28,7 @@ https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
   - [ ] 无法理解的是，为什么需要 anchor 啊
 
 ## 枚举所有的参数出来
-```
+```plain
 huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
 huxueshi:fw_cfg_add_file_callback etc/e820
 huxueshi:fw_cfg_add_file_callback genroms/kvmvapic.bin
@@ -46,7 +46,7 @@ huxueshi:fw_cfg_add_file_callback bios-geometry
 ```
 
 
-```
+```plain
 huxueshi:fw_cfg_add_bytes 0
 huxueshi:fw_cfg_add_bytes 2
 huxueshi:fw_cfg_add_bytes 4
@@ -100,7 +100,7 @@ huxueshi:fw_cfg_add_bytes 18
   - pc_machine_done
     - `fw_cfg_modify_i16(x86ms->fw_cfg, FW_CFG_NB_CPUS, x86ms->boot_cpus);`
   - fw_cfg_modify_file
-```
+```plain
 #0  fw_cfg_modify_file (s=0x1f, filename=0x0, data=0x5555569a3850, len=93825003170080) at ../hw/nvram/fw_cfg.c:1012
 #1  0x000055555591a473 in fw_cfg_machine_reset (opaque=0x555556b92980) at ../hw/nvram/fw_cfg.c:1097
 #2  0x0000555555e7ee35 in qemu_devices_reset () at ../hw/core/reset.c:69

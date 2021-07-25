@@ -267,7 +267,7 @@ length : 从而知道 table_offset_entry 到底存在多少项了.
 - [ ] 就算是在 seabios 中间枚举了所有的设备，又怎么样, 需要干什么吗?
 - [ ] 为什么需要靠 acpi 枚举 pci 设备，pci 在 acpi 之前就搞定了
 
-```
+```plain
 ACPI: dumping dsdt devices
     SF8
     SF0
@@ -360,7 +360,7 @@ parse_resource: small: 0x5 (len 3)
 #### [ ] 为什么在 seabios 中间会调用 `acpi_build_update`
 调用位置在 `romfile_loader_execute` 中间的
 
-```
+```plain
 [rom : kvmvapic.bin]
 [rom : linuxboot_dma.bin]
 [rom : /home/maritns3/core/seabios/out/bios.bin]

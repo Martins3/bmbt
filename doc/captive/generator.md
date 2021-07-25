@@ -114,8 +114,9 @@ class SSAGenCWalker : public SSANodeWalker : 23 derives
 
 src/generators/GenCJIT/DynamicTranslationGenerator.cpp : some hard coded for generate LLVM
 
-			bool EmitFixedFunction(util::cppformatstream &cfile, genc::ssa::SSAFormAction &action, std::string name_prefix /* = "Execute_" */) const;plain
-			bool EmitDynamicEmitter(util::cppformatstream &cfile, util::cppformatstream &hstream, const genc::ssa::SSAFormAction &action, std::string name_prefix /* = "Execute_" */) const;
+```cpp
+			bool EmitFixedFunction(util::cppformatstream &cfile, genc::ssa::SSAFormAction &action, std::string name_prefix /* = "Execute_" */) const;
+      bool EmitDynamicEmitter(util::cppformatstream &cfile, util::cppformatstream &hstream, const genc::ssa::SSAFormAction &action, std::string name_prefix /* = "Execute_" */) const;
 
 		class DynamicTranslationGenerator : public TranslationGenerator
-
+```

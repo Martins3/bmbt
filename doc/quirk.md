@@ -116,7 +116,7 @@ ${qemu}  -M ls3a5k -m 2048 -kernel ${kernel} -initrd ${disk_img} -smp 1
 ```
 
 log 
-```
+```plain
 mips_ls3a7a_init: num_nodes 1
 mips_ls3a7a_init: node 0 mem 0x80000000
 *****zl 1, mask0
