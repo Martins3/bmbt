@@ -6,7 +6,6 @@
 - [ ] 在 core part 的地方已经处理过 cross page 了吧
   - TranslationBlock::page_next
   - [ ] 顺便问一下，PageDesc 是用于存放 x86 的还是 la 的指令的
-
 - [ ] tb_jmp_cache 的工作方式是什么 ?
   - [ ] 查询的过程，是两级查询过程的
 
