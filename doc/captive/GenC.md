@@ -57,11 +57,11 @@ AssemblyReader::Parse used by genc-opt.cpp
 All kind of statement variable with basic line, accept with visitor.
 
 
-## how components works ?
+## how components works 
 
 ## SSA
 
-### how to ssa print ?
+### how to ssa print 
 - [x] why DynamicTranslationGenerator::Generate() never called ?
 
 - DynamicTranslationGenerator::Generate
@@ -85,7 +85,7 @@ and there is no documents for these components.
 
 
 ISADescription::BuildSSAContext, will read file which assemble c language:
-```
+```plain
 ExecuteFiles : execute.vfpv4
 ExecuteFiles : execute.neon
 ExecuteFiles : execute.arm

@@ -11,7 +11,7 @@
   - qemu_opts_print_help : 解析出现错误，那么就报错
 
 1. 三层结构: QemuOptsList QemuOpts 和 QemuOpt 的关系可以从下面两个参数理解
-```
+```plain
 -device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1 
 -device nvme,drive=nvme2,serial=foo -drive file=${ext4_img2},format=raw,if=none,id=nvme2 
 ```
@@ -139,7 +139,7 @@ for(;;) {
 ```
 
 其中通过 lookup_opt 可以将
-```
+```plain
 -chardev file,path=/tmp/seabios.log,id=seabios 15
 ```
 其两个参数返回值为

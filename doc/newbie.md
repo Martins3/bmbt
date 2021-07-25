@@ -7,13 +7,13 @@
   - http://old-releases.ubuntu.com/releases/10.04.0/ 中找到 ubuntu-10.04-server-i386.iso 下载，然后可以安装(tcg / kvm 都可以)
 
 - 编译参数
-```
+```plain
 mkdir build
 ../configure --target-list=i386-softmmu --enable-latx --disable-werror
 ```
 
 - 运行参数
-```
+```plain
 #!/bin/bash
 
 /home/loongson/ld/x86-qemu-mips/build/i386-softmmu/qemu-system-i386 -hda ~/xqm_images/ubuntu10s.test.img.full -xtm select,tblink,lbt -kernel ~/xqm_images/vmlinuz-2.6.32 -append "console=ttyS0 root=/dev/sda1 ro init=/bin/bash tsc=reliable rw" --nographic \
@@ -55,7 +55,7 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 ## 处理 QEMU 的 macro
 
 生成中间文件 
-```
+```plain
 ../configure --target-list=x86_64-softmmu  --disable-werror --extra-cflags='-save-temps'
 ```
 但是这似乎导致无法 `make -j10`, 只能串行编译

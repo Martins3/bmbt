@@ -153,7 +153,7 @@ struct X86CPU {
     - mask
     - table : 需要的 page table
 
-> IOTLB的表项和上面的 CPUTLBEntry 分开也是一个需要理解的点。定义里有一些注释，要结合代码才会完全理解。一个IO访问，它的地址匹配依然是通过CPUTLBEntry的地址来完成，但是由于IO访问时CPUTLBEntry相关地址的低位不为0（如果它已经被填充了的话），所以地址不会匹配成功，访存代码会走slow path。
+> IOTLB 的表项和上面的 CPUTLBEntry 分开也是一个需要理解的点。定义里有一些注释，要结合代码才会完全理解。一个 IO 访问，它的地址匹配依然是通过 CPUTLBEntry 的地址来完成，但是由于 IO 访问时 CPUTLBEntry 相关地址的低位不为 0（如果它已经被填充了的话），所以地址不会匹配成功，访存代码会走 slow path。
 
 ## WatchPoint
 - [ ] 如何实现?

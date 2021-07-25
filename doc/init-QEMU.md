@@ -127,7 +127,7 @@ huxueshi:qdev_device_add virtio-9p-pci
                            - 通过 QOM 调用 apic_realize
                         - 添加对应的 memory region
                       - X86CPUClass::parent_realize : 也就是 cpu_common_realizefn, 这里并没有做什么事情
-          - pc_memory_init : 创建了两个mr alias，ram_below_4g 以及ram_above_4g，这两个mr分别指向ram的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr下面的
+          - pc_memory_init : 创建了两个 mr alias，ram_below_4g 以及 ram_above_4g，这两个 mr 分别指向 ram 的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr 下面的
             - e820_add_entry
             - pc_system_firmware_init : pflash 参考 [pflash](#pflash)
               - x86_bios_rom_init : 不考虑 pflash, 这是唯一的调用者
@@ -323,7 +323,7 @@ static const TypeInfo i440fx_pcihost_info = {
 ## BUS
 - pci host bridge 和 pcibus 的关系?
 
-```
+```plain
 #0  qbus_init (bus=0x55555608760c, parent=0x7fffffffd510, name=0x555555e65068 <object_initialize+99> "\220\311\303\363\017\036\372UH\211\345H\201\354\020\001") at ../hw
 /core/bus.c:103
 #1  0x0000555555e78fdb in qbus_create_inplace (bus=0x555556aacb60, size=120, typename=0x55555608760c "System", parent=0x0, name=0x5555560876dc "main-system-bus") at ../
@@ -1195,7 +1195,7 @@ x86_cpu_common_class_init 中注册是什么，然后找 cpu_class_init 注册�
 - [x] parent_realize 处理的
 
 在 x86_cpu_common_class_init 中，将通过 
-```
+```plain
     device_class_set_parent_realize(dc, x86_cpu_realizefn,
                                     &xcc->parent_realize);
 ```

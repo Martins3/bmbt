@@ -8,7 +8,7 @@
 | translate-all.c    | tb 的管理, tb 和 page 的关系 以及 ..., 总之是核心文件          |
 | cpu-tlb.c          | softmmu 管理                                                   |
 
-## Ask Niugene:
+## Ask Niugene
 - [ ] 再问一次, ./tcg/ 下真的有作用吗?
   - [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/tcg.c : 这就是那个包含两个 in.c 的
     - [ ] 这个会被使用上吗 ?

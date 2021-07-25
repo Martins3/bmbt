@@ -218,7 +218,7 @@ DSDT address to be filled by Guest linker at runtime
 1. 在 fw_cfg_io_realize 中创建
 2. 在 fw_cfg_init_io_dma 中和 link 到 get_system_io() 上 
 
-```
+```plain
 address-space: I/O
   0000000000000000-000000000000ffff (prio 0, i/o): io
     0000000000000510-0000000000000511 (prio 0, i/o): fwcfg

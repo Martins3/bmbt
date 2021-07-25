@@ -1,7 +1,7 @@
 # Loongarch : Make MIPS Great Again
 
 当其中的数值
-```
+```plain
 ➜  mips git:(dune) ✗ cloc .
     1973 text files.
     1968 unique files.
@@ -115,7 +115,7 @@ LA 中间取消掉了基本函数 arch/loongarch/include/asm/asm.h
 #define INIT_VALUE_PRCFG3 0x8073f2
 ```
 
-一些特殊的CSR:
+一些特殊的 CSR:
 - 有些 CSR 不会注入到 guest 中间的
 - PRCFG1 之类的是常量
 

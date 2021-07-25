@@ -76,11 +76,11 @@ cmake trick:
     - `isa->GetSSAContext().Resolve(root_context);`
   - section three : component 
 
-```
+```plain
 COMMAND ${gensim-binary} -a ${CMAKE_CURRENT_SOURCE_DIR}/${arch-file} ${gensim-options} -t ${CMAKE_CURRENT_BINARY_DIR}/output-${arch-name}/
 ```
 
-```
+```plain
 function(define_model target-name arch-name arch-file)
 -- armv7a------------------<<<<<
 -- model-armv7a------------<<<<
@@ -187,7 +187,7 @@ behaviours ===> How it works ?
 ```
 
 
-```
+```plain
 thumb2_subwi -- {
         if (!(inst.rn == 0xf))
         {
@@ -218,7 +218,7 @@ ISADescriptionParser::load_isa_from_node
   - case SET_DECODER
   - case SET_EOB
   - case SET_USES_PC
-  - and many ....
+  - and many ……
 
 ```cpp
 			case SET_ASM: {
@@ -238,7 +238,7 @@ ISADescriptionParser::load_isa_from_node
 			}
 ```
 
-```
+```plain
   ldr2.set_asm("ldr%[cond] %reg, [%reg, +%reg]", cond, rd, rn, rm, p=1, w=0, shift_amt=0, shift_type=0, u=1);
   ldr2.set_asm("ldr%[cond] %reg, [%reg, -%reg]", cond, rd, rn, rm, p=1, w=0, shift_amt=0, shift_type=0, u=0);
   ldr2.set_asm("ldr%[cond] %reg, [%reg, %reg]", cond, rd, rn, rm, p=1, w=0, shift_amt=0, shift_type=0, u=1);
@@ -273,7 +273,7 @@ Type_vfpv3_dpi --> %cond:4 0xe:4 %op1:1 %D:1 %op:2 %vn:4 %vd:4 0x5:3 %sz:1 %N:1 
 And this is the sourcecode:
 
 /home/maritns3/core/captive-project/gensim/models/armv7/vfpv4.ac
-```
+```plain
 AC_ISA(arm)
 {
 	// VFPv3 Instructions

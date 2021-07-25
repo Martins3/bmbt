@@ -42,7 +42,7 @@ static inline void rcu_read_unlock(void)
       - synchronize_rcu
         - wait_for_readers : 流程很清晰
           1. `static ThreadList registry = QLIST_HEAD_INITIALIZER(registry);` : 在 rcu_register_thread 的时候，将 thread local 的 rcu_reader 挂到上面去
-          2. 对于register 上挂载的 rcu_reader 调用 rcu_gp_ongoing 查询 local 的版本和 global 的版本是否存在差别，如果有，那么设置 rcu_reader_data::waiting 为 true, 如果版本相同，那么从 registry 中移除掉
+          2. 对于 register 上挂载的 rcu_reader 调用 rcu_gp_ongoing 查询 local 的版本和 global 的版本是否存在差别，如果有，那么设置 rcu_reader_data::waiting 为 true, 如果版本相同，那么从 registry 中移除掉
           3. QLIST_EMPTY(&registry) : 这表示所有的 reader 都离开 critical region 了
           4. qemu_event_wait(&rcu_gp_event); 等待
       - try_dequeue && `node->func(node)` : 从队列中间取出需要执行的函数来
@@ -144,7 +144,7 @@ reader 获取了指针 p 之后，之后通过 p 进行各种操作可以保证 
 In QEMU, when a lock is used, this will often be the "iothread mutex", also known as the "big QEMU lock" (BQL). 
 
 ## [ ] 分析一下在当前项目中使用到的 RCU
-```
+```plain
 ➜  src git:(xqm) ✗ ag rcu
 qemu/memory_ldst.c.inc
 35:    RCU_READ_LOCK();
@@ -181,7 +181,7 @@ tcg/translate-all.c
 544:    pd = atomic_rcu_read(lp);
 ```
 
-## [x] QTAILQ_INSERT_TAIL 和 QTAILQ_INSERT_TAIL_RCU 版本差异是什么?
+## [x] QTAILQ_INSERT_TAIL 和 QTAILQ_INSERT_TAIL_RCU 版本差异是什么
 回答，几乎没有任何的区别啊
 
 对比这两个，只是在写的时候是 atomic 的

@@ -1,5 +1,5 @@
 # can't compile qemu in loongarch
-```
+```plain
 make[1]: 进入目录“/home/loongson/ld/qemu_bak/slirp”
 make[1]: 对“all”无需做任何事。
 make[1]: 离开目录“/home/loongson/ld/qemu_bak/slirp”
@@ -18,7 +18,7 @@ make: *** 正在等待未完成的任务....
 doesn't sync the repo correctly.
 
 # [ ] 出现 loader 错误
-```
+```plain
 ➜  build git:(system-la) ✗ qsync && make -j10 && ~/run_xqm.sh
 sync x86-qemu-mips
 receiving incremental file list
@@ -132,7 +132,7 @@ VNC server running on ::1:5900
 1. qemu 无论是在 5000 还是在我的 x86 上都立刻挂掉，只是 x86 上是 segment fault 报错而已
 2. 兰彦志可以运行 qemu kernel 拷贝我的机器上，其 qemu 依赖的动态库和我的 x86 版本不一致, 放弃。使用兰彦志的镜像，QEMU 会死循环。
 3. x86 上， 使用 gdb 分析，日志结果如下
-```
+```plain
 >>> bt
 #0  0x00005555557b6ef6 in test_bit (addr=0x7fffe8e4eed0, nr=7905747460161236391) at /home/maritns3/core/ld/qemu/include/qemu/bitops.h:135
 #1  init_ts_info (infos=infos@entry=0x7fffb400ce10, temps_used=temps_used@entry=0x7fffe8e4eed0, ts=ts@entry=0x7fffb4000b60) at /home/maritns3/core/ld/qemu/tcg/optimize.c:96

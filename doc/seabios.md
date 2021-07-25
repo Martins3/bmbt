@@ -166,7 +166,7 @@ This code calls romlayout.S:entry_post() which then calls post.c:handle_post() i
 kvm_detect 中使用一条 cpuid 指令，来知道当前在 KVM 中间运行
 
 - [x] 如何实现 dma 的，如何实现 region 的操作的
-```
+```plain
 0000000000000510-0000000000000511 (prio 0, i/o): fwcfg
 0000000000000514-000000000000051b (prio 0, i/o): fwcfg.dma
 ```
@@ -481,7 +481,7 @@ PCI: map device bdf=00:03.0  bar 0, addr febc0000, size 00020000 [mem]
 ```
 
 pci 设备的 bar 的起始位置映射的配置是 bios 中的代码扫描完成的
-```
+```plain
 huxueshi:e1000_write_config 10 ffffffff 4
 huxueshi:e1000_write_config 10 0 4
 huxueshi:e1000_write_config 14 ffffffff 4
@@ -581,7 +581,7 @@ ca20, sysdata=sysdata@entry=0xffff88810022ca58) at drivers/acpi/pci_root.c:925
 从 pci_read_bases 中可以看的超级清晰，为什么在 Linux kernel 中间依旧存在配置 bar 空间的行为.
 
 ## cat /proc/ioports
-```
+```plain
 0000-0cf7 : PCI Bus 0000:00
   0000-001f : dma1
   0020-0021 : pic1

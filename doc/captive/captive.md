@@ -77,7 +77,7 @@ arch/common/printf/printf.cpp:printf 的 0xfe 是如何解析的?
 #### [ ] arch/common
 - [ ] c++ 文件夹中间头文件，似乎是为了给这些函数提供一个标准的接口
 
-#### [ ] 还是找不到 unikernel 的范围啊!
+#### [ ] 还是找不到 unikernel 的范围啊
 
 #### 分析 keyboard 的流程
 从 KVM_EXIT_MMIO 的位置开始。
