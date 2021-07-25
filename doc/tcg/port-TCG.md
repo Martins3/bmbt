@@ -1,6 +1,10 @@
 # TCG
 `target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
 
+- [ ] how cross page works?
+- [ ] cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
+- [ ] tb 查询到底如何操作的 ?
+
 #### tb 查找的过程
 - [ ] 在 /home/maritns3/core/notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-02.txt
 中间提到了, 首先使用虚拟地址查询(fast)，然后使用物理地址查询(slow)，为什么这么设计。
@@ -11,6 +15,11 @@
 - tb_lookup__cpu_state(在 v6.0 叫做 tb_lookup)
   - tb_jmp_cache : 是快路径查询查询，使用虚拟地址 tb_jmp_cache_hash_func 计算 hash，在 `cpu->tb_jmp_cache` 中间直接查询出来
   - tb_ctx.htable : 慢路径，通过 get_page_addr_code 获取物理地址，然后通过 tb_hash_func 计算 hash 值, 最后调用 qht_lookup_custom 来查询
+
+21. tb_jmp_cache 是个啥
+    - [ ] tb_flush_jmp_cache
+- [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
+
 
 ## tcg.c 的代码分析
 - [ ] tcg_region_state

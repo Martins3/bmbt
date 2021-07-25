@@ -5,6 +5,7 @@ linker_script := src/linker.ld
 # assembly_source_files := src/head.S
 assembly_source_files :=
 
+c_source_files += $(wildcard src/*.c)
 c_source_files := $(wildcard src/tcg/*.c)
 c_source_files += $(wildcard src/i386/*.c)
 c_source_files += $(wildcard src/i386/LATX/*.c)
