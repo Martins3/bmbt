@@ -17,5 +17,5 @@ jobs:
         uses: lint-md/github-action@v0.0.2
         with:
                 files: 'Readme.md doc/'
-                configFile: '.lintmdrc'
+                configFile: '.lintmdrc.json'
                 failOnWarnings: true
