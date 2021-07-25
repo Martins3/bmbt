@@ -42,16 +42,6 @@ tb_lookup__cpu_state
 - [ ] 每次执行完成一个 tb 就进行检查中断吗?
     - [ ] 对应的检查代码在哪里?
 
-## interrupt 机制
-- apic_local_deliver : 在 apic 中存在大量的模拟
-  - cpu_interrupt
-    - generic_handle_interrupt
-      - `cpu->interrupt_request |= mask;` 
-
-在 cpu_handle_interrupt 中，会处理几种特殊情况，默认是 `cc->cpu_exec_interrupt(cpu, interrupt_request)`
-也就是 x86_cpu_exec_interrupt, 在这里根据 idt 之类的中断处理需要的地址, 然后跳转过去执行的
-
-
 在 tr_gen_tb_start 生成了 icount 的检查代码，那个并不是 interrupt 的检查机制。
 
 ## 二进制文件的反汇编阶段
@@ -63,22 +53,3 @@ tb_lookup__cpu_state
           - cpu_ldub_code : x86-qemu-mips/include/exec/cpu_ldst_template.h 中间生成的
         - ir1_disasm
           - cs_disasm : 这个就是 capstone 的代码了
-
-## How softmmu works
-Q: 其实，访问存储也是隐藏的 load，是如何被 softmmu 处理的?
-
-A: 指令的读取都是 tb 的事情
-
-- gen_ldst_softmmu_helper
-  - `__gen_ldst_softmmu_helper_native`
-    - tr_gen_lookup_qemu_tlb : TLB 比较查询
-    - tr_gen_ldst_slow_path : 无奈，只能跳转到 slow path 去
-      - td_rcd_softmmu_slow_path
-
-- tr_ir2_generate
-  - tr_gen_softmmu_slow_path
-    - `__tr_gen_softmmu_sp_rcd`
-      - helper_ret_stb_mmu : 跳转的入口通过 helper_ret_stb_mmu 实现, 当前在 accel/tcg/cputlb.c 中
-        - store_helper
-          - io_writex
-            - memory_region_dispatch_write
