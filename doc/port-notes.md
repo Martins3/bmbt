@@ -1,6 +1,5 @@
-# Divergence between qemu
+## 移植过程中的一些记录
 
-## 注意
 1. 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
   - cpu_ldst_template.h 这个文件在 6.0 版本中被替换掉了，这一部分的代码是按照 6.0 的
 
