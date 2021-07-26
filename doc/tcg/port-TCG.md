@@ -72,30 +72,8 @@ tcg/tcg.c 中分别 include 下面几个文件，因为 xqm 抛弃了 tcg, 都�
 1. 当 guest page table 发生改变的时候，QEMU 不会 invalidate all translations
 2. 而且 shared libraries 对应的 tb QEMU 也是共享的
 
-## tcg region
-- [ ] tcg_region_state
-  - [ ] tcg_region_reset_all
-
-- [ ] tcg_target_qemu_prologue
-  - target_x86_to_mips_static_codes
-  - tcg_set_frame
-  - tcg_out_pool_finalize
-  - flush_icache_range : qemu 本身作为用户态的程序，为什么需要进行 flush icache
-
-- [ ] tcg_tb_alloc
-
-- [ ] 应该存在一个直接分配一个连续空间才对，之后的将所有分配的 tb 都是放到哪里就可以了
-
-tcg_region 到底是什么东西呀?
-
-code_gen_ptr 和 data_gen_ptr 都是意思啊
-  - [ ] 从 tcg_tb_alloc 中看，就是连续分配的啊
-  - 从 tcg_code_size 看， code_gen_ptr  code_gen_buffer 分别是缓冲区的尾和头
-
-将 code_gen_buffer 划分为大小相等的 regions，
-
-
 ## TCGContext : 如何工作的，如何维护的，作用是什么
+
 - [ ] tcg_context_init 的参数写死了是: tcg_init_ctx, 那么其他都是怎么初始化的啊
 
 - [ ] `static TCGContext **tcg_ctxs;` 和 `extern TCGContext *tcg_ctx;` `extern TCGContext tcg_init_ctx;` 的关系是什么?
@@ -155,55 +133,43 @@ index 3a73912827..62f418ac8a 100644
 所以，到底为什么需要 tcg_init_ctx 的
 
 ## tcg region
-可以分析一下 tcg_tb_alloc, 每个 TCGContext 分配的空间是动态分配的，然后进缓冲区划分为一个个的 block
-来实现动态分配的
+初始化的工作一直发生在 init thread 中间了:
 
+- x86_cpu_realizefn
+  - qemu_init_vcpu : 这里进行选择执行引擎
+    - qemu_tcg_init_vcpu : 在 exec thread 中进行执行的, 这里检查了一下，保证即使是多个 cpu ，也只会发生
+      - tcg_region_init 
+          - tcg_n_regions : 计算出来创建多少个 region 出来，因为不同的 cpu 生成 tb 的数量不同，所以一般让 region 多于 cpu 的数量
+          - 在 tcg_region_init 使用 tcg_init_ctx.code_gen_buffer 来对于 region 进行赋值
+          - 初始化 static struct tcg_region_state region; 关于 region 的所有信息都是放到此处的
+          - tcg_region_trees_init : 每一个 tcg_region 建立一个 tb_tc 的 gtree
+
+- tb_gen_code
+    - tcg_tb_alloc
+      - tcg_region_alloc
+    - tb_flush
+      - do_tb_flush
+        - cpu_tb_jmp_cache_clear : quick cache
+        - qht_reset_size : slow cache 清理
+        - page_flush_tb : PageDesc 的清理
+        - tcg_region_reset_all
+            - tcg_region_initial_alloc__locked
+              - tcg_region_alloc__locked
+                - tcg_region_assign : 将一个 region 分配给一个 TCGContext
+            - tcg_region_tree_reset_all
+
+总之，region 的创建是因为多核，每次分配一个 region，从而用于修改 TCGContext::code_gen_buffer
+
+TranslationBlock 和 生成的代码分别放到什么位置 ?
+
+tcg_tb_alloc 的注释说道, TranslationBlock 就是生成的代码左侧
 ```c
 /*
- * We divide code_gen_buffer into equally-sized "regions" that TCG threads
- * dynamically allocate from as demand dictates. Given appropriate region
- * sizing, this minimizes flushes even when some TCG threads generate a lot
- * more code than others.
+ * Allocate TBs right before their corresponding translated code, making
+ * sure that TBs and code are on different cache lines.
  */
-struct tcg_region_state {
-    QemuMutex lock;
-
-    /* fields set at init time */
-    void *start;
-    void *start_aligned;
-    void *end;
-    size_t n;
-    size_t size; /* size of one region */
-    size_t stride; /* .size + guard size */
-
-    /* fields protected by the lock */
-    size_t current; /* current region index */
-    size_t agg_size_full; /* aggregate size of full regions */
-};
-
-static struct tcg_region_state region;
 ```
 
-- [x] 找到 TCGContext 将 tcg_region_state 分配满了，一次性全部清空掉掉的证据
-  - 在 tb_gen_code 中 tcg_tb_alloc 如果失败，那么调用 tb_flush 来将所有的 TCG 清空掉
-  - 从 tcg_region_alloc__locked 看，判断 buffer 是否满，就是将 block 一个个分配出去，block 分配完即可
-
-每次分配的时候进行一下 buffer 的时候
-```c
-static void tcg_region_assign(TCGContext *s, size_t curr_region)
-{
-    void *start, *end;
-
-    tcg_region_bounds(curr_region, &start, &end);
-
-    s->code_gen_buffer = start;
-    s->code_gen_ptr = start;
-    s->code_gen_buffer_size = end - start;
-    s->code_gen_highwater = end - TCG_HIGHWATER;
-}
-```
-
-在 tcg_region_init 使用 tcg_init_ctx.code_gen_buffer 来对于 region 进行赋值 ##
 
 ## TCG_HIGHWATER
 似乎特别大的用途
