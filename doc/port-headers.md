@@ -17,7 +17,7 @@
 | i386/cpu.h | CPUX86State / X86CPUClass / X86CPU                                |
 | cpu-defs.h | CPUTLBEntry / CPUIOTLBEntry / CPUTLBDescFast 之类的 TLB 定义      |
 | cpus.h     | 多核                                                              |
-| cpu-ldst.h | 从这里继续                                                        |
+| cpu-ldst.h | 接下来从这里开始                                                        |
 
 CPUState 的子类居然是 x86CPU 啊
 
