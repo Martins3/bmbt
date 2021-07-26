@@ -81,9 +81,3 @@
   - [ ] 在 bitmap.c 中间是直接从
   - [ ] g_assert
   - error_report
-
-## 一些简单的代码分析工作
-15. why is mmap_lock empty in system mode? In another word, why mmap_lock is necessary for user mode ? 实际上，mmap 的使用位置相当有限
-   - 首先，搞清楚 mmap_lock 的位置吧
-
-- [ ] https://github.com/Martins3/BMBT/issues/32
