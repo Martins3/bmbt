@@ -6,7 +6,6 @@
 #include "../../exec/memory.h"
 #include "../../qemu/atomic.h"
 #include "../../qemu/bitmap.h"
-#include "../../qemu/config-host.h"
 #include "../../qemu/queue.h"
 #include "../../types.h"
 #include <inttypes.h> // for VADDR_PRIx

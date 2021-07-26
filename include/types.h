@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h> // for EOF
+#include "qemu/config-host.h"
+#include "qemu/config-target.h"
 
 // FIXME size_t conflicts with <stddef>, as for how to deal with glibc
 // no solution yet.

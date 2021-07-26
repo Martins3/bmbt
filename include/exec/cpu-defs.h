@@ -2,8 +2,6 @@
 #define CPU_DEFS_H_QNWQEKKO
 
 #include "../hw/core/cpu.h"
-#include "../qemu/config-host.h"
-#include "../qemu/config-target.h"
 #include "../qemu/thread.h"
 #include "../types.h"
 #include "cpu-para.h"

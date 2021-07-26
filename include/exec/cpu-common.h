@@ -1,7 +1,6 @@
 #ifndef CPU_COMMON_H_OF49R186
 #define CPU_COMMON_H_OF49R186
 
-#include "../qemu/config-host.h"
 #include "../types.h"
 
 enum device_endian {
