@@ -1,5 +1,8 @@
 # QEMU 启动代码
 
+## 初始化 QEMU 大约需要处理的事情
+- [ ] tcg_register_thread : 唯一 reference 了 MachineState
+
 
 ## 几个关键的结构体功能和移植差异说明
 

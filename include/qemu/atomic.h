@@ -25,5 +25,7 @@
 #define atomic_and(ptr, n) (*ptr &= n)
 
 #define atomic_or_fetch(ptr, n) __atomic_or_fetch(ptr, n, __ATOMIC_SEQ_CST)
+#define atomic_fetch_inc(ptr) *ptr = *ptr + 1;
+
 
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

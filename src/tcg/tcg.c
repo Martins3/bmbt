@@ -775,3 +775,44 @@ void tcg_region_init(void) {
   }
 #endif
 }
+
+/*
+ * All TCG threads except the parent (i.e. the one that called tcg_context_init
+ * and registered the target's TCG globals) must register with this function
+ * before initiating translation.
+ *
+ * In user-mode we just point tcg_ctx to tcg_init_ctx. See the documentation
+ * of tcg_region_init() for the reasoning behind this.
+ *
+ * In softmmu each caller registers its context in tcg_ctxs[]. Note that in
+ * softmmu tcg_ctxs[] does not track tcg_ctx_init, since the initial context
+ * is not used anymore for translation once this function is called.
+ *
+ * Not tracking tcg_init_ctx in tcg_ctxs[] in softmmu keeps code that iterates
+ * over the array (e.g. tcg_code_size() the same for both softmmu and user-mode.
+ */
+void tcg_register_thread(void) {
+  // FIXME we will port MachineState related code later
+  // MachineState *ms = MACHINE(qdev_get_machine());
+  TCGContext *s = g_malloc(sizeof(*s));
+  unsigned int i, n;
+  bool err;
+
+  *s = tcg_init_ctx;
+
+  /* Claim an entry in tcg_ctxs */
+  n = atomic_fetch_inc(&n_tcg_ctxs);
+  // FIXME
+  // g_assert(n < ms->smp.max_cpus);
+  atomic_set(&tcg_ctxs[n], s);
+
+  if (n > 0) {
+    alloc_tcg_plugin_context(s);
+  }
+
+  tcg_ctx = s;
+  qemu_mutex_lock(&region.lock);
+  err = tcg_region_initial_alloc__locked(tcg_ctx);
+  g_assert(!err);
+  qemu_mutex_unlock(&region.lock);
+}
