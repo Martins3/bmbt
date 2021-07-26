@@ -4,30 +4,49 @@
 
 1. 所有的 header 都是使用绝对路径，这是为了让 ccls 可以正确警告，从而可以正确移植
 2. 总体来说，bmbt 中的每一个 header 都是和原始 QEMU 对称的
+## 一些记录
+1. 在 thread-posix.h 中定义了 QemuMutex QemuCond QemuSemaphore QemuEvent QemuThread, 但是只使用了 QemuMutex 了，将其移动到 thread.h 在和锁相关的问题上一起分析
+2. include/exec/helper-head.h 中包含了 /home/maritns3/core/ld/DuckBuBi/include/exec/helper-head.h
 
-## cpu.h
-`include/hw/core/cpu.h`, 这是根，不应该依赖 `src/i386/cpu.h`
-`include/exec/cpu-defs.h` 不应该依赖 `src/i386/cpu.h`
+## 头文件功能描述
+| header     | desc                                                              |
+|------------|-------------------------------------------------------------------|
+| cpu-all.h  | 包含 memory_ldst.inc.h  以及一些基础的 macro                      |
+| exec-all.h | TranslationBlock 以及 cputlb.c / exec.c / cpu-exec.c 中定义的函数 |
+| core/cpu.h | CPUState / CPUClass                                               |
+| i386/cpu.h | CPUX86State / X86CPUClass / X86CPU                                |
+| cpu-defs.h | CPUTLBEntry / CPUIOTLBEntry / CPUTLBDescFast 之类的 TLB 定义      |
+| cpus.h     | 多核                                                              |
+| cpu-ldst.h | 从这里继续                                                        |
 
-但是 `include/exec/exec-all.h` 是可以依赖 `src/i386/cpu.h` 的
+CPUState 的子类居然是 x86CPU 啊
 
 ## TODO
-
-| TODO                     | 问题描述                                                                        |
-|--------------------------|---------------------------------------------------------------------------------|
-| `#include <stdbool>`     | 如何让 acpi / kernel / tcg 使用同一个 header                                    |
-| 清理 types 的定义        | target_ulong 和各种 u32 i32, 以及 ram_addr_t 定义在 cpu-common.h 中，感觉很随意 |
-| 清理头文件的依赖         | 在 i386 下依赖的头文件</br> 两个 cpu.h, tcg/tcg.h                               |
-| 写一个所有头文件功能描述 | cpu-all.h exec-all.h cpu.h cpu-defs.h 中间到底有什么，根本不清楚啊              |
+1. `#include <stdbool>` 之类的头文件真的需要清理掉吗 ?
+2. 如何让 acpi / kernel / tcg 使用同一个 header                                  
 
 6. 需要被重新设计的头文件
   1. seglock.h
-  2. thread-posix.h
   3. qht.h
   4. qdist.h
 
 7. cpu-defs.h osdep.h 和 config-host.h / config-target.h 的内容分析整理一下
   - cpu-paras.h
+
+
+
+## cpu.h 和 exec-all.h 的依赖分析
+`include/hw/core/cpu.h`, 这是根，不应该依赖 `src/i386/cpu.h`
+`include/exec/cpu-defs.h` 不应该依赖 `src/i386/cpu.h`
+
+但是 `include/exec/exec-all.h` 是可以依赖 `src/i386/cpu.h` 的
+
+
+所以，`include/hw/core/cpu.h` / `include/exec/cpu-defs.h` <- `src/i386/cpu.h` <- `include/exec/exec-all.h`
+
+大致含义就是，core/cpu.h 和 cpu-defs.h 都是基本 cpu 的定义，
+而 exec-all.h 是操作 CPUArchState 的
+
 
 # 如何保证 config-host.h 和 config-target.h 被所有的人 include
 在 `include/hw/core/cpu.h` 的函数 cpu_tb_jmp_cache_clear 的 CONFIG_X86toMIPS 
