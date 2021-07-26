@@ -11,7 +11,6 @@
 // #include "seqlock.h"
 #include "thread.h"
 #include "qdist.h"
-#include "../qemu/thread-posix.h"
 
 typedef bool (*qht_cmp_func_t)(const void *a, const void *b);
 

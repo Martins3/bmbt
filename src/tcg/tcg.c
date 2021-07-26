@@ -7,7 +7,7 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/osdep.h"
-#include "../../include/qemu/thread-posix.h"
+#include "../../include/qemu/thread.h"
 #include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
