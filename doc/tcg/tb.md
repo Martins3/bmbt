@@ -1,72 +1,17 @@
 ## TCGContext : 如何工作的，如何维护的，作用是什么
 
-- [x] tcg_context_init 的参数写死了是: tcg_init_ctx, 那么其他都是怎么初始化的啊
+- `static TCGContext **tcg_ctxs;` 和 `extern TCGContext *tcg_ctx;` `extern TCGContext tcg_init_ctx;` 的关系
+  - tcg_context_init 的参数写死了是: tcg_init_ctx, 那么其他都是怎么初始化的啊
   - 并且初始化 init thread 的 tcg_ctx = tcg_init_ctx
   - 在 tcg_region_init 使用 tcg_init_ctx.code_gen_buffer 来对于 region 进行赋值
-  - tcg_register_thread : 每一个线程在此处创建新的 TCGContext 其中的内容从 tcg_init_ctx 中获取
-  - 并且对于 tcg_ctxs 赋值
-
-- [ ] `static TCGContext **tcg_ctxs;` 和 `extern TCGContext *tcg_ctx;` `extern TCGContext tcg_init_ctx;` 的关系是什么?
-  - 都是在什么时候初始化的
-
-tb 的管理是比较清晰的, 所有的人都是使用一个的 qht 的
-- 这些 tb 的插入都是靠 tb_link_page 进行的，`qht_insert(&tb_ctx.htable, tb, h, &existing_tb);`
-- tb_htable_lookup
-- tb_htable_init
-
-static struct tcg_region_state region;
-
-- alloc_code_gen_buffer
-  - alloc_code_gen_buffer_splitwx_memfd 中实现的操作
-
-在 tcg_register_thread 初始化了 tcg_ctx
-
-```diff
-History:        #0
-Commit:         b1311c4acf503dc9c1a310cc40b64f05b08833dc
-Author:         Emilio G. Cota <cota@braap.org>
-Committer:      Richard Henderson <richard.henderson@linaro.org>
-Author Date:    Thu 13 Jul 2017 05:15:52 AM CST
-Committer Date: Wed 25 Oct 2017 04:53:42 AM CST
-
-tcg: define tcg_init_ctx and make tcg_ctx a pointer
-
-Groundwork for supporting multiple TCG contexts.
-
-The core of this patch is this change to tcg/tcg.h:
-
-> -extern TCGContext tcg_ctx;
-> +extern TCGContext tcg_init_ctx;
-> +extern TCGContext *tcg_ctx;
-
-Note that for now we set *tcg_ctx to whatever TCGContext is passed
-to tcg_context_init -- in this case &tcg_init_ctx.
-
-Reviewed-by: Richard Henderson <rth@twiddle.net>
-Signed-off-by: Emilio G. Cota <cota@braap.org>
-Signed-off-by: Richard Henderson <richard.henderson@linaro.org>
-
-diff --git a/tcg/tcg.c b/tcg/tcg.c
-index 3a73912827..62f418ac8a 100644
---- a/tcg/tcg.c
-+++ b/tcg/tcg.c
-@@ -382,6 +382,8 @@ void tcg_context_init(TCGContext *s)
-     for (; i < ARRAY_SIZE(tcg_target_reg_alloc_order); ++i) {
-         indirect_reg_alloc_order[i] = tcg_target_reg_alloc_order[i];
-     }
-+
-+    tcg_ctx = s;
- }
-```
-应该是曾经每一个线程都是创建一个 tcg_ctx 的
-
-所以，到底为什么需要 tcg_init_ctx 的
-
+  - tcg_register_thread : 每一个线程在此处创建新的 TCGContext 其中的内容从 tcg_init_ctx 中获取, 并且对于 tcg_ctxs 赋值
+  - `static TCGContext **tcg_ctxs;`  的使用位置仅仅在 tcg_region_reset_all 中间
 
 ## tb_gen_code : 让我们来分析一下这个狗东西
 
 1. 了解一下 TCGContext::tb_cflags
     - 这个只是在 tcg/tcg-op.c 中间使用, 但是现在 xqm 中，这个东西直接被移除掉了, 暂时不用考虑
+    - 但是函数 tb_cflags 还是在使用的
 
 2. cflags 相关的 macro 的引用位置吧
 
@@ -132,8 +77,6 @@ typedef struct TCGContext {
 
 - tcg_prologue_init
   - tcg_target_qemu_prologue
-
-不如深入理解一下 tcg_prologue_init 在干什么 ?
 
 - code_ptr 和 code_buf 出现的位置相当有限，应该是删除的
 - data_gen_ptr : 只有两次赋值为 NULL

@@ -5,3 +5,5 @@
 - [ ] async_safe_run_on_cpu 的实现原理
   - [ ] 如果哪一个 cpu 正好在运行，和 cpu 没有运行，处理的情况有没有区别 ?
 
+## 一些初始化的代码需要重新分析
+- [ ] qemu_tcg_init_vcpu
