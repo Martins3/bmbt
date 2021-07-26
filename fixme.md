@@ -55,6 +55,8 @@
     4. 多核机制分析其实不仅仅在于此
       - cpus.h
       - CPUState 中的 cpu_index, cluster_index 等
+    1. thread.h 中间的接口需要补齐
+    2. cpus.h 中间接口
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
