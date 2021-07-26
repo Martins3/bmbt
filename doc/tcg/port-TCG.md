@@ -1,11 +1,37 @@
 # TCG
-`target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
+> `target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
 
+所以 ./tcg 下被 include 的文件
+- [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch/tcg-target.inc.c
+- [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/tcg.c
+
+- [ ] 我记得有一个地方是各种 inc.c 的，到底实际使用情况如何?
+
+
+<!-- vim-markdown-toc GFM -->
+
+- [问题](#问题)
+- [tb 查找的过程](#tb-查找的过程)
+- [tcg.c 的代码分析](#tcgc-的代码分析)
+- [TCGContext : 如何工作的，如何维护的，作用是什么](#tcgcontext--如何工作的如何维护的作用是什么)
+- [tcg region](#tcg-region)
+- [TCG_HIGHWATER](#tcg_highwater)
+- [tb_gen_code : 让我们来分析一下这个狗东西](#tb_gen_code--让我们来分析一下这个狗东西)
+- [`TCGContext::code_gen_`](#tcgcontextcode_gen_)
+    - [code_gen_buffer](#code_gen_buffer)
+    - [code_gen_ptr](#code_gen_ptr)
+- [tb_tc](#tb_tc)
+- [cpu_exec_nocache](#cpu_exec_nocache)
+
+<!-- vim-markdown-toc -->
+
+## 问题
 - [ ] how cross page works?
 - [ ] cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
 - [ ] tb 查询到底如何操作的 ?
 
-#### tb 查找的过程
+
+## tb 查找的过程
 - [ ] 在 /home/maritns3/core/notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-02.txt
 中间提到了, 首先使用虚拟地址查询(fast)，然后使用物理地址查询(slow)，为什么这么设计。
 - [ ] captive 说，其使用物理地址索引，所以效率更高之类的
@@ -52,7 +78,7 @@ code_gen_ptr 和 data_gen_ptr 都是意思啊
 将 code_gen_buffer 划分为大小相等的 regions，
 
 
-## [ ] TCGContext : 如何工作的，如何维护的，作用是什么
+## TCGContext : 如何工作的，如何维护的，作用是什么
 - [ ] tcg_context_init 的参数写死了是: tcg_init_ctx, 那么其他都是怎么初始化的啊
 
 - [ ] `static TCGContext **tcg_ctxs;` 和 `extern TCGContext *tcg_ctx;` `extern TCGContext tcg_init_ctx;` 的关系是什么?
@@ -162,7 +188,7 @@ static void tcg_region_assign(TCGContext *s, size_t curr_region)
 
 在 tcg_region_init 使用 tcg_init_ctx.code_gen_buffer 来对于 region 进行赋值 ##
 
-## [ ] TCG_HIGHWATER
+## TCG_HIGHWATER
 似乎特别大的用途
 
 ## tb_gen_code : 让我们来分析一下这个狗东西
@@ -209,7 +235,7 @@ static void tcg_region_assign(TCGContext *s, size_t curr_region)
     - buffer_overflow : 表示 tb 块太多了，该刷新了
     - tb_overflow : 一个 tb 中间的指令太多了
 
-## TCGContext::code_gen_
+## `TCGContext::code_gen_`
 
 ```c
 typedef struct TCGContext {
