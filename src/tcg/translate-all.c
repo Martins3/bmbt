@@ -1082,6 +1082,7 @@ static inline void *alloc_code_gen_buffer(void) {
 #endif
 
   /* Request large pages for the buffer.  */
+  // FIXME
   // qemu_madvise(buf, size, QEMU_MADV_HUGEPAGE);
 
   return buf;

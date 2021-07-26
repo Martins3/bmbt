@@ -81,20 +81,9 @@
   - [ ] 在 bitmap.c 中间是直接从
   - [ ] g_assert
   - error_report
-9. 好好分析下 tcg 吧
 
 ## 一些简单的代码分析工作
 15. why is mmap_lock empty in system mode? In another word, why mmap_lock is necessary for user mode ? 实际上，mmap 的使用位置相当有限
    - 首先，搞清楚 mmap_lock 的位置吧
-20. [ ] 有件事情没有想明白，调用 helper 的时候就进入到 qemu 中间了，是什么时候调用的 prologue 的离开 tb 执行的环境的。(heler_inw 之类的) (写一个进入 tb 环境 和 离开的小专题，顺便分析一下如何是 setjmp 的使用方法)
-     - Niugenen 说切到 helper 这里实际上取决于是否破坏环境，有的不用处理的
-     - 这件事明明可以测试，为什么老是折磨我 ?
 
 - [ ] https://github.com/Martins3/BMBT/issues/32
-
-- tcg.c : 主要是 tb 的一些分配工作在使用，其实几乎没有什么用途了
-  - [ ] tcg.c 在本来的涉及中间，是好几个文件和合集(因为 #include .c 的原因), 到时候拆开 ?
-    - [ ] 最恐怖的是，发现这些文件基本处于没有被使用的状态
-    - [ ] 实际上，将 tcg_prologue_init 包含进来，也只是花费了 1000 行而已，原来的设计中，剩下的代码在干什么 ?
-
-- [ ] qemu_tcg_init_vcpu : 在 cpus.c 中还存在一些代码
