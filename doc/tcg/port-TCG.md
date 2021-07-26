@@ -1,53 +1,78 @@
 # TCG
-> `target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
-
-所以 ./tcg 下被 include 的文件
-- [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/loongarch/tcg-target.inc.c
-- [ ] /home/maritns3/core/ld/x86-qemu-mips/tcg/tcg.c
-
-- [ ] 我记得有一个地方是各种 inc.c 的，到底实际使用情况如何?
-
-
-<!-- vim-markdown-toc GFM -->
-
-- [问题](#问题)
-- [tb 查找的过程](#tb-查找的过程)
-- [tcg.c 的代码分析](#tcgc-的代码分析)
-- [TCGContext : 如何工作的，如何维护的，作用是什么](#tcgcontext--如何工作的如何维护的作用是什么)
-- [tcg region](#tcg-region)
-- [TCG_HIGHWATER](#tcg_highwater)
-- [tb_gen_code : 让我们来分析一下这个狗东西](#tb_gen_code--让我们来分析一下这个狗东西)
-- [`TCGContext::code_gen_`](#tcgcontextcode_gen_)
-    - [code_gen_buffer](#code_gen_buffer)
-    - [code_gen_ptr](#code_gen_ptr)
-- [tb_tc](#tb_tc)
-- [cpu_exec_nocache](#cpu_exec_nocache)
-
-<!-- vim-markdown-toc -->
+在 notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-02.txt 中存在一些简单的描述 tcg 
+的大致执行流程，但是这些内容有点老，很多问题也没有分析清楚，下面重新分析一下
 
 ## 问题
 - [ ] how cross page works?
 - [ ] cross-page-check.h 算是少数从 LATX 入侵到公共部分的代码了
 - [ ] tb 查询到底如何操作的 ?
-
-
-## tb 查找的过程
-- [ ] 在 /home/maritns3/core/notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-02.txt
-中间提到了, 首先使用虚拟地址查询(fast)，然后使用物理地址查询(slow)，为什么这么设计。
-- [ ] captive 说，其使用物理地址索引，所以效率更高之类的
-  - [ ] 当使用上物理 TLB 之后，使用物理地址作为索引更好吗 ?
-- [ ] 同时使用物理地址和虚拟地址作为索引的一个原因是不是因为曾经为了支持 usermode 的二进制翻译
-
-- tb_lookup__cpu_state(在 v6.0 叫做 tb_lookup)
-  - tb_jmp_cache : 是快路径查询查询，使用虚拟地址 tb_jmp_cache_hash_func 计算 hash，在 `cpu->tb_jmp_cache` 中间直接查询出来
-  - tb_ctx.htable : 慢路径，通过 get_page_addr_code 获取物理地址，然后通过 tb_hash_func 计算 hash 值, 最后调用 qht_lookup_custom 来查询
-
-21. tb_jmp_cache 是个啥
-    - [ ] tb_flush_jmp_cache
 - [ ] 从 translate-all.c 到 tcg.c 的调用图制作一下
 
 
-## tcg.c 的代码分析
+## 总体的执行流程
+
+- qemu_tcg_rr_cpu_thread_fn
+  - tcg_cpu_exec
+    - cpu_exec
+      - cpu_handle_exception
+      - cpu_handle_interrupt
+      - tb_find
+        - tb_lookup__cpu_state
+        - tb_gen_code
+          - target_x86_to_mips_host : 原来的 tcg 入口是 tcg_gen_code, 现在移除了 tcg
+            - tr_disasm
+              - get_ir1_list
+                - `__disasm_one_ir1`
+                  - cpu_read_code_via_qemu
+                    - cpu_ldub_code : x86-qemu-mips/include/exec/cpu_ldst_template.h 中间生成的
+                  - ir1_disasm
+                    - cs_disasm : 这个就是 capstone 的代码了
+            - tr_translate_tb
+              - tr_ir2_generate
+                - ir1_translate
+          - tb_link_page
+          - tcg_tb_insert
+      - cpu_loop_exec_tb
+        - cpu_tb_exec
+          - tcg_qemu_tb_exec
+
+在 cpu_exec 的 while 循环中，tb_find 找到 tb, 然后 cpu_loop_exec_tb 执行 tb
+
+## 文件结构
+> `target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
+
+所以 ./tcg 还存在作用只有 tcg.c 了, 
+tcg/tcg.c 中分别 include 下面几个文件，因为 xqm 抛弃了 tcg, 都是没有作用的了:
+```c
+#include "tcg-ldst.inc.c"
+#include "tcg-target.inc.c"
+#include "../tcg-pool.inc.c"
+```
+
+目前将 accel/tcg 和 tcg 下的内容合并到一起了:
+| Filename        | desc                                          |
+|-----------------|-----------------------------------------------|
+| cpu-exec.c      | tb 的执行, cpu_exec 的所在地                  |
+| translate-all.c | 主要处理 tb 和 page 的关系，smc, tb_jmp_cache |
+| cputlb.c        | softmmu 管理                                  |
+| tcg.c           | tb 的内存管理，tb region 之类的               |
+
+## tb 查找的过程
+- tb_lookup__cpu_state(在 v6.0 叫做 tb_lookup)
+  - tb_jmp_cache : 是快路径查询查询，使用虚拟地址 tb_jmp_cache_hash_func 计算 hash，在 `cpu->tb_jmp_cache` 中间直接查询出来
+  - tb_htable_lookup : 慢路径，通过 get_page_addr_code 获取物理地址，然后通过 tb_hash_func 计算 hash 值, 最后调用 qht_lookup_custom 来查询
+  - `atomic_set(&cpu->tb_jmp_cache[hash], tb);` : 如果在 慢路径 上查询成功，那么更新 tb_jmp_cache
+
+首先使用虚拟地址查询(fast)，然后使用物理地址查询(slow), 这么设计的原因为:
+    - 在执行 tb 的时候，进行跳转，显然是使用虚拟地址来查询 tb, 如果没有 tb_jmp_cache，那么就首先软件 page walk 计算出来物理地址，使用物理地址来查询
+
+> Translated Code Management Captive employs a code cache, similar to QEMU, which maintains the translated code sequences. The key difference is that we index our translations by guest physical address, while QEMU indexes by guest virtual address. The consequence of this is that our translations are retained and re-used for longer, whereas QEMU must invalidate all translations when the guest page tables are changed. In contrast, we only invalidate translations when self-modifying code is detected. We utilize our ability to write-protect virtual pages to efficiently detect when a guest memory write may modify translated code, and hence invalidate translations only when necessary. A further benefit is that translated code is re-used across different virtual mappings to the same physical address, e.g. when using shared libraries.[^3]
+
+这里 Tom Spink 实际上说的并没有什么道理, 对此猜测可能这些东西都是基于早期的 QEMU 吧:
+1. 当 guest page table 发生改变的时候，QEMU 不会 invalidate all translations
+2. 而且 shared libraries 对应的 tb QEMU 也是共享的
+
+## tcg region
 - [ ] tcg_region_state
   - [ ] tcg_region_reset_all
 
@@ -60,14 +85,6 @@
 - [ ] tcg_tb_alloc
 
 - [ ] 应该存在一个直接分配一个连续空间才对，之后的将所有分配的 tb 都是放到哪里就可以了
-
-- tcg_exec_init
-  - cpu_gen_init
-    - tcg_context_init : 各种 ops 的初始化
-  - page_init
-  - tb_htable_init : 应该是用来处理
-  - code_gen_alloc
-  - tcg_prologue_init
 
 tcg_region 到底是什么东西呀?
 
@@ -326,3 +343,4 @@ struct tb_tc {
 
 [^1]: https://wiki.qemu.org/Documentation/TCG/frontend-ops
 [^2]: https://github.com/S2E/libtcg
+[^3]: https://www.usenix.org/system/files/atc19-spink.pdf
