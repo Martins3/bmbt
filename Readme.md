@@ -14,8 +14,6 @@
     \___)=(___/
 ```
 
-![](./doc/img/fixme.png)
-
 ## Introduction
 这个项目的想法是，一个 3A5000 电脑开机之后，然后开机之后就是 Windows 。
 基本思路是让 BIOS 启动之后，然后执行 BMBT，进而让 guest OS 来引导启动。
