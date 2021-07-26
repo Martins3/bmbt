@@ -1,14 +1,12 @@
 # Bare Mental Binary Translator
 
-- [ ] 需要将 bios 虚拟化吗 ?
-  - [ ] ramooflax 中，应该没有吧，如果真的没有，他是怎么加载内核的
 - [ ] ramooflax 是怎么处理网卡的 ?
   - 疑问在于，网卡是 ramooflax 的调试组件，同时这个网卡还会在启动的被使用
   - [ ] ramooflax 如何知道其 mmio 空间
   - 如果 pcie 启动的时候，修改了其 mmio 空间，会怎么样
 
 - [ ] 所以还是使用 e820 来实现探测内存吗? 那么 acpi 是做什么用的?
-- [ ] 搞清楚 notify 机制
+- [ ] 搞清楚 pci 的 notify 机制
 
 ## 短期计划
 - [ ] 将 5000 手册比对一下内核
