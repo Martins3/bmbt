@@ -87,11 +87,12 @@ huxueshi:qdev_device_add virtio-9p-pci
           - tcg_init
             - tcg_exec_init
               - cpu_gen_init
-                - tcg_context_init
+                - tcg_context_init : 在 xqm 下这个没有意义
               - page_init
               - tb_htable_init
-              - alloc_code_gen_buffer
-                - alloc_code_gen_buffer_anon
+              - code_gen_alloc
+                - alloc_code_gen_buffer
+                  - alloc_code_gen_buffer_anon
               - tcg_prologue_init
             - tcg_region_init
   - qmp_x_exit_preconfig
