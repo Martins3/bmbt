@@ -7,8 +7,29 @@
 
 - 虽然短期之类不会支持 host 多核，但是支持 guest 多核还是有必要的
 
-## TODO
+## mmap_lock
 
+```c
+static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
+static __thread int mmap_lock_count;
+
+void mmap_lock(void)
+{
+    if (mmap_lock_count++ == 0) {
+        pthread_mutex_lock(&mmap_mutex);
+    }
+}
+```
+利用 mmap_lock_count 一个 thread 可以反复上锁，但是可以防止其他 thread 并发访问。
+
+那么只有用户态才需要啊 ?
+
+参考两个资料:
+1. https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
+2. tcg_region_init 上面的注释
+
+用户态的线程数量可能很大，所以创建多个 region 是不合适的，所以只创建一个，
+而且用户进程的代码大多数都是相同，所以 tb 相关串行也问题不大。
 ## mttcg
 [^1] 指出
 1. 如果需要支持 icount 机制将会消失
