@@ -1119,11 +1119,6 @@ typedef struct TRANSLATION_DATA {
     int max_insns; /* max number of target instruction */
     void *code_highwater; /* to check buffer overflow */
 
-#ifdef CONFIG_BTMMU
-    /* Wether to use BTMMU during translation */
-    int is_btmmu_ok;
-#endif
-
     int slow_path_rcd_max;
     int slow_path_rcd_nr;
     softmmu_sp_rcd_t *slow_path_rcd;
@@ -1470,12 +1465,6 @@ void gen_ldst_c1_softmmu_helper(
         IR2_OPND *opnd_fpr,
         IR2_OPND *opnd_mem,
         int save_temp);
-
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-void tr_enable_btmmu(void);
-void tr_disable_btmmu(void);
-void tr_reset_btmmu(void);
-#endif
 
 /* Atomic version for softmmu */
 void gen_helper_atomic(IR1_OPCODE op, IR2_OPND *opr1, IR2_OPND *opr2, int save_temp);

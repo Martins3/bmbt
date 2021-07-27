@@ -1124,10 +1124,6 @@ void tcg_exec_init(unsigned long tb_size) {
   page_init();
   tb_htable_init();
   code_gen_alloc(tb_size);
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-  if (btmmu_enabled())
-    btmmu_init();
-#endif
 #if defined(CONFIG_SOFTMMU)
   /* There's no guest base to take into account, so go ahead and
      initialize the prologue now.  */
@@ -1411,16 +1407,6 @@ static inline void tb_jmp_unlink(TranslationBlock *dest) {
 
   qemu_spin_unlock(&dest->jmp_lock);
 }
-
-#ifdef CONFIG_BTMMU
-#ifndef BTMMU_USER_ONLY
-/* remove any jumps from/to this tb */
-void tb_jmp_clear(TranslationBlock *tb) {
-  /* suppress any remaining jumps to this TB */
-  tb_jmp_unlink(tb);
-}
-#endif
-#endif
 
 /*
  * In user-mode, call with mmap_lock held.

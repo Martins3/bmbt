@@ -50,10 +50,5 @@ extern ADDR sys_helper_epilogue_default;
 
 void trace_tb_execution(CPUState *cpu, struct TranslationBlock *tb);
 
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-void* build_func_xqm(void);
-void* build_data_xqm(void);
-#endif
-
 ADDRX linear_address(ADDRX pc);
 #endif /* _X86toMIPS_CONFIG_H_ */

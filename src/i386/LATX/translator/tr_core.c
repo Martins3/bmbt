@@ -326,50 +326,6 @@ int tr_check_buffer_overflow(void *code_start, TRANSLATION_DATA *td)
 }
 #endif
 
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-void btmmu_check_setmem(void *code_addr);
-
-void btmmu_check_setmem(void *code_addr)
-{
-    lsassertm(0, "BTMMU to be implemented in LoongArch.\n");
-//    TRANSLATION_DATA *td = lsenv->tr_data;
-//
-//    int ir2_curr_id = 0;
-//    IR2_INST *ir2_curr = td->first_ir2;
-//
-//    if (ir2_curr) {
-//        ir2_curr_id = ir2_get_id(ir2_curr);
-//    }
-//
-//    uint64_t ir2_code_addr = (uint64_t)code_addr - 4;
-//
-//    while (ir2_curr != NULL) {
-//        if (ir2_opcode(ir2_curr) == LISA_LABEL ||
-//            ir2_opcode(ir2_curr) == LISA_X86_INST) {
-//            ir2_curr = ir2_next(ir2_curr);
-//            if (ir2_curr)
-//                ir2_curr_id = ir2_get_id(ir2_curr);
-//            continue;
-//        }
-//
-//        ir2_code_addr += 4;
-//        if (ir2_opcode(ir2_curr) == mips_setmem) {
-//            if ((((uint64_t)(ir2_code_addr) + sizeof(int)) % qemu_host_page_size) == 0) {
-//                IR2_INST *p = ir2_allocate();
-//                ir2_build(p, mips_nop, NULL, NULL, NULL);
-//                ir2_curr = ir2_get(ir2_curr_id);
-//                ir2_insert_before(p, ir2_curr);
-//                ir2_code_addr += 4;
-//            }
-//        }
-//
-//        ir2_curr = ir2_next(ir2_curr);
-//        if (ir2_curr)
-//            ir2_curr_id = ir2_get_id(ir2_curr);
-//    }
-}
-#endif
-
 /* Translation each IR1 and generate IR2 array */
 bool tr_ir2_generate(TranslationBlock *tb)
 {
@@ -548,10 +504,6 @@ int tr_ir2_assemble(void *code_start_addr)
 #ifdef REG_ALLOC_ALG_AFT
     /* 1. assign temp register to physical register */
     ra_temp_register_allocation();
-#endif
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-    /* Check if setmem locates at page edge */
-    btmmu_check_setmem(code_start_addr);
 #endif
     /* 2. label dispose */
     label_dispose(code_start_addr);

@@ -95,22 +95,6 @@ static void QEMU_NORETURN raise_interrupt2(CPUX86State *env, int intno,
     env->error_code = error_code;
     env->exception_is_int = is_int;
     env->exception_next_eip = env->eip + next_eip_addend;
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-    if (btmmu_enabled() && is_int && intno == 0x80) {
-#ifdef TARGET_X86_64
-        if (env->regs[0] == 60 || env->regs[0] == 231 ||
-                env->regs[0] == 59 || env->regs[0] == 322) {
-#else
-        if (env->regs[0] == 1 || env->regs[0] == 252 ||
-                env->regs[0] == 11 || env->regs[0] == 358) {
-#endif
-            /* to flag that we meet a exit* or execve* syscall, should flush
-             * spts of current process when we are switching to other processes
-             */
-            btmmu_set_need_flush();
-        }
-    }   
-#endif
     cpu_loop_exit_restore(cs, retaddr);
 }
 
