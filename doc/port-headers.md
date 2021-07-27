@@ -4,10 +4,15 @@
 
 1. 所有的 header 都是使用绝对路径，这是为了让 ccls 可以正确警告，从而可以正确移植
 2. 总体来说，bmbt 中的每一个 header 都是和原始 QEMU 对称的
+
+## [ ] TODO
+1. `#include <stdbool>` 之类的头文件真的需要清理掉吗 ?
+2. 如何让 acpi / kernel / tcg 使用同一个 header                                  
+3. qdist.h : 主要是 print_qht_statistics 中间使用的用于分析统计信息的，也许直接删除吧
+
 ## 一些记录
 1. 在 thread-posix.h 中定义了 QemuMutex QemuCond QemuSemaphore QemuEvent QemuThread, 但是只使用了 QemuMutex 了，将其移动到 thread.h 在和锁相关的问题上一起分析
 2. include/exec/helper-head.h 中包含了 /home/maritns3/core/ld/DuckBuBi/include/exec/helper-head.h
-
 
 ## cpu-ldst.h
 1. cpu-ldst.h 开始移植的时候，使用了 v6.0 的代码
@@ -16,31 +21,21 @@
 4. 还移植了 v6.0 的 seg_helper.h 
 
 ## 头文件功能描述
-| header     | desc                                                              |
-|------------|-------------------------------------------------------------------|
-| cpu-all.h  | 包含 memory_ldst.inc.h  以及一些基础的 macro                      |
-| exec-all.h | TranslationBlock 以及 cputlb.c / exec.c / cpu-exec.c 中定义的函数 |
-| core/cpu.h | CPUState / CPUClass                                               |
-| i386/cpu.h | CPUX86State / X86CPUClass / X86CPU                                |
-| cpu-defs.h | CPUTLBEntry / CPUIOTLBEntry / CPUTLBDescFast 之类的 TLB 定义      |
-| cpus.h     | 多核                                                              |
-| cpu-ldst.h | 接下来从这里开始                                                        |
+| header       | desc                                                                       |
+|--------------|----------------------------------------------------------------------------|
+| core/cpu.h   | CPUState / CPUClass                                                        |
+| i386/cpu.h   | CPUX86State / X86CPUClass / X86CPU                                         |
+| cpu-all.h    | 包含 memory_ldst.inc.h  以及一些基础的 macro                               |
+| exec-all.h   | TranslationBlock 以及 cputlb.c / exec.c / cpu-exec.c 中定义的函数          |
+| cpu-defs.h   | CPUTLBEntry / CPUIOTLBEntry / CPUTLBDescFast 之类的 TLB 定义               |
+| cpus.h       | 多核                                                                       |
+| cpu-ldst.h   | 这个东西的实现非常的不优雅，将会切换到 v6.0 的实现方法，之后再去慢慢分析吧 |
+| cpu-common.h | 定义了 ram_addr_t 类型                                                     |
+| cpu-para.h   | 定义了 x86 cpu 的地址空间的属性                                            |
 
-CPUState 的子类居然是 x86CPU 啊
-
-## TODO
-1. `#include <stdbool>` 之类的头文件真的需要清理掉吗 ?
-2. 如何让 acpi / kernel / tcg 使用同一个 header                                  
-
-6. 需要被重新设计的头文件
-  1. seglock.h
-  3. qht.h
-  4. qdist.h
-
-7. cpu-defs.h osdep.h 和 config-host.h / config-target.h 的内容分析整理一下
-  - cpu-paras.h
-
-
+注意:
+1. 除了前面两个，其余头文件都是放到 exec 下面的
+2. CPUState 的子类居然是 x86CPU 啊
 
 ## cpu.h 和 exec-all.h 的依赖分析
 `include/hw/core/cpu.h`, 这是根，不应该依赖 `src/i386/cpu.h`

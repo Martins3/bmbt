@@ -7,7 +7,7 @@
 | 多核                       | 现在为了代码的方便执行，也没有太搞清楚其中的作用，在 cputlb.c 的 async_run_on_cpu 以及各种 atomic 函数，qemu_spin_lock, 以及 RCU. 现在的操作是，先将接口保存下来，之后需要支持多核，有一个参考 |
 | icount / record replay     | 没有 record replay 是不是很难调试，使用 record replay 会不会很难集成                                                                                                                           |
 | trace                      |                                                                                                                                                                                                |
-| 存在好几个数据结构需要重构 | queue.h, qht.h 和 glib 的 qtree                                                                                                                                                                |
+| 存在好几个数据结构需要重构 |qht.h 和 glib 的 qtree                                                                                                                                                                |
 
 1. memory model
     1. include/sysemu/cpus.h : 定义的为空函数啊
@@ -27,6 +27,7 @@
             - 在进程里面，访问总是自己的地址空间，如果 TLB 没有，那么让 QEMU page walk, 如果 walk 没有就是 page fault, 所以其实问题不大
         2. 生成指令
             - 生成的时候，就可以产生 exception 还是到执行 ？(精确异常，所以执行的时候吧)
+    12. 分析 cpu-ldst.h 一方面重构为 v6.0 的做法，同时分析 mmuidx 的具体实现啊
 2. apic
     1. DeviceState 中定义为空
     2. /home/maritns3/core/ld/DuckBuBi/include/hw/i386/apic.h 都是空函数
@@ -47,7 +48,6 @@
         2. QemuMutex
         3. qemu_spin_lock
         4. 在 include/qemu 下存在 thread.h thread-posix.h 等
-        5. seqlock.h
         6. lockable
     2. 那些数据结构需要 RCU 来保护 
     4. 统计一下 `__thread` 出现的次数
