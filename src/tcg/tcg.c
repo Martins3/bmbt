@@ -610,10 +610,10 @@ static size_t tcg_n_regions(void) {
 
   /* Use a single region if all we have is one vCPU thread */
 #if !defined(CONFIG_USER_ONLY)
-  unsigned int max_cpus = 1;
-
+  // FIXME review MachineState related code later
   // MachineState *ms = MACHINE(qdev_get_machine());
   // unsigned int max_cpus = ms->smp.max_cpus;
+  unsigned int max_cpus = 1;
 #endif
   if (max_cpus == 1 || !qemu_tcg_mttcg_enabled()) {
     return 1;
