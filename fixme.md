@@ -37,6 +37,7 @@
     6. tcg-all.c : 涉及到初始化 tcg engine, 很短的一个文件
         - 虽然主要是处理 interrupt 的，也是很麻烦的啊
     7. /home/maritns3/core/ld/DuckBuBi/src/i386/excp_helper.c 中为什么有那么多的处理 exception 的函数
+    8. qemu_irq_raise
 3. locks
     1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
       - 关注一下，为什么单独这里是需要处理 lock 的
