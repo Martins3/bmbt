@@ -13,6 +13,7 @@
 1. cpu-ldst.h 开始移植的时候，使用了 v6.0 的代码
 2. cputlb.c 就是直接拷贝的 v4.2 的，没有做任何的修改
 3. 在 v6.0 中，cputlb.c 中是定义了 cpu_ldub_mmuidx_ra 的
+4. 还移植了 v6.0 的 seg_helper.h 
 
 ## 头文件功能描述
 | header     | desc                                                              |
