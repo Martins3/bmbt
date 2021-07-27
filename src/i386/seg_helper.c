@@ -8,12 +8,37 @@
 #include "../../include/qemu/log-for-trace.h"
 #include "cpu.h"
 #include "svm.h"
-#include "seg_helper.h"
 #include "LATX/x86tomips-config.h"
+
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
 #include <stdbool.h>
+
+#ifdef DEBUG_PCALL
+# define LOG_PCALL(...) qemu_log_mask(CPU_LOG_PCALL, ## __VA_ARGS__)
+# define LOG_PCALL_STATE(cpu)                                  \
+    log_cpu_state_mask(CPU_LOG_PCALL, (cpu), CPU_DUMP_CCOP)
+#else
+# define LOG_PCALL(...) do { } while (0)
+# define LOG_PCALL_STATE(cpu) do { } while (0)
+#endif
+
+#define CPU_MMU_INDEX (cpu_mmu_index_kernel(env))
+#define MEMSUFFIX _kernel
+#define DATA_SIZE 1
+#include "../../include/exec/cpu_ldst_template.h"
+
+#define DATA_SIZE 2
+#include "../../include/exec/cpu_ldst_template.h"
+
+#define DATA_SIZE 4
+#include "../../include/exec/cpu_ldst_template.h"
+
+#define DATA_SIZE 8
+#include "../../include/exec/cpu_ldst_template.h"
+#undef CPU_MMU_INDEX
+#undef MEMSUFFIX
 
 /* return non zero if error */
 static inline int load_segment_ra(CPUX86State *env, uint32_t *e1_ptr,

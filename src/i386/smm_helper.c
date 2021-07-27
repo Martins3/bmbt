@@ -7,7 +7,6 @@
 #include "../../include/qemu/log-for-trace.h"
 #include "cpu.h"
 #include "svm.h"
-#include "seg_helper.h"
 #include "LATX/x86tomips-config.h"
 #include <stddef.h>
 #include <string.h>
