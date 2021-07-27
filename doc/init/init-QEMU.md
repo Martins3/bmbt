@@ -1180,9 +1180,6 @@ typedef struct CPUX86State {
     int exit_test;
 #endif
 #endif
-#ifdef CONFIG_BTMMU
-    struct TranslationBlock *current_tb;
-#endif
 } CPUX86State;
 ```
 

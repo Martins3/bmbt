@@ -1019,19 +1019,6 @@ void helper_syscall(CPUX86State *env, int next_eip_addend)
                                DESC_W_MASK | DESC_A_MASK);
         env->eip = (uint32_t)env->star;
     }
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-    if (btmmu_enabled()) {
-        /* syscall instruction is only for 64bit */
-        if (env->regs[0] == 60 || env->regs[0] == 231 ||
-                env->regs[0] == 59 || env->regs[0] == 322) {
-            /* to flag that we meet a exit* or execve* syscall, should flush
-             * spts of current process when we are switching to other processes
-             */
-            //fprintf(stderr, "syscall %ld detected!\n", env->regs[0]);
-            btmmu_set_need_flush();
-        }
-    }   
-#endif
 }
 #endif
 #endif
@@ -2435,28 +2422,6 @@ void helper_sysenter(CPUX86State *env)
         raise_exception_err_ra(env, EXCP0D_GPF, 0, GETPC());
     }
     env->eflags &= ~(VM_MASK | IF_MASK | RF_MASK);
-
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_BTMMU)
-    if (btmmu_enabled()) {
-        /* SYSCALL number for 32/64 bit x86 is different
-           for 64bit, exit->60, exit_group->231, execve->59, execeat->322
-           for 32bit, exit->1, exit_group->252, execve->11, execveat->358
-         */
-#ifdef TARGET_X86_64
-        if (env->regs[0] == 60 || env->regs[0] == 231 ||
-                env->regs[0] == 59 || env->regs[0] == 322) {
-#else
-        if (env->regs[0] == 1 || env->regs[0] == 252 ||
-                env->regs[0] == 11 || env->regs[0] == 358) {
-#endif
-            /* to flag that we meet a exit/exit_group/exec 8yscall, should flush
-             * btmmus of current process when we are switching to other processes
-             */
-            //fprintf(stderr, "sysenter exit/execve %ld detected!\n", env->regs[0]);
-            btmmu_set_need_flush();
-        }
-    }    
-#endif
 
 #ifdef TARGET_X86_64
     if (env->hflags & HF_LMA_MASK) {

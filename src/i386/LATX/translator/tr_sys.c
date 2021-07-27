@@ -136,12 +136,6 @@ fix_up_2:
     }
 }
 
-#ifdef CONFIG_BTMMU
-void tr_enable_btmmu(void)  { lsenv->tr_data->is_btmmu_ok = 1; }
-void tr_disable_btmmu(void) { lsenv->tr_data->is_btmmu_ok = 0; }
-void tr_reset_btmmu(void)   { lsenv->tr_data->is_btmmu_ok = 1; }
-#endif
-
 void tr_sys_init(
         TranslationBlock *tb,
         int max_insns,
@@ -159,10 +153,6 @@ void tr_sys_init(
 
     uint32 flags  = tb->flags;
     uint32 cflags = tb->cflags;
-
-#ifdef CONFIG_BTMMU
-    tr_reset_btmmu();
-#endif
 
     td->is_top_saved = 0;
 
@@ -1823,10 +1813,6 @@ static void translate_lmsw_gpr(IR1_INST *pir1, IR1_OPND *opnd0)
 
 static void translate_lmsw_mem(IR1_INST *pir1, IR1_OPND *opnd0)
 {
-#ifdef CONFIG_BTMMU
-    tr_disable_btmmu();
-#endif
-
     tr_sys_gen_call_to_helper_prologue_cfg(default_helper_cfg);
 
     /* void helper_lmsw(CPUX86State  *env, target_ulong t0) */
@@ -1842,10 +1828,6 @@ static void translate_lmsw_mem(IR1_INST *pir1, IR1_OPND *opnd0)
     tr_gen_call_to_helper((ADDR)helper_lmsw);
 
     tr_sys_gen_call_to_helper_epilogue_cfg(default_helper_cfg);
-
-#ifdef CONFIG_BTMMU
-    tr_reset_btmmu();
-#endif
 }
 
 /* End of TB in system-mode */
@@ -2429,10 +2411,6 @@ static bool do_translate_pusha(IR1_INST *pir1, int size)
     int data_size = ir1_data_size(pir1);
     lsassert(size == (data_size >> 3));
 
-#ifdef CONFIG_BTMMU
-    tr_disable_btmmu();
-#endif
-
     /* 1. save complete context */
     helper_cfg_t cfg = default_helper_cfg;
     tr_sys_gen_call_to_helper_prologue_cfg(cfg);
@@ -2517,10 +2495,6 @@ static bool do_translate_pusha(IR1_INST *pir1, int size)
         ra_free_temp(&tmp);
     }
 
-#ifdef CONFIG_BTMMU
-    tr_reset_btmmu();
-#endif
-
     return true;
 }
 
@@ -2530,10 +2504,6 @@ static bool do_translate_popa(IR1_INST *pir1, int size)
 
     int data_size = ir1_data_size(pir1);
     lsassert(size == (data_size >> 3));
-
-#ifdef CONFIG_BTMMU
-    tr_disable_btmmu();
-#endif
 
     /* 1. save complete context */
     helper_cfg_t cfg = default_helper_cfg;
@@ -2620,10 +2590,6 @@ static bool do_translate_popa(IR1_INST *pir1, int size)
         store_ir2_to_ir1_gpr(&tmp, &sp_ir1_opnd);
         ra_free_temp(&tmp);
     }
-
-#ifdef CONFIG_BTMMU
-    tr_reset_btmmu();
-#endif
 
     return true;
 }

@@ -332,10 +332,6 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap) {
 }
 
 void tlb_flush(CPUState *cpu) {
-#ifdef CONFIG_BTMMU
-  if (btmmu_enabled())
-    btmmu_flush_all(cpu, 3);
-#endif
   tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS);
 }
 
@@ -415,23 +411,11 @@ static void tlb_flush_page_locked(CPUArchState *env, int midx,
               ")\n",
               midx, lp_addr, lp_mask);
     tlb_flush_one_mmuidx_locked(env, midx);
-#ifdef CONFIG_BTMMU
-#ifdef BTMMU_USER_ONLY
-    if (btmmu_enabled() && midx == MMU_USER_IDX)
-#else
-    if (btmmu_enabled())
-#endif
-      btmmu_flush_all(env_cpu(env), midx);
-#endif
   } else {
     if (tlb_flush_entry_locked(tlb_entry(env, midx, page), page)) {
       tlb_n_used_entries_dec(env, midx);
     }
     tlb_flush_vtlb_page_locked(env, midx, page);
-#ifdef CONFIG_BTMMU
-    if (btmmu_enabled())
-      btmmu_flush_page(env_cpu(env), page, midx, 0);
-#endif
   }
 }
 
