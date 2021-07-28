@@ -26,8 +26,8 @@
   - 不可能吧, 分别出现在 build/x86_64-softmmu-config-target.h 和 build/x86_64-linux-user-config-target.h
 
 - [x] 如果同时支持 softmmu 和 user 版本，如何处理?
-```
-➜  build git:(master) ✗ ../configure --target-list=x86_64-linux-user,x86_64-softmmu --disable-werror
+```sh
+../configure --target-list=x86_64-linux-user,x86_64-softmmu --disable-werror
 ```
 从阅读代码的角度来说，这会导致一个强力的误导，实际上的操作方法，将 build/x86_64-linux-user-config-target.h 这个文件夹可能被 include 两次，
 然后分别编译出来 softmmu 版本和 user only 版本，这种情况下 ccls 无法正确处理，所以阅读代码的时候，最好只是配置一个 target-list
@@ -37,8 +37,8 @@
 helper_syscall
 
 测试:
-```txt
-➜  build git:(master) ✗ ../configure --target-list=x86_64-linux-user --disable-werror
+```sh
+../configure --target-list=x86_64-linux-user --disable-werror
 ```
 
 #### user mode exception / interrupt
