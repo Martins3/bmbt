@@ -59,6 +59,7 @@
       - CPUState 中的 cpu_index, cluster_index 等
     1. thread.h 中间的接口需要补齐
     2. cpus.h 中间接口
+    3. first_cpu / CPU_NEXT / CPU_NEXT
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
