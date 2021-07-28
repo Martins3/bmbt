@@ -37,6 +37,7 @@ void cpu_loop_exit_noexc(CPUState *cpu) {
 
 #if defined(CONFIG_SOFTMMU)
 void cpu_reloading_memory_map(void) {
+    // FIXME rethink the code later
 #if 0
     if (qemu_in_vcpu_thread() && current_cpu->running) {
         /* The guest can in theory prolong the RCU critical section as long
