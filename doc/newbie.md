@@ -39,16 +39,6 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 # -xtm select,tblink,lbt,trbh,staticcs,njc,lsfpu
 ```
 
-
-## 学习 QEMU
-| 资料                                                               | 主要内容            |
-|--------------------------------------------------------------------|---------------------|
-| QEMU/KVM 源码解析与应用                                            | 比较全面            |
-| [陈伟任的笔记](https://github.com/azru0512/slide/tree/master/QEMU) | 主要描述 tcg 的工作 |
-
-## 学习内核
-// TODO
-
 ## 调试环境搭建
 [如何增大 dmesg buffer 的大小](https://unix.stackexchange.com/questions/412182/how-to-increase-dmesg-buffer-size-in-centos-7-2)
 

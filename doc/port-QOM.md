@@ -236,7 +236,7 @@ static const TypeInfo conventional_pci_interface_info = {
   - [ ] object_property_add_child (出现的位置: fw_cfg_init_io_dma)
 - [ ] 似乎 property 比想想的更加有趣，实际上，这个 property 关联上  parent_obj.dma_enabled 了
 
-```plain
+```c
 static Property fw_cfg_io_properties[] = {
     DEFINE_PROP_BOOL("dma_enabled", FWCfgIoState, parent_obj.dma_enabled,
                      true),
@@ -333,11 +333,11 @@ reported when running under TCG.
 
 To hide this, the -cpu option tcg-cpuid=off can be used.
 ```
-
-
                 
 #### object_property_add_alias
 - [ ] 干啥用的啊
+
+#### 
 
 ## 附录: 宏展开
 ```c

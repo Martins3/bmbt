@@ -10,7 +10,6 @@
 | 存在好几个数据结构需要重构 |qht.h 和 glib 的 qtree                                                                                                                                                                |
 
 1. memory model
-    1. include/sysemu/cpus.h : 定义的为空函数啊
     2. include/exec/ram_addr.h
     3. memory.h
     4. 在 exec-all.h 中间 memory_region_section_get_iotlb
@@ -39,6 +38,7 @@
     7. /home/maritns3/core/ld/DuckBuBi/src/i386/excp_helper.c 中为什么有那么多的处理 exception 的函数
     8. qemu_irq_raise
 3. locks
+    1. include/sysemu/cpus.h : 定义的为空函数啊
     1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
       - 关注一下，为什么单独这里是需要处理 lock 的
     2. helper_atomic_cmpxchgq_le_mmu : 这个最后会导入一个很烦人的 lock 中间去
