@@ -2373,7 +2373,7 @@ void dump_exec_info(void)
 }
 #endif
 
-#else /* CONFIG_USER_ONLY */
+#else  /* CONFIG_USER_ONLY */
 #endif /* CONFIG_USER_ONLY */
 
 /* This is a wrapper for common code that can not use CONFIG_SOFTMMU */

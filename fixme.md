@@ -10,7 +10,7 @@
 | 存在好几个数据结构需要重构 |qht.h 和 glib 的 qtree                                                                                                                                                                |
 
 1. memory model
-    2. include/exec/ram_addr.h
+    1. include/exec/ram_addr.h
     3. memory.h
     4. 在 exec-all.h 中间 memory_region_section_get_iotlb
     5. /home/maritns3/core/ld/DuckBuBi/include/exec/address-space.h 中一堆接口
@@ -27,6 +27,11 @@
         2. 生成指令
             - 生成的时候，就可以产生 exception 还是到执行 ？(精确异常，所以执行的时候吧)
     12. 分析 cpu-ldst.h 一方面重构为 v6.0 的做法，同时分析 mmuidx 的具体实现啊
+    1. 移除掉 softmmu.c 之类的对于 memory model 的依赖 (主要出现在 include/exec/memory.h 中)
+    1. 重新构建 iotlb
+    1. understand how smm works in tcg
+    1. CPUAddressSpace : 这是 tcg 下单独搞出来的吗 ?
+    1. exec/ram_addr.h : 定义了几个 physical memory dirty 相关的问题
 2. apic
     1. DeviceState 中定义为空
     2. /home/maritns3/core/ld/DuckBuBi/include/hw/i386/apic.h 都是空函数
@@ -60,6 +65,10 @@
     1. thread.h 中间的接口需要补齐
     2. cpus.h 中间接口
     3. first_cpu / CPU_NEXT / CPU_NEXT
+    1. TCG region : 比如 tcg_tb_lookup
+    1. TB hash table : hash table RCU 机制
+    1. iothread
+    1. async_run_on_cpu
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
