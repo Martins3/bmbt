@@ -328,7 +328,6 @@ static int encode_search(TranslationBlock *tb, uint8_t *block) {
 }
 #endif
 
-// copied from i386/translate.c which is useless
 void restore_state_to_opc(CPUX86State *env, TranslationBlock *tb,
                           target_ulong *data) {
   int cc_op = data[1];
