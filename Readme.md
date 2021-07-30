@@ -26,7 +26,7 @@
 1. 系统调用是存在很大的开销的
 2. 如何构建一个内核模块来将系统态资源共享给二进制翻译器是很有挑战的
 
-将系统态二进制翻译放到内核中运行的方法去的一系列进展[^1], 但是这些方法都是借助了虚拟化，
+将系统态二进制翻译放到内核中运行的方法去的一系列进展 [^1], 但是这些方法都是借助了虚拟化，
 host 的软件栈无法移除掉。还有一个就是 QEMU 实际上为了处理各种虚拟化技术，操作系统和指令集，也变的过于复杂了。
 ## LoongArch Manual
 Please contact huxueshi@loongson.cn
@@ -40,7 +40,7 @@ Please contact huxueshi@loongson.cn
 
 3. 为什么不适用 unikernel + QEMU 的方法?
     - 现在 unikernel 的解决方案都是试图将 unikernel 放到虚拟机的 guest 态中运行，无法避免 host 的软件栈 
-      - 那为什么不采用的 A Linux in unikernel clothing[^2] 的方式 ?
+      - 那为什么不采用的 A Linux in unikernel clothing [^2] 的方式 ?
           - 这种方法无法实现设备直通, 而且这种方案依赖于 KLM[^3] 的支持
 
 ## Contributor
