@@ -41,7 +41,7 @@ Please contact huxueshi@loongson.cn
 3. 为什么不适用 unikernel + QEMU 的方法?
     - 现在 unikernel 的解决方案都是试图将 unikernel 放到虚拟机的 guest 态中运行，无法避免 host 的软件栈 
       - 那为什么不采用的 A Linux in unikernel clothing[^2] 的方式 ?
-          - 这种方法无法实现设备直通, 而且这种方案依赖于 KLM[^3] d的支持
+          - 这种方法无法实现设备直通, 而且这种方案依赖于 KLM[^3] 的支持
 
 ## Contributor
 As for collaboration, please follow [these instructions](./CONTRIBUTING.md)

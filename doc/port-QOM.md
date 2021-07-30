@@ -336,8 +336,68 @@ To hide this, the -cpu option tcg-cpuid=off can be used.
                 
 #### object_property_add_alias
 - [ ] 干啥用的啊
+  - 因为一些
 
-#### 
+#### GlobalProperty
+和 property 似乎没有什么关系, 这是从 qdev 中间延伸出来的概念啊
+
+
+```c
+/**
+ * GlobalProperty:
+ * @used: Set to true if property was used when initializing a device.
+ * @optional: If set to true, GlobalProperty will be skipped without errors
+ *            if the property doesn't exist.
+ *
+ * An error is fatal for non-hotplugged devices, when the global is applied.
+ */
+typedef struct GlobalProperty {
+    const char *driver;
+    const char *property;
+    const char *value;
+    bool used;
+    bool optional;
+} GlobalProperty;
+```
+
+```c
+QemuOptsList qemu_global_opts = {
+    .name = "global",
+    .head = QTAILQ_HEAD_INITIALIZER(qemu_global_opts.head),
+    .desc = {
+        {
+            .name = "driver",
+            .type = QEMU_OPT_STRING,
+        },{
+            .name = "property",
+            .type = QEMU_OPT_STRING,
+        },{
+            .name = "value",
+            .type = QEMU_OPT_STRING,
+        },
+        { /* end of list */ }
+    },
+};
+```
+
+通过 Man qemu-system(1) 中找到的:
+```
+-global driver.prop=value
+-global driver=driver,property=property,value=value
+   Set default value of driver's property prop to value, e.g.:
+
+           qemu-system-x86_64 -global ide-hd.physical_block_size=4096 disk-image.img
+
+   In particular, you can use this to set driver properties for devices which are created automatically by the
+   machine model. To create a device which is not created automatically and set properties on it, use -device.
+
+   -global driver.prop=value is shorthand for -global driver=driver,property=prop,value=value.  The longhand
+   syntax works even when driver contains a dot.
+```
+
+
+
+
 
 ## 附录: 宏展开
 ```c
