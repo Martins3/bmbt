@@ -14,12 +14,6 @@
 #include "../include/shadow_stack.h"
 #include <assert.h>
 
-#ifdef CONFIG_SOFTMMU
-#include "../debug/lockstep.h"
-#  ifdef CONFIG_XTM_PROFILE
-#  include "x86tomips-profile-sys.h"
-#  endif
-#endif
 
 #include <string.h>
 
