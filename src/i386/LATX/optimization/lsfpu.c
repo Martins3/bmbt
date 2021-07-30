@@ -13,13 +13,6 @@
 #include "../include/flag_pattern.h"
 #include "../include/shadow_stack.h"
 
-#ifdef CONFIG_SOFTMMU
-#include "../debug/lockstep.h"
-#  ifdef CONFIG_XTM_PROFILE
-#  include "x86tomips-profile-sys.h"
-#  endif
-#endif
-
 #include <string.h>
 
 /* we have no inst to mov from gpr to top, so we have to be silly */
