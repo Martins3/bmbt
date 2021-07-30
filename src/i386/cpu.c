@@ -657,7 +657,7 @@ int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request) {
 }
 
 void tcg_x86_init(void) {
-    // empty for xqm
+  // empty for xqm
 }
 
 static void x86_cpu_common_class_init(CPUState *cpu) {
