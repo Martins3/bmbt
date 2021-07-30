@@ -158,6 +158,9 @@
 #define HOST_DSOSUF ".so"
 #define CONFIG_NUMA 1
 
-
+// FIXME
+// actually this is a quickfix for test-def.h
+// as for how it works, we trace it later
+#define CONFIG_XTM_TEST 1
 
 #endif /* end of include guard: CONFIG_HOST_H_OTZD6DK0 */

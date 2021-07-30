@@ -381,7 +381,7 @@ QemuOptsList qemu_global_opts = {
 ```
 
 通过 Man qemu-system(1) 中找到的:
-```
+```txt
 -global driver.prop=value
 -global driver=driver,property=property,value=value
    Set default value of driver's property prop to value, e.g.:

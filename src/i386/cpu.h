@@ -1571,6 +1571,10 @@ typedef struct CPUX86State {
     int is_top_int_inst; /* for nested interrupt */
   } xtm_flags;
 #endif
+
+#if defined(CONFIG_XTM_TEST)
+    int exit_test;
+#endif
 } CPUX86State;
 
 /**
@@ -1956,5 +1960,8 @@ static inline target_long lshift(target_long x, int n)
         return x >> (-n);
     }
 }
+
+// FIXME the only user is test-def.h
+void x86_update_hflags(CPUX86State* env);
 
 #endif /* end of include guard: CPU_H_CJEDABLV */
