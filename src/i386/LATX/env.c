@@ -2,7 +2,6 @@
 #include "include/shadow_stack.h"
 #include "x86tomips-options.h"
 #include "include/profile.h"
-#include "debug/lockstep.h"
 
 __thread ENV *lsenv;
 QHT * etb_cache_qht;
