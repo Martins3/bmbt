@@ -12,3 +12,8 @@
   - GSList 的使用方法是创建链表然后管理指针
   - 而 QLIST 的方法内核的方法，需要将要管理的结构体内插入一个 entry
   - 所以，其实共存也问题不大, 在加上 GSList 目前完全没有出现，所以暂时不考虑了
+
+
+- i386/translate.c 几乎被全部移除掉了，除了
+    - tcg_x86_init : 其中也不存在内容
+    - restore_state_to_opc
