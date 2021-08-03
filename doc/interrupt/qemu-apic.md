@@ -1,4 +1,28 @@
-# X86CPU::apic_state 是如何工作的
+# QEMU 是如何处理 interrupt 和 exception 的
+
+- 在 cpu_exec 中，为什么实现 while 检查 exception, 然后 while interrupt
+  - 中断的检测总是发生 tb 最后的位置，如果检查发现了中断，那么从 tb 山下文离开就可以了，然后就处理中断
+  - 在中断处理中，存在一堆返回 true 的情况，这让 while interrupt 失败，这就是为什么 while exception 在外层
+
+- cpu_handle_exception
+  - x86_cpu_do_interrupt
+
+- cpu_handle_interrupt
+  - 首先处理和架构无关的，类似 halt reset 之类的
+  - 通过 CPUClass 进入 x86_cpu_exec_interrupt
+      - x86_cpu_pending_interrupt : 需要分析出来真正的 interrupts, 因为可能屏蔽了
+      - do_interrupt_x86_hardirq : 处理函数各种情况
+
+- 在 tcg_qemu_tb_exec 的位置发生跳转, 利用变量 context_switch_bt_to_native 来进行
+
+## 问题
+1. exception_index 和负数的关系是什么 ?
+    - 从 cpu_loop_exit_noexc 的注释来说，似乎是离开的原因没有什么的时候的，就赋值为 -1
+
+2. 如果 cpu_handle_exception 失败之后，这会导致 cpu_exec 函数退出，之后如何处理 ?
+    - 退出的原因应该都是外部原因，`cpu->exception_index >= EXCP_INTERRUPT` 和  reply ，目前似乎不用过于考虑
+
+## X86CPU::apic_state 是如何工作的
 
 - [ ] 需要回答一个问题，为什么只是 apic 被单独处理了
   - [ ] 更加复杂的选择
@@ -105,4 +129,13 @@ static const TypeInfo kvm_apic_info = {
 在 pc_basic_device_init 中间抉择
 
 ## MSI : 以后再说
+
+## interrupt 机制
+- apic_local_deliver : 在 apic 中存在大量的模拟
+  - cpu_interrupt
+    - generic_handle_interrupt
+      - `cpu->interrupt_request |= mask;` 
+
+在 cpu_handle_interrupt 中，会处理几种特殊情况，默认是 `cc->cpu_exec_interrupt(cpu, interrupt_request)`
+也就是 x86_cpu_exec_interrupt, 在这里根据 idt 之类的中断处理需要的地址, 然后跳转过去执行的
 
