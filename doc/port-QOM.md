@@ -395,9 +395,10 @@ QemuOptsList qemu_global_opts = {
    syntax works even when driver contains a dot.
 ```
 
-
-
-
+## [ ] object_property_add_child
+- x86_cpu_apic_create : 中调用的，创建一个 apic 然后添加 lapic 作为 child
+  - 问题是，apic 在当前的语境下面，本身就是 lapic 
+- ioapic_init_gsi : 中出现类似的操作
 
 ## 附录: 宏展开
 ```c
