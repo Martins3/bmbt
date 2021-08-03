@@ -16,6 +16,11 @@
 
 5. 那么 tcg 处理中断的流程是什么 ?
 
+
+# TODO
+- [ ] pc_machine_reset
+- 补充材料 : ioapic 如何知道中断源头 : https://stackoverflow.com/questions/57704146/how-to-figure-out-the-interrupt-source-on-i-o-apic
+
 ## QEMU 是如何处理 interrupt 和 exception 的
 
 - 在 cpu_exec 中，为什么实现 while 检查 exception, 然后 while interrupt
@@ -36,7 +41,8 @@
 
 ## X86CPU::apic_state 是如何工作的
 
-- [ ] 需要回答一个问题，为什么只是 apic 被单独处理了
+- [ ] 需要回答一个问题，为什么只是 apic 被单独处理了, 只有这个一个在 X86CPU::apic_state 中的
+  - [ ] 这个东西在 X86CPU 中，因为这是 percpu 的
   - [ ] 更加复杂的选择
   - [ ] 额外的 include/hw/i386/apic.h 支持
 
@@ -46,26 +52,32 @@
   - 需要的，在 smp_scan 中需要 apic 的
   - 在其他的位置一些位置(暂时没分析，需要 8259)
 
-# TODO
-- [ ] pc_machine_reset
-
-## APIC 的抉择
+## select APIC
 对应的在三个文件中:
 - intc/apic_common.c
 - intc/apic.c
 - i386/kvm/apic.c
 
+- do_configure_accelerator
+  - accel_init_machine : 调用 AccelClass::init_machine
+    - kvm_init
+      - kvm_irqchip_create 当 KVMState::kernel_irqchip_allowed 的时候，才会调用这个函数
+          - kvm_vm_ioctl(s, KVM_CREATE_IRQCHIP)
+          - kvm_kernel_irqchip = true; --------------------------------------------------------------------------------------------------|
+                                                                                                                                         |
+- x86_cpu_realizefn                                                                                                                      |
+  - x86_cpu_apic_create                                                                                                                  |
+    - x86_cpu_apic_create : 调用这个函数实际上会做出判断, 只有当前 CPU 支持这个特性 或者 cpu 的数量超过两个的时候才可以调用下面的函数    |
+        - apic_get_class                                                                                                                 |
+          - kvm_apic_in_kernel <---------------------------------------------------------------------------------------------------------|
+        - `cpu->apic_state = DEVICE(object_new_with_class(apic_class));`
 
-- x86_cpu_apic_create
-  - apic_get_class
-
-在 kvm_set_kernel_irqchip 中，初始化 KVMState 的三个成员
+在 kvm_set_kernel_irqchip 中， 可以通过命令行来初始化 KVMState 的三个成员
 ```c
     bool kernel_irqchip_allowed;
     bool kernel_irqchip_required;
     OnOffAuto kernel_irqchip_split;
 ```
-
 
 在 kvm_init 中调用 kvm_irqchip_create
 ```c
@@ -102,8 +114,8 @@ APICCommonClass *apic_get_class(void)
 }
 ```
 
-这两个 TypeInfo 创建出来，最后的效果都导致 apic_class_init 和 kvm_apic_class_init
-注册的内容不同罢了。
+两个 TypeInfo 对应的 instance 都是 APICCommonState, 其差别在于 apic_class_init 和 kvm_apic_class_init
+注册的函数指针完全不同。
 
 ```c
 static const TypeInfo apic_info = {
@@ -121,7 +133,7 @@ static const TypeInfo kvm_apic_info = {
 };
 ```
 
-## IOAPIC 的抉择
+## select IOAPIC 
 - hw/intc/ioapic_common.c
 - hw/intc/ioapic.c
 - hw/i386/kvm/ioapic.c
@@ -132,14 +144,21 @@ static const TypeInfo kvm_apic_info = {
         ioapic_init_gsi(gsi_state, "i440fx");
     }
 ```
-- [ ] 为什么说，当没有 enable pci 的时候，就不需要 iopaic 了
+只有支持 pci 的时候才会初始化 ioapic ，这似乎说的过去:
 
-## PIC 的抉择
+在 ioapic_init_gsi 中, 一些常规的易于理解的操作:
+```c
+    if (kvm_ioapic_in_kernel()) {
+        dev = qdev_new(TYPE_KVM_IOAPIC);
+    } else {
+        dev = qdev_new(TYPE_IOAPIC);
+    }
+```
+
+## select PIC
 - hw/i386/kvm/i8259.c
 - hw/intc/i8259.c
 - hw/intc/i8259_common.c
-
-在 pc_basic_device_init 中间抉择
 
 ## MSI : 以后再说
 
@@ -154,7 +173,9 @@ static const TypeInfo kvm_apic_info = {
 
 ## [ ] kvm 中为什么的 irq routing 是做什么的
 - 为什么需要 irq routing
-  - 一个正常的 x86 主板是不会同时存在 pic 和 apic 的
+  - [ ] 一个正常的 x86 主板是不会同时存在 pic 和 apic 的
+      - [ ] 真的如此吗? 实际上，QEMU 的地址空间上是同时存在 kvm-ioapic /kvmvapic / kvm-pic 的
+          - [ ] 并不能完全这么判断，从地址空间上看，tcg 运行的时候，其地址空间还是包含了一堆 kvm-pic 了
   - 同时 kvm_vm_ioctl_irq_line 其实是一个标准的接口, arm 对于函数实现就是不需要 irq routing 的操作
       - 所以，当调用 KVM_IRQ_LINE 的时候, 只是需要提供一个中断号
 - kvm_vm_ioctl
@@ -169,6 +190,16 @@ static const TypeInfo kvm_apic_info = {
 		- kvm_vm_ioctl_set_irqchip(kvm, chip);
 
 **首先等一下**
+
+https://cloud.tencent.com/developer/article/1087271 : 似乎说的很有道理
+
+> 虚拟触发了irq 1，那么需要经过irq routing：
+> irq 1在0-7的范围内，所以会路由到i8259 master，随后i8259 master会向vCPU注入中断。
+> 同时，irq 1也会路由到io apic一份，io apic也会向lapic继续delivery。lapic继续向vCPU注入中断。
+> linux在启动阶段，检查到io apic后，会选择使用io apic。尽管经过irq routing产生了i8259 master和io apic两个中断，但是Linux选择io apic上的中断。
+
+- [ ] 什么叫做 linux 选择了 io apic 上的中断啊
+    - [ ] 是不是这两个中断都是可以注入到 guest 中间的，然后让 guest 来决定，还是说 guest 启动之后，最后会 disable 掉一个 i8259, 最后导致只有一个注入
 
 ## [ ] 到底选择哪一个中断控制器，受什么控制的
 
@@ -225,3 +256,95 @@ at ../hw/core/resettable.c:96
 #25 0x0000555555d0d6b0 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3713
 #26 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
+
+## [ ] GSIState
+```c
+/*
+ * Pointer types
+ * Such typedefs should be limited to cases where the typedef's users
+ * are oblivious of its "pointer-ness".
+ * Please keep this list in case-insensitive alphabetical order.
+ */
+typedef struct IRQState *qemu_irq;
+
+struct IRQState {
+    Object parent_obj;
+
+    qemu_irq_handler handler;
+    void *opaque;
+    int n;
+};
+```
+
+发生在 pc_init1
+1. pc_gsi_create : 创建了 qemu_irq，分配了 GSIState , 但是 GSIState 没有被初始化
+
+- pc_gsi_create
+  - kvm_pc_setup_irq_routing : 
+    - kvm_irqchip_add_irq_route(s, i, KVM_IRQCHIP_PIC_MASTER, i); i = [0,8)
+    - kvm_irqchip_add_irq_route(s, i, KVM_IRQCHIP_PIC_SLAVE, i - 8); i = [8, 16)
+    - kvm_irqchip_add_irq_route(s, i, KVM_IRQCHIP_IOAPIC, i); i = [0, 24) i == 2 被特殊处理了 
+    - kvm_irqchip_commit_routes
+        - `kvm_vm_ioctl(s, KVM_SET_GSI_ROUTING, s->irq_routes);`
+  - qemu_allocate_irqs : 创建一组 IRQState 其 handler 是 gsi_handler, 其 opaque 是 GSIState, 这些 gsi 通过 X86MachineState::gsi 来索引的
+
+总体来说，和 kvm 内调用 kvm_setup_default_irq_routing 的差别在于处理了 irq = 2 的关系
+
+```c
+void gsi_handler(void *opaque, int n, int level)
+{
+    GSIState *s = opaque;
+
+    trace_x86_gsi_interrupt(n, level);
+    switch (n) {
+    case 0 ... ISA_NUM_IRQS - 1:
+        if (s->i8259_irq[n]) {
+            /* Under KVM, Kernel will forward to both PIC and IOAPIC */
+            qemu_set_irq(s->i8259_irq[n], level);
+        }
+        /* fall through */
+    case ISA_NUM_IRQS ... IOAPIC_NUM_PINS - 1:
+        qemu_set_irq(s->ioapic_irq[n], level);
+        break;
+    case IO_APIC_SECONDARY_IRQBASE
+        ... IO_APIC_SECONDARY_IRQBASE + IOAPIC_NUM_PINS - 1:
+        qemu_set_irq(s->ioapic2_irq[n - IO_APIC_SECONDARY_IRQBASE], level);
+        break;
+    }
+}
+```
+从这里看，gsi_handler 总是入口，然后
+
+
+2. `pc_i8259_create(isa_bus, gsi_state->i8259_irq);`
+
+- pc_i8259_create
+  - kvm_i8259_init : i8259 也就是 pic 本身是一个设备，所以需要调用 i8259_init_chip 初始化一下，这很好
+    - i8259_init_chip(TYPE_KVM_I8259, bus, true); // master
+    - i8259_init_chip(TYPE_KVM_I8259, bus, false); // slave
+    - [ ] qemu_allocate_irqs(kvm_pic_set_irq, NULL, ISA_NUM_IRQS); 很好，又初始化了一堆 qemu_irq 出来了，之后就可以在 gsi_handler 中调用了
+  - xen_interrupt_controller_init
+  - i8259_init
+
+```c
+static void kvm_pic_set_irq(void *opaque, int irq, int level)
+{
+    int delivered;
+
+    pic_stat_update_irq(irq, level);
+    delivered = kvm_set_irq(kvm_state, irq, level);
+    apic_report_irq_delivered(delivered);
+}
+```
+
+3. ioapic_init_gsi
+
+其实和 pc_i8259_create 类似，初始化设备，然后拷贝 qemu_irq
+
+kvm ioapic 初始化这些内容的位置在 : kvm_ioapic_realize 的位置
+
+到这里，其实关于 pic 和 io apic 的部分搞定了, 接下来:
+1. 如何到达 gsi 的
+2. 从 ioapic 如何到 lapic 的
+- [ ] 其实，irq routing 还是不明不白的
+- [ ] 思考一下在 bmbt 中间的设计
