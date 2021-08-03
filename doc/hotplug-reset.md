@@ -83,5 +83,12 @@ reset 的官方文档 [^2]
 #10 0x0000555555b897af in x86_cpus_init (x86ms=0x555556975de0, default_cpu_version=1) at ../hw/i386/x86.c:138
 ```
 
+## VMSD
+https://lists.gnu.org/archive/html/qemu-devel/2014-06/msg05689.html
+
+> The JSON-format output can then be used to compare the vmstate info for different QEMU versions, specifically to test whether live migration would break due to changes in the vmstate data. 
+
+保证迁移的两个 QEMU 中的内容完全相同的要求实在是太高了, 所以设置为仅仅为 VMSD 相同即可，也就是 dump 出来的文件相同 `-dump-vmstate state.json` 
+
 [^1]: http://events17.linuxfoundation.org/sites/events/files/slides/CPU%20Hot-plug%20support%20in%20QEMU.pdf
 [^2]: https://qemu.readthedocs.io/en/latest/devel/reset.html
