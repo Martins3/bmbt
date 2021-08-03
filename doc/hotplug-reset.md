@@ -61,6 +61,9 @@ cpu_reset (cpu=0x5555565e1800) at /home/maritns3/core/kvmqemu/hw/core/cpu.c:243
 ## reset
 reset 的官方文档 [^2]
 
+- [ ] 可以进一步的分析一下 interrupt/qemu-irq.md 中关于 kvm_ioapic_put 和 kvm_pic_put 的调用路径
+    - 系统是如何初始化一个 ioapic 和两个 pic 的状态的
+
 ## hotplug
 - [ ] 有必要分析一下 device_set_realized 一般都做了什么东西啊
 
