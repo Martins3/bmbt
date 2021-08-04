@@ -16,10 +16,18 @@
 
 5. 那么 tcg 处理中断的流程是什么 ?
 
+2. 从 ioapic 如何到 lapic 的
+- [ ] 其实，irq routing 还是不明不白的
+- [ ] 思考一下在 bmbt 中间的设计
 
-# TODO
+6. MSI : 以后再说
+
+7. 能不能只是模拟 pic 啊，又不是不能用 ?
+
+## TODO
 - [ ] pc_machine_reset
 - 补充材料 : ioapic 如何知道中断源头 : https://stackoverflow.com/questions/57704146/how-to-figure-out-the-interrupt-source-on-i-o-apic
+
 
 ## QEMU 是如何处理 interrupt 和 exception 的
 
@@ -160,7 +168,6 @@ static const TypeInfo kvm_apic_info = {
 - hw/intc/i8259.c
 - hw/intc/i8259_common.c
 
-## MSI : 以后再说
 
 ## interrupt 机制
 - apic_local_deliver : 在 apic 中存在大量的模拟
@@ -173,37 +180,56 @@ static const TypeInfo kvm_apic_info = {
 
 ## [ ] kvm 中为什么的 irq routing 是做什么的
 - 为什么需要 irq routing
-  - [ ] 一个正常的 x86 主板是不会同时存在 pic 和 apic 的
-      - [ ] 真的如此吗? 实际上，QEMU 的地址空间上是同时存在 kvm-ioapic /kvmvapic / kvm-pic 的
-          - [ ] 并不能完全这么判断，从地址空间上看，tcg 运行的时候，其地址空间还是包含了一堆 kvm-pic 了
+  - 一个正常的 x86 主板是不会同时存在 pic 和 apic 的
   - 同时 kvm_vm_ioctl_irq_line 其实是一个标准的接口, arm 对于函数实现就是不需要 irq routing 的操作
       - 所以，当调用 KVM_IRQ_LINE 的时候, 只是需要提供一个中断号
+  - kvm 和 QEMU 需要同时支持各种类型的主板，类似一个 kbd 之类的设备其实也不知道具体是和 pic 还是 ioapic 上的, 目前这个处理方法是有效并且最简单的
+
 - kvm_vm_ioctl
   - kvm_vm_ioctl_irq_line
     - kvm_set_irq : 循环调用注册到这个 gsi 上的函数
         - kvm_set_pic_irq / kvm_set_ioapic_irq / kvm_set_msi
 
-- KVM_SET_IRQCHIP : 找到 QEMU 调用这个函数的位置
+https://cloud.tencent.com/developer/article/1087271
 
-- [ ] kvm_arch_vm_ioctl : 
-    - `struct kvm_irqchip *chip = memdup_user(argp, sizeof(*chip));` : KVM_SET_IRQCHIP 的
-		- kvm_vm_ioctl_set_irqchip(kvm, chip);
+> 虚拟触发了 irq 1，那么需要经过 irq routing：
+> irq 1 在 0-7 的范围内，所以会路由到 i8259 master，随后 i8259 master 会向 vCPU 注入中断。
+> 同时，irq 1 也会路由到 io apic 一份，io apic 也会向 lapic 继续 delivery。lapic 继续向 vCPU 注入中断。
+> linux 在启动阶段，检查到 io apic 后，会选择使用 io apic。尽管经过 irq routing 产生了 i8259 master 和 io apic 两个中断，但是 Linux 选择 io apic 上的中断。
 
-**首先等一下**
+回顾一下从 userspace 提交中断一路向下的过程:
+- kvm_vm_ioctl
+  - kvm_set_irq
+    - kvm_set_ioapic_irq
+      - kvm_ioapic_set_irq
+        - ioapic_set_irq
+          - ioapic_service
+            - kvm_irq_delivery_to_apic
+              - kvm_apic_set_irq
+                - `__apic_accept_irq`
+                  - kvm_make_request
+                  - kvm_vcpu_kick : ipi 中断
 
-https://cloud.tencent.com/developer/article/1087271 : 似乎说的很有道理
+进而分析 pic 的处理过程:
+1. 想要发送中断总是 kvm_make_request + kvm_vcpu_kick 两件套实现的, arch/x86/kvm/i8259.c 中只有 pic_unlock 这个函数使用上
+2. 调用之前, 会通过 kvm_apic_accept_pic_intr 检查一下, 当前配置( amd64 内核) 下，这个检查总是失败
+3. 分析 kvm_apic_accept_pic_intr 的实现，其中只是相当于看 guest 的实现了
 
-> 虚拟触发了irq 1，那么需要经过irq routing：
-> irq 1在0-7的范围内，所以会路由到i8259 master，随后i8259 master会向vCPU注入中断。
-> 同时，irq 1也会路由到io apic一份，io apic也会向lapic继续delivery。lapic继续向vCPU注入中断。
-> linux在启动阶段，检查到io apic后，会选择使用io apic。尽管经过irq routing产生了i8259 master和io apic两个中断，但是Linux选择io apic上的中断。
 
-- [ ] 什么叫做 linux 选择了 io apic 上的中断啊
-    - [ ] 是不是这两个中断都是可以注入到 guest 中间的，然后让 guest 来决定，还是说 guest 启动之后，最后会 disable 掉一个 i8259, 最后导致只有一个注入
+一些其他的发现:
+
+在 gsi_handler 中，我们发现，设备想要发送中断给 gsi 的时候，实际上会分别调用
+kvm_pic_set_irq / kvm_ioapic_set_irq，对于 kvm 的接口而言，都是 irq = 12 而已，
+如果内核中间再去处理 irq routing 机制, 那么岂不是一共需要四次
+
+使用 scrpit/bpftrace.bt 来进行检测，的确如此，一个 qemu_set_irq 经过 qemu 的 irq routing 会变为两个，
+经过 kvm 的 irq routing 就成为了四个。
+
+猜测，其实中断的次数并没有必要非常精确了，多发射几次也无所谓
 
 ## [ ] 到底选择哪一个中断控制器，受什么控制的
 
-- [ ] 所以，kvm 是如何处理 apic 的，
+- [ ] 所以，kvm 是如何处理 apic 的
 
 kvm_ioapic_put 和 kvm_pic_put 是两个调用 KVM_SET_IRQCHIP 的位置
 
@@ -257,7 +283,9 @@ at ../hw/core/resettable.c:96
 #26 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 
-## [ ] GSIState
+## GSIState
+其核心作用在于 : gsi_handler 中进一步的分发到具体的 chip 相关的 irq chip
+
 ```c
 /*
  * Pointer types
@@ -340,11 +368,142 @@ static void kvm_pic_set_irq(void *opaque, int irq, int level)
 3. ioapic_init_gsi
 
 其实和 pc_i8259_create 类似，初始化设备，然后拷贝 qemu_irq
+kvm ioapic 初始化这些被拷贝的 qemu_irq 的位置在 : kvm_ioapic_realize , 其中
+对应的 handler 为 kvm_ioapic_set_irq
 
-kvm ioapic 初始化这些内容的位置在 : kvm_ioapic_realize 的位置
+```c
+static void kvm_ioapic_set_irq(void *opaque, int irq, int level)
+{
+    KVMIOAPICState *s = opaque;
+    IOAPICCommonState *common = IOAPIC_COMMON(s);
+    int delivered;
 
-到这里，其实关于 pic 和 io apic 的部分搞定了, 接下来:
-1. 如何到达 gsi 的
-2. 从 ioapic 如何到 lapic 的
-- [ ] 其实，irq routing 还是不明不白的
-- [ ] 思考一下在 bmbt 中间的设计
+    ioapic_stat_update_irq(common, irq, level);
+    delivered = kvm_set_irq(kvm_state, s->kvm_gsi_base + irq, level);
+    apic_report_irq_delivered(delivered);
+}
+```
+
+
+## X86MachineState::gsi
+
+1. 键盘的中断处理过程
+
+```c
+/* XXX: not generating the irqs if KBD_MODE_DISABLE_KBD is set may be
+   incorrect, but it avoids having to simulate exact delays */
+static void kbd_update_irq_lines(KBDState *s)
+{
+    int irq_kbd_level, irq_mouse_level;
+
+    irq_kbd_level = 0;
+    irq_mouse_level = 0;
+
+    if (s->status & KBD_STAT_OBF) {
+        if (s->status & KBD_STAT_MOUSE_OBF) {
+            if (s->mode & KBD_MODE_MOUSE_INT) {
+                irq_mouse_level = 1;
+            }
+        } else {
+            if ((s->mode & KBD_MODE_KBD_INT) &&
+                !(s->mode & KBD_MODE_DISABLE_KBD)) {
+                irq_kbd_level = 1;
+            }
+        }
+    }
+    qemu_set_irq(s->irq_kbd, irq_kbd_level);
+    qemu_set_irq(s->irq_mouse, irq_mouse_level);
+}
+```
+
+
+每一次键盘对应的调用两次函数:
+```c
+/*
+#0  kbd_update_irq_lines (s=0x555556844d98) at ../hw/input/pckbd.c:144
+#1  0x00005555559f5b9b in ps2_put_keycode (opaque=0x555556d28f20, keycode=<optimized out>) at ../hw/input/ps2.c:277
+#2  0x00005555559f5e05 in ps2_keyboard_event (dev=0x555556d28f20, src=<optimized out>, evt=<optimized out>) at ../hw/input/ps2.c:478
+#3  0x0000555555a35f88 in qemu_input_event_send_impl (src=0x55555668ffb0, evt=0x555556e5ad40) at ../ui/input.c:349
+#4  0x0000555555a368eb in qemu_input_event_send_key (src=0x55555668ffb0, key=0x555556d3fcc0, down=<optimized out>) at ../ui/input.c:422
+#5  0x0000555555a36946 in qemu_input_event_send_key_qcode (src=<optimized out>, q=q@entry=Q_KEY_CODE_R, down=down@entry=true) at ../ui/input.c:444
+#6  0x000055555595afea in qkbd_state_key_event (down=<optimized out>, qcode=Q_KEY_CODE_R, kbd=0x555556a42c10) at ../ui/kbd-state.c:102
+#7  qkbd_state_key_event (kbd=0x555556a42c10, qcode=qcode@entry=Q_KEY_CODE_R, down=<optimized out>) at ../ui/kbd-state.c:40
+#8  0x0000555555b4cb23 in gd_key_event (widget=<optimized out>, key=0x555556971e40, opaque=0x555556b24d70) at ../ui/gtk.c:1112
+#9  0x00007ffff78dd4fb in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#10 0x00007ffff7077802 in g_closure_invoke () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#11 0x00007ffff708b814 in  () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#12 0x00007ffff709647d in g_signal_emit_valist () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#13 0x00007ffff70970f3 in g_signal_emit () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#14 0x00007ffff7887c23 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#15 0x00007ffff78a95db in gtk_window_propagate_key_event () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#16 0x00007ffff78ad873 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#17 0x00007ffff78dd5ef in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#18 0x00007ffff7077a56 in  () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#19 0x00007ffff7095df1 in g_signal_emit_valist () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#20 0x00007ffff70970f3 in g_signal_emit () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#21 0x00007ffff7887c23 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#22 0x00007ffff77431df in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#23 0x00007ffff77453db in gtk_main_do_event () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#24 0x00007ffff742df79 in  () at /lib/x86_64-linux-gnu/libgdk-3.so.0
+#25 0x00007ffff7461106 in  () at /lib/x86_64-linux-gnu/libgdk-3.so.0
+#26 0x00007ffff6f8c17d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#27 0x0000555555e4ce88 in glib_pollfds_poll () at ../util/main-loop.c:232
+#28 os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#29 main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#30 0x0000555555c58261 in qemu_main_loop () at ../softmmu/runstate.c:726
+#31 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+*/
+```
+
+```c
+/*
+#0  kbd_update_irq_lines (s=0x555556844d98) at ../hw/input/pckbd.c:144
+#1  0x00005555559ab077 in kbd_deassert_irq (s=0x555556844d98) at ../hw/input/pckbd.c:165
+#2  kbd_read_data (opaque=0x555556844d98, addr=<optimized out>, size=<optimized out>) at ../hw/input/pckbd.c:387
+#3  0x0000555555cd2092 in memory_region_read_accessor (mr=mr@entry=0x555556844df0, addr=0, value=value@entry=0x7fffd9ff9130, size=size@entry=1, shift=0, mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:440
+#4  0x0000555555cceb1e in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffd9ff9130, size=size@entry=1, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=0x555555cd2050 <memory_region_read_accessor>, mr=0x555556844df0, attrs=...) at ../softmmu/memory.c:554
+#5  0x0000555555cd1ac1 in memory_region_dispatch_read1 (attrs=..., size=<optimized out>, pval=0x7fffd9ff9130, addr=0, mr=0x555556844df0) at ../softmmu/memory.c:1424
+#6  memory_region_dispatch_read (mr=mr@entry=0x555556844df0, addr=0, pval=pval@entry=0x7fffd9ff9130, op=MO_8, attrs=attrs@entry=...) at ../softmmu/memory.c:1452
+#7  0x0000555555c9eb89 in flatview_read_continue (fv=fv@entry=0x7ffe4402d230, addr=addr@entry=96, attrs=..., ptr=ptr@entry=0x7fffeb17d000, len=len@entry=1, addr1=<optimized out>, l=<optimized out>, mr=0x555556844df0) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
+#8  0x0000555555c9ed43 in flatview_read (fv=0x7ffe4402d230, addr=addr@entry=96, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb17d000, len=len@entry=1) at ../softmmu/physmem.c:2881
+#9  0x0000555555c9ee96 in address_space_read_full (as=0x555556606880 <address_space_io>, addr=96, attrs=..., buf=0x7fffeb17d000, len=1) at ../softmmu/physmem.c:2894
+#10 0x0000555555c9f015 in address_space_rw (as=<optimized out>, addr=addr@entry=96, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=1, is_write=is_write@entry=false) at ../softmmu/physmem.c:2922
+#11 0x0000555555c8ece9 in kvm_handle_io (count=1, size=1, direction=<optimized out>, data=<optimized out>, attrs=..., port=96) at ../accel/kvm/kvm-all.c:2635
+#12 kvm_cpu_exec (cpu=cpu@entry=0x555556af4410) at ../accel/kvm/kvm-all.c:2886
+#13 0x0000555555cf1825 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556af4410) at ../accel/kvm/kvm-accel-ops.c:49
+#14 0x0000555555e55983 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#15 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#16 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+*/
+```
+- [ ] **根本无法理解为什么 kvm 那一边还是会到来一个中断啊**
+
+2. 键盘中断如何初始化的 KBDState::irq_kbd 以及 KBDState::irq_mouse
+
+- i8042_realizefn
+  - `isa_init_irq(isadev, &s->irq_kbd, 1);`
+  - `isa_init_irq(isadev, &s->irq_mouse, 12);`
+    - isa_get_irq 
+
+```c
+qemu_irq isa_get_irq(ISADevice *dev, unsigned isairq)
+{
+    assert(!dev || ISA_BUS(qdev_get_parent_bus(DEVICE(dev))) == isabus);
+    assert(isairq < ISA_NUM_IRQS);
+    return isabus->irqs[isairq];
+}
+```
+
+注意，其中 `isabus->irqs` 被初始化为 X86MachineState::gsi 了
+
+
+3. qemu_set_irq 如何运行的?
+```c
+void qemu_set_irq(qemu_irq irq, int level)
+{
+    if (!irq)
+        return;
+
+    irq->handler(irq->opaque, irq->n, level);
+}
+```
