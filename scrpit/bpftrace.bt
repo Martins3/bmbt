@@ -1,0 +1,24 @@
+#!/usr/bin/bpftrace
+
+// kvm_ioapic_set_irq
+// kvm_pic_set_irq
+
+kprobe:kvm_ioapic_set_irq
+{
+  if(arg1 == 12){
+    printf("kvm_ioapic_set_irq irq = %d \n", arg1);
+  }
+}
+
+kprobe:kvm_pic_set_irq
+{
+  if(arg1 == 12){
+    printf("kvm_pic_set_irq irq = %d \n", arg1);
+  }
+}
+kretprobe:kvm_apic_accept_pic_intr
+{
+  if(retval != 0){
+    printf("kvm_apic_accept_pic_intr ret = %d \n", retval);
+  }
+}
