@@ -20,6 +20,15 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
     - 一堆 fw_cfg_add_i16 添加 x86 特有的配置 
     - 处理 NUMA 相关的内容
 
+## 一些小记录
+在 vapic_realize 中间使用了两个全局变量
+```c
+    option_rom[nb_option_roms].name = "kvmvapic.bin";
+    option_rom[nb_option_roms].bootindex = -1;
+    nb_option_roms++;
+```
+
+
 ## smbios
 https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
 
