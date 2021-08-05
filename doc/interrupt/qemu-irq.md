@@ -46,20 +46,6 @@
 
 - 在 tcg_qemu_tb_exec 的位置发生跳转, 利用变量 context_switch_bt_to_native 来进行
 
-
-## X86CPU::apic_state 是如何工作的
-
-- [ ] 需要回答一个问题，为什么只是 apic 被单独处理了, 只有这个一个在 X86CPU::apic_state 中的
-  - [ ] 这个东西在 X86CPU 中，因为这是 percpu 的
-  - [ ] 更加复杂的选择
-  - [ ] 额外的 include/hw/i386/apic.h 支持
-
-只是需要看一看，常规的 apic 是被注入中断就可以了
-
-- [x] 检测一下，到 seabios 的时候，中断控制器需要被处理吗 ?
-  - 需要的，在 smp_scan 中需要 apic 的
-  - 在其他的位置一些位置(暂时没分析，需要 8259)
-
 ## select APIC
 对应的在三个文件中:
 - intc/apic_common.c
@@ -227,9 +213,7 @@ kvm_pic_set_irq / kvm_ioapic_set_irq，对于 kvm 的接口而言，都是 irq =
 
 猜测，其实中断的次数并没有必要非常精确了，多发射几次也无所谓
 
-## [ ] 到底选择哪一个中断控制器，受什么控制的
-
-- [ ] 所以，kvm 是如何处理 apic 的
+## [ ] KVM_SET_IRQCHIP 的作用是什么?
 
 kvm_ioapic_put 和 kvm_pic_put 是两个调用 KVM_SET_IRQCHIP 的位置
 
@@ -507,3 +491,148 @@ void qemu_set_irq(qemu_irq irq, int level)
     irq->handler(irq->opaque, irq->n, level);
 }
 ```
+
+## X86CPU::apic_state
+- [ ] 如果当前设备只是支持 pic 岂不是这个东西即使无需模拟了 ?
+
+-  需要回答一个问题，为什么只是 apic 被单独处理了, 只有这个一个在 X86CPU::apic_state 中的
+  - [x] 这个东西在 X86CPU 中，因为这是 percpu 的
+  - [ ] 额外的 include/hw/i386/apic.h 支持
+
+只是需要看一看，常规的 apic 是被注入中断就可以了
+
+- [x] 检测一下，到 seabios 的时候，中断控制器需要被处理吗 ?
+  - 需要的，在 smp_scan 中需要 apic 的
+  - 在其他的位置一些位置(暂时没分析，需要 8259)
+  - 暂时实际上，apic 和系统配置存在一些莫名奇妙的关系，因为多核才需要 ioapic 的呀, 所以需要的
+
+分析一下 APICCommonClass 中间注册的 hook 函数, 这些 hook 都是在 hw/intc/apic_common.c 中调用的
+其中的一个比如:
+
+```c
+void apic_enable_vapic(DeviceState *dev, hwaddr paddr)
+{
+    APICCommonState *s = APIC_COMMON(dev);
+    APICCommonClass *info = APIC_COMMON_GET_CLASS(s);
+
+    s->vapic_paddr = paddr;
+    info->vapic_base_update(s);
+}
+```
+
+实际上，持有的是这个玩意儿:
+```c
+struct APICCommonState {
+    /*< private >*/
+    DeviceState parent_obj;
+    /*< public >*/
+
+    MemoryRegion io_memory;
+    X86CPU *cpu;
+    uint32_t apicbase;
+    uint8_t id; /* legacy APIC ID */
+    uint32_t initial_apic_id;
+    uint8_t version;
+    uint8_t arb_id;
+    uint8_t tpr;
+    uint32_t spurious_vec;
+    uint8_t log_dest;
+    uint8_t dest_mode;
+    uint32_t isr[8];  /* in service register */
+    uint32_t tmr[8];  /* trigger mode register */
+    uint32_t irr[8]; /* interrupt request register */
+    uint32_t lvt[APIC_LVT_NB];
+    uint32_t esr; /* error register */
+    uint32_t icr[2];
+
+    uint32_t divide_conf;
+    int count_shift;
+    uint32_t initial_count;
+    int64_t initial_count_load_time;
+    int64_t next_time;
+    QEMUTimer *timer;
+    int64_t timer_expiry;
+    int sipi_vector;
+    int wait_for_sipi;
+
+    uint32_t vapic_control;
+    DeviceState *vapic;
+    hwaddr vapic_paddr; /* note: persistence via kvmvapic */
+    bool legacy_instance_id;
+};
+```
+从 kvm 的角度，这个东西似乎什么意义，用于临时保存一下  kvm_get_apic_state / kvm_put_apic_state 实现迁移
+
+分析了一下引用位置, 其他的位置都是 tcg 带来的, 甚至包括 hw/i386/pc.c
+分析一下 target/i386/kvm/kvm.c 中，实际上也并不访问其中内容。
+
+## kvmvapic 的作用
+首先可以复习一下 posted interrupt 和 vt-d[^1]
+
+- [ ] pc-bios/kvmvapic.bin : 这个到底是如何制作出来的
+
+```diff
+History:        #0
+Commit:         e5ad936b0fd7dfd7fd7908be6f9f1ca88f63b96b
+Author:         Jan Kiszka <jan.kiszka@siemens.com>
+Committer:      Avi Kivity <avi@redhat.com>
+Author Date:    Sat 18 Feb 2012 01:31:19 AM CST
+Committer Date: Sat 18 Feb 2012 06:15:59 PM CST
+
+kvmvapic: Introduce TPR access optimization for Windows guests
+
+This enables acceleration for MMIO-based TPR registers accesses of
+32-bit Windows guest systems. It is mostly useful with KVM enabled,
+either on older Intel CPUs (without flexpriority feature, can also be
+manually disabled for testing) or any current AMD processor.
+
+The approach introduced here is derived from the original version of
+qemu-kvm. It was refactored, documented, and extended by support for
+user space APIC emulation, both with and without KVM acceleration. The
+VMState format was kept compatible, so was the ABI to the option ROM
+that implements the guest-side para-virtualized driver service. This
+enables seamless migration from qemu-kvm to upstream or, one day,
+between KVM and TCG mode.
+
+The basic concept goes like this:
+ - VAPIC PV interface consisting of I/O port 0x7e and (for KVM in-kernel
+   irqchip) a vmcall hypercall is registered
+ - VAPIC option ROM is loaded into guest
+ - option ROM activates TPR MMIO access reporting via port 0x7e
+ - TPR accesses are trapped and patched in the guest to call into option
+   ROM instead, VAPIC support is enabled
+ - option ROM TPR helpers track state in memory and invoke hypercall to
+   poll for pending IRQs if required
+
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Signed-off-by: Avi Kivity <avi@redhat.com>
+```
+
+vapic_write : 只是调用过一次, 在 seabios 中的 callrom 中进行的
+
+- apic_enable_vapic : 从来没有被调用过
+  - kvm_apic_vapic_base_update
+    - `kvm_vcpu_ioctl(CPU(s->cpu), KVM_SET_VAPIC_ADDR, &vapid_addr);`
+
+在 vapic_realize 中间，注释掉代码，不添加 kvmvapic.bin 这个 rom 实际上也没有问题
+
+所以，总结就是这个东西实际上暂时是没有必要的
+
+- [ ] 存在一个关联的 exit reason 是 KVM_EXIT_TPR_ACCESS
+- [ ] 一个关联的 kvm ioctl 命令 : KVM_SET_VAPIC_ADDR
+
+## kvm ioapic
+```c
+struct KVMIOAPICState {
+    IOAPICCommonState ioapic;
+    uint32_t kvm_gsi_base;
+};
+```
+除了和初始化相关的，几乎没有什么需要做的事情，而且 kvm_gsi_base 的取值总是 0 的
+
+总体来说，就是一些简单的保存 恢复工作 : kvm_ioapic_get / kvm_ioapic_put, 通过 KVM_GET_IRQCHIP 来实现
+
+## kvm i8259
+和 kvm ioapic 类似, 不过有趣的是 lapic 使用的是 KVM_SET_LAPIC ，而 ioapic 和 8259 都是 KVM_GET_IRQCHIP
+
+[^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf

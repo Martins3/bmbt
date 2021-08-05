@@ -156,6 +156,8 @@ This code calls romlayout.S:entry_post() which then calls post.c:handle_post() i
             - sercon_setup
             - enable_vga_console
           - optionrom_setup : Non-VGA option rom init
+            - run_file_roms : Run all roms in a given CBFS directory. 其实也就是 genroms/linuxboot_dma.bin 和 genroms/kvmvapic.bin
+              - init_optionrom
           - [ ] interactive_bootmenu
           - wait_threads
           - make_bios_readonly
