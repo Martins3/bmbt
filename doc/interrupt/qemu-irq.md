@@ -150,10 +150,48 @@ static const TypeInfo kvm_apic_info = {
 ```
 
 ## select PIC
+- hw/intc/i8259_common.c
 - hw/i386/kvm/i8259.c
 - hw/intc/i8259.c
-- hw/intc/i8259_common.c
 
+pc_i8259_create 中
+
+## select 总结
+这几个东西的初始化都是 kvm 的事情, 但是 apic_get_class 中进行判断的，无论是 tcg 还是 kvm 的
+
+- kvm_irqchip_create 使用 kvm 成员变量来初始化全局变量，也就是那些 macro
+
+KVMState::kernel_irqchip_allowed : 似乎只是决定了 apic 啊
+KVMState::kernel_irqchip_required 对于 x86 而言，没有任何意义的
+
+
+- kvm_set_kernel_irqchip 真的理解了吗 ?
+  - ON / OFF / SPLIT 就是用于描述，APIC kernel 里面模拟，其他的取决于 split 的情况
+
+```c
+// 表示 apic 在内核中间
+#define kvm_irqchip_in_kernel() (kvm_kernel_irqchip)
+// 表示 ioapic pic 在用户态
+#define kvm_irqchip_is_split() (kvm_split_irqchip)
+```
+kvm_irqchip_create => kvm_arch_irqchip_create 中初始化了 kvm_split_irqchip 的内容
+
+为此构建出来了几个 macro 来描述 split 的情况
+```c
+#define kvm_pit_in_kernel() \
+    (kvm_irqchip_in_kernel() && !kvm_irqchip_is_split())
+#define kvm_pic_in_kernel()  \
+    (kvm_irqchip_in_kernel() && !kvm_irqchip_is_split())
+#define kvm_ioapic_in_kernel() \
+    (kvm_irqchip_in_kernel() && !kvm_irqchip_is_split())
+```
+
+
+- [x] 如何初始化出来 split 的效果来啊, split 的效果到底意味着什么 ?
+  - ioapic_init_gsi / pc_i8259_create 都非常类似，如果是 split 的，那么就初始化出来和 tcg 版本相同的样子出来
+
+所以，最后来分析一下为什么 hw/intc/ioapic.c 会出现 kvm_irqchip_is_split
+- 其实主要就是 ioapic_service 了，因为是 split 的，所以需要将消息注入到 kvm 中间，似乎还是很有道理的
 
 ## interrupt 机制
 - apic_local_deliver : 在 apic 中存在大量的模拟
@@ -213,61 +251,9 @@ kvm_pic_set_irq / kvm_ioapic_set_irq，对于 kvm 的接口而言，都是 irq =
 
 猜测，其实中断的次数并没有必要非常精确了，多发射几次也无所谓
 
-## [ ] KVM_SET_IRQCHIP 的作用是什么?
-
-kvm_ioapic_put 和 kvm_pic_put 是两个调用 KVM_SET_IRQCHIP 的位置
-
-```c
-/*
-#0  kvm_ioapic_put (s=0x555556a38100) at ../hw/i386/kvm/ioapic.c:80
-#1  0x0000555555de4729 in resettable_phase_hold (obj=0x555556a38100, opaque=<optimized out>, type=<optimized out>) at ../hw/core/resettable.c:182
-#2  0x0000555555de0044 in bus_reset_child_foreach (obj=<optimized out>, cb=0x555555de4640 <resettable_phase_hold>, opaque=0x0, type=RESET_TYPE_COLD) at ../hw/core/bus.c
-:97
-#3  0x0000555555de46e4 in resettable_child_foreach (rc=0x555556879da0, type=RESET_TYPE_COLD, opaque=0x0, cb=0x555555de4640 <resettable_phase_hold>, obj=0x5555569265d0)
-at ../hw/core/resettable.c:96
-#4  resettable_phase_hold (obj=obj@entry=0x5555569265d0, opaque=opaque@entry=0x0, type=type@entry=RESET_TYPE_COLD) at ../hw/core/resettable.c:173
-#5  0x0000555555de4ec9 in resettable_assert_reset (obj=0x5555569265d0, type=<optimized out>) at ../hw/core/resettable.c:60
-#6  0x0000555555de525d in resettable_reset (obj=0x5555569265d0, type=RESET_TYPE_COLD) at ../hw/core/resettable.c:45
-#7  0x0000555555de4225 in qemu_devices_reset () at ../hw/core/reset.c:69
-#8  0x0000555555b8a07f in pc_machine_reset (machine=<optimized out>) at ../hw/i386/pc.c:1654
-#9  0x0000555555c57ac0 in qemu_system_reset (reason=reason@entry=SHUTDOWN_CAUSE_NONE) at ../softmmu/runstate.c:443
-#10 0x0000555555a9c0ca in qdev_machine_creation_done () at ../hw/core/machine.c:1332
-#11 0x0000555555d09fe0 in qemu_machine_creation_done () at ../softmmu/vl.c:2671
-#12 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2694
-#13 0x0000555555d0d6b0 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3713
-#14 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
-```
-
-```c
-/*
-#0  kvm_pic_put (s=0x55555698d520) at ../hw/i386/kvm/i8259.c:71
-#1  0x0000555555de4729 in resettable_phase_hold (obj=0x55555698d520, opaque=<optimized out>, type=<optimized out>) at ../hw/core/resettable.c:182
-#2  0x0000555555de0044 in bus_reset_child_foreach (obj=<optimized out>, cb=0x555555de4640 <resettable_phase_hold>, opaque=0x0, type=RESET_TYPE_COLD) at ../hw/core/bus.c:97
-#3  0x0000555555de46e4 in resettable_child_foreach (rc=0x5555567da870, type=RESET_TYPE_COLD, opaque=0x0, cb=0x555555de4640 <resettable_phase_hold>, obj=0x555556acb9c0) at ../hw/core/resettable.c:96
-#4  resettable_phase_hold (obj=0x555556acb9c0, opaque=<optimized out>, type=RESET_TYPE_COLD) at ../hw/core/resettable.c:173 #5  0x0000555555de1e1b in device_reset_child_foreach (obj=<optimized out>, cb=0x555555de4640 <resettable_phase_hold>, opaque=0x0, type=RESET_TYPE_COLD) at ../hw/core/qdev.c:366
-#6  0x0000555555de46e4 in resettable_child_foreach (rc=0x5555567df1d0, type=RESET_TYPE_COLD, opaque=0x0, cb=0x555555de4640 <resettable_phase_hold>, obj=0x555556aee300) at ../hw/core/resettable.c:96
-#7  resettable_phase_hold (obj=0x555556aee300, opaque=<optimized out>, type=RESET_TYPE_COLD) at ../hw/core/resettable.c:173
-#8  0x0000555555de0044 in bus_reset_child_foreach (obj=<optimized out>, cb=0x555555de4640 <resettable_phase_hold>, opaque=0x0, type=RESET_TYPE_COLD) at ../hw/core/bus.c:97
-#9  0x0000555555de46e4 in resettable_child_foreach (rc=0x5555567c66e0, type=RESET_TYPE_COLD, opaque=0x0, cb=0x555555de4640 <resettable_phase_hold>, obj=0x555556f49e00) at ../hw/core/resettable.c:96
-#10 resettable_phase_hold (obj=0x555556f49e00, opaque=<optimized out>, type=RESET_TYPE_COLD) at ../hw/core/resettable.c:173
-#11 0x0000555555de1e1b in device_reset_child_foreach (obj=<optimized out>, cb=0x555555de4640 <resettable_phase_hold>, opaque=0x0, type=RESET_TYPE_COLD) at ../hw/core/qdev.c:366
-#12 0x0000555555de46e4 in resettable_child_foreach (rc=0x555556786f30, type=RESET_TYPE_COLD, opaque=0x0, cb=0x555555de4640 <resettable_phase_hold>, obj=0x555556a477c0) at ../hw/core/resettable.c:96
-#13 resettable_phase_hold (obj=0x555556a477c0, opaque=<optimized out>, type=RESET_TYPE_COLD) at ../hw/core/resettable.c:173 #14 0x0000555555de0044 in bus_reset_child_foreach (obj=<optimized out>, cb=0x555555de4640 <resettable_phase_hold>, opaque=0x0, type=RESET_TYPE_COLD) at ../hw/core/bus.c:97
-#15 0x0000555555de46e4 in resettable_child_foreach (rc=0x555556879da0, type=RESET_TYPE_COLD, opaque=0x0, cb=0x555555de4640 <resettable_phase_hold>, obj=0x5555569265d0) at ../hw/core/resettable.c:96
-#16 resettable_phase_hold (obj=obj@entry=0x5555569265d0, opaque=opaque@entry=0x0, type=type@entry=RESET_TYPE_COLD) at ../hw/core/resettable.c:173
-#17 0x0000555555de4ec9 in resettable_assert_reset (obj=0x5555569265d0, type=<optimized out>) at ../hw/core/resettable.c:60
-#18 0x0000555555de525d in resettable_reset (obj=0x5555569265d0, type=RESET_TYPE_COLD) at ../hw/core/resettable.c:45
-#19 0x0000555555de4225 in qemu_devices_reset () at ../hw/core/reset.c:69
-#20 0x0000555555b8a07f in pc_machine_reset (machine=<optimized out>) at ../hw/i386/pc.c:1654
-#21 0x0000555555c57ac0 in qemu_system_reset (reason=reason@entry=SHUTDOWN_CAUSE_NONE) at ../softmmu/runstate.c:443
-#22 0x0000555555a9c0ca in qdev_machine_creation_done () at ../hw/core/machine.c:1332
-#23 0x0000555555d09fe0 in qemu_machine_creation_done () at ../softmmu/vl.c:2671
-#24 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2694
-#25 0x0000555555d0d6b0 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3713
-#26 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
-```
-
 ## GSIState
+每次调用中断，都是从 X86MachineState::gsi 开始，其在 pc_gsi_create 中初始化, handler 为 gsi_handler, gsi_handler 再去调用 GSIState 中三个 irqchip 对应的 handler
+
 其核心作用在于 : gsi_handler 中进一步的分发到具体的 chip 相关的 irq chip
 
 ```c
@@ -334,7 +320,7 @@ void gsi_handler(void *opaque, int n, int level)
   - kvm_i8259_init : i8259 也就是 pic 本身是一个设备，所以需要调用 i8259_init_chip 初始化一下，这很好
     - i8259_init_chip(TYPE_KVM_I8259, bus, true); // master
     - i8259_init_chip(TYPE_KVM_I8259, bus, false); // slave
-    - [ ] qemu_allocate_irqs(kvm_pic_set_irq, NULL, ISA_NUM_IRQS); 很好，又初始化了一堆 qemu_irq 出来了，之后就可以在 gsi_handler 中调用了
+    - qemu_allocate_irqs(kvm_pic_set_irq, NULL, ISA_NUM_IRQS); // 创建出来的 qemu_irq 赋值给
   - xen_interrupt_controller_init
   - i8259_init
 
@@ -632,7 +618,81 @@ struct KVMIOAPICState {
 
 总体来说，就是一些简单的保存 恢复工作 : kvm_ioapic_get / kvm_ioapic_put, 通过 KVM_GET_IRQCHIP 来实现
 
-## kvm i8259
-和 kvm ioapic 类似, 不过有趣的是 lapic 使用的是 KVM_SET_LAPIC ，而 ioapic 和 8259 都是 KVM_GET_IRQCHIP
+顺便回答一下 KVM_SET_IRQCHIP 的作用是什么, 因为 kvm 在内核中维护 irqchip 的状态，
+但是实际上，在用户态也是可以设置 irqchip 的，从而实现 machine migration
+
+## kvm pic
+和 kvm ioapic 类似, 不过有趣的是 lapic 使用的是 KVM_SET_LAPIC ，而 ioapic 和 pic 都是 KVM_GET_IRQCHIP
+
+## tcg pic
+- pc_i8259_create
+  - `i8259_init(isa_bus, x86_allocate_cpu_irq())`
+
+可以分析一下 qemu_irq_lower 关于 gpio 的内容，pic 内部是存在两级级联的中断的，
+而中断最后导入到 x86_allocate_cpu_irq() 创建的 qemu_irq 中处理
+```c
+/*
+#0  pic_irq_request (opaque=0x0, irq=0, level=0) at ../hw/i386/x86.c:530
+#1  0x00005555559641de in qemu_irq_lower (irq=<optimized out>) at /home/maritns3/core/kvmqemu/include/hw/irq.h:17
+#2  pic_update_irq (s=0x555556999920) at ../hw/intc/i8259.c:116
+#3  pic_update_irq (s=0x555556999920) at ../hw/intc/i8259.c:107
+#4  0x000055555596497e in pic_set_irq (opaque=0x555556999920, irq=<optimized out>, level=0) at ../hw/intc/i8259.c:156
+#5  0x0000555555b92674 in gsi_handler (opaque=0x555556b0b1f0, n=4, level=0) at ../hw/i386/x86.c:596
+```
+
+- 分析 pic_irq_request
+    - [x] 为什么还存在 kvm_irqchip_in_kernel 的判断啊? 因为 irq chip 的 split 原因
+    - 一般来说，pic 是和 lapic 联系在一起的，但是实际上可以越过去
+
+## tcg 模式下的 irq routing
+- 还是会调用 gsi_handler，而 gsi_handler 对于中断号小于 16 的会连续调用两次, 分别是
+  - pic_irq_request
+  - ioapic_set_irq
+
+和 kvm 非常类似，在系统启动之后，逐渐抛弃使用 pic
+具体表现为 apic_accept_pic_intr 的这个判断失败
+
+- [x] 找到对应的源代码位置, 将 apic_accept_pic_intr disabled 的
+  - 就是在 apic_mem_write 的位置
+  - [ ] 但是进行 mem write 的操作具体发生在 guest 的哪一个源码，暂时是不知道的
+
+
+## [ ] tcg ioapic
+- [ ] 跟踪一下 ioapic 的 ioredtbl 是如何处理的
+
+ioapic_realize 中的初始化，总是 ioapic_set_irq 来作为入口的
+- ioapic_service
+  - [ ] stl_le_phys(ioapic_as, info.addr, info.data);
+      - 实际上，这就是通往 apic 的过程，上面的注释也分析过，采用类似 msi 的过程
+      - stl_le_phys 最终会调用起来 apic 的 handler 的
+
+## [ ] tcg apic
+tcg apic 真的好复杂啊
+
+```c
+/*
+#0  apic_set_irq (s=0x55555698a050, vector_num=0, trigger_mode=0) at ../hw/intc/apic.c:401
+#1  0x0000555555c6a2d6 in apic_local_deliver (s=0x55555698a050, vector=3) at ../hw/intc/apic.c:166
+#2  0x0000555555b90d74 in pic_irq_request (opaque=<optimized out>, irq=<optimized out>, level=1) at ../hw/i386/x86.c:540
+#3  pic_irq_request (opaque=<optimized out>, irq=<optimized out>, level=1) at ../hw/i386/x86.c:529
+#4  0x0000555555964178 in qemu_irq_raise (irq=<optimized out>) at /home/maritns3/core/kvmqemu/include/hw/irq.h:12
+#5  pic_update_irq (s=0x555556999520) at ../hw/intc/i8259.c:114
+#6  0x000055555596493e in pic_set_irq (opaque=0x555556999520, irq=<optimized out>, level=1) at ../hw/intc/i8259.c:156
+#7  0x0000555555b92634 in gsi_handler (opaque=0x555556adfc30, n=0, level=1) at ../hw/i386/x86.c:596
+```
+
+- apic_accept_pic_intr : 不一定会接受 pic 的 intr 的
+
+> The local APIC is enabled at boot-time and can be disabled by clearing bit 11 of the IA32_APIC_BASE Model Specific Register (MSR). [^3]
+
+> In general, one pin is used for chaining the legacy PIC and the other for NMIs (Or occasionally SMIs). No devices are actually connected to the LINT pins for a couple of reasons, one of which is that id just doesn't work on multiprocessor systems (They inevitably get delivered to one core).
+> In practice, all devices are connected to the I/O APIC and/or PIC.[^4]
+
+
+- [ ] 实际上还存在 timer 之类的东西
+
 
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf
+[^2]: https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong-duan-xu-ni-hua-kuang-jia-fen-679028-4e0a29.html
+[^3]: https://wiki.osdev.org/APIC
+[^4]: https://forum.osdev.org/viewtopic.php?f=1&t=22024

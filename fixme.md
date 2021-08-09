@@ -32,6 +32,7 @@
     1. understand how smm works in tcg
     1. CPUAddressSpace : 这是 tcg 下单独搞出来的吗 ?
     1. exec/ram_addr.h : 定义了几个 physical memory dirty 相关的问题
+    2. stl_le_phys : 这个在 memory_ldst.c 中并没有配套的实现
 2. apic
     1. DeviceState 中定义为空
     2. /home/maritns3/core/ld/DuckBuBi/include/hw/i386/apic.h 都是空函数
