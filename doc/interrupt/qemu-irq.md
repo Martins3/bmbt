@@ -1,3 +1,8 @@
+下面的代码暂时分析基于 v6.1.0-rc2
+## 挑战
+1. 当前的 QEMU 中间，时钟中断是采用现有设施的
+    1. 因为 timer 线程是单独的线程，所以 CPU_INTERRUPT_POLL 来处理, 显然 BMBT 没有那么多的线程
+
 ## 问题
 1. exception_index 和负数的关系是什么 ?
     - 从 cpu_loop_exit_noexc 的注释来说，似乎是离开的原因没有什么的时候的，就赋值为 -1
@@ -24,9 +29,26 @@
 
 7. 能不能只是模拟 pic 啊，又不是不能用 ?
 
+8. 在进入 kernel 之前，似乎只是 QEMU 启动的时候，gsi_handler 似乎被调用数次，是因为初始化的原因，还是因为 seabios 调用的
+
+9. 在 seabios 中，会处理中断吗 ?
+
+## 备忘
+- tcg_handle_interrupt /  x86_cpu_exec_interrupt 的功能区别:
+  - 前者: 让执行线程退出，去检查 interrupt
+  - 后者: 线程相关的具体分析 interrupt 该如何处理
+
 ## TODO
 - [ ] pc_machine_reset
 - 补充材料 : ioapic 如何知道中断源头 : https://stackoverflow.com/questions/57704146/how-to-figure-out-the-interrupt-source-on-i-o-apic
+
+## intel 手册知识准备
+
+- volume 3 CHAPTER 6 (INTERRUPT AND EXCEPTION HANDLING) : 从 CPU 的角度描述了中断的处理过程
+- volume 3 CHAPTER 10 (ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)): apic
+  - 10.8.3.1 Task and Processor Priorities
+  - 10.8.5 Signaling Interrupt Servicing Completion : 描述 eoi 的作用
+
 
 
 ## QEMU 是如何处理 interrupt 和 exception 的
@@ -607,6 +629,7 @@ vapic_write : 只是调用过一次, 在 seabios 中的 callrom 中进行的
 - [ ] 存在一个关联的 exit reason 是 KVM_EXIT_TPR_ACCESS
 - [ ] 一个关联的 kvm ioctl 命令 : KVM_SET_VAPIC_ADDR
 
+- [ ] APICCommonState::vapic_paddr 似乎和 kvmvapic 有关的
 ## kvm ioapic
 ```c
 struct KVMIOAPICState {
@@ -644,6 +667,13 @@ struct KVMIOAPICState {
     - [x] 为什么还存在 kvm_irqchip_in_kernel 的判断啊? 因为 irq chip 的 split 原因
     - 一般来说，pic 是和 lapic 联系在一起的，但是实际上可以越过去
 
+- [ ] apic_check_pic : 这个东西是做啥的
+  - 和 apic_update_irq 做出类似的判断
+```c
+  if (!apic_accept_pic_intr(dev) || !pic_get_output(isa_pic)) {
+```
+
+
 ## tcg 模式下的 irq routing
 - 还是会调用 gsi_handler，而 gsi_handler 对于中断号小于 16 的会连续调用两次, 分别是
   - pic_irq_request
@@ -655,19 +685,6 @@ struct KVMIOAPICState {
 - [x] 找到对应的源代码位置, 将 apic_accept_pic_intr disabled 的
   - 就是在 apic_mem_write 的位置
   - [ ] 但是进行 mem write 的操作具体发生在 guest 的哪一个源码，暂时是不知道的
-
-
-## [ ] tcg ioapic
-- [ ] 跟踪一下 ioapic 的 ioredtbl 是如何处理的
-
-ioapic_realize 中的初始化，总是 ioapic_set_irq 来作为入口的
-- ioapic_service
-  - [ ] stl_le_phys(ioapic_as, info.addr, info.data);
-      - 实际上，这就是通往 apic 的过程，上面的注释也分析过，采用类似 msi 的过程
-      - stl_le_phys 最终会调用起来 apic 的 handler 的
-
-## [ ] tcg apic
-tcg apic 真的好复杂啊
 
 ```c
 /*
@@ -688,11 +705,111 @@ tcg apic 真的好复杂啊
 > In general, one pin is used for chaining the legacy PIC and the other for NMIs (Or occasionally SMIs). No devices are actually connected to the LINT pins for a couple of reasons, one of which is that id just doesn't work on multiprocessor systems (They inevitably get delivered to one core).
 > In practice, all devices are connected to the I/O APIC and/or PIC.[^4]
 
+## [ ] tcg ioapic
+ioapic_realize 中的初始化，总是 ioapic_set_irq 来作为入口的
+- ioapic_service
+  - [ ] stl_le_phys(ioapic_as, info.addr, info.data);
+      - 实际上，这就是通往 apic 的过程，上面的注释也分析过，采用类似 msi 的过程
+      - stl_le_phys 最终会调用起来 apic 的 handler 的
 
-- [ ] 实际上还存在 timer 之类的东西
+- [ ] 跟踪一下 ioapic 的 ioredtbl 是如何处理的
 
+cat /proc/interrupts 中的编号到底是啥啊
+
+Understanding Linux Kernel 中的 : Table 4-2. Interrupt vectors in Linux
+| Vector range        | Use                                                                                                         |
+|---------------------|-------------------------------------------------------------------------------------------------------------|
+| 0–19 (0x0-0x13)     | Nonmaskable interrupts and exceptions                                                                       |
+| 20–31 (0x14-0x1f)   | Intel-reserved                                                                                              |
+| 32–127 (0x20-0x7f)  | External interrupts (IRQs)                                                                                  |
+| 128 (0x80)          | Programmed exception for system calls (see Chapter 10)                                                      |
+| 129–238 (0x81-0xee) | External interrupts (IRQs)                                                                                  |
+| 239 (0xef)          | Local APIC timer interrupt (see Chapter 6)                                                                  |
+| 240 (0xf0)          | Local APIC thermal interrupt (introduced in the Pentium 4 models)                                           |
+| 241–250 (0xf1-0xfa) | Reserved by Linux for future use                                                                            |
+| 251–253 (0xfb-0xfd) | Interprocessor interrupts (see the section "Interprocessor Interrupt Handling" later in this chapter)       |
+| 254 (0xfe)          | Local APIC error interrupt (generated when the local APIC detects an erroneous condition)                   |
+| 255 (0xff)          | Local APIC spurious interrupt (generated if the CPU masks an interrupt while the hardware device raises it) |
+
+## [ ] tcg apic
+
+- apic timer : 总体来说，timer 是比较容易处理的
+  - apic_timer 被周期性的触发
+    - [ ] 思考一下如何获取 clock time, 实际上，guest 操作系统可以主动校准实践
+    - QEMU_CLOCK_VIRTUAL : 当虚拟机停下来的时候，时钟中断需要停止下来
+  - 考虑一个小问题，所有的 vCPU 都是需要接受 local timer 的时钟的，难道为此需要创建出来多个 timer 吗 ?
+    - 是的, 而且 timer 这个线程是在 main_loop_wait => qemu_clock_run_all_timers 中使用一个新的线程来进行的
+
+- [ ] apic_eoi : 和 10.8.5 中描述的一致，但是
+  - [ ] 10.8.5 : 手册中间分析的 ioapic 的 broadcast 是什么意思
+  - [x] apic_sync_vapic : 这个是处理 kvm 的，暂时不分析
+- [ ] isr
+
+*If the terminated interrupt was a level-triggered interrupt, the local APIC Also sends an
+end-of-interrupt message to all I/O APICs.* (**无法理解为什么 level-triggered 的就需要向 io apic 发送**)
+
+System software may prefer to direct EOIs to specific I/O APICs rather than having the local APIC send end-of-interrupt messages to all I/O APICs.
+
+Software can inhibit the broadcast of EOI message by setting bit 12 of the *Spurious Interrupt Vector Register* (see 
+Section 10.9). If this bit is set, a broadcast EOI is not generated on an EOI cycle even if the associated *TMR* bit indicates that the current interrupt was level-triggered.
+The default value for the bit is 0, indicating that EOI broadcasts are performed.
+
+Bit 12 of the Spurious Interrupt Vector Register is reserved to 0 if the processor does not support suppression of 
+EOI broadcasts. Support for EOI-broadcast suppression is reported in bit 24 in the Local APIC Version Register (see 
+Section 10.4.8); the feature is supported if that bit is set to 1. When supported, the feature is available in both 
+xAPIC mode and x2APIC mode.
+
+System software desiring to perform directed EOIs for level-triggered interrupts should set bit 12 of the *Spurious Interrupt Vector Register* and follow each the EOI to the local xAPIC for a level triggered interrupt with a directed 
+EOI to the I/O APIC generating the interrupt (this is done by writing to the I/O APIC’s EOI register).
+System software performing directed EOIs must retain a mapping associating level-triggered interrupts with the I/O APICs in the system. (**并没有看懂这个英语，是如何实现 dedicated 的 EOI 的**)
+
+- [ ] 实际上，ioapic 也是存在 eoi 的, 而且还在两个调用位置, 放到 tcg ioapic 中间分析吧
+
+- apic_update_irq 的分析
+  - apic_poll_irq : 如果中断是来自于其他的 thread，那么就采用这种方式，比如时钟中断
+    - 因为时钟是在另一个线程处理的，所以需要实现
+  - 如果不是来自于 pic 的中断，那就清理掉这个中断
+
+- [ ] cr8 和 tpr 的关系是什么？
+    - apic_set_tpr 的唯一调用者是 helper_write_crN
+    - 从 apic_set_tpr 和 apic_get_tpr 的效果看，SDM 10-18 的 sub-class 的实际上没有用的
+    - [^5] 中间描述，如果一个中断的优先级不够, 那么是无法通知 CPU 的，那么如何知道一个中断的优先级
+    - [ ] 似乎，实际上，tpr 的意义在于计算出来 ppr, 因为 ppr 是 tpr + isrv 中的较大值，只有一个中断同时超过两者才可以
+
+- [ ] irr / isr 的操作是什么?
+    - 10.8.4 Interrupt Acceptance for Fixed Interrupts : 虽然在描述了，但是
+        - 为什么存在 256 bit，为什么设置出来了两个 register 啊
+
+- apic_get_interrupt : 从 irr 中接受中断之后，然后立刻装换到系统中间
+
+The local APIC queues the fixed interrupts that it accepts in one of two interrupt pending registers: the interrupt
+request register (IRR) or in-service register (ISR).
+
+- [ ] 为什么 apic_get_interrupt 返回的数值都是 236 之类的, 操作系统是如何解析的
+    - [ ] apic_local_deliver : 似乎和 lvt 有关的
+    - [ ] 众所周知，idt 中间一共是存在 256 项目的，其中的一些还是和 exception 相关的，是如何实现让的 apic 的引脚 和 idt 产生联系的
+        - 忽然间意识到一个问题，之前说的 gsi 什么的，其实那都是 apic 和 pic 的引脚啊，但是实际上，CPU 看到的就是 icr 之类的东西了
+        - [ ] 是所有的中断的入口都是相同的，还是对于 irr 256 每一个都是可以建立对应的 idt 的
+
+
+lvt  中的取值总是在发生改变的, 但是
+apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的中断是 APIC_LVT_TIMER 的，但是最后装换为 236 了
+
+```txt
+[0=236] [1=65536] [2=65536] [3=67328] [4=1024] [5=254]
+```
+
+从 apic_mem_write 的操作看，似乎, msi 根本不用遵守 io apic pin 的要求哇
+
+但是，需要注意一个问题，之前描述的是 ioapic 的引脚，但是现在是 apic
+
+- [ ] 到底存在那些 idt 来响应中断
+- [ ] 当中断的处理函数中间，是否存在检测分析 isr 从而知道是那个中断的函数
+
+破案了，原来是 ioapic_entry_parse 将 ioapic 的 pin 最后装换为 apic 上的 irr 之类的
 
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf
 [^2]: https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong-duan-xu-ni-hua-kuang-jia-fen-679028-4e0a29.html
 [^3]: https://wiki.osdev.org/APIC
 [^4]: https://forum.osdev.org/viewtopic.php?f=1&t=22024
+[^5]: https://stackoverflow.com/questions/51490552/how-is-cr8-register-used-to-prioritize-interrupts-in-an-x86-64-cpu
