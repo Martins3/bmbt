@@ -58,6 +58,12 @@ host 的软件栈无法移除掉。还有一个就是 QEMU 实际上为了处理
     - 虽然存在 c2rust [^6] 等工具实现源码装换，目前来说，重写代码的难度不可预估，使用 Rust 来构建是将来的工作
     - 使用 Rust 写还有一个好处在于可以拜托 QEMU 的证书限制。
 
+## 计划
+- [ ] fixme.md 中间大致列举需要修复的接口
+- [ ] init 之类的事情放到后面处理
+- [ ] acpi 就是接下来处理的问题了
+
+
 ## Contributor
 As for collaboration, please follow [these instructions](./CONTRIBUTING.md)
 
@@ -67,5 +73,5 @@ This project is fairly tricky for beginner, we also write some [documents for ne
 [^2]: [A Linux in unikernel clothing](https://dl.acm.org/doi/10.1145/3342195.3387526)
 [^3]: [Kernel Mode Linux](http://web.yl.is.s.u-tokyo.ac.jp/~tosh/kml/)
 [^4]: [High Velocity Kernel File Systems with Bento](https://www.usenix.org/conference/fast21/presentation/miller)
-[^5]: https://github.com/theseus-os/Theseus
-[^6]: https://github.com/immunant/c2rust
+[^5]: [Theseus](https://github.com/theseus-os/Theseus)
+[^6]: [c2rust](https://github.com/immunant/c2rust)
