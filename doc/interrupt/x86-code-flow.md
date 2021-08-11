@@ -53,7 +53,7 @@ https://www.kernel.org/doc/html/latest/PCI/msi-howto.html : 最详细的文档�
 - [ ] 键盘等各种 virq 其实是 acpi 决定的，那么，当 nvme 分配的 virq=24 是靠什么让
 CPU 知道当 24 号引脚拉高的时候是 msi 中断啊, 从原则上，这是物理决定的才对啊
   - 应该是就是 cpu 了
-  - [ ] 感觉已经话费了很长时间了，但是 `__irq_msi_compose_msg` 写入的数据和实际上想想不一样
+  - [ ] 感觉已经话费了很长时间了，但是 `__irq_msi_compose_msg` 写入的数据实际上和想想的不一样
 - [ ] 当 msi disable 掉，那么 nvme 设备如何通过 pci bridge 实现中断通知
 
 
@@ -174,6 +174,7 @@ fee00000-fee00fff : Local APIC
 #7  __common_interrupt (regs=<optimized out>, vector=37) at arch/x86/kernel/irq.c:250
 #8  0xffffffff81b94c46 in common_interrupt (regs=0xffffc90000013868, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
 Backtrace stopped: Cannot access memory at address 0xffffc90000004010
+*/
 ```
 
 可以很容易的找到 common_interrupt 的入口, 此时可以从硬件哪里拿到 error_code 来索引 vector_irq 获取 irqdesc

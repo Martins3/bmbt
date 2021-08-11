@@ -33,6 +33,41 @@
 
 9. 在 seabios 中，会处理中断吗 ?
 
+10. level 和 edge 的处理有什么不同, 为什么需要 level 的触发方式
+
+11. 分析这个路径产生的原因是什么:
+```c
+/*
+#0  huxueshi (irq=14) at ../hw/i386/kvm/ioapic.c:112
+#1  insert_counter (irq=14) at ../hw/i386/kvm/ioapic.c:125
+#2  kvm_ioapic_set_irq (opaque=0x555556bec800, irq=14, level=0) at ../hw/i386/kvm/ioapic.c:135
+#3  0x0000555555b92644 in gsi_handler (opaque=0x555556a0e200, n=14, level=0) at ../hw/i386/x86.c:600
+#4  0x0000555555a23e2e in piix3_set_irq_pic (piix3=0x555556a60310, piix3=0x555556a60310, pic_irq=<optimized out>) at ../hw/isa/piix3.c:123
+#5  piix3_write_config (address=<optimized out>, val=<optimized out>, len=<optimized out>, dev=<optimized out>) at ../hw/isa/piix3.c:123
+#6  piix3_write_config (dev=<optimized out>, address=<optimized out>, val=<optimized out>, len=<optimized out>) at ../hw/isa/piix3.c:112
+#7  0x0000555555a34bbb in pci_host_config_write_common (pci_dev=0x555556a60310, addr=96, limit=<optimized out>, val=10, len=1) at ../hw/pci/pci_host.c:83
+#8  0x0000555555cd2661 in memory_region_write_accessor (mr=mr@entry=0x555556a22de0, addr=0, value=value@entry=0x7fffe890d0a8, size=size@entry=1, shift=<optimized out>,
+mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:492
+#9  0x0000555555cceaee in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffe890d0a8, size=size@entry=1, access_size_min=<optimized out>, access_siz
+e_max=<optimized out>, access_fn=access_fn@entry=0x555555cd25d0 <memory_region_write_accessor>, mr=0x555556a22de0, attrs=...) at ../softmmu/memory.c:554
+#10 0x0000555555cd1b97 in memory_region_dispatch_write (mr=mr@entry=0x555556a22de0, addr=0, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softm
+mu/memory.c:1504
+#11 0x0000555555c9c060 in flatview_write_continue (fv=fv@entry=0x7ffe4c043840, addr=addr@entry=3324, attrs=..., ptr=ptr@entry=0x7fffeb180000, len=len@entry=1, addr1=<op
+timized out>, l=<optimized out>, mr=0x555556a22de0) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
+#12 0x0000555555c9c276 in flatview_write (fv=0x7ffe4c043840, addr=addr@entry=3324, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb180000, len=len@entry=1) at ../softmmu/p
+hysmem.c:2818
+#13 0x0000555555c9ef46 in address_space_write (as=0x555556606a40 <address_space_io>, addr=addr@entry=3324, attrs=..., buf=0x7fffeb180000, len=len@entry=1) at ../softmmu
+/physmem.c:2910
+#14 0x0000555555c9efde in address_space_rw (as=<optimized out>, addr=addr@entry=3324, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=1, is_write=is_writ
+e@entry=true) at ../softmmu/physmem.c:2920
+#15 0x0000555555c8ecb9 in kvm_handle_io (count=1, size=1, direction=<optimized out>, data=<optimized out>, attrs=..., port=3324) at ../accel/kvm/kvm-all.c:2632
+#16 kvm_cpu_exec (cpu=cpu@entry=0x555556b030d0) at ../accel/kvm/kvm-all.c:2883
+#17 0x0000555555cf17f5 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556b030d0) at ../accel/kvm/kvm-accel-ops.c:49
+#18 0x0000555555e55953 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#19 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#20 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
 ## 备忘
 - tcg_handle_interrupt /  x86_cpu_exec_interrupt 的功能区别:
   - 前者: 让执行线程退出，去检查 interrupt
@@ -757,6 +792,8 @@ ioapic_realize 中的初始化，总是 ioapic_set_irq 来作为入口的
 - [ ] cat /proc/interrupts 中的编号到底是啥啊
 
 - [ ] Understanding Linux Kernel 中的 : Table 4-2. Interrupt vectors in Linux
+    - 这个东西实际上是 idt 的编号啊
+
 | Vector range        | Use                                                                                                         |
 |---------------------|-------------------------------------------------------------------------------------------------------------|
 | 0–19 (0x0-0x13)     | Nonmaskable interrupts and exceptions                                                                       |
@@ -780,69 +817,22 @@ ioapic_realize 中的初始化，总是 ioapic_set_irq 来作为入口的
 
 - [ ] 操作系统可以通过 acpi 知道中断是链接到具体的哪一个 ioapic 的引脚的，但是 ioredtbl 的配置是按照什么规则来的
 
-- [ ] irq 的相关性如何做到的
+- [ ] irq 的 affinity 如何做到的
 
-在 Linux 内核这一侧, 非常有意思，也是采用 irq 的方式啊
-- ioapic_configure_entry
-    - ioapic_setup_msg_from_msi
+在 Linux 内核这一侧, 配置 ioapic 也是采用 msi 的方式:
 
+- mp_irqdomain_activate
+  - ioapic_configure_entry : 看 `__add_pin_to_irq_node` 的注释: The common case is 1:1 `IRQ<->pin` mappings.
+      - ioapic_setup_msg_from_msi : 构造 msi
+          - irq_chip_compose_msi_msg :  构建 struct msi_msg
+              - irq_chip::irq_compose_msi_msg
+                - x86_vector_msi_compose_msg  : 这就是注册的 hook 函数
+          - 使用 struct msi_msg 来填充 struct IO_APIC_route_entry
+      - `__ioapic_write_entry` : 将 msi 信息写入到 ioapic 的重定向表格
+
+下面是一个典型的 mp_irqdomain_activate 的调用路径:
 ```c
 /*
-#0  mp_irqdomain_activate (domain=0xffff888100101a00, irq_data=0xffff888100051828, reserve=false) at arch/x86/kernel/apic/io_apic.c:3076
-#1  0xffffffff81136d4e in __irq_domain_activate_irq (irqd=irqd@entry=0xffff888100051828, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1761
-#2  0xffffffff811387f0 in irq_domain_activate_irq (irq_data=irq_data@entry=0xffff888100051828, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1784
-#3  0xffffffff82dbe344 in check_timer () at arch/x86/kernel/apic/io_apic.c:2240
-#4  setup_IO_APIC () at arch/x86/kernel/apic/io_apic.c:2422
-#5  0xffffffff82dbd0cb in apic_bsp_setup (upmode=<optimized out>) at arch/x86/kernel/apic/apic.c:2606
-#6  apic_intr_mode_init () at arch/x86/kernel/apic/apic.c:1444
-#7  0xffffffff82db1cd8 in x86_late_time_init () at arch/x86/kernel/time.c:100
-#8  0xffffffff82daa109 in start_kernel () at init/main.c:1080
-#9  0xffffffff81000107 in secondary_startup_64 () at arch/x86/kernel/head_64.S:283
-#10 0x0000000000000000 in ?? ()
-
-#0  mp_irqdomain_activate (domain=0xffff888100101a00, irq_data=0xffff888100100a28, reserve=false) at arch/x86/kernel/apic/io_apic.c:3076
-#1  0xffffffff81136d4e in __irq_domain_activate_irq (irqd=irqd@entry=0xffff888100100a28, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1761
-#2  0xffffffff811387f0 in irq_domain_activate_irq (irq_data=irq_data@entry=0xffff888100100a28, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1784
-#3  0xffffffff81135bfb in irq_activate (desc=desc@entry=0xffff888100100a00) at kernel/irq/chip.c:291
-#4  0xffffffff81133515 in __setup_irq (irq=irq@entry=9, desc=desc@entry=0xffff888100100a00, new=new@entry=0xffff888100325a00) at kernel/irq/manage.c:1709
-#5  0xffffffff81133a57 in request_threaded_irq (irq=9, handler=handler@entry=0xffffffff814e36f0 <acpi_irq>, thread_fn=thread_fn@entry=0x0 <fixed_percpu_data>, irqflags=
-irqflags@entry=128, devname=devname@entry=0xffffffff8243c085 "acpi", dev_id=dev_id@entry=0xffffffff814e36f0 <acpi_irq>) at kernel/irq/manage.c:2173
-#6  0xffffffff814e3af7 in request_irq (dev=0xffffffff814e36f0 <acpi_irq>, name=0xffffffff8243c085 "acpi", flags=128, handler=0xffffffff814e36f0 <acpi_irq>, irq=<optimiz
-ed out>) at ./include/linux/interrupt.h:167
-#7  acpi_os_install_interrupt_handler (gsi=9, handler=handler@entry=0xffffffff814ffd00 <acpi_ev_sci_xrupt_handler>, context=0xffff888100309ae0) at drivers/acpi/osl.c:586
-#8  0xffffffff814ffd47 in acpi_ev_install_sci_handler () at drivers/acpi/acpica/evsci.c:156
-#9  0xffffffff814fd4c3 in acpi_ev_install_xrupt_handlers () at drivers/acpi/acpica/evevent.c:94
-#10 0xffffffff82ddf987 in acpi_enable_subsystem (flags=flags@entry=2) at drivers/acpi/acpica/utxfinit.c:184
-#11 0xffffffff82dddca0 in acpi_bus_init () at drivers/acpi/bus.c:1230
-#12 acpi_init () at drivers/acpi/bus.c:1323
-#13 0xffffffff81000def in do_one_initcall (fn=0xffffffff82dddc1c <acpi_init>) at init/main.c:1278
-#14 0xffffffff82daa3d3 in do_initcall_level (command_line=0xffff8881001277c0 "root", level=4) at ./include/linux/compiler.h:250
-#15 do_initcalls () at init/main.c:1367
-#16 do_basic_setup () at init/main.c:1387
-#17 kernel_init_freeable () at init/main.c:1589
-#18 0xffffffff81c38121 in kernel_init (unused=<optimized out>) at init/main.c:1481
-#19 0xffffffff81001992 in ret_from_fork () at arch/x86/entry/entry_64.S:295
-#20 0x0000000000000000 in ?? ()
-
->>> bt
-#0  mp_irqdomain_activate (domain=0xffff888100101a00, irq_data=0xffff888100100428, reserve=false) at arch/x86/kernel/apic/io_apic.c:3076
-#1  0xffffffff81136d4e in __irq_domain_activate_irq (irqd=irqd@entry=0xffff888100100428, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1761
-#2  0xffffffff811387f0 in irq_domain_activate_irq (irq_data=irq_data@entry=0xffff888100100428, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1784
-#3  0xffffffff81135bfb in irq_activate (desc=desc@entry=0xffff888100100400) at kernel/irq/chip.c:291
-#4  0xffffffff81133515 in __setup_irq (irq=irq@entry=6, desc=desc@entry=0xffff888100100400, new=new@entry=0xffff888100282500) at kernel/irq/manage.c:1709
-#5  0xffffffff81133a57 in request_threaded_irq (irq=6, handler=handler@entry=0xffffffff8173d680 <floppy_hardint>, thread_fn=thread_fn@entry=0x0 <fixed_percpu_data>, irqflags=irqflags@entry=0, devname=devname@entry=0xffffffff8246b2ca "floppy", dev_id=dev_id@entry=0x0 <fixed_percpu_data>) at kernel/irq/manage.c:2173
-#6  0xffffffff82de8319 in request_irq (dev=0x0 <fixed_percpu_data>, name=0xffffffff8246b2ca "floppy", flags=0, handler=0xffffffff8173d680 <floppy_hardint>, irq=<optimized out>) at ./include/linux/interrupt.h:167
-#7  fd_request_irq () at ./arch/x86/include/asm/floppy.h:147
-#8  floppy_grab_irq_and_dma () at drivers/block/floppy.c:4802
-#9  do_floppy_init () at drivers/block/floppy.c:4615
-#10 floppy_async_init (data=<optimized out>, cookie=<optimized out>) at drivers/block/floppy.c:4731
-#11 0xffffffff81101b0b in async_run_entry_fn (work=0xffff8881011c57a0) at kernel/async.c:127
-#12 0xffffffff810f567f in process_one_work (worker=0xffff88810004da80, work=0xffff8881011c57a0) at kernel/workqueue.c:2276
-#13 0xffffffff810f5865 in worker_thread (__worker=0xffff88810004da80) at kernel/workqueue.c:2422
-#14 0xffffffff810fcc02 in kthread (_create=0xffff888100127040) at kernel/kthread.c:319
-#15 0xffffffff81001992 in ret_from_fork () at arch/x86/entry/entry_64.S:295
-#16 0x0000000000000000 in ?? ()
-
 >>> bt
 #0  mp_irqdomain_activate (domain=0xffff888100101a00, irq_data=0xffff888100100e28, reserve=false) at arch/x86/kernel/apic/io_apic.c:3076
 #1  0xffffffff81136d4e in __irq_domain_activate_irq (irqd=irqd@entry=0xffff888100100e28, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1761
@@ -861,6 +851,205 @@ ed out>) at ./include/linux/interrupt.h:167
 #14 0x0000000000000000 in ?? ()
 ```
 
+而至于 vector 的具体数值的，就要看 apic_update_irq_cfg 了:
+
+```c
+/*
+>>> bt
+#0  apic_update_irq_cfg (irqd=irqd@entry=0xffff88810004e440, vector=vector@entry=239, cpu=0) at arch/x86/kernel/apic/vector.c:120
+#1  0xffffffff810be093 in vector_assign_managed_shutdown (irqd=0xffff88810004e440) at arch/x86/kernel/apic/vector.c:181
+#2  reserve_irq_vector_locked (irqd=irqd@entry=0xffff88810004e440) at arch/x86/kernel/apic/vector.c:208
+#3  0xffffffff810be419 in reserve_irq_vector (irqd=0xffff88810004e440) at arch/x86/kernel/apic/vector.c:216
+#4  assign_irq_vector_policy (info=0xffffffff82603da0, irqd=0xffff88810004e440) at arch/x86/kernel/apic/vector.c:309
+#5  x86_vector_alloc_irqs (arg=<optimized out>, nr_irqs=<optimized out>, virq=<optimized out>, domain=<optimized out>) at arch/x86/kernel/apic/vector.c:592
+#6  x86_vector_alloc_irqs (domain=0xffff88810004d180, virq=1, nr_irqs=1, arg=0xffffffff82603da0) at arch/x86/kernel/apic/vector.c:531
+#7  0xffffffff810c035f in mp_irqdomain_alloc (domain=0xffff888100101a00, virq=1, nr_irqs=1, arg=0xffffffff82603da0) at arch/x86/kernel/apic/io_apic.c:3023
+#8  0xffffffff81138135 in irq_domain_alloc_irqs_hierarchy (arg=0xffffffff82603da0, nr_irqs=1, irq_base=1, domain=0xffff888100101a00) at kernel/irq/irqdomain.c:1421
+#9  __irq_domain_alloc_irqs (domain=domain@entry=0xffff888100101a00, irq_base=irq_base@entry=1, nr_irqs=nr_irqs@entry=1, node=node@entry=-1, arg=arg@entry=0xffffffff826
+03da0, realloc=realloc@entry=true, affinity=0x0 <fixed_percpu_data>) at kernel/irq/irqdomain.c:1477
+#10 0xffffffff810bf23a in alloc_isa_irq_from_domain (domain=domain@entry=0xffff888100101a00, irq=irq@entry=1, ioapic=ioapic@entry=0, info=info@entry=0xffffffff82603da0,
+ pin=1) at arch/x86/kernel/apic/io_apic.c:1008
+#11 0xffffffff810bff43 in mp_map_pin_to_irq (gsi=gsi@entry=1, idx=idx@entry=5, ioapic=ioapic@entry=0, pin=pin@entry=1, flags=1, info=info@entry=0x0 <fixed_percpu_data>)
+ at arch/x86/kernel/apic/io_apic.c:1057
+#12 0xffffffff810c00ed in pin_2_irq (idx=5, ioapic=ioapic@entry=0, pin=pin@entry=1, flags=flags@entry=1) at arch/x86/kernel/apic/io_apic.c:1103
+#13 0xffffffff82dbe3a8 in setup_IO_APIC_irqs () at arch/x86/kernel/apic/io_apic.c:1222
+#14 setup_IO_APIC () at arch/x86/kernel/apic/io_apic.c:2419
+#15 0xffffffff82dbd0cb in apic_bsp_setup (upmode=<optimized out>) at arch/x86/kernel/apic/apic.c:2606
+#16 apic_intr_mode_init () at arch/x86/kernel/apic/apic.c:1444
+#17 0xffffffff82db1cd8 in x86_late_time_init () at arch/x86/kernel/time.c:100
+#18 0xffffffff82daa109 in start_kernel () at init/main.c:1080
+#19 0xffffffff81000107 in secondary_startup_64 () at arch/x86/kernel/head_64.S:283
+#20 0x0000000000000000 in ?? ()
+
+>>> bt
+#0  apic_update_irq_cfg (irqd=irqd@entry=0xffff88810004e4c0, vector=48, cpu=0) at arch/x86/kernel/apic/vector.c:120
+#1  0xffffffff810be258 in vector_configure_legacy (apicd=0xffff88810004e500, irqd=0xffff88810004e4c0, virq=0) at arch/x86/kernel/apic/vector.c:519
+#2  x86_vector_alloc_irqs (arg=<optimized out>, nr_irqs=<optimized out>, virq=<optimized out>, domain=<optimized out>) at arch/x86/kernel/apic/vector.c:588
+#3  x86_vector_alloc_irqs (domain=0xffff88810004d180, virq=0, nr_irqs=1, arg=0xffffffff82603da0) at arch/x86/kernel/apic/vector.c:531
+#4  0xffffffff810c035f in mp_irqdomain_alloc (domain=0xffff888100101a00, virq=0, nr_irqs=1, arg=0xffffffff82603da0) at arch/x86/kernel/apic/io_apic.c:3023
+#5  0xffffffff81138135 in irq_domain_alloc_irqs_hierarchy (arg=0xffffffff82603da0, nr_irqs=1, irq_base=0, domain=0xffff888100101a00) at kernel/irq/irqdomain.c:1421
+#6  __irq_domain_alloc_irqs (domain=domain@entry=0xffff888100101a00, irq_base=irq_base@entry=0, nr_irqs=nr_irqs@entry=1, node=node@entry=-1, arg=arg@entry=0xffffffff82603da0, realloc=realloc@entry=true, affinity=0x0 <fixed_percpu_data>) at kernel/irq/irqdomain.c:1477
+#7  0xffffffff810bf23a in alloc_isa_irq_from_domain (domain=domain@entry=0xffff888100101a00, irq=irq@entry=0, ioapic=ioapic@entry=0, info=info@entry=0xffffffff82603da0,pin=2) at arch/x86/kernel/apic/io_apic.c:1008
+#8  0xffffffff810bff43 in mp_map_pin_to_irq (gsi=gsi@entry=2, idx=idx@entry=0, ioapic=ioapic@entry=0, pin=pin@entry=2, flags=1, info=info@entry=0x0 <fixed_percpu_data>) at arch/x86/kernel/apic/io_apic.c:1057
+#9  0xffffffff810c00ed in pin_2_irq (idx=0, ioapic=ioapic@entry=0, pin=pin@entry=2, flags=flags@entry=1) at arch/x86/kernel/apic/io_apic.c:1103
+#10 0xffffffff82dbe3a8 in setup_IO_APIC_irqs () at arch/x86/kernel/apic/io_apic.c:1222
+#11 setup_IO_APIC () at arch/x86/kernel/apic/io_apic.c:2419
+#12 0xffffffff82dbd0cb in apic_bsp_setup (upmode=<optimized out>) at arch/x86/kernel/apic/apic.c:2606
+#13 apic_intr_mode_init () at arch/x86/kernel/apic/apic.c:1444
+#14 0xffffffff82db1cd8 in x86_late_time_init () at arch/x86/kernel/time.c:100
+#15 0xffffffff82daa109 in start_kernel () at init/main.c:1080
+#16 0xffffffff81000107 in secondary_startup_64 () at arch/x86/kernel/head_64.S:283
+#17 0x0000000000000000 in ?? ()
+
+#0  apic_update_irq_cfg (irqd=irqd@entry=0xffff88810004e840, vector=33, cpu=1) at arch/x86/kernel/apic/vector.c:120
+#1  0xffffffff810bd9a8 in assign_vector_locked (irqd=irqd@entry=0xffff88810004e840, dest=dest@entry=0xffffffff82efdb60 <vector_searchmask>) at arch/x86/kernel/apic/vector.c:253
+#2  0xffffffff810bdb9b in assign_irq_vector_any_locked (irqd=0xffff88810004e840) at arch/x86/kernel/apic/vector.c:279
+#3  0xffffffff810bdfa4 in activate_reserved (irqd=0xffff88810004e840) at arch/x86/kernel/apic/vector.c:393
+#4  x86_vector_activate (dom=<optimized out>, irqd=0xffff88810004e840, reserve=<optimized out>) at arch/x86/kernel/apic/vector.c:462
+#5  0xffffffff81136d4e in __irq_domain_activate_irq (irqd=0xffff88810004e840, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1761
+#6  0xffffffff81136d2d in __irq_domain_activate_irq (irqd=irqd@entry=0xffff888100100a28, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1758
+#7  0xffffffff811387f0 in irq_domain_activate_irq (irq_data=irq_data@entry=0xffff888100100a28, reserve=reserve@entry=false) at kernel/irq/irqdomain.c:1784
+#8  0xffffffff81135bfb in irq_activate (desc=desc@entry=0xffff888100100a00) at kernel/irq/chip.c:291
+#9  0xffffffff81133515 in __setup_irq (irq=irq@entry=9, desc=desc@entry=0xffff888100100a00, new=new@entry=0xffff888100325a00) at kernel/irq/manage.c:1709
+#10 0xffffffff81133a57 in request_threaded_irq (irq=9, handler=handler@entry=0xffffffff814e36f0 <acpi_irq>, thread_fn=thread_fn@entry=0x0 <fixed_percpu_data>, irqflags=irqflags@entry=128, devname=devname@entry=0xffffffff8243c085 "acpi", dev_id=dev_id@entry=0xffffffff814e36f0 <acpi_irq>) at kernel/irq/manage.c:2173
+#11 0xffffffff814e3af7 in request_irq (dev=0xffffffff814e36f0 <acpi_irq>, name=0xffffffff8243c085 "acpi", flags=128, handler=0xffffffff814e36f0 <acpi_irq>, irq=<optimized out>) at ./include/linux/interrupt.h:167
+#12 acpi_os_install_interrupt_handler (gsi=9, handler=handler@entry=0xffffffff814ffd00 <acpi_ev_sci_xrupt_handler>, context=0xffff888100309ae0) at drivers/acpi/osl.c:586
+#13 0xffffffff814ffd47 in acpi_ev_install_sci_handler () at drivers/acpi/acpica/evsci.c:156
+#14 0xffffffff814fd4c3 in acpi_ev_install_xrupt_handlers () at drivers/acpi/acpica/evevent.c:94
+#15 0xffffffff82ddf987 in acpi_enable_subsystem (flags=flags@entry=2) at drivers/acpi/acpica/utxfinit.c:184
+#16 0xffffffff82dddca0 in acpi_bus_init () at drivers/acpi/bus.c:1230
+#17 acpi_init () at drivers/acpi/bus.c:1323
+#18 0xffffffff81000def in do_one_initcall (fn=0xffffffff82dddc1c <acpi_init>) at init/main.c:1278
+#19 0xffffffff82daa3d3 in do_initcall_level (command_line=0xffff8881001277c0 "root", level=4) at ./include/linux/compiler.h:250
+#20 do_initcalls () at init/main.c:1367
+#21 do_basic_setup () at init/main.c:1387
+#22 kernel_init_freeable () at init/main.c:1589
+#23 0xffffffff81c38121 in kernel_init (unused=<optimized out>) at init/main.c:1481
+#24 0xffffffff81001992 in ret_from_fork () at arch/x86/entry/entry_64.S:295
+#25 0x0000000000000000 in ?? ()
+```
+
+- acpi 的这个很有意思，最开始是 irq = 9 最后就变为 vector=33 了, 其他的几个标准注册是类似的
+  - vector 数值的分配和 irq 没有关系，是从 irq_matrix_alloc  中分配的
+  - irq_matrix::alloc_start 和 irq_matrix::alloc_end 决定了分配的起始位置
+  - 从 acpi_ev_install_sci_handler 中间看，acpi 的 gsi = 9 是从 acpi 的 FADT 中间读取的
+
+
+- 分析调用过程 : 在 ./x86-code-flow.md tirgger 的哪一个小节发现，从 common_interrupt 到 nvme_irq 之间，实际上存在多次中间调用啊
+  - 才知道一个 irq_desc 同时存在 handle_irq 和 action，前者来注册 handle_edge_irq ，后者注册 nvme_irq
+  - 整个的处理过程中，始终都是使用同一个 irq_desc
+      - 所以，在 common_interrupt 的时候获取就是 linux irq 才对
+  - [x] 分析一下，nvme_irq 的 backtrace 开始的时候 vector 是 37, 但是之后，但是到了 nvme_irq 的位置，irq = 24
+    - 可以理解的
+  - [x] 上面的 acpi 的例子 request_threaded_irq 的时候，其使用 irq = 9 来作为索引来获取 desc 的
+    - 分析 apic_update_vector 可以看到, 通过 irq = 9 用于索引出来一个 desc，之后，该 desc 最后赋值给 vector
+
+看一下 interrupt 的展开的全过程
+```c
+/**
+ * idtentry_body - Macro to emit code calling the C function
+ * @cfunc:		C function to be called
+ * @has_error_code:	Hardware pushed error code on stack
+ */
+.macro idtentry_body cfunc has_error_code:req
+
+	call	error_entry // 其中的 error_entry 是用于保存 pt_regs 的上下文的
+	UNWIND_HINT_REGS
+
+	movq	%rsp, %rdi			/* pt_regs pointer into 1st argument*/
+
+	.if \has_error_code == 1
+		movq	ORIG_RAX(%rsp), %rsi	/* get error code into 2nd argument*/
+		movq	$-1, ORIG_RAX(%rsp)	/* no syscall to restart */
+	.endif
+
+	call	\cfunc
+
+	jmp	error_return
+.endm
+
+/**
+ * idtentry - Macro to generate entry stubs for simple IDT entries
+ * @vector:		Vector number
+ * @asmsym:		ASM symbol for the entry point
+ * @cfunc:		C function to be called
+ * @has_error_code:	Hardware pushed error code on stack
+ *
+ * The macro emits code to set up the kernel context for straight forward
+ * and simple IDT entries. No IST stack, no paranoid entry checks.
+ */
+.macro idtentry vector asmsym cfunc has_error_code:req
+SYM_CODE_START(\asmsym)
+	UNWIND_HINT_IRET_REGS offset=\has_error_code*8
+	ASM_CLAC
+
+	.if \has_error_code == 0
+		pushq	$-1			/* ORIG_RAX: no syscall to restart */
+	.endif
+
+	.if \vector == X86_TRAP_BP
+		/*
+		 * If coming from kernel space, create a 6-word gap to allow the
+		 * int3 handler to emulate a call instruction.
+		 */
+		testb	$3, CS-ORIG_RAX(%rsp)
+		jnz	.Lfrom_usermode_no_gap_\@
+		.rept	6
+		pushq	5*8(%rsp)
+		.endr
+		UNWIND_HINT_IRET_REGS offset=8
+.Lfrom_usermode_no_gap_\@:
+	.endif
+
+	idtentry_body \cfunc \has_error_code
+
+_ASM_NOKPROBE(\asmsym)
+SYM_CODE_END(\asmsym)
+.endm
+
+/*
+ * Interrupt entry/exit.
+ *
+ + The interrupt stubs push (vector) onto the stack, which is the error_code
+ * position of idtentry exceptions, and jump to one of the two idtentry points
+ * (common/spurious).
+ *
+ * common_interrupt is a hotpath, align it to a cache line
+ */
+.macro idtentry_irq vector cfunc
+	.p2align CONFIG_X86_L1_CACHE_SHIFT
+	idtentry \vector asm_\cfunc \cfunc has_error_code=1
+.endm
+
+/* Entries for common/spurious (device) interrupts */
+#define DECLARE_IDTENTRY_IRQ(vector, func)				\
+	idtentry_irq vector func
+
+/* Device interrupts common/spurious */
+DECLARE_IDTENTRY_IRQ(X86_TRAP_OTHER,	common_interrupt);
+#ifdef CONFIG_X86_LOCAL_APIC
+DECLARE_IDTENTRY_IRQ(X86_TRAP_OTHER,	spurious_interrupt);
+#endif
+
+/*
+ * On syscall entry, this is syscall#. On CPU exception, this is error code.
+ * On hw interrupt, it's IRQ number:
+ */
+#define ORIG_RAX 120
+```
+回忆一下 ucore 的设计，实际上，hw interrupt 的 error_code 是自己 push 进去的
+
+- [x] asm_common_interrupt : 利用 macro idtentry 实现定义的
+- [x] idt_setup_apic_and_irq_gates : 设置 idt 的跳转位置为 asm_common_interrupt
+
+好的，总体来说, CPU 这边直接获取的就是 linux irq
+
+再次回忆 Understanding, 忽然可以理解为什么 irq_matrix_alloc 的开始位置是 0x20 了
+
+-  所以 ioapic 的编码是如何进行的
+  - 当在 qemu 中间调用 gsi_handler 的 gsi 数值就是 kernel 中的 linux irq 的数值, 也就是 /proc/interrupts
+  - ioapic 中编码从 gsi 到 vector 的操作就是发生在 : ioapic_configure_entry : 给定一定 gsi ，知道其 vector 最后编码上去
+  - ioapic 之类的和 Loongarch 的中断控制器还是非常不一样的啊
 
 ## [ ] tcg apic
 
@@ -940,8 +1129,159 @@ apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的�
 - [x] 当中断的处理函数中间，是否存在检测分析 isr 从而知道是那个中断的函数
   - DEFINE_IDTENTRY_IRQ 的注释说，The vector number is pushed by the low level entry stub
 
-
 破案了，原来是 ioapic_entry_parse 将 ioapic 的 pin 最后装换为 apic 上的 irr 之类的
+
+## 等待整理的内容
+
+- [ ] 再次反思一下，为什么 x86 kvm 需要奇怪的中断路由机制?
+  - 以及为此制作出来了 gsi 的概念
+  - [ ] 原则上，CPU 只能知道哪一个中断到来了才对, vmcs 记录一下，这就是跳转的位置了
+  - [ ] 为什么会出现 kvm 不知道 os 使用的是哪一个中断控制器?
+
+这个书的太痛苦了，还是使用一下其他的制作方法吧!
+
+coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
+
+## qemu_set_irq 到底做了什么?
+gsi 似乎是总体的入口:
+
+1. 创建
+```c
+GSIState *pc_gsi_create(qemu_irq **irqs, bool pci_enabled)
+{
+    GSIState *s;
+
+    s = g_new0(GSIState, 1);
+    if (kvm_ioapic_in_kernel()) {
+        kvm_pc_setup_irq_routing(pci_enabled);
+    }
+    *irqs = qemu_allocate_irqs(gsi_handler, s, GSI_NUM_PINS);
+
+    return s;
+}
+```
+
+2. 使用
+```c
+void qemu_set_irq(qemu_irq irq, int level)
+{
+    if (!irq)
+        return;
+
+    // 这个 handler 总是 gsi_handler
+    irq->handler(irq->opaque, irq->n, level);
+}
+```
+
+3. 分发
+```c
+void gsi_handler(void *opaque, int n, int level)
+{
+    GSIState *s = opaque;
+
+    trace_x86_gsi_interrupt(n, level);
+    switch (n) {
+    case 0 ... ISA_NUM_IRQS - 1:
+        if (s->i8259_irq[n]) {
+            /* Under KVM, Kernel will forward to both PIC and IOAPIC */
+            qemu_set_irq(s->i8259_irq[n], level);
+        }
+        /* fall through */
+    case ISA_NUM_IRQS ... IOAPIC_NUM_PINS - 1:
+        qemu_set_irq(s->ioapic_irq[n], level);
+        break;
+    case IO_APIC_SECONDARY_IRQBASE
+        ... IO_APIC_SECONDARY_IRQBASE + IOAPIC_NUM_PINS - 1:
+        qemu_set_irq(s->ioapic2_irq[n - IO_APIC_SECONDARY_IRQBASE], level);
+        break;
+    }
+}
+```
+
+```c
+typedef struct GSIState {
+    qemu_irq i8259_irq[ISA_NUM_IRQS];
+    qemu_irq ioapic_irq[IOAPIC_NUM_PINS];
+    qemu_irq ioapic2_irq[IOAPIC_NUM_PINS];
+} GSIState;
+```
+
+- pc_i8259_create
+  - kvm_i8259_init
+    - i8259_init_chip : 创建主从两个设备，映射地址空间, 在 `info mtree` 中可以看到 `kvm-pic` 和 `kvm-elcr`
+      - `qemu_allocate_irqs(kvm_pic_set_irq, NULL, ISA_NUM_IRQS);`
+        - 因此注册的 handler 就是 kvm_pic_set_irq 了, 其会调用 kvm 的接口
+- ioapic_init_gsi : 这个地方是唯一对于 GSIState 进行赋值的位置了
+  - 中间利用 gpio 的框架，最后注册的 handler 就是 kvm_ioapic_set_irq 了
+
+## [x] 键盘的中断是如何注入的
+参考 ./hack/qemu/internals/i8042.md
+
+## [x] qemu 如何知道 e1000 的中断号
+首先，可以清楚的知道 e1000 使用的就是 10 号作为 IRQ
+```c
+/*
+─── Variables ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+arg opaque = 0x555556bc5080, irq = 10, level = 1
+loc s = 0x0: Cannot access memory at address 0x0, common = 0x1ffffcdee: Cannot access memory at address 0x1ffffcdee, delivered = 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+>>> bt
+#0  kvm_ioapic_set_irq (opaque=0x555556bc5080, irq=10, level=1) at ../hw/i386/kvm/ioapic.c:114
+#1  0x0000555555e8c04a in qemu_set_irq (irq=0x555556c176e0, level=1) at ../hw/core/irq.c:46
+#2  0x0000555555b7ca51 in gsi_handler (opaque=0x555556b87600, n=10, level=1) at ../hw/i386/x86.c:600
+#3  0x0000555555e8c04a in qemu_set_irq (irq=0x555556b8e1c0, level=1) at ../hw/core/irq.c:46
+#4  0x0000555555999b69 in piix3_set_irq_pic (piix3=0x555556c6f720, pic_irq=10) at ../hw/isa/piix3.c:44
+#5  0x0000555555999c72 in piix3_set_irq_level (piix3=0x555556c6f720, pirq=2, level=1) at ../hw/isa/piix3.c:76
+#6  0x0000555555999ca9 in piix3_set_irq (opaque=0x555556c6f720, pirq=2, level=1) at ../hw/isa/piix3.c:82
+#7  0x000055555585f50c in pci_bus_change_irq_level (bus=0x5555570c7800, irq_num=2, change=1) at ../hw/pci/pci.c:266 // 这里还是北桥控制的
+#8  0x000055555585f587 in pci_change_irq_level (pci_dev=0x555557c7d680, irq_num=2, change=1) at ../hw/pci/pci.c:279
+#9  0x0000555555862725 in pci_irq_handler (opaque=0x555557c7d680, irq_num=0, level=1) at ../hw/pci/pci.c:1463
+#10 0x00005555558627f0 in pci_set_irq (pci_dev=0x555557c7d680, level=1) at ../hw/pci/pci.c:1482
+#11 0x0000555555a0ff93 in set_interrupt_cause (s=0x555557c7d680, index=0, val=16) at ../hw/net/e1000.c:333
+#12 0x0000555555a10023 in set_ics (s=0x555557c7d680, index=50, val=16) at ../hw/net/e1000.c:351
+#13 0x0000555555a126aa in e1000_mmio_write (opaque=0x555557c7d680, addr=200, val=16, size=4) at ../hw/net/e1000.c:1309
+#14 0x0000555555c93868 in memory_region_write_accessor (mr=0x555557c7ffa0, addr=200, value=0x7fffd9ff9028, size=4, shift=0, mask=4294967295, attrs=...) at ../softmmu/me
+mory.c:491
+```
+下面分析 IRQ = 10 是怎么得到的?
+
+- [ ] 无法理解 : 为什么 e1000 的中断需要 piix3 参与?
+  - piix3 作为一个南桥芯片
+  - 从 `info qtree` 中间，e1000 和 piix3 是平级的才对啊
+
+```c
+/*
+>>> bt
+#0  pci_bus_irqs (bus=0x555556e19800, set_irq=0x555556b533c0, map_irq=0x555555999b02 <PIIX3_PCI_DEVICE+50>, irq_opaque=0x7fffffffd360, nirq=21845) at ../hw/pci/pci.c:48
+#1  0x000055555599a4d2 in piix3_create (pci_bus=0x5555570d1e00, isa_bus=0x7fffffffd3d0) at ../hw/isa/piix3.c:389
+#2  0x0000555555b56298 in pc_init1 (machine=0x5555569ba000, host_type=0x55555609066a "i440FX-pcihost", pci_type=0x555556090663 "i440FX") at ../hw/i386/pc_piix.c:211
+#3  0x0000555555b56bea in pc_init_v6_0 (machine=0x5555569ba000) at ../hw/i386/pc_piix.c:427
+#4  0x0000555555b3840f in machine_run_board_init (machine=0x5555569ba000) at ../hw/core/machine.c:1232
+#5  0x0000555555d2fd9a in qemu_init_board () at ../softmmu/vl.c:2514
+#6  0x0000555555d2ff79 in qmp_x_exit_preconfig (errp=0x5555567a0d50 <error_fatal>) at ../softmmu/vl.c:2588
+#7  0x0000555555d326c9 in qemu_init (argc=28, argv=0x7fffffffd7d8, envp=0x7fffffffd8c0) at ../softmmu/vl.c:3611
+#8  0x000055555582f3a5 in main (argc=28, argv=0x7fffffffd7d8, envp=0x7fffffffd8c0) at ../softmmu/main.c:49
+```
+
+将 pci_bus_irqs 的参数 bus 还是 i440FX 也就是北桥。
+
+- [ ] irq_opaque 是做啥的
+```c
+void pci_bus_irqs(PCIBus *bus, pci_set_irq_fn set_irq, pci_map_irq_fn map_irq,
+                  void *irq_opaque, int nirq)
+{
+    bus->set_irq = set_irq;
+    bus->map_irq = map_irq;
+    bus->irq_opaque = irq_opaque;
+    bus->nirq = nirq;
+    bus->irq_count = g_malloc0(nirq * sizeof(bus->irq_count[0]));
+}
+```
+
+
+## [ ] 没有看到 msi 的模拟啊 ?
+
+- [ ] 从 pci_default_write_config 的位置分析
 
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf
 [^2]: https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong-duan-xu-ni-hua-kuang-jia-fen-679028-4e0a29.html
