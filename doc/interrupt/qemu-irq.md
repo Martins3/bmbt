@@ -44,6 +44,9 @@
 - volume 3 CHAPTER 10 (ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)): apic
   - 10.8.3.1 Task and Processor Priorities
   - 10.8.5 Signaling Interrupt Servicing Completion : 描述 eoi 的作用
+  - 10.11.1 Message Address Register Format : 描述 MSI 地址的格式, 从中看到一个中断如何发送到特定的 vector 的
+
+coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
 
 ## 一些关键流程
 1. 如何从 ide 走到 apic 的
@@ -261,12 +264,12 @@ kvm_irqchip_create => kvm_arch_irqchip_create 中初始化了 kvm_split_irqchip 
 在 cpu_handle_interrupt 中，会处理几种特殊情况，默认是 `cc->cpu_exec_interrupt(cpu, interrupt_request)`
 也就是 x86_cpu_exec_interrupt, 在这里根据 idt 之类的中断处理需要的地址, 然后跳转过去执行的
 
-## [ ] kvm 中为什么的 irq routing 是做什么的
+## kvm irq routing
 - 为什么需要 irq routing
-  - 一个正常的 x86 主板是不会同时存在 pic 和 apic 的
   - 同时 kvm_vm_ioctl_irq_line 其实是一个标准的接口, arm 对于函数实现就是不需要 irq routing 的操作
       - 所以，当调用 KVM_IRQ_LINE 的时候, 只是需要提供一个中断号
   - kvm 和 QEMU 需要同时支持各种类型的主板，类似一个 kbd 之类的设备其实也不知道具体是和 pic 还是 ioapic 上的, 目前这个处理方法是有效并且最简单的
+  - kvm 不知道 os 使用的是哪一个中断控制器
 
 - kvm_vm_ioctl
   - kvm_vm_ioctl_irq_line
@@ -709,13 +712,20 @@ ioapic_realize 中的初始化，总是 ioapic_set_irq 来作为入口的
 - ioapic_service : 注意 ioapic 也是有 irr 的，当一个引脚上有信号，那么就 irr 数组对应的就会 assert 一下, io apic 的 irr 是在 ioapic_set_irq 里面设置的
   - ioapic_entry_parse : 填充 ioapic_entry_info，实际上就是从 ioredtbl 中解析填充数组，最后构建 MSI 的信息, 其中比较关键是知道了 vector 是什么
 
-通过 ioapic_mem_write 会写这些空间
+通过 ioapic_mem_write 来让软件来编码这些优先级
 
-- [ ] 所以 ioredtbl 中间编码了优先级没有啊
+- [x] 所以 ioredtbl 中间编码了优先级没有啊
+  - 应该是没有的
 
-- [ ] 操作系统可以通过 acpi 知道中断是链接到具体的哪一个 ioapic 的引脚的，但是 ioredtbl 的配置是按照什么规则来的
+- [x] 在 ioapic_service 直接调用 stl_le_phys ，最后是如何选定上一个 CPU 的
+  - 而且 cpu 中的所有的 apic 的地址空间都是相同的，现在模拟设备，从 ioapic 的写地址空间，最后是如何选择出来到底是谁?
+  - cpu_get_current_apic : 当前线程对应的 vcpu 持有的 apic
+  - 对此 ioapic_entry_parse 中的注释的解释是，发送给哪一个 CPU 的事情并不想去考虑
 
-- [ ] irq 的 affinity 如何做到的
+## Linux 内核如何配置 ioapic 的
+在 x86 这一边采用了 gsi 的概念
+gsi，等价于 ioapic 的引脚编号，pic 的引脚编号，linux irq 的
+而 vector 是从 0x20 开始分配的，vector 是 idt 的编号，ioapic 映射从 gsi 到 vector
 
 在 Linux 内核这一侧, 配置 ioapic 也是采用 msi 的方式:
 
@@ -1028,16 +1038,6 @@ apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的�
   - DEFINE_IDTENTRY_IRQ 的注释说，The vector number is pushed by the low level entry stub
 
 破案了，原来是 ioapic_entry_parse 将 ioapic 的 pin 最后装换为 apic 上的 irr 之类的
-
-## 等待整理的内容
-- [ ] 再次反思一下，为什么 x86 kvm 需要奇怪的中断路由机制?
-  - 以及为此制作出来了 gsi 的概念
-  - [ ] 原则上，CPU 只能知道哪一个中断到来了才对, vmcs 记录一下，这就是跳转的位置了
-  - [ ] 为什么会出现 kvm 不知道 os 使用的是哪一个中断控制器?
-
-这个书的太痛苦了，还是使用一下其他的制作方法吧!
-
-coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
 
 ## 键盘的中断是如何注入的
 参考 vn/hack/qemu/internals/i8042.md
