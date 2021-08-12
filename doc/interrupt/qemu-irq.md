@@ -35,39 +35,6 @@
 
 10. level 和 edge 的处理有什么不同, 为什么需要 level 的触发方式
 
-11. 分析这个路径产生的原因是什么:
-```c
-/*
-#0  huxueshi (irq=14) at ../hw/i386/kvm/ioapic.c:112
-#1  insert_counter (irq=14) at ../hw/i386/kvm/ioapic.c:125
-#2  kvm_ioapic_set_irq (opaque=0x555556bec800, irq=14, level=0) at ../hw/i386/kvm/ioapic.c:135
-#3  0x0000555555b92644 in gsi_handler (opaque=0x555556a0e200, n=14, level=0) at ../hw/i386/x86.c:600
-#4  0x0000555555a23e2e in piix3_set_irq_pic (piix3=0x555556a60310, piix3=0x555556a60310, pic_irq=<optimized out>) at ../hw/isa/piix3.c:123
-#5  piix3_write_config (address=<optimized out>, val=<optimized out>, len=<optimized out>, dev=<optimized out>) at ../hw/isa/piix3.c:123
-#6  piix3_write_config (dev=<optimized out>, address=<optimized out>, val=<optimized out>, len=<optimized out>) at ../hw/isa/piix3.c:112
-#7  0x0000555555a34bbb in pci_host_config_write_common (pci_dev=0x555556a60310, addr=96, limit=<optimized out>, val=10, len=1) at ../hw/pci/pci_host.c:83
-#8  0x0000555555cd2661 in memory_region_write_accessor (mr=mr@entry=0x555556a22de0, addr=0, value=value@entry=0x7fffe890d0a8, size=size@entry=1, shift=<optimized out>,
-mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:492
-#9  0x0000555555cceaee in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffe890d0a8, size=size@entry=1, access_size_min=<optimized out>, access_siz
-e_max=<optimized out>, access_fn=access_fn@entry=0x555555cd25d0 <memory_region_write_accessor>, mr=0x555556a22de0, attrs=...) at ../softmmu/memory.c:554
-#10 0x0000555555cd1b97 in memory_region_dispatch_write (mr=mr@entry=0x555556a22de0, addr=0, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softm
-mu/memory.c:1504
-#11 0x0000555555c9c060 in flatview_write_continue (fv=fv@entry=0x7ffe4c043840, addr=addr@entry=3324, attrs=..., ptr=ptr@entry=0x7fffeb180000, len=len@entry=1, addr1=<op
-timized out>, l=<optimized out>, mr=0x555556a22de0) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
-#12 0x0000555555c9c276 in flatview_write (fv=0x7ffe4c043840, addr=addr@entry=3324, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb180000, len=len@entry=1) at ../softmmu/p
-hysmem.c:2818
-#13 0x0000555555c9ef46 in address_space_write (as=0x555556606a40 <address_space_io>, addr=addr@entry=3324, attrs=..., buf=0x7fffeb180000, len=len@entry=1) at ../softmmu
-/physmem.c:2910
-#14 0x0000555555c9efde in address_space_rw (as=<optimized out>, addr=addr@entry=3324, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=1, is_write=is_writ
-e@entry=true) at ../softmmu/physmem.c:2920
-#15 0x0000555555c8ecb9 in kvm_handle_io (count=1, size=1, direction=<optimized out>, data=<optimized out>, attrs=..., port=3324) at ../accel/kvm/kvm-all.c:2632
-#16 kvm_cpu_exec (cpu=cpu@entry=0x555556b030d0) at ../accel/kvm/kvm-all.c:2883
-#17 0x0000555555cf17f5 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556b030d0) at ../accel/kvm/kvm-accel-ops.c:49
-#18 0x0000555555e55953 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#19 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#20 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
 ## 备忘
 - tcg_handle_interrupt /  x86_cpu_exec_interrupt 的功能区别:
   - 前者: 让执行线程退出，去检查 interrupt
