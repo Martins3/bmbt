@@ -19,12 +19,6 @@
     - 还有一个让人很烦的 gsi 的定义啊, 为什么一个中断号需要注入两次啊
     - [ ] 对于用户态提供的接口是什么?
 
-5. 那么 tcg 处理中断的流程是什么 ?
-
-2. 从 ioapic 如何到 lapic 的
-- [ ] 其实，irq routing 还是不明不白的
-- [ ] 思考一下在 bmbt 中间的设计
-
 6. MSI : 以后再说
 
 7. 能不能只是模拟 pic 啊，又不是不能用 ?
@@ -43,6 +37,7 @@
 ## TODO
 - [ ] pc_machine_reset
 - 补充材料 : ioapic 如何知道中断源头 : https://stackoverflow.com/questions/57704146/how-to-figure-out-the-interrupt-source-on-i-o-apic
+
 
 ## intel 手册知识准备
 - volume 3 CHAPTER 6 (INTERRUPT AND EXCEPTION HANDLING) : 从 CPU 的角度描述了中断的处理过程
@@ -449,68 +444,6 @@ static void kbd_update_irq_lines(KBDState *s)
     qemu_set_irq(s->irq_mouse, irq_mouse_level);
 }
 ```
-
-
-每一次键盘对应的调用两次函数:
-```c
-/*
-#0  kbd_update_irq_lines (s=0x555556844d98) at ../hw/input/pckbd.c:144
-#1  0x00005555559f5b9b in ps2_put_keycode (opaque=0x555556d28f20, keycode=<optimized out>) at ../hw/input/ps2.c:277
-#2  0x00005555559f5e05 in ps2_keyboard_event (dev=0x555556d28f20, src=<optimized out>, evt=<optimized out>) at ../hw/input/ps2.c:478
-#3  0x0000555555a35f88 in qemu_input_event_send_impl (src=0x55555668ffb0, evt=0x555556e5ad40) at ../ui/input.c:349
-#4  0x0000555555a368eb in qemu_input_event_send_key (src=0x55555668ffb0, key=0x555556d3fcc0, down=<optimized out>) at ../ui/input.c:422
-#5  0x0000555555a36946 in qemu_input_event_send_key_qcode (src=<optimized out>, q=q@entry=Q_KEY_CODE_R, down=down@entry=true) at ../ui/input.c:444
-#6  0x000055555595afea in qkbd_state_key_event (down=<optimized out>, qcode=Q_KEY_CODE_R, kbd=0x555556a42c10) at ../ui/kbd-state.c:102
-#7  qkbd_state_key_event (kbd=0x555556a42c10, qcode=qcode@entry=Q_KEY_CODE_R, down=<optimized out>) at ../ui/kbd-state.c:40
-#8  0x0000555555b4cb23 in gd_key_event (widget=<optimized out>, key=0x555556971e40, opaque=0x555556b24d70) at ../ui/gtk.c:1112
-#9  0x00007ffff78dd4fb in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#10 0x00007ffff7077802 in g_closure_invoke () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#11 0x00007ffff708b814 in  () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#12 0x00007ffff709647d in g_signal_emit_valist () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#13 0x00007ffff70970f3 in g_signal_emit () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#14 0x00007ffff7887c23 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#15 0x00007ffff78a95db in gtk_window_propagate_key_event () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#16 0x00007ffff78ad873 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#17 0x00007ffff78dd5ef in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#18 0x00007ffff7077a56 in  () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#19 0x00007ffff7095df1 in g_signal_emit_valist () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#20 0x00007ffff70970f3 in g_signal_emit () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
-#21 0x00007ffff7887c23 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#22 0x00007ffff77431df in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#23 0x00007ffff77453db in gtk_main_do_event () at /lib/x86_64-linux-gnu/libgtk-3.so.0
-#24 0x00007ffff742df79 in  () at /lib/x86_64-linux-gnu/libgdk-3.so.0
-#25 0x00007ffff7461106 in  () at /lib/x86_64-linux-gnu/libgdk-3.so.0
-#26 0x00007ffff6f8c17d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#27 0x0000555555e4ce88 in glib_pollfds_poll () at ../util/main-loop.c:232
-#28 os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
-#29 main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
-#30 0x0000555555c58261 in qemu_main_loop () at ../softmmu/runstate.c:726
-#31 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
-*/
-```
-
-```c
-/*
-#0  kbd_update_irq_lines (s=0x555556844d98) at ../hw/input/pckbd.c:144
-#1  0x00005555559ab077 in kbd_deassert_irq (s=0x555556844d98) at ../hw/input/pckbd.c:165
-#2  kbd_read_data (opaque=0x555556844d98, addr=<optimized out>, size=<optimized out>) at ../hw/input/pckbd.c:387
-#3  0x0000555555cd2092 in memory_region_read_accessor (mr=mr@entry=0x555556844df0, addr=0, value=value@entry=0x7fffd9ff9130, size=size@entry=1, shift=0, mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:440
-#4  0x0000555555cceb1e in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffd9ff9130, size=size@entry=1, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=0x555555cd2050 <memory_region_read_accessor>, mr=0x555556844df0, attrs=...) at ../softmmu/memory.c:554
-#5  0x0000555555cd1ac1 in memory_region_dispatch_read1 (attrs=..., size=<optimized out>, pval=0x7fffd9ff9130, addr=0, mr=0x555556844df0) at ../softmmu/memory.c:1424
-#6  memory_region_dispatch_read (mr=mr@entry=0x555556844df0, addr=0, pval=pval@entry=0x7fffd9ff9130, op=MO_8, attrs=attrs@entry=...) at ../softmmu/memory.c:1452
-#7  0x0000555555c9eb89 in flatview_read_continue (fv=fv@entry=0x7ffe4402d230, addr=addr@entry=96, attrs=..., ptr=ptr@entry=0x7fffeb17d000, len=len@entry=1, addr1=<optimized out>, l=<optimized out>, mr=0x555556844df0) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
-#8  0x0000555555c9ed43 in flatview_read (fv=0x7ffe4402d230, addr=addr@entry=96, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb17d000, len=len@entry=1) at ../softmmu/physmem.c:2881
-#9  0x0000555555c9ee96 in address_space_read_full (as=0x555556606880 <address_space_io>, addr=96, attrs=..., buf=0x7fffeb17d000, len=1) at ../softmmu/physmem.c:2894
-#10 0x0000555555c9f015 in address_space_rw (as=<optimized out>, addr=addr@entry=96, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=1, is_write=is_write@entry=false) at ../softmmu/physmem.c:2922
-#11 0x0000555555c8ece9 in kvm_handle_io (count=1, size=1, direction=<optimized out>, data=<optimized out>, attrs=..., port=96) at ../accel/kvm/kvm-all.c:2635
-#12 kvm_cpu_exec (cpu=cpu@entry=0x555556af4410) at ../accel/kvm/kvm-all.c:2886
-#13 0x0000555555cf1825 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556af4410) at ../accel/kvm/kvm-accel-ops.c:49
-#14 0x0000555555e55983 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#15 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#16 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-*/
-```
-- [ ] **根本无法理解为什么 kvm 那一边还是会到来一个中断啊**
 
 2. 键盘中断如何初始化的 KBDState::irq_kbd 以及 KBDState::irq_mouse
 
@@ -1108,6 +1041,66 @@ coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
 
 ## 键盘的中断是如何注入的
 参考 vn/hack/qemu/internals/i8042.md
+
+每一次键盘对应的调用两次函数:
+```c
+/*
+#0  kbd_update_irq_lines (s=0x555556844d98) at ../hw/input/pckbd.c:144
+#1  0x00005555559f5b9b in ps2_put_keycode (opaque=0x555556d28f20, keycode=<optimized out>) at ../hw/input/ps2.c:277
+#2  0x00005555559f5e05 in ps2_keyboard_event (dev=0x555556d28f20, src=<optimized out>, evt=<optimized out>) at ../hw/input/ps2.c:478
+#3  0x0000555555a35f88 in qemu_input_event_send_impl (src=0x55555668ffb0, evt=0x555556e5ad40) at ../ui/input.c:349
+#4  0x0000555555a368eb in qemu_input_event_send_key (src=0x55555668ffb0, key=0x555556d3fcc0, down=<optimized out>) at ../ui/input.c:422
+#5  0x0000555555a36946 in qemu_input_event_send_key_qcode (src=<optimized out>, q=q@entry=Q_KEY_CODE_R, down=down@entry=true) at ../ui/input.c:444
+#6  0x000055555595afea in qkbd_state_key_event (down=<optimized out>, qcode=Q_KEY_CODE_R, kbd=0x555556a42c10) at ../ui/kbd-state.c:102
+#7  qkbd_state_key_event (kbd=0x555556a42c10, qcode=qcode@entry=Q_KEY_CODE_R, down=<optimized out>) at ../ui/kbd-state.c:40
+#8  0x0000555555b4cb23 in gd_key_event (widget=<optimized out>, key=0x555556971e40, opaque=0x555556b24d70) at ../ui/gtk.c:1112
+#9  0x00007ffff78dd4fb in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#10 0x00007ffff7077802 in g_closure_invoke () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#11 0x00007ffff708b814 in  () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#12 0x00007ffff709647d in g_signal_emit_valist () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#13 0x00007ffff70970f3 in g_signal_emit () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#14 0x00007ffff7887c23 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#15 0x00007ffff78a95db in gtk_window_propagate_key_event () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#16 0x00007ffff78ad873 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#17 0x00007ffff78dd5ef in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#18 0x00007ffff7077a56 in  () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#19 0x00007ffff7095df1 in g_signal_emit_valist () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#20 0x00007ffff70970f3 in g_signal_emit () at /lib/x86_64-linux-gnu/libgobject-2.0.so.0
+#21 0x00007ffff7887c23 in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#22 0x00007ffff77431df in  () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#23 0x00007ffff77453db in gtk_main_do_event () at /lib/x86_64-linux-gnu/libgtk-3.so.0
+#24 0x00007ffff742df79 in  () at /lib/x86_64-linux-gnu/libgdk-3.so.0
+#25 0x00007ffff7461106 in  () at /lib/x86_64-linux-gnu/libgdk-3.so.0
+#26 0x00007ffff6f8c17d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#27 0x0000555555e4ce88 in glib_pollfds_poll () at ../util/main-loop.c:232
+#28 os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#29 main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#30 0x0000555555c58261 in qemu_main_loop () at ../softmmu/runstate.c:726
+#31 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+*/
+```
+
+```c
+/*
+#0  kbd_update_irq_lines (s=0x555556844d98) at ../hw/input/pckbd.c:144
+#1  0x00005555559ab077 in kbd_deassert_irq (s=0x555556844d98) at ../hw/input/pckbd.c:165
+#2  kbd_read_data (opaque=0x555556844d98, addr=<optimized out>, size=<optimized out>) at ../hw/input/pckbd.c:387
+#3  0x0000555555cd2092 in memory_region_read_accessor (mr=mr@entry=0x555556844df0, addr=0, value=value@entry=0x7fffd9ff9130, size=size@entry=1, shift=0, mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:440
+#4  0x0000555555cceb1e in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffd9ff9130, size=size@entry=1, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=0x555555cd2050 <memory_region_read_accessor>, mr=0x555556844df0, attrs=...) at ../softmmu/memory.c:554
+#5  0x0000555555cd1ac1 in memory_region_dispatch_read1 (attrs=..., size=<optimized out>, pval=0x7fffd9ff9130, addr=0, mr=0x555556844df0) at ../softmmu/memory.c:1424
+#6  memory_region_dispatch_read (mr=mr@entry=0x555556844df0, addr=0, pval=pval@entry=0x7fffd9ff9130, op=MO_8, attrs=attrs@entry=...) at ../softmmu/memory.c:1452
+#7  0x0000555555c9eb89 in flatview_read_continue (fv=fv@entry=0x7ffe4402d230, addr=addr@entry=96, attrs=..., ptr=ptr@entry=0x7fffeb17d000, len=len@entry=1, addr1=<optimized out>, l=<optimized out>, mr=0x555556844df0) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
+#8  0x0000555555c9ed43 in flatview_read (fv=0x7ffe4402d230, addr=addr@entry=96, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb17d000, len=len@entry=1) at ../softmmu/physmem.c:2881
+#9  0x0000555555c9ee96 in address_space_read_full (as=0x555556606880 <address_space_io>, addr=96, attrs=..., buf=0x7fffeb17d000, len=1) at ../softmmu/physmem.c:2894
+#10 0x0000555555c9f015 in address_space_rw (as=<optimized out>, addr=addr@entry=96, attrs=..., attrs@entry=..., buf=<optimized out>, len=len@entry=1, is_write=is_write@entry=false) at ../softmmu/physmem.c:2922
+#11 0x0000555555c8ece9 in kvm_handle_io (count=1, size=1, direction=<optimized out>, data=<optimized out>, attrs=..., port=96) at ../accel/kvm/kvm-all.c:2635
+#12 kvm_cpu_exec (cpu=cpu@entry=0x555556af4410) at ../accel/kvm/kvm-all.c:2886
+#13 0x0000555555cf1825 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556af4410) at ../accel/kvm/kvm-accel-ops.c:49
+#14 0x0000555555e55983 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#15 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#16 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+*/
+```
 
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf
 [^2]: https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong-duan-xu-ni-hua-kuang-jia-fen-679028-4e0a29.html
