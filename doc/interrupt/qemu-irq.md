@@ -721,7 +721,7 @@ struct KVMIOAPICState {
   - pic_irq_request
   - ioapic_set_irq
 
-和 kvm 非常类似，在系统启动之后，逐渐抛弃使用 pic
+和 kvm 非常类似，在系统启动之后，抛弃使用 pic
 具体表现为 apic_accept_pic_intr 的这个判断失败
 
 - [x] 找到对应的源代码位置, 将 apic_accept_pic_intr disabled 的
@@ -739,8 +739,6 @@ struct KVMIOAPICState {
 #6  0x000055555596493e in pic_set_irq (opaque=0x555556999520, irq=<optimized out>, level=1) at ../hw/intc/i8259.c:156
 #7  0x0000555555b92634 in gsi_handler (opaque=0x555556adfc30, n=0, level=1) at ../hw/i386/x86.c:596
 ```
-
-- apic_accept_pic_intr : 不一定会接受 pic 的 intr 的
 
 > The local APIC is enabled at boot-time and can be disabled by clearing bit 11 of the IA32_APIC_BASE Model Specific Register (MSR). [^3]
 
@@ -1109,7 +1107,7 @@ apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的�
 
 coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
 
-## qemu_set_irq 到底做了什么?
+## qemu_set_irq 到底做了什么
 gsi 似乎是总体的入口:
 
 1. 创建
@@ -1246,7 +1244,7 @@ void pci_bus_irqs(PCIBus *bus, pci_set_irq_fn set_irq, pci_map_irq_fn map_irq,
 ```
 
 
-## [ ] 没有看到 msi 的模拟啊 ?
+## [ ] 没有看到 msi 的模拟啊
 
 - [ ] 从 pci_default_write_config 的位置分析
 
