@@ -1,5 +1,7 @@
 # pci
 
+1. 中断的设计: 实现中断在 PCI 中路由到 ioapic 中的操作
+
 
 ## 资料
 
@@ -21,6 +23,8 @@
 - [ ] 能不能不要让其探测出来 piix3 ，如此一了百了
   - 使用其他的方法来模拟 piix3 的功能
 
+- [ ] piix3 和 isa 总线是什么关系 ?
+  - piix3 是一个 PCI 设备
 
 在我们的设想当中，pci 设备都是可以进行穿透的，还是存在很多需要考虑的问题, 比如
 - [ ] 如果提供 piix3 / piix4 等虚拟设备，如何处理
@@ -128,6 +132,8 @@ static void piix_isa_bridge_setup(struct pci_device *pci, void *arg)
 - [ ] kvm 为何无需考虑 eclr 这个东西啊
 
 ## [ ] 中断在 piix3 中的工作方式
+- [ ] 当前的分析都是基于 nomsi 的，并不知道采用 msi 之后有什么区别
+
 - nvme_irq_check
   - nvme_irq_check
     - pci_irq_assert
@@ -147,60 +153,6 @@ static void piix_isa_bridge_setup(struct pci_device *pci, void *arg)
               - pci_bus_change_irq_level
                 - PCIBus::set_irq : 根据当前的机器配置，注册的是 piix3_set_irq
 
-              
-2. 看来 pci 设备发送都是需要经过的 piix3 的
-```c
-/*
-#0  piix3_set_irq (opaque=0x555556a1ee20, pirq=2, level=0) at ../hw/isa/piix3.c:79
-#1  0x0000555555b5e754 in mac_icr_read (s=<optimized out>, index=<optimized out>) at ../hw/net/e1000.c:1083
-#2  0x0000555555b5d32e in e1000_mmio_read (opaque=<optimized out>, addr=<optimized out>, size=<optimized out>) at ../hw/net/e1000.c:1351
-#3  0x0000555555cd20c2 in memory_region_read_accessor (mr=mr@entry=0x555557a510d0, addr=192, value=value@entry=0x7fffd9ff9130, size=size@entry=4, shift=0, mask=mask@entry=4294967295, attrs=...) at ../softmmu/memory.c:440
-#4  0x0000555555cceb4e in access_with_adjusted_size (addr=addr@entry=192, value=value@entry=0x7fffd9ff9130, size=size@entry=4, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=0x555555cd2080 <memory_region_read_accessor>, mr=0x555557a510d0, attrs=...) at ../softmmu/memory.c:554
-#5  0x0000555555cd1af1 in memory_region_dispatch_read1 (attrs=..., size=<optimized out>, pval=0x7fffd9ff9130, addr=192, mr=0x555557a510d0) at ../softmmu/memory.c:1424
-#6  memory_region_dispatch_read (mr=mr@entry=0x555557a510d0, addr=192, pval=pval@entry=0x7fffd9ff9130, op=MO_32, attrs=attrs@entry=...) at ../softmmu/memory.c:1452
-#7  0x0000555555c9ebb9 in flatview_read_continue (fv=fv@entry=0x7ffe4c0fefb0, addr=addr@entry=4273733824, attrs=..., ptr=ptr@entry=0x7fffeb17c028, len=len@entry=4, addr 1=<optimized out>, l=<optimized out>, mr=0x555557a510d0) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
-#8  0x0000555555c9ed73 in flatview_read (fv=0x7ffe4c0fefb0, addr=addr@entry=4273733824, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb17c028, len=len@entry=4) at ../softmmu/physmem.c:2881
-#9  0x0000555555c9eec6 in address_space_read_full (as=0x5555566079e0 <address_space_memory>, addr=4273733824, attrs=..., buf=0x7fffeb17c028, len=4) at ../softmmu/physmem.c:2894
-#10 0x0000555555c9f045 in address_space_rw (as=<optimized out>, addr=<optimized out>, attrs=..., attrs@entry=..., buf=buf@entry=0x7fffeb17c028, len=<optimized out>, is_write=<optimized out>) at ../softmmu/physmem.c:2922
-#11 0x0000555555c8ec96 in kvm_cpu_exec (cpu=cpu@entry=0x555556bd6c00) at ../accel/kvm/kvm-all.c:2893
-#12 0x0000555555cf1855 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556bd6c00) at ../accel/kvm/kvm-accel-ops.c:49
-#13 0x0000555555e559b3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#14 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#15 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
-3. 
-```c
-/*
-#0  piix3_set_irq (opaque=0x555556a1ee20, pirq=2, level=1) at ../hw/isa/piix3.c:79
-#1  0x0000555555b5f610 in set_ics (val=<optimized out>, index=0, s=0x555557a4e750) at ../hw/net/e1000.c:1031
-#2  e1000_receive_iov (nc=<optimized out>, iov=0x7ffffffed1a0, iovcnt=<optimized out>) at ../hw/net/e1000.c:1031
-#3  0x000055555595c623 in qemu_deliver_packet_iov (sender=<optimized out>, opaque=0x555556d3d120, iovcnt=1, iov=0x7ffffffed190, flags=0) at ../net/net.c:762
-#4  qemu_deliver_packet_iov (sender=<optimized out>, flags=0, iov=0x7ffffffed190, iovcnt=1, opaque=0x555556d3d120) at ../net/net.c:743
-#5  0x0000555555b6442c in qemu_net_queue_deliver_iov (iovcnt=1, iov=0x7ffffffed190, flags=0, sender=0x555556a27460, queue=0x555556d3d2a0) at ../net/queue.c:179
-#6  qemu_net_queue_send_iov (queue=0x555556d3d2a0, sender=0x555556a27460, flags=0, iov=0x7ffffffed190, iovcnt=1, sent_cb=0x0) at ../net/queue.c:246
-#7  0x0000555555adc9bb in net_hub_receive_iov (hub=<optimized out>, iovcnt=1, iov=0x7ffffffed190, source_port=0x555556a27c50) at ../net/hub.c:74
-#8  net_hub_port_receive_iov (nc=0x555556a27c50, iov=0x7ffffffed190, iovcnt=1) at ../net/hub.c:125
-#9  0x000055555595c623 in qemu_deliver_packet_iov (sender=<optimized out>, opaque=0x555556a27c50, iovcnt=1, iov=0x7ffffffed190, flags=0) at ../net/net.c:762
-#10 qemu_deliver_packet_iov (sender=<optimized out>, flags=0, iov=0x7ffffffed190, iovcnt=1, opaque=0x555556a27c50) at ../net/net.c:743
-#11 0x0000555555b6436b in qemu_net_queue_deliver (size=110, data=0x7ffffffed310 "33", flags=0, sender=0x5555569fe310, queue=0x555556706890) at ../net/queue.c:164
-#12 qemu_net_queue_send (queue=0x555556706890, sender=sender@entry=0x5555569fe310, flags=flags@entry=0, data=data@entry=0x7ffffffed310 "33", size=size@entry=110, sent_cb=sent_cb@entry=0x0) at ../net/queue.c:221
-#13 0x000055555595c84c in qemu_send_packet_async_with_flags (sender=0x5555569fe310, flags=0, buf=0x7ffffffed310 "33", size=<optimized out>, sent_cb=0x0) at ../net/net.c:671
-#14 0x0000555555aca88f in net_slirp_send_packet (pkt=0x7ffffffed310, pkt_len=110, opaque=0x5555569fe310) at ../net/slirp.c:129
-#15 0x0000555555e84661 in slirp_send_packet_all (slirp=<optimized out>, buf=<optimized out>, len=110) at ../slirp/src/slirp.c:1181
-#16 0x0000555555e84be5 in if_encap (slirp=slirp@entry=0x555556d57770, ifm=ifm@entry=0x555557c3b300) at ../slirp/src/slirp.c:985
-#17 0x0000555555e8fb8f in if_start (slirp=0x555556d57770) at ../slirp/src/if.c:183
-#18 0x0000555555e8fd70 in if_output (so=so@entry=0x0, ifm=ifm@entry=0x555557c3b300) at ../slirp/src/if.c:128
-#19 0x0000555555e9122b in ip6_output (so=so@entry=0x0, m=m@entry=0x555557c3b300, fast=fast@entry=0) at ../slirp/src/ip6_output.c:35
-#20 0x0000555555e90360 in ndp_send_ra (slirp=0x555556d57770) at ../slirp/src/ip6_icmp.c:213
-#21 0x0000555555e6fe38 in timerlist_run_timers (timer_list=0x555556708070) at ../util/qemu-timer.c:573
-#22 timerlist_run_timers (timer_list=0x555556708070) at ../util/qemu-timer.c:498
-#23 0x0000555555e70047 in qemu_clock_run_all_timers () at ../util/qemu-timer.c:669
-#24 0x0000555555e4ce89 in main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:542
-#25 0x0000555555c582f1 in qemu_main_loop () at ../softmmu/runstate.c:726
-#26 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
-```
-
 ## piix4
 piix4 只是 piix3 的升级版本而已，但是不采用这个东西
 
@@ -209,9 +161,61 @@ piix4 只是 piix3 的升级版本而已，但是不采用这个东西
   - 仅仅是在 configs/devices/mips-softmmu/common.mak 中存在的 CONFIG_PIIX4
   - 但是 build/x86_64-softmmu-config-devices.h 中，并没有配置
 
-## i440fx
-- [ ] 为什么 nvme 的中断最后不是经过 i440fx 的，这才是 pci hub 的啊
+实际上，对于 piix3 和 piix4 在 QEMU 中的地位不是可以随意配置替换的，从 pc_init1 中直接硬编码调用 piix3_create 就可见一斑
 
+## i440fx 需要被模拟吗 ?
+- [ ] 为什么 nvme 的中断最后不是经过 i440fx 的，这才是 pci hub 的啊
+- 应该只是需要处理相当少的内容的吧!
+
+
+## PCI 中断的一般过程
+1. 在 hw/isa/piix3.c 中实际上，将 PCIBus 的中断功能就是交给 piix3 实现了
+2. 通过 piix3 实际上控制着 pci 中断的 level 的，体现在 piix3_write_config
+    - 暂时无法理解 piix3_write_config 在修改 level 之后需要将 pic 的所有中断全部 raise 一遍
+    - [ ] 修改这些的时候 level，我相信整个 CPU 都是屏蔽中断的
+
+```c
+struct PCIBus {
+    BusState qbus;
+    enum PCIBusFlags flags;
+    PCIIOMMUFunc iommu_fn;
+    void *iommu_opaque;
+    uint8_t devfn_min;
+    uint32_t slot_reserved_mask;
+    pci_set_irq_fn set_irq;
+    pci_map_irq_fn map_irq;
+    pci_route_irq_fn route_intx_to_irq;
+    void *irq_opaque;
+    PCIDevice *devices[PCI_SLOT_MAX * PCI_FUNC_MAX];
+    PCIDevice *parent_dev;
+    MemoryRegion *address_space_mem;
+    MemoryRegion *address_space_io;
+
+    QLIST_HEAD(, PCIBus) child; /* this will be replaced by qdev later */
+    QLIST_ENTRY(PCIBus) sibling;/* this will be replaced by qdev later */
+
+    /* The bus IRQ state is the logical OR of the connected devices.
+       Keep a count of the number of devices with raised IRQs.  */
+    int nirq;
+    int *irq_count;
+
+    Notifier machine_done;
+};
+```
+
+- [ ] map_irq 是什么作用?
+```c
+/*
+ * Return the global irq number corresponding to a given device irq
+ * pin. We could also use the bus number to have a more precise mapping.
+ */
+static int pci_slot_get_pirq(PCIDevice *pci_dev, int pci_intx)
+{
+    int slot_addend;
+    slot_addend = PCI_SLOT(pci_dev->devfn) - 1;
+    return (pci_intx + slot_addend) & 3;
+}
+```
 
 [^1]: https://stackoverflow.com/questions/52136259/how-to-access-pci-express-configuration-space-via-mmio
 [^2]: https://en.wikipedia.org/wiki/Intel_8259
