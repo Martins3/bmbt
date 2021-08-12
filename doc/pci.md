@@ -1,12 +1,10 @@
 # pci
-
 1. 中断的设计: 实现中断在 PCI 中路由到 ioapic 中的操作
-
 
 ## 资料
 
 - lspci
-```
+```txt
 00:00.0 Host bridge: Intel Corporation 440FX - 82441FX PMC [Natoma] (rev 02)
 00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA [Natoma/Triton II]
 00:01.1 IDE interface: Intel Corporation 82371SB PIIX3 IDE [Natoma/Triton II]
@@ -163,7 +161,7 @@ piix4 只是 piix3 的升级版本而已，但是不采用这个东西
 
 实际上，对于 piix3 和 piix4 在 QEMU 中的地位不是可以随意配置替换的，从 pc_init1 中直接硬编码调用 piix3_create 就可见一斑
 
-## i440fx 需要被模拟吗 ?
+## i440fx 需要被模拟吗
 - [ ] 为什么 nvme 的中断最后不是经过 i440fx 的，这才是 pci hub 的啊
 - 应该只是需要处理相当少的内容的吧!
 
