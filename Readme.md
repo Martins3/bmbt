@@ -40,6 +40,9 @@ host 的软件栈无法移除掉。还有一个就是 QEMU 实际上为了处理
 - https://github.com/wbenny/hvpp/blob/master/README.md :  使用 Window 驱动, 用 C++ 写的一个 hypervisor, 可以理解为一个简单的 kvm
 - https://github.com/tandasat/MiniVisorPkg : 使用 UEFI driver 来构建 hypervisor
 
+## 一些参考的文章
+- [ ] HyperMAMBO-X64: Using Virtualization to Support High-Performance Transparent Binary Translation
+
 ## QA
 1. 为什么需要将 TCG engine 移植过来
     - 因为 helper 函数需要

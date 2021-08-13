@@ -1,4 +1,4 @@
-下面的代码暂时分析基于 v6.1.0-rc2
+下面的代码暂时分析基于 v6.1.0-rc2 的 x64
 ## 挑战
 1. 当前的 QEMU 中间，时钟中断是采用现有设施的
     1. 因为 timer 线程是单独的线程，所以 CPU_INTERRUPT_POLL 来处理, 显然 BMBT 没有那么多的线程
@@ -9,10 +9,6 @@
 
 2. 如果 cpu_handle_exception 失败之后，这会导致 cpu_exec 函数退出，之后如何处理 ?
     - 退出的原因应该都是外部原因，`cpu->exception_index >= EXCP_INTERRUPT` 和  reply ，目前似乎不用过于考虑
-
-8. 在进入 kernel 之前，似乎只是 QEMU 启动的时候，gsi_handler 似乎被调用数次，是因为初始化的原因，还是因为 seabios 调用的
-
-9. 在 seabios 中，会处理中断吗 ?
 
 10. level 和 edge 的处理有什么不同, 为什么需要 level 的触发方式
 
@@ -30,7 +26,8 @@
 - volume 3 CHAPTER 6 (INTERRUPT AND EXCEPTION HANDLING) : 从 CPU 的角度描述了中断的处理过程
 - volume 3 CHAPTER 10 (ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)): apic
   - 10.8.3.1 Task and Processor Priorities
-  - 10.8.5 Signaling Interrupt Servicing Completion : 描述 eoi 的作用
+  - 10.8.4 Interrupt Acceptance for Fixed Interrupts : irr 表示 apic 接受的中断，isr 表示正在处理的中断
+  - 10.8.5 Signaling Interrupt Servicing Completion : 描述 eoi 的作用, 软件写 eoi，然后就从 isr 中可以获取下一个需要处理的中断
   - 10.11.1 Message Address Register Format : 描述 MSI 地址的格式, 从中看到一个中断如何发送到特定的 vector 的
 
 coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
@@ -698,6 +695,12 @@ gsi，等价于 ioapic 的引脚编号，pic 的引脚编号，linux irq 的
 
 在 Linux 内核这一侧, 配置 ioapic 也是采用 msi 的方式:
 
+- [x] 到底存在那些 idt 来响应中断
+    - 在 idt.c  和 irq.c 中定义相关的项目
+    - common_interrupt 是一般的入口, 但是其他的中断，例如 ipi 有其他的特殊入口，这个和 Loongarch 很类似
+
+破案了，原来是 ioapic_entry_parse 将 ioapic 的 pin 最后装换为 apic 上的 irr 之类的
+
 - mp_irqdomain_activate
   - ioapic_configure_entry : 看 `__add_pin_to_irq_node` 的注释: The common case is 1:1 `IRQ<->pin` mappings.
       - ioapic_setup_msg_from_msi : 构造 msi
@@ -928,8 +931,7 @@ DECLARE_IDTENTRY_IRQ(X86_TRAP_OTHER,	spurious_interrupt);
   - ioapic 中编码从 gsi 到 vector 的操作就是发生在 : ioapic_configure_entry : 给定一定 gsi ，知道其 vector 最后编码上去
   - ioapic 之类的和 Loongarch 的中断控制器还是非常不一样的啊
 
-## [ ] tcg apic
-
+## tcg apic
 - apic timer : 总体来说，timer 是比较容易处理的
   - apic_timer 被周期性的触发
     - [ ] 思考一下如何获取 clock time, 实际上，guest 操作系统可以主动校准实践
@@ -937,10 +939,16 @@ DECLARE_IDTENTRY_IRQ(X86_TRAP_OTHER,	spurious_interrupt);
   - 考虑一个小问题，所有的 vCPU 都是需要接受 local timer 的时钟的，难道为此需要创建出来多个 timer 吗 ?
     - 是的, 而且 timer 这个线程是在 main_loop_wait => qemu_clock_run_all_timers 中使用一个新的线程来进行的
 
-- [ ] apic_eoi : 和 10.8.5 中描述的一致，但是
+- apic_update_irq 的分析
+  - apic_poll_irq : 如果中断是来自于其他的 thread，那么就采用这种方式，比如时钟中断
+    - 因为时钟是在另一个线程处理的，所以需要实现
+  - 如果不是来自于 pic 的中断，那就清理掉这个中断
+
+#### EOI
+- [ ] apic_eoi : 和 10.8.5 中描述的一致，当 apic 接受到一个 EOIUpon receiving an EOI, the APIC clears the highest priority bit in the ISR and dispatches the next highest priority 
+interrupt to the processor.
   - [ ] 10.8.5 : 手册中间分析的 ioapic 的 broadcast 是什么意思
   - [x] apic_sync_vapic : 这个是处理 kvm 的，暂时不分析
-- [ ] isr
 
 *If the terminated interrupt was a level-triggered interrupt, the local APIC Also sends an
 end-of-interrupt message to all I/O APICs.* (**无法理解为什么 level-triggered 的就需要向 io apic 发送**)
@@ -962,33 +970,7 @@ System software performing directed EOIs must retain a mapping associating level
 
 - [ ] 实际上，ioapic 也是存在 eoi 的, 而且还在两个调用位置, 放到 tcg ioapic 中间分析吧
 
-- apic_update_irq 的分析
-  - apic_poll_irq : 如果中断是来自于其他的 thread，那么就采用这种方式，比如时钟中断
-    - 因为时钟是在另一个线程处理的，所以需要实现
-  - 如果不是来自于 pic 的中断，那就清理掉这个中断
-
-- [ ] cr8 和 tpr 的关系是什么？
-    - apic_set_tpr 的唯一调用者是 helper_write_crN
-    - 从 apic_set_tpr 和 apic_get_tpr 的效果看，SDM 10-18 的 sub-class 的实际上没有用的
-    - [^5] 中间描述，如果一个中断的优先级不够, 那么是无法通知 CPU 的，那么如何知道一个中断的优先级
-    - [ ] 似乎，实际上，tpr 的意义在于计算出来 ppr, 因为 ppr 是 tpr + isrv 中的较大值，只有一个中断同时超过两者才可以
-
-- [ ] irr / isr 的操作是什么?
-    - 10.8.4 Interrupt Acceptance for Fixed Interrupts : 虽然在描述了，但是
-        - 为什么存在 256 bit，为什么设置出来了两个 register 啊
-
-- apic_get_interrupt : 从 irr 中接受中断之后，然后立刻装换到系统中间
-
-The local APIC queues the fixed interrupts that it accepts in one of two interrupt pending registers: the interrupt
-request register (IRR) or in-service register (ISR).
-
-- [ ] 为什么 apic_get_interrupt 返回的数值都是 236 之类的, 操作系统是如何解析的
-    - [ ] apic_local_deliver : 似乎和 lvt 有关的
-    - [ ] 众所周知，idt 中间一共是存在 256 项目的，其中的一些还是和 exception 相关的，是如何实现让的 apic 的引脚 和 idt 产生联系的
-        - 忽然间意识到一个问题，之前说的 gsi 什么的，其实那都是 apic 和 pic 的引脚啊，但是实际上，CPU 看到的就是 icr 之类的东西了
-        - [ ] 是所有的中断的入口都是相同的，还是对于 irr 256 每一个都是可以建立对应的 idt 的
-
-
+#### lvt
 lvt  中的取值总是在发生改变的, 但是
 apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的中断是 APIC_LVT_TIMER 的，但是最后装换为 236 了
 
@@ -996,17 +978,27 @@ apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的�
 [0=236] [1=65536] [2=65536] [3=67328] [4=1024] [5=254]
 ```
 
-从 apic_mem_write 的操作看，似乎, msi 根本不用遵守 io apic pin 的要求哇
+#### apic 处理优先级的方式
+- cr8 和 tpr 的关系是什么？
+    - apic_set_tpr 的唯一调用者是 helper_write_crN
+    - 从 apic_set_tpr 和 apic_get_tpr 的效果看，intel SDM Figure 10-18 的 sub-class 的实际上没有用的
+    - [^5] 中间描述，如果一个中断的优先级不够, 那么是无法通知 CPU 的，那么如何知道一个中断的优先级
+    - tpr 的意义在于计算出来 ppr, 因为 ppr 是 tpr + isrv 中的较大值，只有一个中断的优先级大于 ppr 才可以
 
-但是，需要注意一个问题，之前描述的是 ioapic 的引脚，但是现在是 apic
+- apic_get_interrupt : 从 irr 中接受中断之后，然后立刻装换到系统中间
+  - apic_irq_pending : 获取 [0, 256] 的 intno
+    - get_highest_priority_int : 看看到底有没有 irr, 如果没有就是没有中断发生了
+    - apic_get_ppr : 通过 isr 获取 isrv
 
-- [x] 到底存在那些 idt 来响应中断
-    - 在 idt.c  和 irq.c 中定义相关的项目
-    - common_interrupt 是一般的入口, 但是其他的中断，例如 ipi 有其他的特殊入口，这个和 Loongarch 很类似
-- [x] 当中断的处理函数中间，是否存在检测分析 isr 从而知道是那个中断的函数
-  - DEFINE_IDTENTRY_IRQ 的注释说，The vector number is pushed by the low level entry stub
+#### irr 和 isr 分别是什么
+- apic_set_irq : 中断首先提交给 irr 的
+- apic_get_interrupt : 进行从 irr 到 isr 的转移, 表示 cpu 将会处理该中断
+- apic_update_irq : 提醒 cpu 存在有, 整个模拟过程中，很多位置都采用
 
-破案了，原来是 ioapic_entry_parse 将 ioapic 的 pin 最后装换为 apic 上的 irr 之类的
+如果没有 priority 的限制，从 irr 就是立刻到 isr 上，否则就首先在 irr 上等着
+高优先级的可以打断低优先级的。
+发送 EOI 中断可以接下来执行 isr 上的下一个中断，当然高优先级的也可以让 cpu 执行下一个中断。
+
 
 ## 键盘的中断是如何注入的
 参考 vn/hack/qemu/internals/i8042.md
@@ -1122,8 +1114,8 @@ Line 33 of "./include/asm-generic/fixmap.h" starts at address 0xffffffff810c14d0
 
 使用 tcg 的时候(否则是 kvm 模拟了)，在 QEMU 初始化会调用一次 apic_mem_write
 在内核启动之前会调用一次, 之后 seabios 会调用数次 
-```
-(qemu) huxueshi:apic_mem_write addr=0 // qemu 初始化 
+```txt
+(qemu) huxueshi:apic_mem_write addr=0 // qemu 初始化 hpet 的时候代码自动触发的
 huxueshi:apic_mem_write addr=f0 // 都是 kernel 启动之前搞定的
 huxueshi:apic_mem_write addr=350
 huxueshi:apic_mem_write eip=ec676 // 暂时没有方法通过地址找 seabios 的源代码

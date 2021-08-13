@@ -96,3 +96,4 @@
   - [ ] 在 bitmap.c 中间是直接从
   - [ ] g_assert
   - error_report
+9. pit 和 hpet 需要模拟?
