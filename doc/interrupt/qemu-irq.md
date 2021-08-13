@@ -16,6 +16,7 @@
 
 10. level 和 edge 的处理有什么不同, 为什么需要 level 的触发方式
 
+
 ## 备忘
 - tcg_handle_interrupt /  x86_cpu_exec_interrupt 的功能区别:
   - 前者: 让执行线程退出，去检查 interrupt
@@ -643,24 +644,6 @@ struct KVMIOAPICState {
   - pic_irq_request
   - ioapic_set_irq
 
-和 kvm 非常类似，在系统启动之后，抛弃使用 pic
-具体表现为 apic_accept_pic_intr 的这个判断失败
-
-- [x] 找到对应的源代码位置, 将 apic_accept_pic_intr disabled 的
-  - 就是在 apic_mem_write 的位置
-  - [ ] 但是进行 mem write 的操作具体发生在 guest 的哪一个源码，暂时是不知道的
-
-```c
-/*
-#0  apic_set_irq (s=0x55555698a050, vector_num=0, trigger_mode=0) at ../hw/intc/apic.c:401
-#1  0x0000555555c6a2d6 in apic_local_deliver (s=0x55555698a050, vector=3) at ../hw/intc/apic.c:166
-#2  0x0000555555b90d74 in pic_irq_request (opaque=<optimized out>, irq=<optimized out>, level=1) at ../hw/i386/x86.c:540
-#3  pic_irq_request (opaque=<optimized out>, irq=<optimized out>, level=1) at ../hw/i386/x86.c:529
-#4  0x0000555555964178 in qemu_irq_raise (irq=<optimized out>) at /home/maritns3/core/kvmqemu/include/hw/irq.h:12
-#5  pic_update_irq (s=0x555556999520) at ../hw/intc/i8259.c:114
-#6  0x000055555596493e in pic_set_irq (opaque=0x555556999520, irq=<optimized out>, level=1) at ../hw/intc/i8259.c:156
-#7  0x0000555555b92634 in gsi_handler (opaque=0x555556adfc30, n=0, level=1) at ../hw/i386/x86.c:596
-```
 
 > The local APIC is enabled at boot-time and can be disabled by clearing bit 11 of the IA32_APIC_BASE Model Specific Register (MSR). [^3]
 
@@ -1087,6 +1070,70 @@ apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的�
 #16 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 */
 ```
+
+## guest 什么时候将 pic 关闭的
+从 gsi 到 apic 的基本流程:
+```c
+/*
+#0  apic_set_irq (s=0x55555698a050, vector_num=0, trigger_mode=0) at ../hw/intc/apic.c:401
+#1  0x0000555555c6a2d6 in apic_local_deliver (s=0x55555698a050, vector=3) at ../hw/intc/apic.c:166
+#2  0x0000555555b90d74 in pic_irq_request (opaque=<optimized out>, irq=<optimized out>, level=1) at ../hw/i386/x86.c:540
+#3  pic_irq_request (opaque=<optimized out>, irq=<optimized out>, level=1) at ../hw/i386/x86.c:529
+#4  0x0000555555964178 in qemu_irq_raise (irq=<optimized out>) at /home/maritns3/core/kvmqemu/include/hw/irq.h:12
+#5  pic_update_irq (s=0x555556999520) at ../hw/intc/i8259.c:114
+#6  0x000055555596493e in pic_set_irq (opaque=0x555556999520, irq=<optimized out>, level=1) at ../hw/intc/i8259.c:156
+#7  0x0000555555b92634 in gsi_handler (opaque=0x555556adfc30, n=0, level=1) at ../hw/i386/x86.c:596
+```
+
+和 kvm 非常类似，在系统启动之后，抛弃使用 pic,
+具体表现为 apic_accept_pic_intr 的这个判断失败
+通过分析 QEMU 的源代码，可以知道
+在 apic_mem_write 中，对于 lvt 被 masked 了
+
+在  apic_mem_write 中添加如下的代码:
+```c
+X86CPU *cpu = X86_CPU(current_cpu);
+
+if(index == 0x32 + APIC_LVT_LINT0)
+  printf("huxueshi:%s %lx\n", __FUNCTION__, cpu->env.eip);
+```
+
+输出发现 guest 的地址为 : 0xffffffff810c14d0
+
+使用 gdb 找到这一行:
+```gdb
+>>> info line *0xffffffff810c14d0
+Line 33 of "./include/asm-generic/fixmap.h" starts at address 0xffffffff810c14d0 <native_apic_mem_write> and ends at 0xffffffff810c14d2 <native_apic_mem_write+2>.
+```
+
+```c
+/*
+#0  native_apic_mem_write (reg=848, v=1792) at ./include/asm-generic/fixmap.h:33
+#1  0xffffffff810bc7eb in apic_write (val=1792, reg=848) at ./arch/x86/include/asm/apic.h:394
+#2  setup_local_APIC () at arch/x86/kernel/apic/apic.c:1698
+#3  0xffffffff82dbd0ad in apic_bsp_setup (upmode=<optimized out>) at arch/x86/kernel/apic/apic.c:2601
+#4  apic_intr_mode_init () at arch/x86/kernel/apic/apic.c:1444
+#5  0xffffffff82db1cd8 in x86_late_time_init () at arch/x86/kernel/time.c:100
+#6  0xffffffff82daa109 in start_kernel () at init/main.c:1080
+#7  0xffffffff81000107 in secondary_startup_64 () at arch/x86/kernel/head_64.S:283
+```
+
+进而可以找到 在 setup_local_APIC 中存在 Set up LVT0, LVT1 相关的代码, 这个会进行屏蔽
+
+使用 tcg 的时候(否则是 kvm 模拟了)，在 QEMU 初始化会调用一次 apic_mem_write
+在内核启动之前会调用一次, 之后 seabios 会调用数次 
+```
+(qemu) huxueshi:apic_mem_write addr=0 // qemu 初始化 
+huxueshi:apic_mem_write addr=f0 // 都是 kernel 启动之前搞定的
+huxueshi:apic_mem_write addr=350
+huxueshi:apic_mem_write eip=ec676 // 暂时没有方法通过地址找 seabios 的源代码
+huxueshi:apic_mem_write val=8700
+huxueshi:apic_mem_write addr=360
+huxueshi:apic_mem_write addr=300
+huxueshi:apic_mem_write addr=300
+```
+因为 seabios 的代码很简单，其实可以很容易的 seabios 操作 apic 的位置在 smp_scan 中
+
 
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf
 [^2]: https://luohao-brian.gitbooks.io/interrupt-virtualization/content/qemu-kvm-zhong-duan-xu-ni-hua-kuang-jia-fen-679028-4e0a29.html

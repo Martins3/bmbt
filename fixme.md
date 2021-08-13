@@ -87,7 +87,7 @@
     3. target_long 的定义
 7. log printf 和 qemu printf
     1. include/qemu/log-for-trace.h 和 include/qemu/log-for-trace.h : 一起搞出来 mask 基于日志的角度
-    2. qemu_printf 和printf 的区别在于当前是否存在 monitor
+    2. qemu_printf 和 printf 的区别在于当前是否存在 monitor
 8. 非常不统一的 assert
   - [ ] tcg_debug_assert
   - [ ] assert

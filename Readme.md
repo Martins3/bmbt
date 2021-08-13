@@ -58,12 +58,6 @@ host 的软件栈无法移除掉。还有一个就是 QEMU 实际上为了处理
     - 虽然存在 c2rust [^6] 等工具实现源码装换，目前来说，重写代码的难度不可预估，使用 Rust 来构建是将来的工作
     - 使用 Rust 写还有一个好处在于可以拜托 QEMU 的证书限制。
 
-## 计划
-- [ ] fixme.md 中间大致列举需要修复的接口
-- [ ] init 之类的事情放到后面处理
-- [ ] acpi 就是接下来处理的问题了
-
-
 ## Contributor
 As for collaboration, please follow [these instructions](./CONTRIBUTING.md)
 
