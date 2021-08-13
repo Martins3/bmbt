@@ -10,19 +10,6 @@
 2. 如果 cpu_handle_exception 失败之后，这会导致 cpu_exec 函数退出，之后如何处理 ?
     - 退出的原因应该都是外部原因，`cpu->exception_index >= EXCP_INTERRUPT` 和  reply ，目前似乎不用过于考虑
 
-3. 应该去跟踪一下从键盘注入中断的整个过程吧!
-    - nvme 设备注入中断是怎么进行的 ?
-      - 数据传输完成应该存在一个告知操作才可以
-
-4. 始终让人恐惧的 irqchip 其实可以内核模拟或者 QEMU 模拟的分工处理
-    - [x] 为什么说要采用内核中模拟, 其好处是什么?
-    - 还有一个让人很烦的 gsi 的定义啊, 为什么一个中断号需要注入两次啊
-    - [ ] 对于用户态提供的接口是什么?
-
-6. MSI : 以后再说
-
-7. 能不能只是模拟 pic 啊，又不是不能用 ?
-
 8. 在进入 kernel 之前，似乎只是 QEMU 启动的时候，gsi_handler 似乎被调用数次，是因为初始化的原因，还是因为 seabios 调用的
 
 9. 在 seabios 中，会处理中断吗 ?
@@ -37,7 +24,6 @@
 ## TODO
 - [ ] pc_machine_reset
 - 补充材料 : ioapic 如何知道中断源头 : https://stackoverflow.com/questions/57704146/how-to-figure-out-the-interrupt-source-on-i-o-apic
-
 
 ## intel 手册知识准备
 - volume 3 CHAPTER 6 (INTERRUPT AND EXCEPTION HANDLING) : 从 CPU 的角度描述了中断的处理过程
@@ -607,7 +593,7 @@ vapic_write : 只是调用过一次, 在 seabios 中的 callrom 中进行的
 - [ ] 存在一个关联的 exit reason 是 KVM_EXIT_TPR_ACCESS
 - [ ] 一个关联的 kvm ioctl 命令 : KVM_SET_VAPIC_ADDR
 
-- [ ] APICCommonState::vapic_paddr 似乎和 kvmvapic 有关的
+- APICCommonState::vapic_paddr 和 kvmvapic 有关的
 ## kvm ioapic
 ```c
 struct KVMIOAPICState {
