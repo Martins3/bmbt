@@ -27,8 +27,8 @@
 - clear documents
 - How to deal with x86tomips-options.c? #31
 ## 将用户态的依赖彻底移除掉
- setsigjmp 这种东西在内核态可以使用吗?
- 如何保证自己对于 glibc 没有依赖?
+- setsigjmp 这种东西在内核态可以使用吗?
+- 如何保证自己对于 glibc 没有依赖?
 ## 在 bare-mental 上测试 seabios 的执行
 - 添加设备和中断支持
 - 了解 UEFI SDK
