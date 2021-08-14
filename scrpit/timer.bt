@@ -1,0 +1,23 @@
+#!/usr/bin/bpftrace
+
+kprobe:hpet_msi_interrupt_handler
+{
+  printf("timer interrupt\n")
+}
+
+kprobe:timer_interrupt
+{
+  printf("timer interrupt\n")
+}
+
+kprobe:handle_level_irq
+{
+  printf("timer interrupt\n")
+}
+
+kprobe:task_tick_fair
+{
+  @[kstack] = count();
+  printf("task entity tick\n")
+}
+

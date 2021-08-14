@@ -34,8 +34,9 @@
 coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
 
 ## 一些关键流程
-1. 如何从 ide 走到 apic 的
-    - 可以看到，ide assert 是 ioapic 的 15 号引脚, 经过 io apic 转换之后，在 apic 哪里是 irr 等于 34
+
+#### 从 ide 走到 apic 的
+- 可以看到，ide assert 是 ioapic 的 15 号引脚, 经过 io apic 转换之后，在 apic 哪里是 irr 等于 34
 ```c
 /*
 #0  huxueshi (i=34) at ../hw/intc/apic.c:402
@@ -74,6 +75,57 @@ coreboot 三部曲 : https://habr.com/en/post/501912/ : 永远的神
 #33 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
 
+#### Linux 内核触发键盘中断的过程
+```c
+/*
+[   36.794135] Call Trace:
+[   36.794140]  <IRQ>
+[   36.794143]  dump_stack+0x64/0x7c
+[   36.794150]  pollwake+0x2a/0x90
+[   36.794157]  ? check_preempt_curr+0x3a/0x70
+[   36.794162]  ? ttwu_do_wakeup.isra.0+0xd/0xd0
+[   36.794167]  __wake_up_common+0x75/0x140
+[   36.794172]  __wake_up_common_lock+0x77/0xb0
+[   36.794178]  evdev_events+0x7c/0xa0
+[   36.794184]  input_to_handler+0x90/0xf0
+[   36.794190]  input_pass_values.part.0+0x119/0x140
+[   36.794196]  input_handle_event+0x20e/0x5f0
+[   36.794203]  input_event+0x4a/0x70
+[   36.794208]  atkbd_interrupt+0x47f/0x640
+[   36.794213]  serio_interrupt+0x42/0x90
+[   36.794218]  i8042_interrupt+0x146/0x250
+[   36.794223]  __handle_irq_event_percpu+0x38/0x150
+[   36.794229]  handle_irq_event_percpu+0x2c/0x80
+[   36.794234]  handle_irq_event+0x23/0x50
+[   36.794252]  handle_edge_irq+0x79/0x190
+[   36.794257]  __common_interrupt+0x39/0x90
+[   36.794277]  common_interrupt+0x76/0xa0
+[   36.794283]  </IRQ>
+[   36.794285]  asm_common_interrupt+0x1e/0x40
+```
+
+```c
+/*
+#0  nvme_irq (irq=24, data=0xffff888101150e00) at drivers/nvme/host/pci.c:1066
+#1  0xffffffff810bb448 in __handle_irq_event_percpu (desc=desc@entry=0xffff888101163200, flags=flags@entry=0xffffc90000003f84) at kernel/irq/handle.c:156
+#2  0xffffffff810bb58c in handle_irq_event_percpu (desc=desc@entry=0xffff888101163200) at kernel/irq/handle.c:196
+#3  0xffffffff810bb603 in handle_irq_event (desc=desc@entry=0xffff888101163200) at kernel/irq/handle.c:213
+#4  0xffffffff810bf4c9 in handle_edge_irq (desc=0xffff888101163200) at kernel/irq/chip.c:819
+#5  0xffffffff81021c19 in generic_handle_irq_desc (desc=0xffff888101163200) at ./include/linux/irqdesc.h:158
+#6  handle_irq (regs=<optimized out>, desc=0xffff888101163200) at arch/x86/kernel/irq.c:231
+#7  __common_interrupt (regs=<optimized out>, vector=37) at arch/x86/kernel/irq.c:250
+#8  0xffffffff81b94c46 in common_interrupt (regs=0xffffc90000013868, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+Backtrace stopped: Cannot access memory at address 0xffffc90000004010
+*/
+```
+
+可以很容易的找到 common_interrupt 的入口, 此时可以从硬件哪里拿到 error_code 来索引 vector_irq 获取 irqdesc
+
+```c
+DEFINE_PER_CPU(vector_irq_t, vector_irq) = {
+	[0 ... NR_VECTORS - 1] = VECTOR_UNUSED,
+};
+```
 
 
 ## QEMU 是如何处理 interrupt 和 exception 的
@@ -1181,7 +1233,46 @@ memory_ldst_phys.h.inc:121
 #18 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
 
+## level 和 edge 的触发
 
+#### 内核中如何注册 edge 和 level 的
+- [ ] 什么叫做 linux 的 fasteoi
+
+其实现在回头看，14.1.5 Interrupt Flow Handling 的分析是很有道理的，通过 irq_desc::handle_irq 来处理 flow 的，
+通过 irq_desc::action 实现具体 irq
+
+在 x86 中，使用 level 只有在 setup_default_timer_irq 中注册 timer_interrupt 中注册，但是这个之后马上就消失了。
+
+似乎当前的中断是 hpet 产生的, 应该指的是全局的
+https://unix.stackexchange.com/questions/549616/what-is-the-hardware-which-the-linux-kernel-uses-for-timer-interrupt
+
+这是早期的中断处理使用 hpet，之后就切换了
+```c
+/*
+#0  timer_interrupt (irq=0, dev_id=0x0 <fixed_percpu_data>) at arch/x86/kernel/time.c:57
+#1  0xffffffff81132995 in __handle_irq_event_percpu (desc=desc@entry=0xffff888100051800, flags=flags@entry=0xffffc90000003f84) at kernel/irq/handle.c:156
+#2  0xffffffff81132acc in handle_irq_event_percpu (desc=desc@entry=0xffff888100051800) at kernel/irq/handle.c:196
+#3  0xffffffff81132b33 in handle_irq_event (desc=desc@entry=0xffff888100051800) at kernel/irq/handle.c:213
+#4  0xffffffff8113686f in handle_level_irq (desc=0xffff888100051800) at kernel/irq/chip.c:650
+#5  0xffffffff81098419 in generic_handle_irq_desc (desc=0xffff888100051800) at ./include/linux/irqdesc.h:158
+#6  handle_irq (regs=<optimized out>, desc=0xffff888100051800) at arch/x86/kernel/irq.c:231
+#7  __common_interrupt (regs=<optimized out>, vector=48) at arch/x86/kernel/irq.c:250
+#8  0xffffffff81c366ee in common_interrupt (regs=0xffffffff82603dc8, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
+```
+
+而真正的时钟中断是这个:
+```c
+/*
+#0  task_tick_fair (rq=0xffff8881b9c29700, curr=0xffff888100208000, queued=0) at kernel/sched/fair.c:10992
+#1  0xffffffff8110d5d8 in scheduler_tick () at kernel/sched/core.c:4954
+#2  0xffffffff81152cfb in update_process_times (user_tick=0) at kernel/time/timer.c:1801
+#3  0xffffffff81161752 in tick_periodic (cpu=cpu@entry=0) at ./arch/x86/include/asm/ptrace.h:136
+#4  0xffffffff811617bb in tick_handle_periodic (dev=0xffff8881b9c16f80) at kernel/time/tick-common.c:112
+#5  0xffffffff810bc0f7 in local_apic_timer_interrupt () at arch/x86/kernel/apic/apic.c:1089
+#6  __sysvec_apic_timer_interrupt (regs=<optimized out>) at arch/x86/kernel/apic/apic.c:1106
+#7  0xffffffff81c3810d in sysvec_apic_timer_interrupt (regs=0xffffc90000013c98) at arch/x86/kernel/apic/apic.c:1100
+```
+而现在去分析一下 handle_level_irq 的调用位置，只是给
 
 
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf

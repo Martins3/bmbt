@@ -16,6 +16,7 @@ kprobe:kvm_pic_set_irq
     printf("kvm_pic_set_irq irq = %d \n", arg1);
   }
 }
+
 kretprobe:kvm_apic_accept_pic_intr
 {
   if(retval != 0){
