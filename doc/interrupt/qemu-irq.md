@@ -10,8 +10,9 @@
 2. 如果 cpu_handle_exception 失败之后，这会导致 cpu_exec 函数退出，之后如何处理 ?
     - 退出的原因应该都是外部原因，`cpu->exception_index >= EXCP_INTERRUPT` 和  reply ，目前似乎不用过于考虑
 
-10. level 和 edge 的处理有什么不同, 为什么需要 level 的触发方式
+- [ ] level 和 edge 的处理有什么不同, 为什么需要 level 的触发方式
 
+- [ ] make a table explaining every field of APIC and IOAPIC struct in QEMU
 
 ## 备忘
 - tcg_handle_interrupt /  x86_cpu_exec_interrupt 的功能区别:
@@ -1125,6 +1126,62 @@ huxueshi:apic_mem_write addr=300
 huxueshi:apic_mem_write addr=300
 ```
 因为 seabios 的代码很简单，其实可以很容易的 seabios 操作 apic 的位置在 smp_scan 中
+
+## tcg msi
+总体来说，就是两种情况:
+1. 模拟的设备调用 msi_send_message 最后写 apic 的地址空间
+2. ioapic 有时候也是装换为 msi 进行发送的
+
+
+kvm 模式，应该是网卡发送的，但是 backtrace 有点奇怪
+```c
+/*
+#0  kvm_send_msi (msg=0x7fffffffd220) at ../hw/i386/kvm/apic.c:182
+#1  0x0000555555ba1358 in kvm_apic_mem_write (opaque=<optimized out>, addr=<optimized out>, data=<optimized out>, size=<optimized out>) at ../hw/i386/kvm/apic.c:210
+#2  0x0000555555cd2711 in memory_region_write_accessor (mr=mr@entry=0x555556a071f0, addr=8196, value=value@entry=0x7fffffffd358, size=size@entry=4, shift=<optimized out>, mask=mask@entry=4294967295, attrs=...) at ../softmmu/memory.c:492
+#3  0x0000555555cceb9e in access_with_adjusted_size (addr=addr@entry=8196, value=value@entry=0x7fffffffd358, size=size@entry=4, access_size_min=<optimized out>, access_
+size_max=<optimized out>, access_fn=access_fn@entry=0x555555cd2680 <memory_region_write_accessor>, mr=0x555556a071f0, attrs=...) at ../softmmu/memory.c:554
+#4  0x0000555555cd1c47 in memory_region_dispatch_write (mr=mr@entry=0x555556a071f0, addr=8196, data=<optimized out>, data@entry=35, op=op@entry=MO_32, attrs=attrs@entry=...) at ../softmmu/memory.c:1504
+#5  0x0000555555ca12ed in address_space_stl_internal (endian=DEVICE_LITTLE_ENDIAN, result=0x0, attrs=..., val=35, addr=<optimized out>, as=<optimized out>) at /home/maritns3/core/kvmqemu/include/exec/memory.h:2868
+#6  address_space_stl_le (as=<optimized out>, addr=<optimized out>, val=35, attrs=..., result=result@entry=0x0) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:357
+#7  0x000055555595fba5 in msi_send_message (dev=<optimized out>, msg=...) at ../hw/pci/msi.c:340
+#8  0x0000555555b3cc5e in msix_notify (vector=<optimized out>, dev=<optimized out>) at ../hw/pci/msix.c:503
+#9  msix_notify (dev=<optimized out>, vector=<optimized out>) at ../hw/pci/msix.c:488
+#10 0x0000555557d4c520 in  ()
+#11 0x0000000000000000 in  ()
+```
+
+相对于 kvm 的实现，tcg 的 msi 多出来 hpet 的源头
+```c
+/*
+#0  apic_send_msi (msi=0x7fffffffd110) at ../hw/intc/apic.c:726
+#1  0x0000555555c6ab4c in apic_mem_write (opaque=<optimized out>, addr=4100, val=48, size=<optimized out>) at ../hw/intc/apic.c:757
+#2  0x0000555555cd2711 in memory_region_write_accessor (mr=mr@entry=0x55555698bc90, addr=4100, value=value@entry=0x7fffffffd298, size=size@entry=4, shift=<optimized out
+>, mask=mask@entry=4294967295, attrs=...) at ../softmmu/memory.c:492
+#3  0x0000555555cceb9e in access_with_adjusted_size (addr=addr@entry=4100, value=value@entry=0x7fffffffd298, size=size@entry=4, access_size_min=<optimized out>, access_
+size_max=<optimized out>, access_fn=access_fn@entry=0x555555cd2680 <memory_region_write_accessor>, mr=0x55555698bc90, attrs=...) at ../softmmu/memory.c:554
+#4  0x0000555555cd1c47 in memory_region_dispatch_write (mr=mr@entry=0x55555698bc90, addr=4100, data=<optimized out>, data@entry=48, op=op@entry=MO_32, attrs=attrs@entry
+=...) at ../softmmu/memory.c:1504
+#5  0x0000555555ca12ed in address_space_stl_internal (endian=DEVICE_LITTLE_ENDIAN, result=0x0, attrs=..., val=48, addr=<optimized out>, as=0x0) at /home/maritns3/core/k
+vmqemu/include/exec/memory.h:2868
+#6  address_space_stl_le (as=as@entry=0x555556606820 <address_space_memory>, addr=<optimized out>, val=48, attrs=attrs@entry=..., result=result@entry=0x0) at /home/mari
+tns3/core/kvmqemu/memory_ldst.c.inc:357
+#7  0x0000555555cee124 in stl_le_phys (val=<optimized out>, addr=<optimized out>, as=0x555556606820 <address_space_memory>) at /home/maritns3/core/kvmqemu/include/exec/
+memory_ldst_phys.h.inc:121
+#8  ioapic_service (s=s@entry=0x555556a42360) at ../hw/intc/ioapic.c:138
+#9  0x0000555555cee3ff in ioapic_set_irq (opaque=0x555556a42360, vector=<optimized out>, level=1) at ../hw/intc/ioapic.c:186
+#10 0x0000555555b92664 in gsi_handler (opaque=0x555556af6ff0, n=0, level=1) at ../hw/i386/x86.c:600
+#11 0x0000555555b42a9e in qemu_irq_pulse (irq=0x555556ab3b50) at /home/maritns3/core/kvmqemu/include/hw/irq.h:22
+#12 update_irq (timer=<optimized out>, set=<optimized out>) at ../hw/timer/hpet.c:219
+#13 0x0000555555e6fe88 in timerlist_run_timers (timer_list=0x555556707120) at ../util/qemu-timer.c:573
+#14 timerlist_run_timers (timer_list=0x555556707120) at ../util/qemu-timer.c:498
+#15 0x0000555555e70097 in qemu_clock_run_all_timers () at ../util/qemu-timer.c:669
+#16 0x0000555555e4ced9 in main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:542
+#17 0x0000555555c58231 in qemu_main_loop () at ../softmmu/runstate.c:726
+#18 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+
 
 
 [^1]: https://events.static.linuxfound.org/sites/events/files/slides/VT-d%20Posted%20Interrupts-final%20.pdf
