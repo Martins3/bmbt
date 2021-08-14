@@ -4,7 +4,8 @@
 如果想要一个解决问题，那就吧问题列举成为一个 20 min 可以完成的小项目。
 
 当前的计划
-- [ ] 周五赶快处理中断控制器，然后构建 fw_cfg，探测 acpi
+- 构建 fw_cfg，探测 acpi
+- acpi 暂时可以不着急，着急的是理清楚，到底如何加载 bios 以及内核，然后开始第一行代码，所以将这些东西理清楚
 
 ## Make linker happy
 - reference glib : 处理文件 /home/maritns3/core/ld/DuckBuBi/src/tcg/glib_stub.h
