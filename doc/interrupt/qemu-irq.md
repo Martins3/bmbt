@@ -10,8 +10,6 @@
 2. 如果 cpu_handle_exception 失败之后，这会导致 cpu_exec 函数退出，之后如何处理 ?
     - 退出的原因应该都是外部原因，`cpu->exception_index >= EXCP_INTERRUPT` 和  reply ，目前似乎不用过于考虑
 
-- [ ] level 和 edge 的处理有什么不同, 为什么需要 level 的触发方式
-
 - [ ] make a table explaining every field of APIC and IOAPIC struct in QEMU
 
 ## 备忘
