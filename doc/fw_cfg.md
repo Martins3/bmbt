@@ -1,5 +1,9 @@
 # fw_cfg
 
+- [ ] seabios 镜像是如何加载进去的? 其实 fw_cfg 是解决当 seabios 加载成功之后，然后从 host 中要内容的
+    - [ ] 在启动的时候分配了两个地址空间，然后加载 bios 到指定的位置
+    - [ ] 找到 bios.bin 的句柄的位置
+
 ## 基本原理
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
 前者是主要实现，后者主要是为架构中添加一些细节。
@@ -20,6 +24,7 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
     - 一堆 fw_cfg_add_i16 添加 x86 特有的配置 
     - 处理 NUMA 相关的内容
 
+
 ## 一些小记录
 在 vapic_realize 中间使用了两个全局变量
 ```c
@@ -27,7 +32,6 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
     option_rom[nb_option_roms].bootindex = -1;
     nb_option_roms++;
 ```
-
 
 ## smbios
 https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
@@ -90,7 +94,7 @@ huxueshi:fw_cfg_add_bytes 18
 ```
 和架构无关的在: include/standard-headers/linux/qemu_fw_cfg.h 并没有让人恐惧的东西，主要是在 fw_cfg_arch_create 等位置初始化
 
-## add / modify
+## add 相关的函数
 - fw_cfg_add_bytes : 很容易
 - fw_cfg_add_file
   - fw_cfg_add_file_callback
@@ -102,14 +106,15 @@ huxueshi:fw_cfg_add_bytes 18
 - FW_CFG_FILE_FIRST 开始, FWCfgState::entries 持有 FWCfgState::files 的 index
 
 
-## modify
+## modify 相关的函数
 - [ ] modify 总是和 reset 机制放到一起的
 
 一共出现在两个位置：
   - pc_machine_done
     - `fw_cfg_modify_i16(x86ms->fw_cfg, FW_CFG_NB_CPUS, x86ms->boot_cpus);`
   - fw_cfg_modify_file
-```plain
+```c
+/*
 #0  fw_cfg_modify_file (s=0x1f, filename=0x0, data=0x5555569a3850, len=93825003170080) at ../hw/nvram/fw_cfg.c:1012
 #1  0x000055555591a473 in fw_cfg_machine_reset (opaque=0x555556b92980) at ../hw/nvram/fw_cfg.c:1097
 #2  0x0000555555e7ee35 in qemu_devices_reset () at ../hw/core/reset.c:69
@@ -133,15 +138,12 @@ huxueshi:fw_cfg_add_bytes 18
 #1  0x00005555559187a5 in fw_cfg_dma_transfer (s=0x555556c76600) at ../hw/nvram/fw_cfg.c:371
 #2  0x0000555555918b73 in fw_cfg_dma_mem_write (opaque=0x555556c76600, addr=4, value=28024, size=4) at ../hw/nvram/fw_cfg.c:469
 #3  0x0000555555ca6b2a in memory_region_write_accessor (mr=0x555556c76980, addr=4, value=0x7fffe890efe8, size=4, shift=0, mask=4294967295, attrs=...) at ../softmmu/memory.c:489
-#4  0x0000555555ca6d07 in access_with_adjusted_size (addr=4, value=0x7fffe890efe8, size=4, access_size_min=1, access_size_max=8, access_fn=0x555555ca6a3d <memory_region
-_write_accessor>, mr=0x555556c76980, attrs=...) at ../softmmu/memory.c:545
+#4  0x0000555555ca6d07 in access_with_adjusted_size (addr=4, value=0x7fffe890efe8, size=4, access_size_min=1, access_size_max=8, access_fn=0x555555ca6a3d <memory_region_write_accessor>, mr=0x555556c76980, attrs=...) at ../softmmu/memory.c:545
 #5  0x0000555555ca9e10 in memory_region_dispatch_write (mr=0x555556c76980, addr=4, data=28024, op=MO_32, attrs=...) at ../softmmu/memory.c:1500
-#6  0x0000555555d31c60 in flatview_write_continue (fv=0x7ffdcc1cf380, addr=1304, attrs=..., ptr=0x7fffeb180000, len=4, addr1=4, l=4, mr=0x555556c76980) at ../softmmu/ph
-ysmem.c:2767
+#6  0x0000555555d31c60 in flatview_write_continue (fv=0x7ffdcc1cf380, addr=1304, attrs=..., ptr=0x7fffeb180000, len=4, addr1=4, l=4, mr=0x555556c76980) at ../softmmu/physmem.c:2767
 #7  0x0000555555d31da9 in flatview_write (fv=0x7ffdcc1cf380, addr=1304, attrs=..., buf=0x7fffeb180000, len=4) at ../softmmu/physmem.c:2807
 #8  0x0000555555d32123 in address_space_write (as=0x5555567a6b00 <address_space_io>, addr=1304, attrs=..., buf=0x7fffeb180000, len=4) at ../softmmu/physmem.c:2899
-#9  0x0000555555d32194 in address_space_rw (as=0x5555567a6b00 <address_space_io>, addr=1304, attrs=..., buf=0x7fffeb180000, len=4, is_write=true) at ../softmmu/physmem.
-c:2909
+#9  0x0000555555d32194 in address_space_rw (as=0x5555567a6b00 <address_space_io>, addr=1304, attrs=..., buf=0x7fffeb180000, len=4, is_write=true) at ../softmmu/physmem.c:2909
 #10 0x0000555555c408d3 in kvm_handle_io (port=1304, attrs=..., data=0x7fffeb180000, direction=1, size=4, count=1) at ../accel/kvm/kvm-all.c:2626
 #11 0x0000555555c410d1 in kvm_cpu_exec (cpu=0x555556c8be90) at ../accel/kvm/kvm-all.c:2877
 #12 0x0000555555c95315 in kvm_vcpu_thread_fn (arg=0x555556c8be90) at ../accel/kvm/kvm-accel-ops.c:49
@@ -209,7 +211,6 @@ DSDT address to be filled by Guest linker at runtime
   - fw_cfg_init_mem_wide
   - fw_cfg_init_mem
 
-
 ## dma
 在 fw_cfg_init_io_dma 中，根据参数，会设置 qdev_prop_set_bit(dev, "dma_enabled", false);
 
@@ -223,6 +224,7 @@ DSDT address to be filled by Guest linker at runtime
   - dma_memory_read
 
 然后 DMA 进行有一个单独的端口，想要进行 DMA，首先组装 FWCfgDmaAccess，然后进行将地址告知即可。
+
 ## memory region
 1. 在 fw_cfg_io_realize 中创建
 2. 在 fw_cfg_init_io_dma 中和 link 到 get_system_io() 上 
