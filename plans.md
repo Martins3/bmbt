@@ -3,12 +3,16 @@
 
 如果想要一个解决问题，那就吧问题列举成为一个 20 min 可以完成的小项目。
 
-当前的计划
-- 构建 fw_cfg，探测 acpi
+当前的计划:
+
 - acpi 暂时可以不着急，着急的是理清楚，到底如何加载 bios 以及内核，然后开始第一行代码，所以将这些东西理清楚
     - acpi 搞了一个专门的 hw/acpi/aml-build.c 用于投建 acpi，所以，并没有那么多的恐惧的东西
 - 实际上，我发现，只是需要运行一条指令就可以了, fw_cfg 和 acpi 其实都是暂时可以不用考虑了
 
+- [ ] 分析 bios.bin 加载的方法
+- [ ] 只是需要分析在 vcpu 线程的执行过程中，需要的那些内容即可
+  - [ ] 也许思考一些，如何保证一个变量只有在初始化之后才可以访问
+    - [ ] 其实这很容易，初始化一个对象，然后定义出来其 init 函数，在 init 函数中间必须初始化出来
 
 ## Make linker happy
 - reference glib : 处理文件 /home/maritns3/core/ld/DuckBuBi/src/tcg/glib_stub.h
