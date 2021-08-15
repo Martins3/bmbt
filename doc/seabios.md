@@ -358,7 +358,6 @@ parse_resource: small: 0x5 (len 3)
 
 总体来说，是从 build_dsdt 的位置触发的。
 
-
 #### [ ] 为什么在 seabios 中间会调用 `acpi_build_update`
 调用位置在 `romfile_loader_execute` 中间的
 

@@ -11,7 +11,6 @@
 - [ ] 需要体用动态构建 ACPI 表吗?
 
 
-
 ## acpi setup
 
 #### FDC0 / MOU / KBD 的 ACPI 描述是如何添加进去的

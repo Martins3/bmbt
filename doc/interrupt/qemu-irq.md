@@ -1231,6 +1231,15 @@ memory_ldst_phys.h.inc:121
 #18 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
 
+- [ ] 解释一下 nvme 中地址空间的内容
+```txt
+      00000000febf0000-00000000febf3fff (prio 1, i/o): nvme-bar0
+        00000000febf0000-00000000febf1fff (prio 0, i/o): nvme
+        00000000febf2000-00000000febf240f (prio 0, i/o): msix-table
+        00000000febf3000-00000000febf300f (prio 0, i/o): msix-pba
+```
+
+
 ## level 和 edge 的触发
 
 #### 内核中如何注册 edge 和 level 的
