@@ -14,7 +14,48 @@
     - [ ] 在进行 rom reset 的时候，会拷贝内容到系统中去
 - [ ] 为什么需要将 pc.bios 映射到 4G pci 空间的最上方
 - [ ] pc.rom 是什么?
-    - 在 pc_memory_init 
+    - 在 pc_memory_init
+
+- [ ] 实际上，只是使用了 seabios 的后 128k 的空间，看看 seabios 的 loader 中内容吧
+
+
+下面几个内容应该是 rom 直接加载
+```c
+huxueshi:rom_reset /home/maritns3/core/seabios/out/bios.bin
+huxueshi:rom_reset etc/acpi/tables
+huxueshi:rom_reset etc/table-loader
+huxueshi:rom_reset etc/acpi/rsdp
+```
+
+```c
+huxueshi:rom_insert /home/maritns3/core/seabios/out/bios.bin
+huxueshi:rom_insert kvmvapic.bin
+huxueshi:rom_insert linuxboot_dma.bin
+huxueshi:rom_insert etc/acpi/tables
+huxueshi:rom_insert etc/table-loader
+huxueshi:rom_insert etc/acpi/rsdp
+```
+- [ ] 很奇怪，为什么 insert 进去的是 5 个，但是 rom_reset 的时候，
+    - [ ] kvmvapic.bin 和 linuxboot_dma.bin 应该都是通过 fw_cfg 加载的吧
+
+```c
+huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
+huxueshi:fw_cfg_add_file_callback etc/e820
+huxueshi:fw_cfg_add_file_callback genroms/kvmvapic.bin
+huxueshi:fw_cfg_add_file_callback genroms/linuxboot_dma.bin
+huxueshi:fw_cfg_add_file_callback etc/system-states
+huxueshi:fw_cfg_add_file_callback etc/acpi/tables
+huxueshi:fw_cfg_add_file_callback etc/table-loader
+huxueshi:fw_cfg_add_file_callback etc/tpm/log
+huxueshi:fw_cfg_add_file_callback etc/acpi/rsdp
+huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-tables
+huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-anchor
+huxueshi:fw_cfg_add_file_callback etc/msr_feature_control
+huxueshi:fw_cfg_add_file_callback bootorder
+huxueshi:fw_cfg_add_file_callback bios-geometry
+```
+
+- [ ] 分析都存在 rom 之类的东西:
 
 ```c
 #define PC_ROM_MIN_VGA     0xc0000
@@ -23,6 +64,52 @@
 #define PC_ROM_ALIGN       0x800
 #define PC_ROM_SIZE        (PC_ROM_MAX - PC_ROM_MIN_VGA)
 ```
+
+## rom_insert 的调用者
+- rom_add_blob
+- rom_add_file
+- rom_add_elf_program : 暂时没有使用
+
+
+#### rom_add_file
+似乎只是看到下面三个调用者
+```c
+huxueshi:rom_add_file /home/maritns3/core/seabios/out/bios.bin
+huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/kvmvapic.bin
+huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/linuxboot_dma.bin
+```
+
+
+
+#### rom_add_blob
+1. etc/acpi/tables
+
+```c
+/*
+#0  rom_add_blob (name=name@entry=0x555555eeba65 "etc/acpi/tables", blob=0x555557de3890, len=131072, max_len=max_len@entry=2097152, addr=addr@entry=18446744073709551615, fw_file_name=fw_file_name@entry=0x555555eeba65 "etc/acpi/tables", fw_callback=0x555555bb2300 <acpi_build_update>, callback_opaque=0x555556b4ef90, as=0x0, read_only=true) at ../hw/core/loader.c:1044
+#1  0x0000555555998607 in acpi_add_rom_blob (update=update@entry=0x555555bb2300 <acpi_build_update>, opaque=opaque@entry=0x555556b4ef90, blob=0x555556acc030, name=<optimized out>, name@entry=0x555555eeba65 "etc/acpi/tables") at ../hw/acpi/utils.c:46
+#2  0x0000555555bb2568 in acpi_setup () at ../hw/i386/acpi-build.c:2733
+*/
+
+/*
+#0  rom_add_blob (name=name@entry=0x555555eeba75 "etc/table-loader", blob=0x555556ae8950, len=4096, max_len=max_len@entry=65536, addr=addr@entry=18446744073709551615, f
+w_file_name=fw_file_name@entry=0x555555eeba75 "etc/table-loader", fw_callback=0x555555bb2300 <acpi_build_update>, callback_opaque=0x555556b4ef90, as=0x0, read_only=true
+) at ../hw/core/loader.c:1044
+#1  0x0000555555998607 in acpi_add_rom_blob (update=update@entry=0x555555bb2300 <acpi_build_update>, opaque=opaque@entry=0x555556b4ef90, blob=0x555556acc0f0, name=<opti
+mized out>, name@entry=0x555555eeba75 "etc/table-loader") at ../hw/acpi/utils.c:46
+#2  0x0000555555bb2593 in acpi_setup () at ../hw/i386/acpi-build.c:2738
+*/
+
+/*
+#0  rom_add_blob (name=name@entry=0x555555eeba86 "etc/acpi/rsdp", blob=0x555556eb87d0, len=20, max_len=max_len@entry=4096, addr=addr@entry=18446744073709551615, fw_file
+_name=fw_file_name@entry=0x555555eeba86 "etc/acpi/rsdp", fw_callback=0x555555bb2300 <acpi_build_update>, callback_opaque=0x555556b4ef90, as=0x0, read_only=true) at ../h
+w/core/loader.c:1044
+#1  0x0000555555998607 in acpi_add_rom_blob (update=update@entry=0x555555bb2300 <acpi_build_update>, opaque=opaque@entry=0x555556b4ef90, blob=0x555556acc000, name=<opti
+mized out>, name@entry=0x555555eeba86 "etc/acpi/rsdp") at ../hw/acpi/utils.c:46
+#2  0x0000555555bb273f in acpi_setup () at ../hw/i386/acpi-build.c:2779
+
+```
+
 
 ```c
 /*

@@ -41,23 +41,6 @@ https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
   - [ ] 无法理解的是，为什么需要 anchor 啊
 
 ## 枚举所有的参数出来
-```plain
-huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
-huxueshi:fw_cfg_add_file_callback etc/e820
-huxueshi:fw_cfg_add_file_callback genroms/kvmvapic.bin
-huxueshi:fw_cfg_add_file_callback genroms/linuxboot_dma.bin
-huxueshi:fw_cfg_add_file_callback etc/system-states
-huxueshi:fw_cfg_add_file_callback etc/acpi/tables
-huxueshi:fw_cfg_add_file_callback etc/table-loader
-huxueshi:fw_cfg_add_file_callback etc/tpm/log
-huxueshi:fw_cfg_add_file_callback etc/acpi/rsdp
-huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-tables
-huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-anchor
-huxueshi:fw_cfg_add_file_callback etc/msr_feature_control
-huxueshi:fw_cfg_add_file_callback bootorder
-huxueshi:fw_cfg_add_file_callback bios-geometry
-```
-
 
 ```plain
 huxueshi:fw_cfg_add_bytes 0
