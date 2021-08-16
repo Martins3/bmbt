@@ -27,7 +27,7 @@
 ```c
 huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
 huxueshi:fw_cfg_add_file_callback etc/e820
-huxueshi:fw_cfg_add_file_callback genroms/kvmvapic.bin
+huxueshi:fw_cfg_add_file_callback genromros/kvmvapic.bin
 huxueshi:fw_cfg_add_file_callback genroms/linuxboot_dma.bin
 huxueshi:fw_cfg_add_file_callback etc/system-states
 huxueshi:fw_cfg_add_file_callback etc/acpi/tables
@@ -188,8 +188,43 @@ _name=fw_file_name@entry=0x555555eeba86 "etc/acpi/rsdp", fw_callback=0x555555bb2
 
 
 ## boot device
-- 在 rom_add_file 中，最后调用了 add_boot_device_path 而且很小心的组装了 add_boot_device_path 之类的操作
+关联文件 softmmu/bootdevice.c
 
+在 seabios 的 loadBootOrder 中需要读读去 fw_cfg 的 bootorder, 
+seabios 的 boot order 是受到 fw_cfg 制作的 bootorder 控制的, 此处就是在制作 bootorder
+
+```c
+typedef struct FWBootEntry FWBootEntry;
+
+static QTAILQ_HEAD(, FWBootEntry) fw_boot_order =
+    QTAILQ_HEAD_INITIALIZER(fw_boot_order);
+```
+实际上，对于 add_boot_device_path 只有 linuxboot_dma.bin 有意义
+huxueshi:add_boot_device_path bootindex=0 dev=(nil) suffix=/rom@genroms/linuxboot_dma.bin
+
+应该是为了向 fw_cfg 提供: get_boot_devices_list
+
+- fw_cfg_machine_reset
+  - get_boot_devices_list : 返回内容 /rom@genroms/linuxboot_dma.bin
+  - `ptr = fw_cfg_modify_file(s, "bootorder", (uint8_t *)buf, len);` : 提供给 seabios 使用
+  - get_boot_devices_lchs_list
+  - [x] `ptr = fw_cfg_modify_file(s, "bios-geometry", (uint8_t *)buf, len);` : 如果其中的内容是空的，fw_cfg 如何处理的
+      - seabios 的 loadBiosGeometry 中，当调用 romfile_loadfile 可以获取一个空, 具体 fw_cfg 的细节再说吧
+
+结论，传递给 seabios 的
+| bootorder                      | bios-geometry |
+|--------------------------------|---------------|
+| /rom@genroms/linuxboot_dma.bin | -             |
+
+#### lchs
+lchs : logical cylinder head sector[^1]
+
+```c
+static QTAILQ_HEAD(, FWLCHSEntry) fw_lchs =
+    QTAILQ_HEAD_INITIALIZER(fw_lchs);
+```
+
+- add_boot_device_lchs : 的调用者存在 scsi 和 virtio-blk 暂时不用管理这个吧
 
 ## ref material
 ```txt
@@ -221,3 +256,5 @@ address-space: memory
         00000000febf5800-00000000febf5807 (prio 0, i/o): msix-pba
       00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
 ```
+
+[^1]: https://en.wikipedia.org/wiki/Cylinder-head-sector
