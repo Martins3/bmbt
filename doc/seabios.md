@@ -14,6 +14,11 @@
 - [ ] enable_hwirq
   - [ ] ivt_init
 
+- [ ] 分析 seabios 的 loader script, 有两个需求
+    - [ ] QEMU 同时将 bios.bin 映射到 1M 和 4G 的最后位置，reset vector 首先从 4G 的位置跳转到开始的位置, 那岂不是 bios.bin 的前 128k 永远都是没有作用的
+        - 可以找到其 loader script
+    - [ ] 需要有一个标准的方法来分析给定一个 bios 地址，然后找到对应 seabios 源码，方便之后的调试
+
 ## 决策
 虽然具体内容不是也很清楚，但是没有一个 MMIO，找到对应的位置就差不多了
 

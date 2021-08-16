@@ -7,7 +7,7 @@
 - [ ] 看来需要理解一下 isa 地址空间, 1M 的地址空间是个什么玩意儿
 - [ ] ROM 到底是不是 readonly 的啊?
 
-- isa 是 bios 的 128k 的部分，然后 1M 的最后的
+- isa 是 bios 的 128k 的部分，而且放到 1M 的最后的
 
 - [ ] x86_bios_rom_init : 这个只是添加了文件，文件内容什么时候添加的
     - [ ] rom_add_file_fixed 中会进行读去文件, 但是怎么让 guest 读去啊，直接映射过去的，还是要怎么搞 ?
@@ -61,7 +61,7 @@ huxueshi:fw_cfg_add_file_callback bios-geometry
       - memory_region_init_ram_flags_nomigrate
         - qemu_ram_alloc :(./memory/memory-model.md(#RAMBlock)) 分析了进一步如何创建空间的
 
-实际上，当 pci enable 的时候，这个东西并没有啥作用。
+实际上，当 pci enable 的时候，这个东西并没有啥作用, 将 option_rom_mr 相关的代码都删除，还不是工作的好好的。
 
 ## struct Rom
 总体来说，是一个很简单的结构体, 除了:
@@ -126,11 +126,13 @@ huxueshi:rom_insert etc/acpi/rsdp
 - rom_add_file
 - rom_add_elf_program : 暂时没有使用
 
-- [ ] rom_add_file 和 rom_add_blob 的区别是不是 rom 是从文件中读去的，还是
+- rom_add_file 和 rom_add_blob 的区别
+    - rom_add_file 提供的是文件名，其中需要打开文件，将文件内容放到其中
+    - rom_add_blob 的参数冲 blob 需要拷贝过去即可
+    - 其实，从三者调用者这个就已经很清楚了
 
 #### rom_add_file
 1. 将文件中内容拷贝到 Rom::data
-
 
 似乎只是看到下面三个调用者
 ```c
