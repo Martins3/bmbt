@@ -18,26 +18,6 @@
 
 - [ ] 实际上，只是使用了 seabios 的后 128k 的空间，看看 seabios 的 loader 中内容吧
 
-
-下面几个内容应该是 rom 直接加载
-```c
-huxueshi:rom_reset /home/maritns3/core/seabios/out/bios.bin
-huxueshi:rom_reset etc/acpi/tables
-huxueshi:rom_reset etc/table-loader
-huxueshi:rom_reset etc/acpi/rsdp
-```
-
-```c
-huxueshi:rom_insert /home/maritns3/core/seabios/out/bios.bin
-huxueshi:rom_insert kvmvapic.bin
-huxueshi:rom_insert linuxboot_dma.bin
-huxueshi:rom_insert etc/acpi/tables
-huxueshi:rom_insert etc/table-loader
-huxueshi:rom_insert etc/acpi/rsdp
-```
-- [ ] 很奇怪，为什么 insert 进去的是 5 个，但是 rom_reset 的时候，
-    - [ ] kvmvapic.bin 和 linuxboot_dma.bin 应该都是通过 fw_cfg 加载的吧
-
 ```c
 huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
 huxueshi:fw_cfg_add_file_callback etc/e820
@@ -64,22 +44,84 @@ huxueshi:fw_cfg_add_file_callback bios-geometry
 #define PC_ROM_ALIGN       0x800
 #define PC_ROM_SIZE        (PC_ROM_MAX - PC_ROM_MIN_VGA)
 ```
+## [ ] struct Rom
+总体来说，是一个很简单的结构体, 除了:
+- Rom::fw_dir
+- Rom::fw_file
+
+- [ ] 既然都是 ROM 了，为什么不直接放到内存，而是使用 fw_cfg 之类的操作
+
+**分析添加的位置**
+
+只有下面两个选项的时候有用:
+```c
+int rom_add_vga(const char *file)
+{
+    return rom_add_file(file, "vgaroms", 0, -1, true, NULL, NULL);
+}
+
+int rom_add_option(const char *file, int32_t bootindex)
+{
+    return rom_add_file(file, "genroms", 0, bootindex, true, NULL, NULL);
+}
+```
+实际上，变成了只有 rom_add_option 位置。
+
+在 pc_memory_init 中:
+```c
+    for (i = 0; i < nb_option_roms; i++) {
+        rom_add_option(option_rom[i].name, option_rom[i].bootindex);
+    }
+```
+其中 nb_option_roms 和 option_rom 是两个全局变量
+
+**分析其作用**
+
+会调用 fw_cfg_add_file, 将文件添加进去
+
+
+## rom_reset 加载到内存中
+调用路径:
+- address_space_write_rom
+  - address_space_write_rom_internal
+    - 
+
+下面几个内容应该是 rom 直接加载
+```c
+huxueshi:rom_reset /home/maritns3/core/seabios/out/bios.bin
+huxueshi:rom_reset etc/acpi/tables
+huxueshi:rom_reset etc/table-loader
+huxueshi:rom_reset etc/acpi/rsdp
+```
+
+```c
+huxueshi:rom_insert /home/maritns3/core/seabios/out/bios.bin
+huxueshi:rom_insert kvmvapic.bin
+huxueshi:rom_insert linuxboot_dma.bin
+huxueshi:rom_insert etc/acpi/tables
+huxueshi:rom_insert etc/table-loader
+huxueshi:rom_insert etc/acpi/rsdp
+```
+- insert 进去的是 5 个，但是 rom_reset 只有三个，因为对于使用 fw_cfg 加载的，现在还不需要
 
 ## rom_insert 的调用者
 - rom_add_blob
 - rom_add_file
 - rom_add_elf_program : 暂时没有使用
 
+- [ ] rom_add_file 和 rom_add_blob 的区别是不是 rom 是从文件中读去的，还是
 
 #### rom_add_file
+1. 将文件中内容拷贝到 Rom::data
+
+
+
 似乎只是看到下面三个调用者
 ```c
 huxueshi:rom_add_file /home/maritns3/core/seabios/out/bios.bin
 huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/kvmvapic.bin
 huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/linuxboot_dma.bin
 ```
-
-
 
 #### rom_add_blob
 1. etc/acpi/tables
@@ -126,6 +168,11 @@ mized out>, name@entry=0x555555eeba86 "etc/acpi/rsdp") at ../hw/acpi/utils.c:46
 */
 ```
 
+## boot device
+- 在 rom_add_file 中，最后调用了 add_boot_device_path 而且很小心的组装了 add_boot_device_path 之类的操作
+
+
+## ref material
 ```txt
 address-space: memory
   0000000000000000-ffffffffffffffff (prio 0, i/o): system
