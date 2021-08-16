@@ -173,6 +173,10 @@ AddressSpace 关联一个 MemoryRegion, 通过 MemoryRegion 可以找到 Flatvie
       - qemu_ram_mmap
         - mmap : 可见，RAMBlock 就是分配一块空间
 
+RAMBlock 结构体分析:
+1. RAMBlock::host : host 的虚拟地址空间，存储 mmap 的返回值
+
+
 - address_space_rw 和 address_space_stl 之类的关系是什么 ?
   - 含义很清晰(指定 address_space 来访问)，但是，到目前为止，没有指向 address_space_rw 调用路径
   - cpu_physical_memory_rw 是关键的调用者

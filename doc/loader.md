@@ -18,6 +18,12 @@
 
 - [ ] 实际上，只是使用了 seabios 的后 128k 的空间，看看 seabios 的 loader 中内容吧
 
+- [ ] 现在是知道了 bios 的加载地址，其他 rom_add_blob 添加进去的几个怎么分析
+
+- [ ] 真的会为了 below 4g / above 4g 从而 mmap 出来空间吗?
+    - [ ] 如果和 bios.bin 的空间重合不是浪费吗?
+    - [ ] 内存的分配都是通过 RAMBlock 的吧
+
 ```c
 huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
 huxueshi:fw_cfg_add_file_callback etc/e820
@@ -35,21 +41,32 @@ huxueshi:fw_cfg_add_file_callback bootorder
 huxueshi:fw_cfg_add_file_callback bios-geometry
 ```
 
-- [ ] 分析都存在 rom 之类的东西:
+## pc.rom
 
+在 pc_memory_init 中初始化的:
 ```c
-#define PC_ROM_MIN_VGA     0xc0000
-#define PC_ROM_MIN_OPTION  0xc8000
-#define PC_ROM_MAX         0xe0000
-#define PC_ROM_ALIGN       0x800
-#define PC_ROM_SIZE        (PC_ROM_MAX - PC_ROM_MIN_VGA)
+    option_rom_mr = g_malloc(sizeof(*option_rom_mr));
+    memory_region_init_ram(option_rom_mr, NULL, "pc.rom", PC_ROM_SIZE,
+                           &error_fatal);
+    if (pcmc->pci_enabled) {
+        memory_region_set_readonly(option_rom_mr, true);
+    }
+    memory_region_add_subregion_overlap(rom_memory,
+                                        PC_ROM_MIN_VGA,
+                                        option_rom_mr,
+                                        1);
 ```
-## [ ] struct Rom
+- memory_region_init_ram : 创建出来 RAM, 但是 memory_region_set_readonly 不就让这里没有作用了
+    - memory_region_init_ram_nomigrate
+      - memory_region_init_ram_flags_nomigrate
+        - qemu_ram_alloc :(./memory/memory-model.md(#RAMBlock)) 分析了进一步如何创建空间的
+
+实际上，当 pci enable 的时候，这个东西并没有啥作用。
+
+## struct Rom
 总体来说，是一个很简单的结构体, 除了:
 - Rom::fw_dir
 - Rom::fw_file
-
-- [ ] 既然都是 ROM 了，为什么不直接放到内存，而是使用 fw_cfg 之类的操作
 
 **分析添加的位置**
 
@@ -77,14 +94,14 @@ int rom_add_option(const char *file, int32_t bootindex)
 
 **分析其作用**
 
-会调用 fw_cfg_add_file, 将文件添加进去
+体现在 rom_add_file 中, 会调用 fw_cfg_add_file, 将文件添加进去
 
 
 ## rom_reset 加载到内存中
 调用路径:
 - address_space_write_rom
   - address_space_write_rom_internal
-    - 
+    - memcpy
 
 下面几个内容应该是 rom 直接加载
 ```c
@@ -115,7 +132,6 @@ huxueshi:rom_insert etc/acpi/rsdp
 1. 将文件中内容拷贝到 Rom::data
 
 
-
 似乎只是看到下面三个调用者
 ```c
 huxueshi:rom_add_file /home/maritns3/core/seabios/out/bios.bin
@@ -123,8 +139,27 @@ huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/kvmvapic.bin
 huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/linuxboot_dma.bin
 ```
 
+观看一个最经典的:
+```c
+/*
+#0  rom_add_file (file=file@entry=0x555556fe3010 "/home/maritns3/core/seabios/out/bios.bin", fw_dir=fw_dir@entry=0x0, addr=addr@entry=4294705152, bootindex=bootindex@entry=-1, option_rom=option_rom@entry=false, mr=mr@entry=0x0, as=0x0) at ../hw/core/loader.c:944
+#1  0x0000555555b93560 in x86_bios_rom_init (ms=<optimized out>, default_firmware=<optimized out>, rom_memory=0x555556a132d0, isapc_ram_fw=<optimized out>) at ../hw/i386/x86.c:1110
+#2  0x0000555555b9b988 in pc_system_firmware_init (pcms=0x5555568a65e0, rom_memory=0x555556a132d0) at /home/maritns3/core/kvmqemu/include/hw/boards.h:24
+#3  0x0000555555b8baa0 in pc_memory_init (pcms=pcms@entry=0x5555568a65e0, system_memory=system_memory@entry=0x5555566a9460, rom_memory=rom_memory@entry=0x555556a132d0,ram_memory=ram_memory@entry=0x7fffffffd290) at ../hw/i386/pc.c:945
+#4  0x0000555555b9e281 in pc_init1 (machine=0x5555568a65e0, pci_type=0x555555f08869 "i440FX", host_type=0x555555f3773c "i440FX-pcihost") at ../hw/i386/pc_piix.c:185
+#5  0x0000555555a9b934 in machine_run_board_init (machine=0x5555568a65e0) at ../hw/core/machine.c:1272
+#6  0x0000555555d09ef4 in qemu_init_board () at ../softmmu/vl.c:2618
+#7  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2692
+#8  0x0000555555d0d6b0 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3714
+#9  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+*/
+```
+
 #### rom_add_blob
+下面三个通过 rom_add_blob 来添加的:
 1. etc/acpi/tables
+2. etc/table-loader
+3. etc/acpi/rsdp
 
 ```c
 /*
@@ -144,29 +179,11 @@ mized out>, name@entry=0x555555eeba75 "etc/table-loader") at ../hw/acpi/utils.c:
 
 /*
 #0  rom_add_blob (name=name@entry=0x555555eeba86 "etc/acpi/rsdp", blob=0x555556eb87d0, len=20, max_len=max_len@entry=4096, addr=addr@entry=18446744073709551615, fw_file
-_name=fw_file_name@entry=0x555555eeba86 "etc/acpi/rsdp", fw_callback=0x555555bb2300 <acpi_build_update>, callback_opaque=0x555556b4ef90, as=0x0, read_only=true) at ../h
-w/core/loader.c:1044
-#1  0x0000555555998607 in acpi_add_rom_blob (update=update@entry=0x555555bb2300 <acpi_build_update>, opaque=opaque@entry=0x555556b4ef90, blob=0x555556acc000, name=<opti
-mized out>, name@entry=0x555555eeba86 "etc/acpi/rsdp") at ../hw/acpi/utils.c:46
+_name=fw_file_name@entry=0x555555eeba86 "etc/acpi/rsdp", fw_callback=0x555555bb2300 <acpi_build_update>, callback_opaque=0x555556b4ef90, as=0x0, read_only=true) at ../hw/core/loader.c:1044
+#1  0x0000555555998607 in acpi_add_rom_blob (update=update@entry=0x555555bb2300 <acpi_build_update>, opaque=opaque@entry=0x555556b4ef90, blob=0x555556acc000, name=<optimized out>, name@entry=0x555555eeba86 "etc/acpi/rsdp") at ../hw/acpi/utils.c:46
 #2  0x0000555555bb273f in acpi_setup () at ../hw/i386/acpi-build.c:2779
-
 ```
 
-
-```c
-/*
-#0  rom_add_file (file=file@entry=0x555556fe3010 "/home/maritns3/core/seabios/out/bios.bin", fw_dir=fw_dir@entry=0x0, addr=addr@entry=4294705152, bootindex=bootindex@entry=-1, option_rom=option_rom@entry=false, mr=mr@entry=0x0, as=0x0) at ../hw/core/loader.c:944
-#1  0x0000555555b93560 in x86_bios_rom_init (ms=<optimized out>, default_firmware=<optimized out>, rom_memory=0x555556a132d0, isapc_ram_fw=<optimized out>) at ../hw/i386/x86.c:1110
-#2  0x0000555555b9b988 in pc_system_firmware_init (pcms=0x5555568a65e0, rom_memory=0x555556a132d0) at /home/maritns3/core/kvmqemu/include/hw/boards.h:24
-#3  0x0000555555b8baa0 in pc_memory_init (pcms=pcms@entry=0x5555568a65e0, system_memory=system_memory@entry=0x5555566a9460, rom_memory=rom_memory@entry=0x555556a132d0,ram_memory=ram_memory@entry=0x7fffffffd290) at ../hw/i386/pc.c:945
-#4  0x0000555555b9e281 in pc_init1 (machine=0x5555568a65e0, pci_type=0x555555f08869 "i440FX", host_type=0x555555f3773c "i440FX-pcihost") at ../hw/i386/pc_piix.c:185
-#5  0x0000555555a9b934 in machine_run_board_init (machine=0x5555568a65e0) at ../hw/core/machine.c:1272
-#6  0x0000555555d09ef4 in qemu_init_board () at ../softmmu/vl.c:2618
-#7  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2692
-#8  0x0000555555d0d6b0 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3714
-#9  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
-*/
-```
 
 ## boot device
 - 在 rom_add_file 中，最后调用了 add_boot_device_path 而且很小心的组装了 add_boot_device_path 之类的操作
