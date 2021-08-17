@@ -1,8 +1,8 @@
 # fw_cfg
 
-- [ ] seabios 镜像是如何加载进去的? 其实 fw_cfg 是解决当 seabios 加载成功之后，然后从 host 中要内容的
-    - [ ] 在启动的时候分配了两个地址空间，然后加载 bios 到指定的位置
-    - [ ] 找到 bios.bin 的句柄的位置
+- [ ] fw_cfg_add_file_callback : 的两个参数 callback 是做什么的
+  - rom_add_blob 只是添加了 FWCfgCallback select_cb 而且参数就是 acpi_build_update
+
 
 ## 基本原理
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，

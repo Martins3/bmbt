@@ -1,4 +1,4 @@
-# loader
+s loader
 - [ ] 了解一下 pc.rom 和 isa-bios 的映射规则
     - [ ] 好像进行了一些有趣的操作，让 bios 映射到两个位置 (map the last 128KB of the BIOS in ISA space)
 
@@ -18,7 +18,6 @@
 
 - [ ] 实际上，只是使用了 seabios 的后 128k 的空间，看看 seabios 的 loader 中内容吧
 
-- [ ] 现在是知道了 bios 的加载地址，其他 rom_add_blob 添加进去的几个怎么分析
 
 - [ ] 真的会为了 below 4g / above 4g 从而 mmap 出来空间吗?
     - [ ] 如果和 bios.bin 的空间重合不是浪费吗?
@@ -158,10 +157,33 @@ huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/linuxboot_dma.bi
 ```
 
 #### rom_add_blob
-下面三个通过 rom_add_blob 来添加的:
+下面三个通过 rom_add_blob 来添加的, 而且其调用者都是 acpi_add_rom_blob
 1. etc/acpi/tables
 2. etc/table-loader
 3. etc/acpi/rsdp
+
+- 创建的 mr 实际上根本没有挂载到任何 mr 其作用更像是分配空间而已, seabios 读去空间还是靠 fw_cfg 的
+- 实际上，这个 rom_add_blob 调用 fw_cfg_add_file_callback 的数据参数没有任何意义，根本不会被读去
+
+在下面三个位置都会进行从 Rom::data 到 mr 的空间的拷贝，但是都没啥意, 因为在 acpi_build_update 中进行 memcpy 的
+- rom_set_mr
+- rom_reset
+- acpi_ram_update
+
+```c
+static void acpi_ram_update(MemoryRegion *mr, GArray *data)
+{
+    uint32_t size = acpi_data_len(data);
+
+    /* Make sure RAM size is correct - in case it got changed e.g. by migration */
+    memory_region_ram_resize(mr, size, &error_abort);
+
+    memcpy(memory_region_get_ram_ptr(mr), data->data, size);
+    memory_region_set_dirty(mr, 0, size);
+}
+```
+
+
 
 ```c
 /*
@@ -180,10 +202,10 @@ mized out>, name@entry=0x555555eeba75 "etc/table-loader") at ../hw/acpi/utils.c:
 */
 
 /*
-#0  rom_add_blob (name=name@entry=0x555555eeba86 "etc/acpi/rsdp", blob=0x555556eb87d0, len=20, max_len=max_len@entry=4096, addr=addr@entry=18446744073709551615, fw_file
-_name=fw_file_name@entry=0x555555eeba86 "etc/acpi/rsdp", fw_callback=0x555555bb2300 <acpi_build_update>, callback_opaque=0x555556b4ef90, as=0x0, read_only=true) at ../hw/core/loader.c:1044
+#0  rom_add_blob (name=name@entry=0x555555eeba86 "etc/acpi/rsdp", blob=0x555556eb87d0, len=20, max_len=max_len@entry=4096, addr=addr@entry=18446744073709551615, fw_file_name=fw_file_name@entry=0x555555eeba86 "etc/acpi/rsdp", fw_callback=0x555555bb2300 <acpi_build_update>, callback_opaque=0x555556b4ef90, as=0x0, read_only=true) at ../hw/core/loader.c:1044
 #1  0x0000555555998607 in acpi_add_rom_blob (update=update@entry=0x555555bb2300 <acpi_build_update>, opaque=opaque@entry=0x555556b4ef90, blob=0x555556acc000, name=<optimized out>, name@entry=0x555555eeba86 "etc/acpi/rsdp") at ../hw/acpi/utils.c:46
 #2  0x0000555555bb273f in acpi_setup () at ../hw/i386/acpi-build.c:2779
+*/
 ```
 
 
