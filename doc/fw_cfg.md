@@ -1,8 +1,6 @@
 # fw_cfg
 
-- [ ] fw_cfg_add_file_callback : 的两个参数 callback 是做什么的
-  - rom_add_blob 只是添加了 FWCfgCallback select_cb 而且参数就是 acpi_build_update
-
+- [ ] seabios 需要区分处理文件和非文件  
 
 ## 基本原理
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
@@ -24,14 +22,20 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
     - 一堆 fw_cfg_add_i16 添加 x86 特有的配置 
     - 处理 NUMA 相关的内容
 
-
-## 一些小记录
-在 vapic_realize 中间使用了两个全局变量
+## 流程分析 : etc/acpi/rsdp 如何通过 fw_cfg 告知 guest 的
+通过两个端口来通信
 ```c
-    option_rom[nb_option_roms].name = "kvmvapic.bin";
-    option_rom[nb_option_roms].bootindex = -1;
-    nb_option_roms++;
+#define PORT_QEMU_CFG_CTL           0x0510
+#define PORT_QEMU_CFG_DATA          0x0511
 ```
+
+- qemu_cfg_read_file
+  - qemu_cfg_select
+  - qemu_cfg_skip
+  - qemu_cfg_read
+      - qemu_cfg_dma_transfer
+      - insb
+
 
 ## smbios
 https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
@@ -77,17 +81,74 @@ huxueshi:fw_cfg_add_bytes 18
 ```
 和架构无关的在: include/standard-headers/linux/qemu_fw_cfg.h 并没有让人恐惧的东西，主要是在 fw_cfg_arch_create 等位置初始化
 
-## add 相关的函数
-- fw_cfg_add_bytes : 很容易
-- fw_cfg_add_file
-  - fw_cfg_add_file_callback
-    - 创建 FW_CFG_FILE_DIR
+## 文件的处理
+因为很多 fw_cfg 使用约定好的 index，但是新添加的，有一些采用名称来区分
 
 文件的处理方法:
 - 常规内容都存贮在 FWCfgState::entries
 - FWCfgState::entries 持有 FWCfgState::files 地址, FWCfgFiles 是为了记录文件的特有信息
 - FW_CFG_FILE_FIRST 开始, FWCfgState::entries 持有 FWCfgState::files 的 index
 
+```c
+typedef struct FWCfgFiles {
+    uint32_t  count;
+    FWCfgFile f[];
+} FWCfgFiles;
+
+/* fw_cfg file directory entry type */
+struct fw_cfg_file {
+	uint32_t size;
+	uint16_t select;
+	uint16_t reserved;
+	char name[FW_CFG_MAX_FILE_PATH];
+};
+```
+
+seabios 中的 qemu_cfg_init 处理:
+```c
+    u32 count;
+    qemu_cfg_read_entry(&count, QEMU_CFG_FILE_DIR, sizeof(count));
+    count = be32_to_cpu(count);
+    for (e = 0; e < count; e++) {
+        struct QemuCfgFile qfile;
+        qemu_cfg_read(&qfile, sizeof(qfile));
+        dprintf(1, "huxueshi:%s filename=%s\n", __FUNCTION__, qfile.name);
+        qemu_romfile_add(qfile.name, be16_to_cpu(qfile.select)
+                         , 0, be32_to_cpu(qfile.size));
+    }
+```
+
+```c
+huxueshi:qemu_cfg_init filename=bios-geometry
+huxueshi:qemu_cfg_init filename=bootorder
+huxueshi:qemu_cfg_init filename=etc/acpi/rsdp
+huxueshi:qemu_cfg_init filename=etc/acpi/tables
+huxueshi:qemu_cfg_init filename=etc/boot-fail-wait
+huxueshi:qemu_cfg_init filename=etc/e820
+huxueshi:qemu_cfg_init filename=etc/msr_feature_control
+huxueshi:qemu_cfg_init filename=etc/smbios/smbios-anchor
+huxueshi:qemu_cfg_init filename=etc/smbios/smbios-tables
+huxueshi:qemu_cfg_init filename=etc/system-states
+huxueshi:qemu_cfg_init filename=etc/table-loader
+huxueshi:qemu_cfg_init filename=etc/tpm/log
+huxueshi:qemu_cfg_init filename=genroms/kvmvapic.bin
+huxueshi:qemu_cfg_init filename=genroms/linuxboot_dma.bin
+```
+之后 seabios 就可以通过 
+
+
+
+- 这个 dir 是如何组装出来的?
+  - fw_cfg_add_file_callback 中创建了 FW_CFG_FILE_DIR 这个 entry, 其数值正好指向了 FWCfgState::files
+  - fw_cfg_add_file_callback 中接下来组装 FWCfgState::files 中的内容
+  - 最后调用 fw_cfg_add_bytes_callback 将数据装入
+
+
+## add 相关的函数
+- fw_cfg_add_bytes : 很容易
+- fw_cfg_add_file
+  - fw_cfg_add_file_callback
+    - 创建 FW_CFG_FILE_DIR
 
 ## modify 相关的函数
 - [ ] modify 总是和 reset 机制放到一起的
