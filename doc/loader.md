@@ -163,7 +163,6 @@ huxueshi:rom_add_file /home/maritns3/core/kvmqemu/build/pc-bios/linuxboot_dma.bi
 3. etc/acpi/rsdp
 
 - 创建的 mr 实际上根本没有挂载到任何 mr 其作用更像是分配空间而已, seabios 读去空间还是靠 fw_cfg 的
-- 实际上，这个 rom_add_blob 调用 fw_cfg_add_file_callback 的数据参数没有任何意义，根本不会被读去
 
 在下面三个位置都会进行从 Rom::data 到 mr 的空间的拷贝，但是都没啥意, 因为在 acpi_build_update 中进行 memcpy 的
 - rom_set_mr
@@ -182,7 +181,6 @@ static void acpi_ram_update(MemoryRegion *mr, GArray *data)
     memory_region_set_dirty(mr, 0, size);
 }
 ```
-
 
 
 ```c
