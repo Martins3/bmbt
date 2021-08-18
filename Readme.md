@@ -42,6 +42,9 @@ host 的软件栈无法移除掉。还有一个就是 QEMU 实际上为了处理
 
 ## 一些参考的文章
 - [ ] HyperMAMBO-X64: Using Virtualization to Support High-Performance Transparent Binary Translation
+- [ ] Hardware-Accelerated Dynamic Binary Translation
+- [ ] A QEMU-based Approach to Hardware-Assisted Virtualization
+
 
 ## QA
 1. 为什么需要将 TCG engine 移植过来
