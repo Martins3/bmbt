@@ -14,7 +14,7 @@
 
 总体来说，loader 在处理 elf, ramdisk 和 rom 的事情，但是暂时需要的并不多。
 
-## pc.bios 和 pc.ram 会重合吗?
+## pc.bios 和 pc.ram 是重叠的
 真的会为了 below 4g / above 4g 从而 mmap 出来空间吗?
 
 在 pc_memory_init 中分别对于将 MachineState::ram 分别映射出来两个 alias : ram_below_4g 和 ram_above_4g 的
