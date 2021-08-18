@@ -83,6 +83,11 @@ A: 指令的读取都是 tb 的事情
         - qemu_ram_block_from_host
 
 ## CPUIOTLBEntry
+- 从操作系统的角度，进行 IO 也是经过了自己的 TLB 翻译的之后，才得到物理地址的啊，之后这个地址才会发给地址总线
+- 进行 RAM 的访问, TLB 直接从 gva 到 hva 的
+- TLB 中插入 ??? 表示当前 TLB 是当前的映射空间实际上是物理地址空间
+    - [ ] 显然是
+
 使用者:
 - probe_access
   - tlb_hit / victim_tlb_hit / tlb_fill : TLB 访问经典三件套
@@ -115,6 +120,32 @@ A: 指令的读取都是 tb 的事情
     desc->iotlb[index].addr = iotlb - vaddr_page;
     desc->iotlb[index].attrs = attrs;
 ```
+
+```c
+/* The IOTLB is not accessed directly inline by generated TCG code,
+ * so the CPUIOTLBEntry layout is not as critical as that of the
+ * CPUTLBEntry. (This is also why we don't want to combine the two
+ * structs into one.)
+ */
+typedef struct CPUIOTLBEntry {
+    /*
+     * @addr contains:
+     *  - in the lower TARGET_PAGE_BITS, a physical section number
+     *  - with the lower TARGET_PAGE_BITS masked off, an offset which
+     *    must be added to the virtual address to obtain:
+     *     + the ram_addr_t of the target RAM (if the physical section
+     *       number is PHYS_SECTION_NOTDIRTY or PHYS_SECTION_ROM)
+     *     + the offset within the target MemoryRegion (otherwise)
+     */
+    hwaddr addr;
+    MemTxAttrs attrs;
+} CPUIOTLBEntry;
+```
+- [ ] 什么叫做 physical section number ?
+- [ ] PHYS_SECTION_NOTDIRTY
+- [ ] PHYS_SECTION_ROM
+
+- [ ] tlb_set_page_with_attrs : 在这里似乎没有看到正常的 tlb refill 啊
 
 ## CPUTLBEntry 需要三个 addr
 在 struct CPUTLBEntry 中，我们发现:
@@ -150,33 +181,6 @@ typedef struct CPUTLBEntry {
 2. tlb_reset_dirty_range_locked : 产生一个很有意思的问题，那就是通过设置 addr_write 表示的确可写，通过设置 TLB_NOTDIRTY 实现写保护。这样做的好处是，可以区分一个页面到底是真的不可写还是因为模拟的原因不可写。
   - 如果使用上 hardware TLB，其实可以这么处理: 如果想要给 TLB 设置上 addr_write，那么就写权限去掉，当因为 write 失败，可以捕获下这个异常，然后查询 x86 page table 来看，到底是因为 SMC 的原因还是因为 guest 本身的不可写
 3. tlb_set_dirty1_locked
-
-## CPUIOTLBEntry
-```c
-/* The IOTLB is not accessed directly inline by generated TCG code,
- * so the CPUIOTLBEntry layout is not as critical as that of the
- * CPUTLBEntry. (This is also why we don't want to combine the two
- * structs into one.)
- */
-typedef struct CPUIOTLBEntry {
-    /*
-     * @addr contains:
-     *  - in the lower TARGET_PAGE_BITS, a physical section number
-     *  - with the lower TARGET_PAGE_BITS masked off, an offset which
-     *    must be added to the virtual address to obtain:
-     *     + the ram_addr_t of the target RAM (if the physical section
-     *       number is PHYS_SECTION_NOTDIRTY or PHYS_SECTION_ROM)
-     *     + the offset within the target MemoryRegion (otherwise)
-     */
-    hwaddr addr;
-    MemTxAttrs attrs;
-} CPUIOTLBEntry;
-```
-- [ ] 什么叫做 physical section number ?
-- [ ] PHYS_SECTION_NOTDIRTY
-- [ ] PHYS_SECTION_ROM
-
-- [ ] tlb_set_page_with_attrs : 在这里似乎没有看到正常的 tlb refill 啊
 
 ## MemTxAttrs
 在 `x86_*_phys` 和 helper_outb 都是通过 cpu_get_mem_attrs 来构建参数 MemTxAttrs
