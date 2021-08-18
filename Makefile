@@ -1,6 +1,10 @@
-CFLAGS := -Werror
-BUILD_DIR := build
+BASE_DIR = $(shell pwd)
+BUILD_DIR := $(BASE_DIR)/build
 kernel := $(BUILD_DIR)/kernel.bin
+LIBCAPSTONE := $(BASE_DIR)/capstone/libcapstone.a
+
+CFLAGS := -Werror -I$(BUILD_DIR)/capstone/include
+
 linker_script := src/linker.ld
 # assembly_source_files := src/head.S
 assembly_source_files :=
@@ -29,11 +33,13 @@ obj_files := $(assembly_object_files) $(c_object_files)
 # endif
 
 
-CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use
+CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use # 暂时不使用 iwyu
 CXX=gcc
 
 GCC=$(ARCH_PREFIX)${CXX}
 LD=$(ARCH_PREFIX)ld
+AR=$(ARCH_PREFIX)ar
+RANLIB=ranlib
 
 DEF = ../../qemu_bak/vmlinux
 
@@ -42,9 +48,9 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info GCC=$(GCC))
 # $(info obj_files=$(obj_files))
 # $(info dependency_files=$(dependency_files))
+$(info $(LIBCAPSTONE))
 
-all: $(kernel)
-
+all: $(kernel) $(LIBCAPSTONE)
 
 -include $(dependency_files)
 
@@ -67,15 +73,19 @@ $(kernel) : $(obj_files)
 	# Just link all the object files.
 	echo "happy"
 	# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
+	
+
+CAP_CFLAGS=-I$(BASE_DIR)/capstone/include
+CAP_CFLAGS+=-DCAPSTONE_HAS_X86
+
+$(LIBCAPSTONE) :
+	mkdir -p $(@D)
+	$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
 
 .PHONY: all clean
 
-
 clean:
-	rm -f $(dependency_files)
-	rm -f $(assembly_object_files)
-	rm -f $(c_object_files)
-	rm -f $(kernel)
+	rm -r $(BUILD_DIR)
 
 gdb: $(kernel)
 	 gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
