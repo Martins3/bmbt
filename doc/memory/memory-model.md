@@ -358,6 +358,17 @@ memory-region: pc.ram
 仔细想想，这么设计是很有道理的, 这样，一块物理内存是作为一个 MemoryRegion，拥有相同的属性，
 而 system memory 是实际上物理内存中存在空洞的。
 
+此外，alias 的一个例子在 isa 地址空间:
+```c
+/*
+      00000000000e0000-00000000000fffff (prio 1, rom): alias isa-bios @pc.bios 0000000000020000-000000000003ffff
+      00000000fffc0000-00000000ffffffff (prio 0, rom): pc.bios
+*/
+```
+
+- 现在思考一个问题，如何保证访问 alias 的时候，最后获取的是正确的地址:
+  - memory_region_get_ram_ptr 中存在一个转换
+
 #### QEMU 内存虚拟化源码分析[^1]
 首先，qemu 中用 AddressSpace 用来表示 CPU/设备看到的内存，一个 AddressSpace 下面包含多个 MemoryRegion，这些 MemoryRegion 结构通过树连接起来，树的根是 AddressSpace 的 root 域。
 
