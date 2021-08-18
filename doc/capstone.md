@@ -1,7 +1,8 @@
 # capstone
 
 - [ ] 下面是 capstone 实际上的需要的 CFLAGS 的，实际上，真正添加的很少
-```
+
+```Makefile
 CFLAGS="-O2
 -U_FORTIFY_SOURCE
 -D_FORTIFY_SOURCE=2

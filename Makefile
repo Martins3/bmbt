@@ -1,9 +1,10 @@
 BASE_DIR = $(shell pwd)
 BUILD_DIR := $(BASE_DIR)/build
 kernel := $(BUILD_DIR)/kernel.bin
-LIBCAPSTONE := $(BASE_DIR)/capstone/libcapstone.a
+LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 
-CFLAGS := -Werror -I$(BUILD_DIR)/capstone/include
+CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include
+CFLAGS := -Werror $(CFLAGS_HEADER)
 
 linker_script := src/linker.ld
 # assembly_source_files := src/head.S
@@ -48,7 +49,7 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info GCC=$(GCC))
 # $(info obj_files=$(obj_files))
 # $(info dependency_files=$(dependency_files))
-$(info $(LIBCAPSTONE))
+$(info $(BASE_DIR))
 
 all: $(kernel) $(LIBCAPSTONE)
 
@@ -75,7 +76,7 @@ $(kernel) : $(obj_files)
 	# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
 	
 
-CAP_CFLAGS=-I$(BASE_DIR)/capstone/include
+CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86
 
 $(LIBCAPSTONE) :
