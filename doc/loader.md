@@ -6,11 +6,11 @@
 - [ ] 看来需要理解一下 isa 地址空间, 1M 的地址空间内的各种布局到底是怎么规定的
 - [ ] ROM 到底是不是 readonly 的啊?
 
-- isa-bios 是 pc.bios 的后 128k 的部分，而且放到 1M 的后面的空间中
-
 - [ ] 为什么需要将 pc.bios 映射到 4G pci 空间的最上方
 
 - [ ] 实际上，只是使用了 seabios 的后 128k 的空间，看看 seabios 的 loader 中内容吧
+
+- isa-bios 是 pc.bios 的后 128k 的部分，而且放到 1M 的后面的空间中
 
 总体来说，loader 在处理 elf, ramdisk 和 rom 的事情，但是暂时需要的并不多。
 
