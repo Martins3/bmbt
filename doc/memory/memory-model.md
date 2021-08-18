@@ -13,56 +13,61 @@ memory_ldst.inc.h 的方法。
 - flatview_for_each_range 从来不会被调用
 - memory_region_read_with_attrs_accessor 从来不会被调用
 
-## memory_ldst 的分析
-`#include "exec/memory_ldst.inc.h"` defined four times
+## report
+1. 首先对比分析一下 kvmtool 的实现方法 ?
+  - 处理设备 / 处理内存
+1. 要解决什么问题和解决方法?
+    - 设备的地址空间
+    - IOMMU
+    - DMA
+    - memory listener
+    - 地址空间的拆分
+    - AddressSpace 为了做什么?
+    - 有的 memory 是 device 空间，有的是 device 空间的
+2. 使用了那些结构体?
+3. 那些关键的调用路径
 
-```c
-// cpu-all.h
-#define SUFFIX
-#define ARG1         as
-#define ARG1_DECL    AddressSpace *as
-#define TARGET_ENDIANNESS
-#include "exec/memory_ldst.inc.h"
+4. softmmu 的关联部分
+    - [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
 
-#define SUFFIX       _cached_slow
-#define ARG1         cache
-#define ARG1_DECL    MemoryRegionCache *cache
-#define TARGET_ENDIANNESS
-#include "exec/memory_ldst.inc.h"
-```
+## 需要解决的问题
+- [ ] 总结一下类似下面的众多接口
+    - [ ] x86_ldub_phys
+    - [ ] stl_le_phys
+    - [ ] address_space_lduw
 
-```c
-// memory.h
-#define SUFFIX
-#define ARG1         as
-#define ARG1_DECL    AddressSpace *as
-#include "exec/memory_ldst.inc.h"
 
-#define SUFFIX       _cached_slow
-#define ARG1         cache
-#define ARG1_DECL    MemoryRegionCache *cache
-#include "exec/memory_ldst.inc.h"
-```
-but `memory_ldst.inc.c` only two times, both of them defined in exec.c
-```c
-#define ARG1_DECL                AddressSpace *as
-#define ARG1                     as
-#define SUFFIX
-#define TRANSLATE(...)           address_space_translate(as, __VA_ARGS__)
-#define RCU_READ_LOCK(...)       rcu_read_lock()
-#define RCU_READ_UNLOCK(...)     rcu_read_unlock() #include "memory_ldst.inc.c"
-```
-```c
-#define ARG1_DECL                MemoryRegionCache *cache
-#define ARG1                     cache
-#define SUFFIX                   _cached_slow
-#define TRANSLATE(...)           address_space_translate_cached(cache, __VA_ARGS__)
-#define RCU_READ_LOCK()          ((void)0)
-#define RCU_READ_UNLOCK()        ((void)0)
-#include "memory_ldst.inc.c"
-```
-memory_ldst.inc.h 已经被简化到 cpu-all.h 中间了，memory_ldst.inc.c 已经被简化为 memory_ldst.c 了
-因为 cache_slow 版本(只有 virtio 在使用)，也不需要 endianness 版本(主要是设备在使用)
+- AddressSpace 和 memory listener 的耦合很强
+
+- [ ] tcg 需要 memory listener 做什么?
+
+## QEMU Memory Model 结构分析
+https://kernelgo.org/images/qemu-address-space.svg
+
+看上去 info mtree 出来的内容相当的简单啊
+
+关键结构体内容分析:
+| struct               | desc                                                                                                                |
+|----------------------|---------------------------------------------------------------------------------------------------------------------|
+| AddressSpace         | root : 仅仅关联一个 MemoryRegion, current_map : 关联 Flatview，其余是 ioeventfd 之类的                              |
+| MemoryRegion         | 主要成员 ram_block, ops, *container*, *alias*, **subregions**, 看来是 MemoryRegion 通过 subregions 负责构建树形结构 |
+| Flatview             | ranges : 通过 render_memory_region 生成, 成员 nr nr_allocated 来管理其数量, root : 关联的 MemoryRegions , dispatch  |
+| AddressSpaceDispatch | 保存 GPA 到 HVA 的映射关系                                                                                          |
+
+- [ ] 不能理解为什么 AddressSpaceDispatch 为什么需要单独出来
+
+
+- cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAddressSpace 的主要成员 AddressSpace + CPUState
+  - address_space_init : 使用 MemoryRegion 来初始化 AddressSpace，除了调用
+    - address_space_update_topology
+      - memory_region_get_flatview_root
+      - generate_memory_topology
+        - render_memory_region
+        - flatview_simplify
+        - address_space_dispatch_new : 初始化 Flatview::dispatch
+
+> info mtree [-f][-d][-o][-D] -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
+
 
 ## code flow: from helper to memory model
 
@@ -104,11 +109,12 @@ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
 - 在 helper.c 中，那些 `x86_*_phys` 其实都是简单的找到的 cpu 的 AddressSpace 即可
 - helper_outb 中，更加简单，因为 address_space_io 总是固定的
 
-- [x] kvm 模式下会调用这些函数吗 ?
-   - 应该不会，调用者都是 helper 而已
-
-## 为什么需要给创建多个 AddressSpace 
+## 为什么需要给创建多个 AddressSpace
 - [ ] TCG 模式下，实际上，会创建 SMM 的 address space 出来，什么时候搞出来的，为什么需要单独高处这个东西来
+
+- [ ] 既然每一个 AddressSpace 都是只是关联一个 memory region 的
+
+- [ ] 为什么每一个 CPU 都是需要关联一个 AddressSpace 的, 有什么特殊的必要吗?
 
 memory listener 都是挂载到具体的 AddressSpace 上的
 
@@ -181,32 +187,7 @@ RAMBlock 结构体分析:
   - 含义很清晰(指定 address_space 来访问)，但是，到目前为止，没有指向 address_space_rw 调用路径
   - cpu_physical_memory_rw 是关键的调用者
 
-## QEMU Memory Model 结构分析
-https://kernelgo.org/images/qemu-address-space.svg
-
-一致存在一个很强的误导，因为 memory model 一层层的很复杂，实际上，info mtree 出来的内容相当的简单啊
-
-关键结构体内容分析:
-| struct               | desc                                                                                                                |
-|----------------------|---------------------------------------------------------------------------------------------------------------------|
-| AddressSpace         | root : 仅仅关联一个 MemoryRegion, current_map : 关联 Flatview，其余是 ioeventfd 之类的                              |
-| MemoryRegion         | 主要成员 ram_block, ops, *container*, *alias*, **subregions**, 看来是 MemoryRegion 通过 subregions 负责构建树形结构 |
-| Flatview             | ranges : 通过 render_memory_region 生成, 成员 nr nr_allocated 来管理其数量, root : 关联的 MemoryRegions , dispatch  |
-| AddressSpaceDispatch | 保存 GPA 到 HVA 的映射关系                                                                                          |
-
-
-- cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAddressSpace 的主要成员 AddressSpace + CPUState
-  - address_space_init : 使用 MemoryRegion 来初始化 AddressSpace，除了调用
-    - address_space_update_topology
-      - memory_region_get_flatview_root
-      - generate_memory_topology
-        - render_memory_region
-        - flatview_simplify
-        - address_space_dispatch_new : 初始化 Flatview::dispatch
-
-> info mtree [-f][-d][-o][-D] -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
-
-## render_memory_region
+## render_memory_region : 将 memory region 转化为 FlatRange
 - memory_region_transaction_commit
   - flatviews_reset
     - generate_memory_topology : Render a memory topology into a list of disjoint absolute ranges.
@@ -220,7 +201,9 @@ https://kernelgo.org/images/qemu-address-space.svg
       - flatview_add_to_dispatch
       - address_space_dispatch_compact
 
-## AddressSpaceDispatch 的制作过程
+## AddressSpaceDispatch
+
+#### AddressSpaceDispatch 的生成
 这个玩意设计成为多级页面的目的和页表查询的作用应该差不多吧!
 
 ```c
@@ -235,7 +218,7 @@ struct AddressSpaceDispatch {
 ```
 - phys_map : 相当于 cr3
 - map : 相当于管理所有的 page tabel 的页面
-- mru_section : 缓存
+- mru_section : ，缓存
 
 ```c
 struct PhysPageEntry {
@@ -269,13 +252,108 @@ typedef struct PhysPageMap {
 - sections : 最终想要获取的
 
 如何构建 PhysPageMap 这颗树:
-- flatview_add_to_dispatch
-  - register_subpage : 如果 MemoryRegionSection 无法完整地覆盖一整个页
-  - register_multipage
-    - phys_section_add : 将 MemoryRegionSection 添加到 PhysPageMap::sections
-    - phys_page_set : 设置对应的 PhysPageMap::nodes
-      - phys_map_node_reserve : 预留空间
-      - phys_page_set_level :
+- generate_memory_topology
+  - render_memory_region / flatview_simplify  : 将 memory region 转化为了 FlatRange 的
+  - flatview_add_to_dispatch : 将 FlatRange 首先使用 section_from_flat_range 转化为 MemoryRegionSection 然后添加
+    - register_subpage : 如果 MemoryRegionSection 无法完整地覆盖一整个页
+    - register_multipage
+      - phys_section_add : 将 MemoryRegionSection 添加到 PhysPageMap::sections
+      - phys_page_set : 设置对应的 PhysPageMap::nodes
+        - phys_map_node_reserve : 预留空间
+        - phys_page_set_level :
+
+
+#### AddressSpaceDispatch dispatch 的过程 : 百川归海
+进行 pio / mmio 最后总是到达 : memory_region_dispatch_read
+
+各种场景到达 memory_region_dispatch_read 的时候，总是会进行一个 memory_access_is_direct 的检查，否则就会进入到
+qemu_map_ram_ptr 的计算中, 也就是说，memory_region_dispatch_read 总是在处理 pio / mmio
+
+使用 memory_ldst.c 的 address_space_ldl_internal 中分析
+
+- helper_inw
+  - address_space_lduw
+    - address_space_ldl_internal
+      - address_space_translate : 获取具体是在那个 memory region 是为了判断当前的读写发生在哪一个 memory region 上
+        - flatview_translate : 参数 Flatview, 和 hwaddr 返回 MemoryRegion
+            - flatview_do_translate : 其实没有什么奇怪的，这就是利用 AddressSpaceDispatch 的基础设施查询
+              - address_space_translate_internal
+                - phys_page_find : 这存在一个 cache, 当没有命中的时候，需要查询一波
+      - memory_region_dispatch_read : 如果进行的是 mmio, 通过持有 MemoryRegions 可以很快的找到对应的空间
+        - memory_region_dispatch_read1
+          - access_with_adjusted_size
+      - qemu_map_ram_ptr : 如果是 RAM 的访问就很容易
+
+
+- kvm_handle_io
+  - address_space_rw
+    - address_space_read_full
+      - address_space_to_flatview : 获取  AddressSpace::current_map
+      - flatview_read
+        - flatview_translate : 从 flatview 到 mr
+        - flatview_read_continue : 会在这里区分到底是 MMIO 还是一般的, 之所以叫做 continue 是为了处理访问在多个连续的 memory region 的情况
+          - memory_region_dispatch_read : 这里，现在所有人都相同了
+
+kvm 的 style:
+```c
+/*
+#0  pci_host_config_read_common (pci_dev=0x5555570d4000, addr=2147483648, limit=1439872976, len=21845) at ../hw/pci/pci_host.c:88
+#1  0x0000555555a49a17 in pci_data_read (s=0x5555570d4000, addr=2147483648, len=2) at ../hw/pci/pci_host.c:133
+#2  0x0000555555a49b51 in pci_host_data_read (opaque=0x555556c44270, addr=0, len=2) at ../hw/pci/pci_host.c:178
+#3  0x0000555555ca681c in memory_region_read_accessor (mr=0x555556c44680, addr=0, value=0x7fffe890f060, size=2, shift=0, mask=65535, attrs=...) at ../softmmu/memory.c:440
+#4  0x0000555555ca6d1c in access_with_adjusted_size (addr=0, value=0x7fffe890f060, size=2, access_size_min=1, access_size_max=4, access_fn=0x555555ca67d6 <memory_region_read_accessor>, mr=0x555556c44680, attrs=...) at ../softmmu/memory.c:550
+#5  0x0000555555ca9a38 in memory_region_dispatch_read1 (mr=0x555556c44680, addr=0, pval=0x7fffe890f060, size=2, attrs=...) at ../softmmu/memory.c:1427
+#6  0x0000555555ca9b0e in memory_region_dispatch_read (mr=0x555556c44680, addr=0, pval=0x7fffe890f060, op=MO_16, attrs=...) at ../softmmu/memory.c:1455
+#7  0x0000555555d31e77 in flatview_read_continue (fv=0x555556db8900, addr=3324, attrs=..., ptr=0x7fffeb180000, len=2, addr1=0, l=2, mr=0x555556c44680) at ../softmmu/physmem.c:2831
+#8  0x0000555555d31fce in flatview_read (fv=0x555556db8900, addr=3324, attrs=..., buf=0x7fffeb180000, len=2) at ../softmmu/physmem.c:2870
+#9  0x0000555555d3205b in address_space_read_full (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., buf=0x7fffeb180000, len=2) at ../softmmu/physmem.c:2883
+#10 0x0000555555d32187 in address_space_rw (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., buf=0x7fffeb180000, len=2, is_write=false) at ../softmmu/physmem
+```
+
+tcg 的 style:
+```c
+/*
+#0  pci_host_config_read_common (pci_dev=0x5555570c6c00, addr=2147483648, limit=1479011232, len=21845) at ../hw/pci/pci_host.c:88
+#1  0x0000555555a49a17 in pci_data_read (s=0x5555570c6c00, addr=2147483648, len=2) at ../hw/pci/pci_host.c:133
+#2  0x0000555555a49b51 in pci_host_data_read (opaque=0x555556c48e00, addr=0, len=2) at ../hw/pci/pci_host.c:178
+#3  0x0000555555ca681c in memory_region_read_accessor (mr=0x555556c49210, addr=0, value=0x7fffe888db80, size=2, shift=0, mask=65535, attrs=...) at ../softmmu/memory.c:440
+#4  0x0000555555ca6d1c in access_with_adjusted_size (addr=0, value=0x7fffe888db80, size=2, access_size_min=1, access_size_max=4, access_fn=0x555555ca67d6 <memory_region_read_accessor>, mr=0x555556c49210, attrs=...) at ../softmmu/memory.c:550
+#5  0x0000555555ca9a38 in memory_region_dispatch_read1 (mr=0x555556c49210, addr=0, pval=0x7fffe888db80, size=2, attrs=...) at ../softmmu/memory.c:1427
+#6  0x0000555555ca9b0e in memory_region_dispatch_read (mr=0x555556c49210, addr=0, pval=0x7fffe888db80, op=MO_16, attrs=...) at ../softmmu/memory.c:1455
+#7  0x0000555555d332d7 in address_space_lduw_internal (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., result=0x0, endian=DEVICE_NATIVE_ENDIAN) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:214
+#8  0x0000555555d333cc in address_space_lduw (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., result=0x0) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:246
+#9  0x0000555555b45861 in helper_inw (env=0x555556c94340, port=3324) at ../target/i386/tcg/sysemu/misc_helper.c:48
+#10 0x00007fff540080ff in code_gen_buffer ()
+```
+
+tcg 的 style : io_readx
+```c
+/*
+>>> bt
+#0  flatview_read_continue (fv=0x0, addr=384, attrs=..., ptr=0x7fffe888d8b0, len=0, addr1=93825027792176, l=1, mr=0x0) at ../softmmu/physmem.c:2818
+#1  0x0000555555d31fce in flatview_read (fv=0x7ffdcc4e0850, addr=4273946630, attrs=..., buf=0x7fffe888d8b0, len=1) at ../softmmu/physmem.c:2870
+#2  0x0000555555d31306 in subpage_read (opaque=0x7ffdcc52f420, addr=6, data=0x7fffe888d908, len=1, attrs=...) at ../softmmu/physmem.c:2453
+#3  0x0000555555ca692e in memory_region_read_with_attrs_accessor (mr=0x7ffdcc52f420, addr=6, value=0x7fffe888da78, size=1, shift=0, mask=255, attrs=...) at ../softmmu/memory.c:462
+#4  0x0000555555ca6d1c in access_with_adjusted_size (addr=6, value=0x7fffe888da78, size=1, access_size_min=1, access_size_max=8, access_fn=0x555555ca68ca <memory_region_read_with_attrs_accessor>, mr=0x7ffdcc52f420, attrs=...) at ../softmmu/memory.c:550
+#5  0x0000555555ca9a76 in memory_region_dispatch_read1 (mr=0x7ffdcc52f420, addr=6, pval=0x7fffe888da78, size=1, attrs=...) at ../softmmu/memory.c:1433
+#6  0x0000555555ca9b0e in memory_region_dispatch_read (mr=0x7ffdcc52f420, addr=6, pval=0x7fffe888da78, op=MO_8, attrs=...) at ../softmmu/memory.c:1455
+#7  0x0000555555c6cb1b in io_readx (env=0x555556d66880, iotlbentry=0x7ffdcc01d6b0, mmu_idx=2, addr=4273946630, retaddr=140734603597128, access_type=MMU_DATA_LOAD, op=MO_8) at ../accel/tcg/cputlb.c:1359
+#8  0x0000555555c6dfb9 in load_helper (env=0x555556d66880, addr=4273946630, oi=2, retaddr=140734603597128, op=MO_8, code_read=false, full_load=0x555555c6e19c <full_ldub_mmu>) at ../accel/tcg/cputlb.c:1914
+#9  0x0000555555c6e1e6 in full_ldub_mmu (env=0x555556d66880, addr=4273946630, oi=2, retaddr=140734603597128) at ../accel/tcg/cputlb.c:1972
+#10 0x0000555555c6e21e in helper_ret_ldub_mmu (env=0x555556d66880, addr=4273946630, oi=2, retaddr=140734603597128) at ../accel/tcg/cputlb.c:1978
+```
+
+在 [dam](#dma) 中，还有一个类似 backtrace, 其实总是到达 memory_region_dispatch_read, 而到达之前总是通过各种方法获取
+mr 而已，在 kvm_handle_io 中经过了 as 到 flatview 再到 mr 的过程，在 io_readx 中几乎立刻到达，这是因为 iotlb 存储了一个地址对应的 mr
+
+#### AddressSpaceDispatch dispatch 的过程: flatview_translate
+到达 memory_region_dispatch_read 的过程中是，有一个关键的步骤是给定 AddressSpace 以及 addr 获取 memory_region
+这就是靠 flatview_translate
+
+- flatview_translate
+  - flatview_do_translate : 返回 MemoryRegionSection
+    - address_space_translate_internal
+       - address_space_lookup_region : 通过 AddressSpaceDispatch 进行分析下去了
 
 ## 神奇的 memory_region_get_flatview_root
 这个函数，其实有点硬编码, 参考其中的注释，感觉这个东西就是为了实现处理 PCIDevice 的
@@ -368,31 +446,6 @@ memory-region: pc.ram
 
 - 现在思考一个问题，如何保证访问 alias 的时候，最后获取的是正确的地址:
   - memory_region_get_ram_ptr 中存在一个转换
-
-#### QEMU 内存虚拟化源码分析[^1]
-首先，qemu 中用 AddressSpace 用来表示 CPU/设备看到的内存，一个 AddressSpace 下面包含多个 MemoryRegion，这些 MemoryRegion 结构通过树连接起来，树的根是 AddressSpace 的 root 域。
-
-MemoryRegion 有多种类型，可以表示一段 ram，rom，MMIO，alias，alias 表示一个 MemoryRegion 的一部分区域，MemoryRegion 也可以表示一个 container，这就表示它只是其他若干个 MemoryRegion 的容器。在 MemoryRegion 中，'ram_block'表示的是分配的实际内存。
-
-AddressSpace 下面 root 及其子树形成了一个虚拟机的物理地址，但是在往 kvm 进行设置的时候，需要将其转换为一个平坦的地址模型，也就是从 0 开始的。这个就用 FlatView 表示，**一个 AddressSpace 对应一个 FlatView**。
-
-在 FlatView 中，FlatRange 表示按照需要被切分为了几个范围。
-在内存虚拟化中，还有一个重要的结构是 MemoryRegionSection，这个结构通过函数 section_from_flat_range 可由 FlatRange 转换过来。
-
-mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，这也是 alias 的作用
-
-*继续 pc_memory_init，函数在创建好了 ram 并且分配好了空间之后，创建了两个 mr alias，ram_below_4g 以及 ram_above_4g，这两个 mr 分别指向 ram 的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr 下面的。*
-
-> - [ ] 这个结构很难理解啊，即是一个 memory region 的 subregion，又是另一个 region 的 alias
-
-为了在虚拟机退出时，能够顺利根据物理地址找到对应的 HVA 地址，qemu 会有一个 AddressSpaceDispatch 结构，用来在 AddressSpace 中进行位置的找寻，继而完成对 IO/MMIO 地址的访问。
-> 其实不是获取 HVA，而是通过 GPA 获取到对应的 dispatch 函数
-
-为了监控虚拟机的物理地址访问，对于每一个 AddressSpace，会有一个 MemoryListener 与之对应。每当物理映射（`GPA->HVA`)发生改变时，会回调这些函数。
-
-在上面看到 MemoryListener 之后，我们看看什么时候需要更新内存。 进行内存更新有很多个点，比如我们新创建了一个 AddressSpace address_space_init，再比如我们将一个 mr 添加到另一个 mr 的 subregions 中 memory_region_add_subregion,再比如我们更改了一端内存的属性 memory_region_set_readonly，将一个 mr 设置使能或者非使能 memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个 Listener，这包括各个 AddressSpace 对应的，以及 kvm 注册的，这个过程叫做 commit，通过函数 memory_region_transaction_commit 实现。
-
-进行内存更新有很多个点，比如我们新创建了一个 AddressSpace address_space_init，再比如我们将一个 mr 添加到另一个 mr 的 subregions 中 memory_region_add_subregion,再比如我们更改了一端内存的属性 memory_region_set_readonly，将一个 mr 设置使能或者非使能 memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个 Listener，这包括各个 AddressSpace 对应的，以及 kvm 注册的，这个过程叫做 commit，通过函数 memory_region_transaction_commit 实现。
 
 ## memory listener
 TCG
@@ -492,8 +545,7 @@ qemu_ram_alloc
 ```c
 /*
 #0  cpu_physical_memory_set_dirty_range (start=952888, length=4, mask=5 '\005') at /home/maritns3/core/kvmqemu/include/exec/ram_addr.h:290
-#1  0x0000555555c6d24f in notdirty_write (cpu=0x555556d5fc00, mem_vaddr=952888, size=4, iotlbentry=0x7ffdcc01db90, retaddr=140734602805726) at ../accel/tcg/cputlb.c:156
-1
+#1  0x0000555555c6d24f in notdirty_write (cpu=0x555556d5fc00, mem_vaddr=952888, size=4, iotlbentry=0x7ffdcc01db90, retaddr=140734602805726) at ../accel/tcg/cputlb.c:1561
 #2  0x0000555555c6f601 in store_helper (env=0x555556d68480, addr=952888, val=3221225472, oi=34, retaddr=140734602805726, op=MO_32) at ../accel/tcg/cputlb.c:2451
 #3  0x0000555555c6f815 in helper_le_stl_mmu (env=0x555556d68480, addr=952888, val=3221225472, oi=34, retaddr=140734602805726) at ../accel/tcg/cputlb.c:2505
 #4  0x00007fff540201de in code_gen_buffer ()
@@ -649,106 +701,6 @@ ry_ldst.c.inc:350
 #14 0x0000555555b458a8 in helper_outl (env=0x555556d66880, port=1304, data=1013907456) at ../target/i386/tcg/sysemu/misc_helper.c:54
 ```
 
-## dispatch 的过程(1) : 百川归海
-进行 pio / mmio 最后总是到达 : memory_region_dispatch_read
-
-- 非常尴尬, 才意识到，从 memory_ldst.c 的 address_space_stl 调用的时候都是物理地址啊
-  - 从操作系统的角度，进行 IO 也是经过了自己的 TLB 翻译的之后，才得到物理地址的啊，之后这个地址才会发给地址总线
-  - [ ] IO 也需要从 softmmu 中翻译，找到对应的代码验证一下
-
-
-使用 memory_ldst.c 的 address_space_ldl_internal 中分析
-
-- helper_inw
-  - address_space_lduw
-    - address_space_ldl_internal
-      - address_space_translate : 获取具体是在那个 memory region 是为了判断当前的读写发生在哪一个 memory region 上
-        - flatview_translate : 参数 Flatview, 和 hwaddr 返回 MemoryRegion
-            - flatview_do_translate : 其实没有什么奇怪的，这就是利用 AddressSpaceDispatch 的基础设施查询
-              - address_space_translate_internal
-                - phys_page_find : 这存在一个 cache, 当没有命中的时候，需要查询一波
-      - memory_region_dispatch_read : 如果进行的是 mmio, 通过持有 MemoryRegions 可以很快的找到对应的空间
-        - memory_region_dispatch_read1
-          - access_with_adjusted_size
-      - qemu_map_ram_ptr : 如果是 RAM 的访问就很容易
-
-
-- kvm_handle_io
-  - address_space_rw
-    - address_space_read_full
-      - address_space_to_flatview : 从 as 到 flatview
-      - flatview_read
-        - flatview_translate : 从 flatview 到 mr
-        - flatview_read_continue : 会在这里区分到底是 MMIO 还是一般的, 之所以叫做 continue 是为了处理访问在多个连续的 memory region 的情况
-          - memory_region_dispatch_read : 这里，现在所有人都相同了
-
-kvm 的 style:
-```c
-/*
-#0  pci_host_config_read_common (pci_dev=0x5555570d4000, addr=2147483648, limit=1439872976, len=21845) at ../hw/pci/pci_host.c:88
-#1  0x0000555555a49a17 in pci_data_read (s=0x5555570d4000, addr=2147483648, len=2) at ../hw/pci/pci_host.c:133
-#2  0x0000555555a49b51 in pci_host_data_read (opaque=0x555556c44270, addr=0, len=2) at ../hw/pci/pci_host.c:178
-#3  0x0000555555ca681c in memory_region_read_accessor (mr=0x555556c44680, addr=0, value=0x7fffe890f060, size=2, shift=0, mask=65535, attrs=...) at ../softmmu/memory.c:4
-40
-#4  0x0000555555ca6d1c in access_with_adjusted_size (addr=0, value=0x7fffe890f060, size=2, access_size_min=1, access_size_max=4, access_fn=0x555555ca67d6 <memory_region
-_read_accessor>, mr=0x555556c44680, attrs=...) at ../softmmu/memory.c:550
-#5  0x0000555555ca9a38 in memory_region_dispatch_read1 (mr=0x555556c44680, addr=0, pval=0x7fffe890f060, size=2, attrs=...) at ../softmmu/memory.c:1427
-#6  0x0000555555ca9b0e in memory_region_dispatch_read (mr=0x555556c44680, addr=0, pval=0x7fffe890f060, op=MO_16, attrs=...) at ../softmmu/memory.c:1455
-#7  0x0000555555d31e77 in flatview_read_continue (fv=0x555556db8900, addr=3324, attrs=..., ptr=0x7fffeb180000, len=2, addr1=0, l=2, mr=0x555556c44680) at ../softmmu/phy
-smem.c:2831
-#8  0x0000555555d31fce in flatview_read (fv=0x555556db8900, addr=3324, attrs=..., buf=0x7fffeb180000, len=2) at ../softmmu/physmem.c:2870
-#9  0x0000555555d3205b in address_space_read_full (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., buf=0x7fffeb180000, len=2) at ../softmmu/physmem.c:2883
-#10 0x0000555555d32187 in address_space_rw (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., buf=0x7fffeb180000, len=2, is_write=false) at ../softmmu/physmem
-```
-
-tcg 的 style:
-```c
-/*
-#0  pci_host_config_read_common (pci_dev=0x5555570c6c00, addr=2147483648, limit=1479011232, len=21845) at ../hw/pci/pci_host.c:88
-#1  0x0000555555a49a17 in pci_data_read (s=0x5555570c6c00, addr=2147483648, len=2) at ../hw/pci/pci_host.c:133
-#2  0x0000555555a49b51 in pci_host_data_read (opaque=0x555556c48e00, addr=0, len=2) at ../hw/pci/pci_host.c:178
-#3  0x0000555555ca681c in memory_region_read_accessor (mr=0x555556c49210, addr=0, value=0x7fffe888db80, size=2, shift=0, mask=65535, attrs=...) at ../softmmu/memory.c:4
-40
-#4  0x0000555555ca6d1c in access_with_adjusted_size (addr=0, value=0x7fffe888db80, size=2, access_size_min=1, access_size_max=4, access_fn=0x555555ca67d6 <memory_region
-_read_accessor>, mr=0x555556c49210, attrs=...) at ../softmmu/memory.c:550
-#5  0x0000555555ca9a38 in memory_region_dispatch_read1 (mr=0x555556c49210, addr=0, pval=0x7fffe888db80, size=2, attrs=...) at ../softmmu/memory.c:1427
-#6  0x0000555555ca9b0e in memory_region_dispatch_read (mr=0x555556c49210, addr=0, pval=0x7fffe888db80, op=MO_16, attrs=...) at ../softmmu/memory.c:1455
-#7  0x0000555555d332d7 in address_space_lduw_internal (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., result=0x0, endian=DEVICE_NATIVE_ENDIAN) at /home/mar
-itns3/core/kvmqemu/memory_ldst.c.inc:214
-#8  0x0000555555d333cc in address_space_lduw (as=0x5555567a6b00 <address_space_io>, addr=3324, attrs=..., result=0x0) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:2
-46
-#9  0x0000555555b45861 in helper_inw (env=0x555556c94340, port=3324) at ../target/i386/tcg/sysemu/misc_helper.c:48
-#10 0x00007fff540080ff in code_gen_buffer ()
-```
-
-tcg 的 style : io_readx
-```c
-/*
->>> bt
-#0  flatview_read_continue (fv=0x0, addr=384, attrs=..., ptr=0x7fffe888d8b0, len=0, addr1=93825027792176, l=1, mr=0x0) at ../softmmu/physmem.c:2818
-#1  0x0000555555d31fce in flatview_read (fv=0x7ffdcc4e0850, addr=4273946630, attrs=..., buf=0x7fffe888d8b0, len=1) at ../softmmu/physmem.c:2870
-#2  0x0000555555d31306 in subpage_read (opaque=0x7ffdcc52f420, addr=6, data=0x7fffe888d908, len=1, attrs=...) at ../softmmu/physmem.c:2453
-#3  0x0000555555ca692e in memory_region_read_with_attrs_accessor (mr=0x7ffdcc52f420, addr=6, value=0x7fffe888da78, size=1, shift=0, mask=255, attrs=...) at ../softmmu/m
-emory.c:462
-#4  0x0000555555ca6d1c in access_with_adjusted_size (addr=6, value=0x7fffe888da78, size=1, access_size_min=1, access_size_max=8, access_fn=0x555555ca68ca <memory_region
-_read_with_attrs_accessor>, mr=0x7ffdcc52f420, attrs=...) at ../softmmu/memory.c:550
-#5  0x0000555555ca9a76 in memory_region_dispatch_read1 (mr=0x7ffdcc52f420, addr=6, pval=0x7fffe888da78, size=1, attrs=...) at ../softmmu/memory.c:1433
-#6  0x0000555555ca9b0e in memory_region_dispatch_read (mr=0x7ffdcc52f420, addr=6, pval=0x7fffe888da78, op=MO_8, attrs=...) at ../softmmu/memory.c:1455
-#7  0x0000555555c6cb1b in io_readx (env=0x555556d66880, iotlbentry=0x7ffdcc01d6b0, mmu_idx=2, addr=4273946630, retaddr=140734603597128, access_type=MMU_DATA_LOAD, op=MO
-_8) at ../accel/tcg/cputlb.c:1359
-#8  0x0000555555c6dfb9 in load_helper (env=0x555556d66880, addr=4273946630, oi=2, retaddr=140734603597128, op=MO_8, code_read=false, full_load=0x555555c6e19c <full_ldub
-_mmu>) at ../accel/tcg/cputlb.c:1914
-#9  0x0000555555c6e1e6 in full_ldub_mmu (env=0x555556d66880, addr=4273946630, oi=2, retaddr=140734603597128) at ../accel/tcg/cputlb.c:1972
-#10 0x0000555555c6e21e in helper_ret_ldub_mmu (env=0x555556d66880, addr=4273946630, oi=2, retaddr=140734603597128) at ../accel/tcg/cputlb.c:1978
-```
-
-在 [dam](#dma) 中，还有一个类似 backtrace, 其实总是到达 memory_region_dispatch_read, 而到达之前总是通过各种方法获取
-mr 而已，在 kvm_handle_io 中经过了 as 到 flatview 再到 mr 的过程，在 io_readx 中几乎立刻到达，这是因为 iotlb 存储了一个地址对应的 mr
-
-## dispatch 的过程(2) : memory_region_dispatch_read
-各种场景到达 memory_region_dispatch_read 的时候，总是会进行一个 memory_access_is_direct 的检查，否则就会进入到
-qemu_map_ram_ptr 的计算中, 也就是说，memory_region_dispatch_read 总是在处理 pio / mmio
-
 #### endianness
 memory_region_dispatch_read 在最后会调用 adjust_endianness
 而 memory_region_dispatch_write 会在开始的时候调用
@@ -809,11 +761,93 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 ```
 实际上，这个函数的调用者几乎就是 memory listener 了
 
+- [ ] MemoryRegionSection 是最后插入到 AddressSpaceDispatch 中间的，那么 FlatRange 的作用是啥?
+    - FlatView 持有了一堆 FlatRange，感觉生成了 AddressSpaceDispatch 之后就没用了
+
+## memory_ldst 的分析
+`#include "exec/memory_ldst.inc.h"` defined four times
+
+```c
+// cpu-all.h
+#define SUFFIX
+#define ARG1         as
+#define ARG1_DECL    AddressSpace *as
+#define TARGET_ENDIANNESS
+#include "exec/memory_ldst.inc.h"
+
+#define SUFFIX       _cached_slow
+#define ARG1         cache
+#define ARG1_DECL    MemoryRegionCache *cache
+#define TARGET_ENDIANNESS
+#include "exec/memory_ldst.inc.h"
+```
+
+```c
+// memory.h
+#define SUFFIX
+#define ARG1         as
+#define ARG1_DECL    AddressSpace *as
+#include "exec/memory_ldst.inc.h"
+
+#define SUFFIX       _cached_slow
+#define ARG1         cache
+#define ARG1_DECL    MemoryRegionCache *cache
+#include "exec/memory_ldst.inc.h"
+```
+but `memory_ldst.inc.c` only two times, both of them defined in exec.c
+```c
+#define ARG1_DECL                AddressSpace *as
+#define ARG1                     as
+#define SUFFIX
+#define TRANSLATE(...)           address_space_translate(as, __VA_ARGS__)
+#define RCU_READ_LOCK(...)       rcu_read_lock()
+#define RCU_READ_UNLOCK(...)     rcu_read_unlock() #include "memory_ldst.inc.c"
+```
+```c
+#define ARG1_DECL                MemoryRegionCache *cache
+#define ARG1                     cache
+#define SUFFIX                   _cached_slow
+#define TRANSLATE(...)           address_space_translate_cached(cache, __VA_ARGS__)
+#define RCU_READ_LOCK()          ((void)0)
+#define RCU_READ_UNLOCK()        ((void)0)
+#include "memory_ldst.inc.c"
+```
+memory_ldst.inc.h 已经被简化到 cpu-all.h 中间了，memory_ldst.inc.c 已经被简化为 memory_ldst.c 了
+因为 cache_slow 版本(只有 virtio 在使用)，也不需要 endianness 版本(主要是设备在使用)
+
+
 ##  kvmtool
 无论是 pio 还是 mmio，传输数据都是进行传输都是 byte 级别的，所以
 ioport__register 就可以了
 
 而至于内存分配，使用 kvm__init_ram ，考虑一下 pci_hole 就差不多了
+
+## 外部资料
+
+#### QEMU 内存虚拟化源码分析[^1]
+首先，qemu 中用 AddressSpace 用来表示 CPU/设备看到的内存，一个 AddressSpace 下面包含多个 MemoryRegion，这些 MemoryRegion 结构通过树连接起来，树的根是 AddressSpace 的 root 域。
+
+MemoryRegion 有多种类型，可以表示一段 ram，rom，MMIO，alias，alias 表示一个 MemoryRegion 的一部分区域，MemoryRegion 也可以表示一个 container，这就表示它只是其他若干个 MemoryRegion 的容器。在 MemoryRegion 中，'ram_block'表示的是分配的实际内存。
+
+AddressSpace 下面 root 及其子树形成了一个虚拟机的物理地址，但是在往 kvm 进行设置的时候，需要将其转换为一个平坦的地址模型，也就是从 0 开始的。这个就用 FlatView 表示，**一个 AddressSpace 对应一个 FlatView**。
+
+在 FlatView 中，FlatRange 表示按照需要被切分为了几个范围。
+在内存虚拟化中，还有一个重要的结构是 MemoryRegionSection，这个结构通过函数 section_from_flat_range 可由 FlatRange 转换过来。
+
+mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，这也是 alias 的作用
+
+*继续 pc_memory_init，函数在创建好了 ram 并且分配好了空间之后，创建了两个 mr alias，ram_below_4g 以及 ram_above_4g，这两个 mr 分别指向 ram 的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr 下面的。*
+
+> - [ ] 这个结构很难理解啊，即是一个 memory region 的 subregion，又是另一个 region 的 alias
+
+为了在虚拟机退出时，能够顺利根据物理地址找到对应的 HVA 地址，qemu 会有一个 AddressSpaceDispatch 结构，用来在 AddressSpace 中进行位置的找寻，继而完成对 IO/MMIO 地址的访问。
+> 其实不是获取 HVA，而是通过 GPA 获取到对应的 dispatch 函数
+
+为了监控虚拟机的物理地址访问，对于每一个 AddressSpace，会有一个 MemoryListener 与之对应。每当物理映射（`GPA->HVA`)发生改变时，会回调这些函数。
+
+在上面看到 MemoryListener 之后，我们看看什么时候需要更新内存。 进行内存更新有很多个点，比如我们新创建了一个 AddressSpace address_space_init，再比如我们将一个 mr 添加到另一个 mr 的 subregions 中 memory_region_add_subregion,再比如我们更改了一端内存的属性 memory_region_set_readonly，将一个 mr 设置使能或者非使能 memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个 Listener，这包括各个 AddressSpace 对应的，以及 kvm 注册的，这个过程叫做 commit，通过函数 memory_region_transaction_commit 实现。
+
+进行内存更新有很多个点，比如我们新创建了一个 AddressSpace address_space_init，再比如我们将一个 mr 添加到另一个 mr 的 subregions 中 memory_region_add_subregion,再比如我们更改了一端内存的属性 memory_region_set_readonly，将一个 mr 设置使能或者非使能 memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个 Listener，这包括各个 AddressSpace 对应的，以及 kvm 注册的，这个过程叫做 commit，通过函数 memory_region_transaction_commit 实现。
 
 [^1]: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
