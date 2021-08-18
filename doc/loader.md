@@ -1,47 +1,32 @@
-s loader
+## loader
+
 - [ ] 了解一下 pc.rom 和 isa-bios 的映射规则
     - [ ] 好像进行了一些有趣的操作，让 bios 映射到两个位置 (map the last 128KB of the BIOS in ISA space)
 
-- [ ] pc_system_firmware_init 中初始化各种 rom
-
-- [ ] 看来需要理解一下 isa 地址空间, 1M 的地址空间是个什么玩意儿
+- [ ] 看来需要理解一下 isa 地址空间, 1M 的地址空间内的各种布局到底是怎么规定的
 - [ ] ROM 到底是不是 readonly 的啊?
 
-- isa 是 bios 的 128k 的部分，而且放到 1M 的最后的
+- isa-bios 是 pc.bios 的后 128k 的部分，而且放到 1M 的后面的空间中
 
-- [ ] x86_bios_rom_init : 这个只是添加了文件，文件内容什么时候添加的
-    - [ ] rom_add_file_fixed 中会进行读去文件, 但是怎么让 guest 读去啊，直接映射过去的，还是要怎么搞 ?
-    - [ ] 在进行 rom reset 的时候，会拷贝内容到系统中去
 - [ ] 为什么需要将 pc.bios 映射到 4G pci 空间的最上方
-- [ ] pc.rom 是什么?
-    - 在 pc_memory_init
 
 - [ ] 实际上，只是使用了 seabios 的后 128k 的空间，看看 seabios 的 loader 中内容吧
 
+总体来说，loader 在处理 elf, ramdisk 和 rom 的事情，但是暂时需要的并不多。
 
-- [ ] 真的会为了 below 4g / above 4g 从而 mmap 出来空间吗?
-    - [ ] 如果和 bios.bin 的空间重合不是浪费吗?
-    - [ ] 内存的分配都是通过 RAMBlock 的吧
+## pc.bios 和 pc.ram 会重合吗?
+真的会为了 below 4g / above 4g 从而 mmap 出来空间吗?
 
-```c
-huxueshi:fw_cfg_add_file_callback etc/boot-fail-wait
-huxueshi:fw_cfg_add_file_callback etc/e820
-huxueshi:fw_cfg_add_file_callback genromros/kvmvapic.bin
-huxueshi:fw_cfg_add_file_callback genroms/linuxboot_dma.bin
-huxueshi:fw_cfg_add_file_callback etc/system-states
-huxueshi:fw_cfg_add_file_callback etc/acpi/tables
-huxueshi:fw_cfg_add_file_callback etc/table-loader
-huxueshi:fw_cfg_add_file_callback etc/tpm/log
-huxueshi:fw_cfg_add_file_callback etc/acpi/rsdp
-huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-tables
-huxueshi:fw_cfg_add_file_callback etc/smbios/smbios-anchor
-huxueshi:fw_cfg_add_file_callback etc/msr_feature_control
-huxueshi:fw_cfg_add_file_callback bootorder
-huxueshi:fw_cfg_add_file_callback bios-geometry
-```
+在 pc_memory_init 中分别对于将 MachineState::ram 分别映射出来两个 alias : ram_below_4g 和 ram_above_4g 的
+
+下面分析 MachineState::ram 的初始化
+- machine_run_board_init
+  - machine_consume_memdev
+    - host_memory_backend_get_memory : 返回 HostMemoryBackend::mr
+
+而 HostMemoryBackend::mr 是在 ram_backend_memory_alloc 创建的，所以，现在是会重合的
 
 ## pc.rom
-
 在 pc_memory_init 中初始化的:
 ```c
     option_rom_mr = g_malloc(sizeof(*option_rom_mr));
@@ -97,6 +82,8 @@ int rom_add_option(const char *file, int32_t bootindex)
 
 
 ## rom_reset 加载到内存中
+- x86_bios_rom_init 只是负责将文件添加进去，而 rom_reset 负责将内容拷贝过去
+
 调用路径:
 - address_space_write_rom
   - address_space_write_rom_internal
