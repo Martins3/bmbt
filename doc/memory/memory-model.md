@@ -36,7 +36,6 @@ memory_ldst.inc.h 的方法。
     - [ ] stl_le_phys
     - [ ] address_space_lduw
 
-
 - AddressSpace 和 memory listener 的耦合很强
 
 - [ ] tcg 需要 memory listener 做什么?
@@ -109,7 +108,12 @@ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
 - 在 helper.c 中，那些 `x86_*_phys` 其实都是简单的找到的 cpu 的 AddressSpace 即可
 - helper_outb 中，更加简单，因为 address_space_io 总是固定的
 
-## 为什么需要给创建多个 AddressSpace
+## AddressSpace
+- [ ] 如果 memory region 添加了，但是导致 Flatview 重构，那么 AddressSpace 如何知道
+  - [ ] address_space_set_flatview ?
+
+- [ ] 为什么需要给创建多个 AddressSpace
+
 - [ ] TCG 模式下，实际上，会创建 SMM 的 address space 出来，什么时候搞出来的，为什么需要单独高处这个东西来
 
 - [ ] 既然每一个 AddressSpace 都是只是关联一个 memory region 的
@@ -200,6 +204,14 @@ RAMBlock 结构体分析:
       - address_space_dispatch_new : 初始化 FlatView::dispatch
       - flatview_add_to_dispatch
       - address_space_dispatch_compact
+
+## flatviews_reset
+- flatviews_reset 的调用者总是 memory_region_transaction_commit
+- flatviews_reset 总是会将之前生成的 flag_views 全部删除掉, 然后重新构建
+- flat_views 中间一共只有三个 memory region 的
+  - huxueshi:flatviews_reset memory
+  - huxueshi:flatviews_reset I/O
+  - huxueshi:flatviews_reset KVM-SMRAM
 
 ## AddressSpaceDispatch
 

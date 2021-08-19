@@ -1,4 +1,7 @@
 # BMBT
+![compile](https://github.com/martins3/BMBT/actions/workflows/compiler-check.yml/badge.svg)
+![doc](https://github.com/martins3/BMBT/actions/workflows/lint-md.yml/badge.svg)
+
 ```txt
  ______________________________________
 < BMBT is Bare Metal Binary Translator >
