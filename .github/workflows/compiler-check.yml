@@ -1,4 +1,4 @@
-name: compiler check
+name: compile
 
 on:
   push:
