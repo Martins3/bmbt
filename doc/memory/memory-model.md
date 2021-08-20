@@ -24,13 +24,12 @@ memory_ldst.inc.h 的方法。
     - 地址空间的拆分
     - AddressSpace 为了做什么?
     - 有的 memory 是 device 空间，有的是 device 空间的
+    - memory 对于一个固定的板卡是固定的，但是如果总是在动态添加设备，同时处理 kvm / tcg 之类，那就很麻烦了
 2. 使用了那些结构体?
 3. 那些关键的调用路径
 
 4. softmmu 的关联部分
     - [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
-
-
 
 ## 需要解决的问题
 - [ ] 总结一下类似下面的众多接口
@@ -42,6 +41,9 @@ memory_ldst.inc.h 的方法。
 
 - [ ] tcg 需要 memory listener 做什么?
 - [ ] 我总是感觉没有必要这么复杂的啊
+- [ ] 找到 memory region 产生覆盖的位置
+- [ ] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
+  - [ ] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
 
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg
@@ -484,9 +486,8 @@ memory-region: pc.ram
   - memory_region_get_ram_ptr 中存在一个转换
 
 ## memory listener
-TCG
-- cpu_address_space_init 中注册 memory listener
 
+- cpu_address_space_init 中注册 memory listener
 - 忽然意识到，CPUAddressSpace 只是 tcg 特有的
 ```c
 /**
@@ -515,31 +516,37 @@ kvm 的注册方式:
   - 处理一些 RCU，iothread 的问题
   - tlb_flush
 
-listener 的 hook 分析：
-| hook                  | desc                                                                                                                                                                                                                                    |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| begin                 |                                                                                                                                                                                                                                         |
-| region_add            | address_space_set_flatview 调用这个 hook, kvm_region_add 最后会调用到 kvm_vm_ioctl(s, KVM_SET_USER_MEMORY_REGION, &mem)  上                                                                                                             |
-| region_del            |                                                                                                                                                                                                                                         |
-| region_nop            |                                                                                                                                                                                                                                         |
-| log_start             | listener_add_address_space 和 address_space_update_topology_pass 两个，kvm_log_start 最终调用到 kvm_vm_ioctl(s, KVM_SET_USER_MEMORY_REGION, &mem)                                                                                       |
-| log_stop              |                                                                                                                                                                                                                                         |
-| commit                |                                                                                                                                                                                                                                         |
-| log_sync              | Called by memory_region_snapshot_and_clear_dirty() and memory_global_dirty_log_sync(), before accessing QEMU's "official" copy of the dirty memory bitmap for a #MemoryRegionSection. 最终调用到 kvm_vm_ioctl(s, KVM_GET_DIRTY_LOG, &d) |
-| log_sync_global       | This is the global version of @log_sync when the listener does not have a way to synchronize the log with finer granularity. When the listener registers with @log_sync_global defined, then its @log_sync must be NULL.  Vice versa.   |
-| log_clear             |                                                                                                                                                                                                                                         |
-| log_global_start      |                                                                                                                                                                                                                                         |
-| log_global_stop       |                                                                                                                                                                                                                                         |
-| log_global_after_sync |                                                                                                                                                                                                                                         |
-| eventfd_add           |                                                                                                                                                                                                                                         |
-| eventfd_del           |                                                                                                                                                                                                                                         |
-| coalesced_io_add      |                                                                                                                                                                                                                                         |
-| coalesced_io_del      |                                                                                                                                                                                                                                         |
-
 实际上，这些 hook 都是 KVM 注册的:
 - region_add / region_del 是因为需要通过 iotcl 告知 kvm
 - eventfd 和 coalesced_io 都是需要和内核打交道的机制
 - 关于 dirty log 可以参考李强的 blog[^1]
+
+- memory_listener_register
+  - 将 memory_listener 添加到全局链表 memory_listeners 和 AddressSpace::listeners
+  - listener_add_address_space
+    - 调用 begin region_add log_start commit 等 hook
+
+#### memory listener hook 的调用位置
+- address_space_set_flatview 会调用两次 address_space_update_topology_pass，进而调用 log_start log_stop region_del region_add 之类的, 因为更新了新的 Flatview 之类，所以也是需要进行一下比如对于 kvm 的通知吧
+- memory_listener_register -> listener_add_address_space : address_space 首次注册上 memory listener, 所以将这些 flat range 分别调用一下 listener hook 还是很有必要的
+- memory_region_sync_dirty_bitmap
+    - log_sync / log_sync_global
+- memory_global_dirty_log_start
+- memory_global_after_dirty_log_sync
+    - log_global_after_sync
+- address_space_add_del_ioeventfds
+    - eventfd_add / eventfd_del
+
+总结一下，基本就是前面两个 , dirty map 更加复杂一点还要中间几个， 最后一个处理 ioeventfd 的
+
+#### ioeventfd
+
+#### kvm memory listener hook
+- kvm_region_add : 这个很重要，这会让 KVM 最终对于这个 memory section 调用 KVM_SET_USER_MEMORY_REGION, 也即是映射出来一个地址空间来
+- kvm_log_start : 其实很容易，这是这个 region 的 flag, 从现在开始记录 kvm 了
+- log_sync : 将内核的 dirty log 读去出来，调用者为 memory_region_sync_dirty_bitmap
+
+现在分析出来，实际上，kvm 注册 memory listener 多出来的就只是 dirty log 了
 
 ## dirty log
 - DIRTY_MEMORY_CODE : 和 ram_list 配合使用的时候，为什么划分为三种类型的内存
@@ -850,7 +857,6 @@ but `memory_ldst.inc.c` only two times, both of them defined in exec.c
 ```
 memory_ldst.inc.h 已经被简化到 cpu-all.h 中间了，memory_ldst.inc.c 已经被简化为 memory_ldst.c 了
 因为 cache_slow 版本(只有 virtio 在使用)，也不需要 endianness 版本(主要是设备在使用)
-
 
 ##  kvmtool
 无论是 pio 还是 mmio，传输数据都是进行传输都是 byte 级别的，所以
