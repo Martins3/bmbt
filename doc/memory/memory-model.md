@@ -16,8 +16,7 @@ memory_ldst.inc.h 的方法。
 ## report
 1. 首先对比分析一下 kvmtool 的实现方法 ?
   - 处理设备 / 处理内存
-
-1. 要解决什么问题和解决方法?
+2. 要解决什么问题和解决方法?
     - 设备的地址空间
     - IOMMU
     - DMA
@@ -35,15 +34,14 @@ memory_ldst.inc.h 的方法。
       - 猜测只要不是 ram 就设置为 io TLB 的
 
 ## 需要解决的问题
+- [ ] TCG 处理内核态和用户态的东西为此创建出来了两个空间了吧
+
 - [ ] 总结一下类似下面的众多接口
     - [ ] x86_ldub_phys
     - [ ] stl_le_phys
     - [ ] address_space_lduw
 
-- AddressSpace 和 memory listener 的耦合很强
-
 - [ ] tcg 需要 memory listener 做什么?
-- [ ] 我总是感觉没有必要这么复杂的啊
 - [ ] 找到 memory region 发生互相覆盖的例子
   - 看看 Flatview 和 address-space: memory 的结果吧
   - 反而要思考的是，为什么发生了重叠还是对的
@@ -120,6 +118,8 @@ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
 - helper_outb 中，更加简单，因为 address_space_io 总是固定的
 
 ## AddressSpace
+当提到 address space 的时候，因为要处理地址空间的变换的, 所以，实际上是来持有 Flatview 的
+
 - 如果 memory region 添加了，但是导致 Flatview 重构，那么 AddressSpace 如何知道?
   - 在 memory_region_transaction_commit 后面紧跟着 address_space_set_flatview
 
@@ -128,41 +128,13 @@ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
   - AddressSpace 的确需要关联 Flatview 的，但是可能其他的 MemoryRegion 已经将其对应的 Flatview 更新了
   - 所以，其实这就是正确的操作
 
-- [ ] 为什么需要给创建多个 AddressSpace
-  - KVM 处理很简单了 kvm_cpu_exec 中，IO 和 MMIO 分别选择全局定义的 address_space_memory 和 address_space_io
+- [x] 为什么需要给创建多个 AddressSpace
+  - KVM 中, 显然 IO 和 MMIO 是两个空间的，IO 和 MMIO 分别选择全局定义的 address_space_memory 和 address_space_io
+  - tcg 中为了处理 SMM
   - [ ] KVM 处理 SMRAM 是怎么说
-  - [x] 是不是 TCG 创建出来了 cpu 关联的 AddressSpace 啊!
-
-```c
-/*
-#0  address_space_init (as=0x555556ad0800, root=0x5555566a9460, name=0x555556a86370 "cpu-memory-0") at ../softmmu/memory.c:2925
-#1  0x0000555555c9b096 in cpu_address_space_init (cpu=cpu@entry=0x555556b04620, asidx=asidx@entry=0, prefix=prefix@entry=0x555555f840e0 "cpu-memory", mr=0x5555566a9460)at ../softmmu/physmem.c:735
-#2  0x0000555555c3bb5a in qemu_init_vcpu (cpu=cpu@entry=0x555556b04620) at ../softmmu/cpus.c:625
-#3  0x0000555555c00438 in x86_cpu_realizefn (dev=0x555556b04620, errp=0x7fffffffd0d0) at ../target/i386/cpu.c:6268
-#4  0x0000555555de3da7 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffd150) at ../hw/core/qdev.c:761
-```
-- [ ] cpu AddressSpace 创建的对应的 listener 最后有作用吗, 实际上，只是 tcg 的
-
-每一个 CPU 可能对应多个 AddressSpace 的，通过调用 cpu_address_space_init 的时候最后只能初始化一个 CPUAddressSpace, 顺便初始化一个 AddressSpace
-默认初始化的 AddressSpace 对于 listener 和 ioeventfd 都是初始化为空的。
 
 - cpu_address_space_init 当在 KVM 模式下, 已经没有任何必要创建出来 CPUAddressSpace 的必要
   - kvm 注册 memory listener 例如 kvm_memory_listener_register 都是直接使用 address_space_memory 的
-
-- [ ] TCG 模式下，实际上，会创建 SMM 的 address space 出来，什么时候搞出来的，为什么需要单独高处这个东西来
-
-- [ ] 为什么每一个 CPU 都是需要关联一个 AddressSpace 的, 有什么特殊的必要吗?
-
-memory listener 都是挂载到具体的 AddressSpace 上的
-
-- [ ] info mtree : 关于 memory region, 会发现几个问题:
-  - address-space: memory 和 address-space: I/O
-  - [ ] 每一个 cpu 为什么还创建了自己的 address space address-space: cpu-memory-0
-  - [ ] 所有的 pci 设备都创建了自己的 addresss space
-
-- [ ] 从其中的元素分析吧
-  - memory listener
-  - ioeventfd
 
 ```c
 static MemoryRegion *system_memory;
@@ -173,9 +145,6 @@ AddressSpace address_space_memory;
 ```
 这两个 AddressSpace 的初始位置，都是在 memory_map_init, 将其和 system_memory 和 system_io 联系起来
 而之后的一些列初始化和内容的填充都是通过这两个 MemoryRegion 完成的。
-
-- [ ] 暂时打住一下
-  - [ ] 在分析 fw_cfg 的时候，我忽然意识到 address_space_memory, 这个东西几乎只是和 iommu 相关，这个是 `info mtree` 中间的那两个 AddressSpace 吧
 
 AddressSpace 关联一个 MemoryRegion, 通过 MemoryRegion 可以找到 Flatview Root, 从而找到该 as 关联的真正 flatview
 而是 flatview 决定了 io 真正的地址 (address_space_set_flatview)
