@@ -16,6 +16,7 @@ memory_ldst.inc.h 的方法。
 ## report
 1. 首先对比分析一下 kvmtool 的实现方法 ?
   - 处理设备 / 处理内存
+
 1. 要解决什么问题和解决方法?
     - 设备的地址空间
     - IOMMU
@@ -30,6 +31,8 @@ memory_ldst.inc.h 的方法。
 
 4. softmmu 的关联部分
     - [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
+    - [ ] 是如何装载 io TLB 的，或者说，它是怎么知道当前的 TLB 是 io TLB 啊
+      - 猜测只要不是 ram 就设置为 io TLB 的
 
 ## 需要解决的问题
 - [ ] 总结一下类似下面的众多接口
@@ -41,10 +44,13 @@ memory_ldst.inc.h 的方法。
 
 - [ ] tcg 需要 memory listener 做什么?
 - [ ] 我总是感觉没有必要这么复杂的啊
-- [ ] 找到 memory region 产生覆盖的位置
-- [ ] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
-  - [ ] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
-- [ ] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
+- [ ] 找到 memory region 发生互相覆盖的例子
+  - 看看 Flatview 和 address-space: memory 的结果吧
+  - 反而要思考的是，为什么发生了重叠还是对的
+- [x] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
+  - [x] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
+- [x] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
+  - kvm_set_phys_mem : 使用 memory_region_is_ram 做了判断的
 
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg
@@ -656,6 +662,32 @@ pci_device_iommu_address_space : 如果一个 device 被用于直通，那么其
 address_space_memory
 
 ## PCI Device AddressSpace
+- PCI 设备分配空间上是 mmio 和 pio 的, 都是在 PCI 空间的，而不是 DMA 空间的
+```
+      00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio
+      00000000febf0000-00000000febf3fff (prio 1, i/o): nvme-bar0
+```
+
+1. PCIDevice 关联了一个 AddressSpace, PCIDevice::bus_master_as, 其使用位置为
+  - msi_send_message
+  - pci_get_address_space : 当 pci_dma_rw 进行操作的时候需要获取当时的地址空间了
+```c
+/*
+>>> bt
+#0  pci_get_address_space (dev=0x555557d55110) at /home/maritns3/core/kvmqemu/include/hw/pci/pci.h:786
+#1  pci_dma_rw (dir=DMA_DIRECTION_TO_DEVICE, len=64, buf=0x7fffffffd210, addr=3221082112, dev=0x555557d55110) at /home/maritns3/core/kvmqemu/include/hw/pci/pci.h:807
+#2  pci_dma_read (len=64, buf=0x7fffffffd210, addr=3221082112, dev=0x555557d55110) at /home/maritns3/core/kvmqemu/include/hw/pci/pci.h:825
+#3  nvme_addr_read (n=0x555557d55110, addr=3221082112, buf=0x7fffffffd210, size=64) at ../hw/nvme/ctrl.c:377
+#4  0x0000555555955179 in nvme_process_sq (opaque=opaque@entry=0x555557d58908) at ../hw/nvme/ctrl.c:5514
+#5  0x0000555555e71d38 in timerlist_run_timers (timer_list=0x55555670a060) at ../util/qemu-timer.c:573
+#6  timerlist_run_timers (timer_list=0x55555670a060) at ../util/qemu-timer.c:498
+#7  0x0000555555e71f47 in qemu_clock_run_all_timers () at ../util/qemu-timer.c:669
+#8  0x0000555555e4ed89 in main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:542
+#9  0x0000555555c5a1f1 in qemu_main_loop () at ../softmmu/runstate.c:726
+#10 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+
 想要构建如下的结构，分别发生在: pci_init_bus_master 和 do_pci_register_device
 ```c
 /*
@@ -668,19 +700,19 @@ address-space: e1000
 struct PCIDevice {
     // ...
     PCIIORegion io_regions[PCI_NUM_REGIONS];
-    AddressSpace bus_master_as;
-    MemoryRegion bus_master_container_region;
-    MemoryRegion bus_master_enable_region;
+    AddressSpace bus_master_as;                // 因为 IOMMU 的存在，所以有
+    MemoryRegion bus_master_container_region;  // container
+    MemoryRegion bus_master_enable_region;     // 总是 bus_master_as->root 的 alias, 是否 enable 取决于运行时操作系统对于设备的操作
 ```
 
 ```c
 static void pci_init_bus_master(PCIDevice *pci_dev)
 {
-    AddressSpace *dma_as = pci_device_iommu_address_space(pci_dev); // dma 的空间就是 system memory
+    AddressSpace *dma_as = pci_device_iommu_address_space(pci_dev); // dma 的空间就是 address_space_memory
 
     memory_region_init_alias(&pci_dev->bus_master_enable_region,
                              OBJECT(pci_dev), "bus master",
-                             dma_as->root, 0, memory_region_size(dma_as->root)); // 创建一个 alias 到 system memory
+                             dma_as->root, 0, memory_region_size(dma_as->root)); // 创建一个 alias 到 system_memory
     memory_region_set_enabled(&pci_dev->bus_master_enable_region, false);
     memory_region_add_subregion(&pci_dev->bus_master_container_region, 0, // 创建一个 container
                                 &pci_dev->bus_master_enable_region);
@@ -689,6 +721,10 @@ static void pci_init_bus_master(PCIDevice *pci_dev)
 
 - do_pci_register_device
    - `address_space_init(&pci_dev->bus_master_as, &pci_dev->bus_master_container_region, pci_dev->name);`
+
+#### PCIIORegion
+和 bus_master_as / bus_master_container_region / bus_master_enable_region 区分的是，这个就是设备的配置空间
+最后都是放到 system_memory / system_io 上的
 
 ## MemoryRegionSection and RCU 
 [^4] 中间提到了一个非常有意思的事情，将 MemoryRegion 的 inaccessible 和 destroy 划分为两个阶段
