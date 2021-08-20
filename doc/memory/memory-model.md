@@ -26,12 +26,12 @@ memory_ldst.inc.h 的方法。
     - 有的 memory 是 device 空间，有的是 device 空间的
     - memory 对于一个固定的板卡是固定的，但是如果总是在动态添加设备，同时处理 kvm / tcg 之类，那就很麻烦了
 2. 使用了那些结构体?
+    - FlatRange Flatview AddressSpace AddressSpaceDispatch MemoryListener MemoryRegion
 3. 那些关键的调用路径
-
-4. softmmu 的关联部分
-    - [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
-    - [ ] 是如何装载 io TLB 的，或者说，它是怎么知道当前的 TLB 是 io TLB 啊
-      - 猜测只要不是 ram 就设置为 io TLB 的
+    - 构建
+    - 制作 FlatRange 的
+    - 如何 AddressSpaceDispatch 的
+4. 如何和 softmmu 联系起来
 
 ## 需要解决的问题
 - [ ] TCG 处理内核态和用户态的东西为此创建出来了两个空间了吧
@@ -632,10 +632,6 @@ address_space_memory
 
 ## PCI Device AddressSpace
 - PCI 设备分配空间上是 mmio 和 pio 的, 都是在 PCI 空间的，而不是 DMA 空间的
-```
-      00000000febc0000-00000000febdffff (prio 1, i/o): e1000-mmio
-      00000000febf0000-00000000febf3fff (prio 1, i/o): nvme-bar0
-```
 
 1. PCIDevice 关联了一个 AddressSpace, PCIDevice::bus_master_as, 其使用位置为
   - msi_send_message

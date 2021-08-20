@@ -1,5 +1,9 @@
 # qemu softmmu 设计
 
+- [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
+- [ ] 是如何装载 io TLB 的，或者说，它是怎么知道当前的 TLB 是 io TLB 啊
+  - 猜测只要不是 ram 就设置为 io TLB 的
+
 ## cputlb.c
 在 notdirty_write 的作用是什么?
 
@@ -100,7 +104,7 @@ A: 指令的读取都是 tb 的事情
 在 exec 中间，维护了 MemoryRegionSection (具体参考 iotlb_to_section)，这让 iotlbentry 可以找到 IO 命中的 memory_region
 从而知道这个 memory_region 的对应的处理函数是什么。
 
-维护:
+插入:
   tlb_set_page_with_attrs
 
 ```c

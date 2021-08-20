@@ -125,7 +125,8 @@ static inline bool memory_region_is_ram(MemoryRegion *mr) {
  * @mr: the memory region being queried
  */
 static inline bool memory_region_is_romd(MemoryRegion *mr) {
-  // FIXME
+  // rom device is related with pflash_cfi01_realize
+  // we can delete this function, but for simplicity, just return false
   return false;
 }
 
