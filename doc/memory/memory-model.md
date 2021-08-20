@@ -44,6 +44,7 @@ memory_ldst.inc.h 的方法。
 - [ ] 找到 memory region 产生覆盖的位置
 - [ ] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
   - [ ] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
+- [ ] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
 
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg
@@ -534,12 +535,18 @@ kvm 的注册方式:
 - memory_global_dirty_log_start
 - memory_global_after_dirty_log_sync
     - log_global_after_sync
-- address_space_add_del_ioeventfds
+- address_space_add_del_ioeventfds : 将经过 memory model 变动之后还存在的 ioeventfd 保存起来
     - eventfd_add / eventfd_del
 
 总结一下，基本就是前面两个 , dirty map 更加复杂一点还要中间几个， 最后一个处理 ioeventfd 的
 
 #### ioeventfd
+haiyonghao 的两篇 blog 对于这个问题分析非常清晰易懂
+- Linux kernel 的 eventfd 实现 : https://www.cnblogs.com/haiyonghao/p/14440737.html
+- QEMU 的 eventfd 实现  https://www.cnblogs.com/haiyonghao/p/14440743.html
+
+从 memory listener 的角度，也就是当 memory_region_add_eventfd 实现添加 eventfd，而使用注册的 hook 来处理当
+memory region 发生变动的时候来通知内核。
 
 #### kvm memory listener hook
 - kvm_region_add : 这个很重要，这会让 KVM 最终对于这个 memory section 调用 KVM_SET_USER_MEMORY_REGION, 也即是映射出来一个地址空间来
