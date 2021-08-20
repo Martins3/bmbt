@@ -3,8 +3,11 @@
 - [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
 - [ ] 是如何装载 io TLB 的，或者说，它是怎么知道当前的 TLB 是 io TLB 啊
   - 猜测只要不是 ram 就设置为 io TLB 的
+- [ ] 我们会模拟 hugetlb 之类的操作吗 ?
+  - 应该会的 : 比如 tlb_add_large_page
 
-## cputlb.c
+- [ ] 画个图总结一下几个 TLB 的层级啊
+
 在 notdirty_write 的作用是什么?
 
 [^2] 中的 Memory maps and TLBs 分析一些问题
@@ -13,8 +16,61 @@
 - [ ] dirty page tracing 到底如何实现这些工作的?
   - Dirty page tracking (for code gen, SMC detection, migration and display)
 
+## CPUNegativeOffsetState
+include/exec/cpu-defs.h
 
-### 什么是 mmu idx
+- [ ] 为什么 neg 一定需要放到 CPUArchState 前面
+```c
+/*
+ * This structure must be placed in ArchCPU immediately
+ * before CPUArchState, as a field named "neg".
+ */
+typedef struct CPUNegativeOffsetState {
+    CPUTLB tlb;
+    IcountDecr icount_decr;
+} CPUNegativeOffsetState;
+
+struct X86CPU {
+    /*< private >*/
+    CPUState parent_obj;
+    /*< public >*/
+
+    CPUNegativeOffsetState neg;
+    CPUX86State env;
+    // ...
+}
+```
+
+## CPUTLB
+```c
+/*
+ * The entire softmmu tlb, for all MMU modes.
+ * The meaning of each of the MMU modes is defined in the target code.
+ * Since this is placed within CPUNegativeOffsetState, the smallest
+ * negative offsets are at the end of the struct.
+ */
+
+typedef struct CPUTLB {
+    CPUTLBCommon c;
+    CPUTLBDesc d[NB_MMU_MODES];
+    CPUTLBDescFast f[NB_MMU_MODES];
+} CPUTLB;
+```
+
+- CPUTLB
+  - CPUTLBCommon : 统计数据
+  - CPUTLBDesc : 
+    - victim tlb
+    - large page
+    - iotlb
+  - CPUTLBDescFast : 通过 `tlb_entry` 实现访问，这就是常规的 TLB
+    - mask
+    - table : 需要的 page table
+
+> IOTLB 的表项和上面的 CPUTLBEntry 分开也是一个需要理解的点。定义里有一些注释，要结合代码才会完全理解。一个 IO 访问，它的地址匹配依然是通过 CPUTLBEntry 的地址来完成，但是由于 IO 访问时 CPUTLBEntry 相关地址的低位不为 0（如果它已经被填充了的话），所以地址不会匹配成功，访存代码会走 slow path。
+
+
+### mmu idx
 ```c
 #define NB_MMU_MODES 3
 
@@ -42,7 +98,128 @@ static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
 
 两个 flush 的接口， tlb_flush_page_by_mmuidx 和 tlb_flush_by_mmuidx 一个用于 flush 一个，一个用于 flush 全部 tlb
 
-### remote tlb shoot
+### CPUTLBCommon
+```c
+/*
+ * Data elements that are shared between all MMU modes.
+ */
+typedef struct CPUTLBCommon {
+    /* Serialize updates to f.table and d.vtable, and others as noted. */
+    QemuSpin lock;
+    /*
+     * Within dirty, for each bit N, modifications have been made to
+     * mmu_idx N since the last time that mmu_idx was flushed.
+     * Protected by tlb_c.lock.
+     */
+    uint16_t dirty;
+    /*
+     * Statistics.  These are not lock protected, but are read and
+     * written atomically.  This allows the monitor to print a snapshot
+     * of the stats without interfering with the cpu.
+     */
+    size_t full_flush_count;
+    size_t part_flush_count;
+    size_t elide_flush_count;
+} CPUTLBCommon;
+```
+
+### CPUTLBDescFast
+```c
+/*
+ * Data elements that are per MMU mode, accessed by the fast path.
+ * The structure is aligned to aid loading the pair with one insn.
+ */
+typedef struct CPUTLBDescFast {
+    /* Contains (n_entries - 1) << CPU_TLB_ENTRY_BITS */
+    uintptr_t mask;
+    /* The array of tlb entries itself. */
+    CPUTLBEntry *table;
+} CPUTLBDescFast QEMU_ALIGNED(2 * sizeof(void *));
+```
+
+
+### CPUTLBDesc
+```c
+/*
+ * Data elements that are per MMU mode, minus the bits accessed by
+ * the TCG fast path.
+ */
+typedef struct CPUTLBDesc {
+    /*
+     * Describe a region covering all of the large pages allocated
+     * into the tlb.  When any page within this region is flushed,
+     * we must flush the entire tlb.  The region is matched if
+     * (addr & large_page_mask) == large_page_addr.
+     */
+    target_ulong large_page_addr;
+    target_ulong large_page_mask;
+    /* host time (in ns) at the beginning of the time window */
+    int64_t window_begin_ns;
+    /* maximum number of entries observed in the window */
+    size_t window_max_entries;
+    size_t n_used_entries;
+    /* The next index to use in the tlb victim table.  */
+    size_t vindex;
+    /* The tlb victim table, in two parts.  */
+    CPUTLBEntry vtable[CPU_VTLB_SIZE];
+    CPUIOTLBEntry viotlb[CPU_VTLB_SIZE];
+    /* The iotlb.  */
+    CPUIOTLBEntry *iotlb;
+} CPUTLBDesc;
+```
+#### CPUTLBEntry
+
+
+#### CPUIOTLBEntry
+```c
+/* The IOTLB is not accessed directly inline by generated TCG code,
+ * so the CPUIOTLBEntry layout is not as critical as that of the
+ * CPUTLBEntry. (This is also why we don't want to combine the two
+ * structs into one.)
+ */
+typedef struct CPUIOTLBEntry {
+    /*
+     * @addr contains:
+     *  - in the lower TARGET_PAGE_BITS, a physical section number
+     *  - with the lower TARGET_PAGE_BITS masked off, an offset which
+     *    must be added to the virtual address to obtain:
+     *     + the ram_addr_t of the target RAM (if the physical section
+     *       number is PHYS_SECTION_NOTDIRTY or PHYS_SECTION_ROM)
+     *     + the offset within the target MemoryRegion (otherwise)
+     */
+    hwaddr addr;
+    MemTxAttrs attrs;
+} CPUIOTLBEntry;
+```
+
+- 从操作系统的角度，进行 IO 也是经过了自己的 TLB 翻译的之后，才得到物理地址的啊，之后这个地址才会发给地址总线
+- 进行 RAM 的访问, TLB 直接从 gva 到 hva 的
+- TLB 中插入 ??? 表示当前 TLB 是当前的映射空间实际上是物理地址空间
+    - [ ] 显然是
+
+使用者:
+- probe_access
+  - tlb_hit / victim_tlb_hit / tlb_fill : TLB 访问经典三件套
+  - cpu_check_watchpoint
+  - notdirty_write : 和 cpu_check_watchpoint 相同，需要 iotlbentry 作为参数
+- io_writex / io_readx
+  - iotlb_to_section
+  - `mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;`
+
+在 exec 中间，维护了 MemoryRegionSection (具体参考 iotlb_to_section)，这让 iotlbentry 可以找到 IO 命中的 memory_region
+从而知道这个 memory_region 的对应的处理函数是什么。
+
+插入:
+  tlb_set_page_with_attrs
+
+- [ ] 什么叫做 physical section number ?
+- [ ] PHYS_SECTION_NOTDIRTY
+- [ ] PHYS_SECTION_ROM
+
+- [ ] tlb_set_page_with_attrs : 在这里似乎没有看到正常的 tlb refill 啊
+
+
+## remote tlb shoot
 很多时候，需要将 remote 的 TLB 清理掉，但是 remote 的 cpu 还在运行，所以必须确定了 remote cpu 不会使用
 TLB 才可以返回。
 
@@ -86,71 +263,6 @@ A: 指令的读取都是 tb 的事情
       - qemu_ram_addr_from_host 
         - qemu_ram_block_from_host
 
-## CPUIOTLBEntry
-- 从操作系统的角度，进行 IO 也是经过了自己的 TLB 翻译的之后，才得到物理地址的啊，之后这个地址才会发给地址总线
-- 进行 RAM 的访问, TLB 直接从 gva 到 hva 的
-- TLB 中插入 ??? 表示当前 TLB 是当前的映射空间实际上是物理地址空间
-    - [ ] 显然是
-
-使用者:
-- probe_access
-  - tlb_hit / victim_tlb_hit / tlb_fill : TLB 访问经典三件套
-  - cpu_check_watchpoint
-  - notdirty_write : 和 cpu_check_watchpoint 相同，需要 iotlbentry 作为参数
-- io_writex / io_readx
-  - iotlb_to_section
-  - `mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;`
-
-在 exec 中间，维护了 MemoryRegionSection (具体参考 iotlb_to_section)，这让 iotlbentry 可以找到 IO 命中的 memory_region
-从而知道这个 memory_region 的对应的处理函数是什么。
-
-插入:
-  tlb_set_page_with_attrs
-
-```c
-    /* refill the tlb */
-    /*
-     * At this point iotlb contains a physical section number in the lower
-     * TARGET_PAGE_BITS, and either
-     *  + the ram_addr_t of the page base of the target RAM (RAM)
-     *  + the offset within section->mr of the page base (I/O, ROMD)
-     * We subtract the vaddr_page (which is page aligned and thus won't
-     * disturb the low bits) to give an offset which can be added to the
-     * (non-page-aligned) vaddr of the eventual memory access to get
-     * the MemoryRegion offset for the access. Note that the vaddr we
-     * subtract here is that of the page base, and not the same as the
-     * vaddr we add back in io_readx()/io_writex()/get_page_addr_code().
-     */
-    desc->iotlb[index].addr = iotlb - vaddr_page;
-    desc->iotlb[index].attrs = attrs;
-```
-
-```c
-/* The IOTLB is not accessed directly inline by generated TCG code,
- * so the CPUIOTLBEntry layout is not as critical as that of the
- * CPUTLBEntry. (This is also why we don't want to combine the two
- * structs into one.)
- */
-typedef struct CPUIOTLBEntry {
-    /*
-     * @addr contains:
-     *  - in the lower TARGET_PAGE_BITS, a physical section number
-     *  - with the lower TARGET_PAGE_BITS masked off, an offset which
-     *    must be added to the virtual address to obtain:
-     *     + the ram_addr_t of the target RAM (if the physical section
-     *       number is PHYS_SECTION_NOTDIRTY or PHYS_SECTION_ROM)
-     *     + the offset within the target MemoryRegion (otherwise)
-     */
-    hwaddr addr;
-    MemTxAttrs attrs;
-} CPUIOTLBEntry;
-```
-- [ ] 什么叫做 physical section number ?
-- [ ] PHYS_SECTION_NOTDIRTY
-- [ ] PHYS_SECTION_ROM
-
-- [ ] tlb_set_page_with_attrs : 在这里似乎没有看到正常的 tlb refill 啊
-
 ## CPUTLBEntry 需要三个 addr
 在 struct CPUTLBEntry 中，我们发现:
 - addr_write
@@ -193,46 +305,15 @@ typedef struct CPUTLBEntry {
 
 - [ ] 简化的事情，以后在分析，等待可以编译的之后
 
-## TLB 结构
-include/exec/cpu-defs.h
-
-- [ ] 为什么 neg 一定需要放到 CPUArchState 前面
-```c
-/*
- * This structure must be placed in ArchCPU immediately
- * before CPUArchState, as a field named "neg".
- */
-typedef struct CPUNegativeOffsetState {
-    CPUTLB tlb;
-    IcountDecr icount_decr;
-} CPUNegativeOffsetState;
-
-struct X86CPU {
-    /*< private >*/
-    CPUState parent_obj;
-    /*< public >*/
-
-    CPUNegativeOffsetState neg;
-    CPUX86State env;
-    // ...
-}
-```
-
-- CPUTLB
-  - CPUTLBCommon : 统计数据
-  - CPUTLBDesc : 
-    - victim tlb
-    - large page
-    - iotlb
-  - CPUTLBDescFast : 通过 `tlb_entry` 实现访问，这就是常规的 TLB
-    - mask
-    - table : 需要的 page table
-
-> IOTLB 的表项和上面的 CPUTLBEntry 分开也是一个需要理解的点。定义里有一些注释，要结合代码才会完全理解。一个 IO 访问，它的地址匹配依然是通过 CPUTLBEntry 的地址来完成，但是由于 IO 访问时 CPUTLBEntry 相关地址的低位不为 0（如果它已经被填充了的话），所以地址不会匹配成功，访存代码会走 slow path。
-
 ## WatchPoint
 - [ ] 如何实现?
   - 主，不在乎
+
+## tlb_set_page_with_attrs 
+- tlb_set_page_with_attrs 的功能就是添加一个 LTB entry 的
+  - address_space_translate_for_iotlb : 因为没有 IOMMU 的支持，所以等价于调用 address_space_translate_internal
+
+其实不区分是不是 io 还是 ram 的，而是靠 CPUTLBDesc::iotlbiotlb 的中间的
 
 ## softmmu 的 fast path 和 slow path
 ```c
@@ -254,5 +335,8 @@ struct X86CPU {
   - tr_gen_softmmu_slow_path : slow path 的代码在每一个 tb 哪里只会生成一次
   - tr_gen_tb_end 
 
-## 问题
-- [ ] 我们会模拟 hugetlb 之类的操作吗 ?
+## 移植方案
+| function                          | 作用                                                                                                 | 方案 |
+|-----------------------------------|------------------------------------------------------------------------------------------------------|------|
+| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                      |      |
+| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第一个 patch, 之后就可以通过 addr 获取 section 了 |      |
