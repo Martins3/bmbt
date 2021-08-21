@@ -1,5 +1,11 @@
 # qemu softmmu 设计
 
+其实需要分析的问题:
+- dirty
+- flush
+- precise SMC
+
+
 - [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
 - [ ] 是如何装载 io TLB 的，或者说，它是怎么知道当前的 TLB 是 io TLB 啊
   - 猜测只要不是 ram 就设置为 io TLB 的
@@ -15,6 +21,10 @@
   - TLB Update (update a CPUTLBEntry, via tlb_set_page_with_attrs) - This is a per-vCPU table - by definition can’t race - updated by its own thread when the slow-path is forced
 - [ ] dirty page tracing 到底如何实现这些工作的?
   - Dirty page tracking (for code gen, SMC detection, migration and display)
+
+- [ ] tlb_mmu_resize_locked : 上面好长的注释, 所以到底是如何处理 TLB 的大小控制的
+    - 使用的直接相连，为什么 TLB 的大小是动态变化啊
+    - 还有一些时间的相关处理的
 
 ## CPUNegativeOffsetState
 include/exec/cpu-defs.h
@@ -124,6 +134,8 @@ typedef struct CPUTLBCommon {
 ```
 
 ### CPUTLBDescFast
+- [ ] 分析 victim_tlb_hit 的实现, 在同时替换 CPUTLBEntry 和 CPUIOTLBEntry 中的 victim
+
 ```c
 /*
  * Data elements that are per MMU mode, accessed by the fast path.
@@ -136,7 +148,6 @@ typedef struct CPUTLBDescFast {
     CPUTLBEntry *table;
 } CPUTLBDescFast QEMU_ALIGNED(2 * sizeof(void *));
 ```
-
 
 ### CPUTLBDesc
 ```c
@@ -168,7 +179,34 @@ typedef struct CPUTLBDesc {
 } CPUTLBDesc;
 ```
 #### CPUTLBEntry
+```c
+typedef struct CPUTLBEntry {
+    /* bit TARGET_LONG_BITS to TARGET_PAGE_BITS : virtual address
+       bit TARGET_PAGE_BITS-1..4  : Nonzero for accesses that should not
+                                    go directly to ram.
+       bit 3                      : indicates that the entry is invalid
+       bit 2..0                   : zero
+    */
+    union {
+        struct {
+            target_ulong addr_read;
+            target_ulong addr_write;
+            target_ulong addr_code;
+            /* Addend to virtual address to get host address.  IO accesses
+               use the corresponding iotlb value.  */
+            uintptr_t addend;
+        };
+        /* padding to get a power of two size */
+        uint8_t dummy[1 << CPU_TLB_ENTRY_BITS];
+    };
+} CPUTLBEntry;
+```
 
+- addr_read / addr_write / addr_code 都是虚拟地址的，是通过 addend 来计算的
+- 在 tlb_set_page_with_attrs 中，如果是 rom, 那么通过 addened 就会得到 hpa, 否则得到是 0
+  - 实际上，对于 IO 空间，因为在 addr_read / addr_write / addr_code 中比较必然失败，所以这个 addened 一一不大
+
+- [ ] 找到和 addr_read / addr_write / addr_code 比较的过程
 
 #### CPUIOTLBEntry
 ```c
@@ -191,11 +229,9 @@ typedef struct CPUIOTLBEntry {
     MemTxAttrs attrs;
 } CPUIOTLBEntry;
 ```
-
-- 从操作系统的角度，进行 IO 也是经过了自己的 TLB 翻译的之后，才得到物理地址的啊，之后这个地址才会发给地址总线
-- 进行 RAM 的访问, TLB 直接从 gva 到 hva 的
-- TLB 中插入 ??? 表示当前 TLB 是当前的映射空间实际上是物理地址空间
-    - [ ] 显然是
+从 memory_region 的
+- 如果不是 RAM :  TARGET_PAGE_BITS 内可以放 section number, 其他的位置放 mr 内偏移
+- 如果是 RAM : 就是 ram addr 了
 
 使用者:
 - probe_access
@@ -212,12 +248,11 @@ typedef struct CPUIOTLBEntry {
 插入:
   tlb_set_page_with_attrs
 
+
 - [ ] 什么叫做 physical section number ?
+  - 一共出现三次，第三次是 phys_section_add 
 - [ ] PHYS_SECTION_NOTDIRTY
 - [ ] PHYS_SECTION_ROM
-
-- [ ] tlb_set_page_with_attrs : 在这里似乎没有看到正常的 tlb refill 啊
-
 
 ## remote tlb shoot
 很多时候，需要将 remote 的 TLB 清理掉，但是 remote 的 cpu 还在运行，所以必须确定了 remote cpu 不会使用
@@ -313,9 +348,19 @@ typedef struct CPUTLBEntry {
 - tlb_set_page_with_attrs 的功能就是添加一个 LTB entry 的
   - address_space_translate_for_iotlb : 因为没有 IOMMU 的支持，所以等价于调用 address_space_translate_internal
 
-其实不区分是不是 io 还是 ram 的，而是靠 CPUTLBDesc::iotlbiotlb 的中间的
+其实不区分是不是 io 还是 ram 的，都会存储到 CPUTLBDesc::iotlb 和 CPUTLBDescFast::table 中间
 
-## softmmu 的 fast path 和 slow path
+从 victim_tlb_hit 的实现看，也就是 victim / fast 的 tlb 的相同位置, 
+总是同时有相同地址的 iotlb 和 tlb
+
+- [ ] xlat 是 mr 里面的 offset 的，使用 section 偏移加上 mr offset 好奇怪啊
+    - 不对，关于 IOTLB 的理解出现错误了, 应该是 page offset 内的是 mr 内的偏移，而 xlat 的是页的偏移
+```c
+        iotlb = memory_region_section_get_iotlb(cpu, section) + xlat;
+```
+
+
+## softmmu 快慢路径
 ```c
 /*
  * Since the addressing of x86 architecture is complex, we
@@ -339,4 +384,4 @@ typedef struct CPUTLBEntry {
 | function                          | 作用                                                                                                 | 方案 |
 |-----------------------------------|------------------------------------------------------------------------------------------------------|------|
 | address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                      |      |
-| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第一个 patch, 之后就可以通过 addr 获取 section 了 |      |
+| memory_region_section_get_iotlb   | (! 并不是这么回事) 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了 |      |
