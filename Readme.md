@@ -2,7 +2,6 @@
 ![compile](https://github.com/martins3/BMBT/actions/workflows/compiler-check.yml/badge.svg?branch=dev)
 ![doc](https://github.com/martins3/BMBT/actions/workflows/lint-md.yml/badge.svg?branch=dev)
 
-中文test
 ```txt
  ______________________________________
 < BMBT is Bare Metal Binary Translator >
@@ -17,13 +16,14 @@
     /'\_   _/`\
     \___)=(___/
 ```
+[报告](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
+
 ## LoongArch Manual
-Please contact huxueshi@loongson.cn
+https://loongson.github.io/LoongArch-Documentation/README-CN.html
 
 ## 目标
 这个项目的想法是，一个 3A5000 电脑开机之后，然后开机之后就是 Windows 。
 基本思路是让 BIOS 启动之后，然后执行 BMBT，进而让 guest OS 来引导启动。
-
 ## 思路的来源
 1. 在二进制翻译上充分利用硬件资源加速
 2. 避免 QEMU 和 Linux 的软件栈的复杂性

@@ -97,3 +97,11 @@
   - [ ] g_assert
   - error_report
 9. pit 和 hpet 需要模拟?
+
+## 移植方案
+| function                          | 作用                                                                                                 | 方案 |
+|-----------------------------------|------------------------------------------------------------------------------------------------------|------|
+| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                      |      |
+| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了 |      |
+
+flush 的函数的异步运行其实可以好好简化一下。
