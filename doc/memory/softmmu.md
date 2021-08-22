@@ -7,9 +7,18 @@
 
 - [ ] 画个图总结一下几个 TLB 的层级啊
 
-## [ ] hugepage
-- [ ] 我们会模拟 hugetlb 之类的操作吗 ?
-  - 应该会的 : 比如 tlb_add_large_page
+## hugepage
+思考一下，如果使用软件支持 hugepage，那么每次比较还要比较 TLB size，这是不可能的，所以，对于 large page, QEMU softmmu 的处理就是直接不支持。
+但是 large page 需要 flush 的时候，需要将这个范围的 TLB 都 flush
+
+CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
+- large_page_addr
+- large_page_mask
+
+- tlb_add_large_page : 当添加 large page 的时候，需要特殊处理
+
+- tlb_flush_page_locked / tlb_flush_range_locked : 中需要特殊检查是不是因为 large page flush 导致的
+
 
 ## dirty page
 - [ ] dirty page tracing 到底如何实现这些工作的?
@@ -27,7 +36,7 @@
 - 为什么 flush TLB 这种事情有的情况必须让这个 cpu 做: 
   - TLB Update (update a CPUTLBEntry, via tlb_set_page_with_attrs) - This is a per-vCPU table - by definition can’t race - updated by its own thread when the slow-path is forced
 
-- 或者说，如果一个 CPU A正在运行，另外一个 CPU B 如何修改 A 的 TLB 只有一种可能，那就是 remote TLB shoot
+- 或者说，如果一个 CPU A 正在运行，另外一个 CPU B 如何修改 A 的 TLB 只有一种可能，那就是 remote TLB shoot
 - 之所以需要 remote TLB shoot 是因为 B 修改了 page table 所以需要通知其他的 cpu 这件事情。
 stackoverflow : [Who performs the TLB shootdown](https://stackoverflow.com/questions/50256740/who-performs-the-tlb-shootdown) 这个回答正确，虽然 x86 不存在专门的 remote TLB shoot 但是一些操作可以导致这些行为。
 
