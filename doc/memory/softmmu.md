@@ -1,30 +1,60 @@
 # qemu softmmu 设计
 
 其实需要分析的问题:
-- dirty
+- [ ] dirty
 - flush
-- precise SMC
-
-
-- [ ] 忽然意识到，TLB 处理 io 和 memory 的差别
-- [ ] 是如何装载 io TLB 的，或者说，它是怎么知道当前的 TLB 是 io TLB 啊
-  - 猜测只要不是 ram 就设置为 io TLB 的
-- [ ] 我们会模拟 hugetlb 之类的操作吗 ?
-  - 应该会的 : 比如 tlb_add_large_page
+- [ ] precise SMC
 
 - [ ] 画个图总结一下几个 TLB 的层级啊
 
-在 notdirty_write 的作用是什么?
+## [ ] hugepage
+- [ ] 我们会模拟 hugetlb 之类的操作吗 ?
+  - 应该会的 : 比如 tlb_add_large_page
 
-[^2] 中的 Memory maps and TLBs 分析一些问题
-- [ ] 为什么 flush TLB 这种事情有的情况必须让这个 cpu 做: 
-  - TLB Update (update a CPUTLBEntry, via tlb_set_page_with_attrs) - This is a per-vCPU table - by definition can’t race - updated by its own thread when the slow-path is forced
+## dirty page
 - [ ] dirty page tracing 到底如何实现这些工作的?
   - Dirty page tracking (for code gen, SMC detection, migration and display)
 
-- [ ] tlb_mmu_resize_locked : 上面好长的注释, 所以到底是如何处理 TLB 的大小控制的
-    - 使用的直接相连，为什么 TLB 的大小是动态变化啊
-    - 还有一些时间的相关处理的
+- [ ] notdirty_write 的作用是什么?
+
+## tlb flush
+之后采用 HAMT 之后，这些逻辑会发生改变，但是目前还是如此了。
+
+- tlb_flush_one_mmuidx_locked
+    - tlb_mmu_resize_locked : 只有当在 TLB 发生 flush 的时候，才可以 TLB 大小的调整
+    - tlb_mmu_flush_locked : flush 就是 table 清空，并且将统计数据重置
+
+- 为什么 flush TLB 这种事情有的情况必须让这个 cpu 做: 
+  - TLB Update (update a CPUTLBEntry, via tlb_set_page_with_attrs) - This is a per-vCPU table - by definition can’t race - updated by its own thread when the slow-path is forced
+
+- 或者说，如果一个 CPU A正在运行，另外一个 CPU B 如何修改 A 的 TLB 只有一种可能，那就是 remote TLB shoot
+- 之所以需要 remote TLB shoot 是因为 B 修改了 page table 所以需要通知其他的 cpu 这件事情。
+stackoverflow : [Who performs the TLB shootdown](https://stackoverflow.com/questions/50256740/who-performs-the-tlb-shootdown) 这个回答正确，虽然 x86 不存在专门的 remote TLB shoot 但是一些操作可以导致这些行为。
+
+#### sync
+- tlb_flush_page_by_mmuidx
+  - tlb_flush_page_by_mmuidx_async_0 : 如果是自己
+  - tlb_flush_page_by_mmuidx_async_1 : 如果 mmuidx <= TARGET_PAGE_SIZE 的 bit 位数
+  - tlb_flush_page_by_mmuidx_async_2 : 如果 mmuidx > TARGET_PAGE_SIZE 的 bit 位数
+- tlb_flush_page_by_mmuidx_all_cpus
+- tlb_flush_page_by_mmuidx_all_cpus_synced
+
+- synced 的作用是什么?
+  - 调用的函数 async_run_on_cpu / async_safe_run_on_cpu 的差别
+      - qemu_work_item::exclusive 如果设置为 true 就是 safe 的
+      - 这会导致 process_queued_cpu_work 执行的时候保持互斥
+
+只是 ARM 需要 sync 版本的 flush 函数。
+
+#### remote tlb shoot
+很多时候，需要将 remote 的 TLB 清理掉，但是 remote 的 cpu 还在运行，所以必须确定了 remote cpu 不会使用
+TLB 才可以返回。
+
+- [ ] async_run_on_cpu : 首先将代码实现出来
+  - qemu_cpu_kick
+    - cpu_exit : 如果是 qemu_tcg_mttcg_enabled 那么就对于所有的 cpu 进行 cpu_exit
+      - `atomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);` : 猜测这个会导致接下来 tb 执行退出 ?
+        - [ ] icount_decr 只是在 TB 开始的位置检查，怎么办 ? (tr_gen_tb_start)
 
 ## CPUNegativeOffsetState
 include/exec/cpu-defs.h
@@ -134,7 +164,6 @@ typedef struct CPUTLBCommon {
 ```
 
 ### CPUTLBDescFast
-- [ ] 分析 victim_tlb_hit 的实现, 在同时替换 CPUTLBEntry 和 CPUIOTLBEntry 中的 victim
 
 ```c
 /*
@@ -148,6 +177,10 @@ typedef struct CPUTLBDescFast {
     CPUTLBEntry *table;
 } CPUTLBDescFast QEMU_ALIGNED(2 * sizeof(void *));
 ```
+- 分析 victim_tlb_hit 的实现, 在同时替换 CPUTLBEntry 和 CPUIOTLBEntry 中的 victim
+
+- tlb_index / tlb_entry 都是使用的 fast 
+- tlb_set_page_with_attrs 首先构建 CPUTLBEntry 然后使用 tlb_entry 获取地址，最后写入
 
 ### CPUTLBDesc
 ```c
@@ -206,6 +239,15 @@ typedef struct CPUTLBEntry {
 - 在 tlb_set_page_with_attrs 中，如果是 rom, 那么通过 addened 就会得到 hpa, 否则得到是 0
   - 实际上，对于 IO 空间，因为在 addr_read / addr_write / addr_code 中比较必然失败，所以这个 addened 一一不大
 
+
+这是为了在生成 TLB 对比的指令中消除掉其中的关于权限对比的部分。
+
+分析一手 addr_read / addr_write / addr_code 的调用位置:
+1. 三者都是仅仅出现在 cputlb.c 中间
+2. tlb_reset_dirty_range_locked : 产生一个很有意思的问题，那就是通过设置 addr_write 表示的确可写，通过设置 TLB_NOTDIRTY 实现写保护。这样做的好处是，可以区分一个页面到底是真的不可写还是因为模拟的原因不可写。
+  - 如果使用上 hardware TLB，其实可以这么处理: 如果想要给 TLB 设置上 addr_write，那么就写权限去掉，当因为 write 失败，可以捕获下这个异常，然后查询 x86 page table 来看，到底是因为 SMC 的原因还是因为 guest 本身的不可写
+3. tlb_set_dirty1_locked
+
 - [ ] 找到和 addr_read / addr_write / addr_code 比较的过程
 
 #### CPUIOTLBEntry
@@ -248,21 +290,12 @@ typedef struct CPUIOTLBEntry {
 插入:
   tlb_set_page_with_attrs
 
+- [ ] attrs 的作用是什么，为什么是放到 IOTLB 中，对于 RAM 有意义吗?
 
 - [ ] 什么叫做 physical section number ?
   - 一共出现三次，第三次是 phys_section_add 
 - [ ] PHYS_SECTION_NOTDIRTY
 - [ ] PHYS_SECTION_ROM
-
-## remote tlb shoot
-很多时候，需要将 remote 的 TLB 清理掉，但是 remote 的 cpu 还在运行，所以必须确定了 remote cpu 不会使用
-TLB 才可以返回。
-
-- [ ] async_run_on_cpu : 首先将代码实现出来
-  - qemu_cpu_kick
-    - cpu_exit : 如果是 qemu_tcg_mttcg_enabled 那么就对于所有的 cpu 进行 cpu_exit
-      - `atomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);` : 猜测这个会导致接下来 tb 执行退出 ?
-        - [ ] icount_decr 只是在 TB 开始的位置检查，怎么办 ? (tr_gen_tb_start)
 
 ## How softmmu works
 Q: 其实，访问存储也是隐藏的 load，是如何被 softmmu 处理的?
@@ -283,7 +316,7 @@ A: 指令的读取都是 tb 的事情
           - io_writex
             - memory_region_dispatch_write
 
-## 基本调用关系
+## code flow
 - tlb_fill
   - x86_cpu_tlb_fill
     - handle_mmu_fault : 利用 x86 的页面进行 page walk
@@ -297,41 +330,6 @@ A: 指令的读取都是 tb 的事情
     - qemu_ram_addr_from_host_nofail : 通过 hva 获取 gpa 
       - qemu_ram_addr_from_host 
         - qemu_ram_block_from_host
-
-## CPUTLBEntry 需要三个 addr
-在 struct CPUTLBEntry 中，我们发现:
-- addr_write
-- addr_code
-- addr_read
-```c
-typedef struct CPUTLBEntry {
-    /* bit TARGET_LONG_BITS to TARGET_PAGE_BITS : virtual address
-       bit TARGET_PAGE_BITS-1..4  : Nonzero for accesses that should not
-                                    go directly to ram.
-       bit 3                      : indicates that the entry is invalid
-       bit 2..0                   : zero
-    */
-    union {
-        struct {
-            target_ulong addr_read;
-            target_ulong addr_write;
-            target_ulong addr_code;
-            /* Addend to virtual address to get host address.  IO accesses
-               use the corresponding iotlb value.  */
-            uintptr_t addend;
-        };
-        /* padding to get a power of two size */
-        uint8_t dummy[1 << CPU_TLB_ENTRY_BITS];
-    };
-} CPUTLBEntry;
-```
-这是为了在生成 TLB 对比的指令中消除掉其中的关于权限对比的部分。
-
-分析一手 addr_read / addr_write / addr_code 的调用位置:
-1. 三者都是仅仅出现在 cputlb.c 中间
-2. tlb_reset_dirty_range_locked : 产生一个很有意思的问题，那就是通过设置 addr_write 表示的确可写，通过设置 TLB_NOTDIRTY 实现写保护。这样做的好处是，可以区分一个页面到底是真的不可写还是因为模拟的原因不可写。
-  - 如果使用上 hardware TLB，其实可以这么处理: 如果想要给 TLB 设置上 addr_write，那么就写权限去掉，当因为 write 失败，可以捕获下这个异常，然后查询 x86 page table 来看，到底是因为 SMC 的原因还是因为 guest 本身的不可写
-3. tlb_set_dirty1_locked
 
 ## MemTxAttrs
 在 `x86_*_phys` 和 helper_outb 都是通过 cpu_get_mem_attrs 来构建参数 MemTxAttrs
@@ -353,12 +351,7 @@ typedef struct CPUTLBEntry {
 从 victim_tlb_hit 的实现看，也就是 victim / fast 的 tlb 的相同位置, 
 总是同时有相同地址的 iotlb 和 tlb
 
-- [ ] xlat 是 mr 里面的 offset 的，使用 section 偏移加上 mr offset 好奇怪啊
-    - 不对，关于 IOTLB 的理解出现错误了, 应该是 page offset 内的是 mr 内的偏移，而 xlat 的是页的偏移
-```c
-        iotlb = memory_region_section_get_iotlb(cpu, section) + xlat;
-```
-
+- [ ] 现在理解了其中的基本函数如何设置 CPUIOTLBEntry 和 CPUTLBEntry 的，但是中间还空出来了一大片内容的
 
 ## softmmu 快慢路径
 ```c
@@ -379,9 +372,3 @@ typedef struct CPUTLBEntry {
   - tr_gen_tb_start
   - tr_gen_softmmu_slow_path : slow path 的代码在每一个 tb 哪里只会生成一次
   - tr_gen_tb_end 
-
-## 移植方案
-| function                          | 作用                                                                                                 | 方案 |
-|-----------------------------------|------------------------------------------------------------------------------------------------------|------|
-| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                      |      |
-| memory_region_section_get_iotlb   | (! 并不是这么回事) 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了 |      |
