@@ -7,7 +7,7 @@
 
 - [ ] 画个图总结一下几个 TLB 的层级啊
 
-## hugepage
+## large page
 思考一下，如果使用软件支持 hugepage，那么每次比较还要比较 TLB size，这是不可能的，所以，对于 large page, QEMU softmmu 的处理就是直接不支持。
 但是 large page 需要 flush 的时候，需要将这个范围的 TLB 都 flush
 
@@ -19,12 +19,32 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 
 - tlb_flush_page_locked / tlb_flush_range_locked : 中需要特殊检查是不是因为 large page flush 导致的
 
+- [ ] 说实话，tlb_add_large_page 有点没看懂
 
 ## dirty page
+关联的主要函数以及他们的调用者:
+- tlb_set_dirty
+- tlb_reset_dirty
+- notdirty_write
+   * atomic_mmu_lookup : 这是整个 atomic 机制调用的地方
+   * probe_access / probe_access_flags : x86 guest 从来没有调用过，这个不是我能理解的
+   * store_helper
+
 - [ ] dirty page tracing 到底如何实现这些工作的?
   - Dirty page tracking (for code gen, SMC detection, migration and display)
 
-- [ ] notdirty_write 的作用是什么?
+- notdirty_write 的作用:
+  - 在 store_helper 中，会处理 TLB 插入特殊 flag 的情况，例如插入 TLB_WATCHPOINT 就需要考虑 watchpoint 的，还有 TLB_MMIO, 当这个 RAM 被 TLB_NOTDIRTY 保护, 就需要 notdirty_write 特殊处理
+  - [ ] cpu_physical_memory_get_dirty : 其实移植也可以，但是如何搞?
+
+- [ ] 为什么直接 dirty memory 会产生三个 client? notdirty_write 的操作
+```c
+#define DIRTY_MEMORY_VGA       0
+#define DIRTY_MEMORY_CODE      1
+#define DIRTY_MEMORY_MIGRATION 2
+#define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
+```
+
 
 ## tlb flush
 之后采用 HAMT 之后，这些逻辑会发生改变，但是目前还是如此了。
@@ -326,10 +346,11 @@ A: 指令的读取都是 tb 的事情
             - memory_region_dispatch_write
 
 ## code flow
-- tlb_fill
-  - x86_cpu_tlb_fill
-    - handle_mmu_fault : 利用 x86 的页面进行 page walk
-      - tlb_set_page_with_attrs : 设置页面
+- store_helper
+  - tlb_fill
+    - x86_cpu_tlb_fill
+      - handle_mmu_fault : 利用 x86 的页面进行 page walk
+        - tlb_set_page_with_attrs : 设置页面
 
 - [ ] 所以现在的 hamt 设计，在 tlb_fill 在 tlb refill 的位置进行修改，tlb_set_page_with_attrs 修改为真正的 tlbwr 之类的东西
 
