@@ -482,8 +482,32 @@ memory-region: pc.ram
 
 ## memory listener
 
-- cpu_address_space_init 中注册 memory listener
+- kvm 根本没有注册 MemoryListener::commit
+
+- memory_listener_register
+  - 将 memory_listener 添加到全局链表 memory_listeners 和 AddressSpace::listeners
+  - listener_add_address_space
+    - 调用 begin region_add log_start commit 等 hook
+
+#### memory listener tcg
 - 忽然意识到，CPUAddressSpace 只是 tcg 特有的
+- cpu_address_space_init 中注册 memory listener
+
+一共注册两个 hook:
+```c
+    if (tcg_enabled()) {
+        newas->tcg_as_listener.log_global_after_sync = tcg_log_global_after_sync;
+        newas->tcg_as_listener.commit = tcg_commit;
+        memory_listener_register(&newas->tcg_as_listener, as);
+    }
+```
+
+- tcg_commit
+  - 处理一些 RCU，iothread 的问题
+  - tlb_flush
+  - 当 memory_region_transaction_commit 和 将 listener 添加到 (memory_listener_register -> listener_add_address_space) 中间的时候。
+- tcg_log_global_after_sync : 当 dirty map sync 之后，需要为了针对于 tcg 特殊调用的 hook
+
 ```c
 /**
  * CPUAddressSpace: all the information a CPU needs about an AddressSpace
@@ -500,28 +524,10 @@ struct CPUAddressSpace {
 };
 ```
 
-kvm 的注册方式:
-- kvm_init
-  - kvm_memory_listener_register
-    - memory_listener_register
-
-- kvm 根本没有注册 MemoryListener::commit
-
-- tcg_commit
-  - 处理一些 RCU，iothread 的问题
-  - tlb_flush
-
+#### memory listener hook 的调用位置
 实际上，这些 hook 都是 KVM 注册的:
-- region_add / region_del 是因为需要通过 iotcl 告知 kvm
-- eventfd 和 coalesced_io 都是需要和内核打交道的机制
 - 关于 dirty log 可以参考李强的 blog[^1]
 
-- memory_listener_register
-  - 将 memory_listener 添加到全局链表 memory_listeners 和 AddressSpace::listeners
-  - listener_add_address_space
-    - 调用 begin region_add log_start commit 等 hook
-
-#### memory listener hook 的调用位置
 - address_space_set_flatview 会调用两次 address_space_update_topology_pass，进而调用 log_start log_stop region_del region_add 之类的, 因为更新了新的 Flatview 之类，所以也是需要进行一下比如对于 kvm 的通知吧
 - memory_listener_register -> listener_add_address_space : address_space 首次注册上 memory listener, 所以将这些 flat range 分别调用一下 listener hook 还是很有必要的
 - memory_region_sync_dirty_bitmap
@@ -848,7 +854,7 @@ mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，�
 
 进行内存更新有很多个点，比如我们新创建了一个 AddressSpace address_space_init，再比如我们将一个 mr 添加到另一个 mr 的 subregions 中 memory_region_add_subregion,再比如我们更改了一端内存的属性 memory_region_set_readonly，将一个 mr 设置使能或者非使能 memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个 Listener，这包括各个 AddressSpace 对应的，以及 kvm 注册的，这个过程叫做 commit，通过函数 memory_region_transaction_commit 实现。
 
-[^1]: https://www.anquanke.com/post/id/86412
+[^1]: 关键参考: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
 [^4]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
 [^5]: https://terenceli.github.io/%E6%8A%80%E6%9C%AF/2018/08/11/dirty-pages-tracking-in-migration
