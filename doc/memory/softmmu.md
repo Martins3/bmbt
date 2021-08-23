@@ -22,6 +22,7 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 - [ ] 说实话，tlb_add_large_page 有点没看懂
 
 ## dirty page
+
 关联的主要函数以及他们的调用者:
 - tlb_set_dirty
 - tlb_reset_dirty
@@ -44,7 +45,83 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 #define DIRTY_MEMORY_MIGRATION 2
 #define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
 ```
+- 在 cpu_physical_memory_set_dirty_lebitmap 中间, 如果没有打开 global_dirty_log 那么 client 就不会添加上 DIRTY_MEMORY_MIGRATION
+- 在 memory_region_get_dirty_log_mask 中对于 DIRTY_MEMORY_CODE 和 DIRTY_MEMORY_MIGRATION 也是存在类似的特殊处理
 
+
+好的，其实我现在可以猜测，实际上，当 tcg 处理的时候，根本需要 migration 和 vga
+
+可能是因为三种需求吧:
+- smc
+- migration
+- vga
+
+- colo_incoming_start_dirty_log : https://wiki.qemu.org/Features/COLO
+  - ramblock_sync_dirty_bitmap
+    - cpu_physical_memory_sync_dirty_bitmap
+
+
+- 在正常的 kvm 其中的操作过程中，cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty 都不会被调用
+- 在 cpu_physical_memory_test_and_clear_dirty 作为 SMC 的基础设施, 这是为数不多的需要支持的接口
+
+- tlb_protect_code
+  - [ ] cpu_physical_memory_test_and_clear_dirty : 从 tcg 的角度，这个函数中间有一堆似乎没用用的东西，之后再去分析吧
+    - memory_region_clear_dirty_bitmap : 因为 tcg 的 memory listener 没有注册 `listener->log_clear`, 所以这个函数什么都是不需要做的
+    - tlb_reset_dirty_range_all
+      - tlb_reset_dirty : 将这个范围内的 TLB 全部添加上 TLB_NOTDIRTY
+
+- store_helper
+  - notdirty_write : 当写向一个 dirty 的位置的处理
+    - cpu_physical_memory_get_dirty_flag
+    - tb_invalidate_phys_page_fast : 
+    - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
+    - tlb_set_dirty
+
+```c
+/*
+#0  cpu_physical_memory_set_dirty_range (start=952888, length=4, mask=5 '\005') at /home/maritns3/core/kvmqemu/include/exec/ram_addr.h:290
+#1  0x0000555555c6d24f in notdirty_write (cpu=0x555556d5fc00, mem_vaddr=952888, size=4, iotlbentry=0x7ffdcc01db90, retaddr=140734602805726) at ../accel/tcg/cputlb.c:1561
+#2  0x0000555555c6f601 in store_helper (env=0x555556d68480, addr=952888, val=3221225472, oi=34, retaddr=140734602805726, op=MO_32) at ../accel/tcg/cputlb.c:2451
+#3  0x0000555555c6f815 in helper_le_stl_mmu (env=0x555556d68480, addr=952888, val=3221225472, oi=34, retaddr=140734602805726) at ../accel/tcg/cputlb.c:2505
+#4  0x00007fff540201de in code_gen_buffer ()
+#5  0x0000555555cb0254 in cpu_tb_exec (cpu=0x555556d5fc00, itb=0x7fff940200c0, tb_exit=0x7fffe888e1b0) at ../accel/tcg/cpu-exec.c:190
+#6  0x0000555555cb11d8 in cpu_loop_exec_tb (cpu=0x555556d5fc00, tb=0x7fff940200c0, last_tb=0x7fffe888e1b8, tb_exit=0x7fffe888e1b0) at ../accel/tcg/cpu-exec.c:673
+#7  0x0000555555cb14c9 in cpu_exec (cpu=0x555556d5fc00) at ../accel/tcg/cpu-exec.c:798
+#8  0x0000555555d60555 in tcg_cpus_exec (cpu=0x555556d5fc00) at ../accel/tcg/tcg-accel-ops.c:67
+#9  0x0000555555c496c3 in mttcg_cpu_thread_fn (arg=0x555556d5fc00) at ../accel/tcg/tcg-accel-ops-mttcg.c:70
+#10 0x0000555555f53fcd in qemu_thread_start (args=0x555556c6dd10) at ../util/qemu-thread-posix.c:521
+#11 0x00007ffff6298609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#12 0x00007ffff61bd293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+- migration_bitmap_sync
+  - memory_global_dirty_log_sync
+    - memory_region_sync_dirty_bitmap
+      - MemoryListener::log_sync
+         - kvm_log_sync
+            - kvm_physical_sync_dirty_bitmap
+              - kvm_slot_get_dirty_log  : 使用 KVM_GET_DIRTY_LOG ioctl
+              - kvm_slot_sync_dirty_pages
+                - cpu_physical_memory_set_dirty_lebitmap : 这个将从 kvm 中得到的 dirty map 的信息放到 ram_list.dirty_memory
+      - MemoryListener::log_sync_global
+  - ramblock_sync_dirty_bitmap
+    - cpu_physical_memory_sync_dirty_bitmap
+
+总结一下，为了让 dirty log 机制是放到一起的，memory_global_dirty_log_sync 对于 tcg 是一个空函数，实际上，tcg 通过 cpu_physical_memory_sync_dirty_bitmap 将 dirty log 直接可以放到 ramlist.dirty_memory 上
+
+#### global / local dirty log
+- [ ] 似乎还是存在 local 的 dirty memory logging 的吗?
+
+memory_global_dirty_log_sync
+
+#### RAMList
+- [ ] RAMList 上的注释分析一些 RCU 的事情，暂时没有看懂这个东西。
+
+RAMList::blocks 等分配在 dirty_memory_extend 函数中进行
+
+- qemu_ram_alloc
+  - qemu_ram_alloc_internal
+    - ram_block_add
+      - dirty_memory_extend : 应该是唯一初始化 ram_list.dirty_memory 的位置吧, 另外使用的位置在 cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty
 
 ## tlb flush
 之后采用 HAMT 之后，这些逻辑会发生改变，但是目前还是如此了。
