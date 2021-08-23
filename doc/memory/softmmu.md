@@ -127,13 +127,22 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 
 至于为什么和 migration dirty memory 分开，猜测主要是因为其中的
 
-#### global / local dirty log
-- [ ] 似乎还是存在 local 的 dirty memory logging 的吗?
+#### kvm ring size
 
-memory::listener 中间两个 hook 为: log_sync / log_sync_global 都是做什么的?
+QEMU 记录的 dirty page 已经发送到只剩下最后的 max_size 的时候，调用 migration_bitmap_sync 进行 dirty page 同步，
+该函数最终会调用到 ioctl(KVM_GET_DIRTY_LOG) 上，将 dirty page 记录到 ram_list.dirty_memory 中。
 
-memory_global_dirty_log_sync
 
+```c
+    if (s->kvm_dirty_ring_size) {
+        kml->listener.log_sync_global = kvm_log_sync_global;
+    } else {
+        kml->listener.log_sync = kvm_log_sync;
+        kml->listener.log_clear = kvm_log_clear;
+    }
+```
+这些 global 接口都是 Peter Xu 在 2020 添加的, 可以参考
+https://www.youtube.com/watch?v=YsQJ-Vll3sg
 #### RAMList
 ```c
 /* The dirty memory bitmap is split into fixed-size blocks to allow growth
