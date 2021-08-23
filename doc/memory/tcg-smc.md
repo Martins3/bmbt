@@ -3,6 +3,7 @@
 
 - [ ] dirty page 只是和 smc 相关吗 ? 不存在其他的东西和 dirty page 也是相关的吗 ?
 
+- 重新理解一下 tb_invalidate_phys_page_fast, 其第二个参数是 ram_addr 的
 ## 流程
 - tb_invalidate_phys_page_fast
   - page_find
@@ -84,10 +85,8 @@ tb，从而将这些 tb 全部 invalidate 掉。
 - [ ] 居然 PageDesc 是给 SMC 用的
   - 一共四个结构体, 去掉一个锁，first_tb 用于获取这个 page 上的所有 tb, 
 
-```c
 tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而是发现 tb_invalidate_phys_page_fast 多次被调用才会创建
 创建 bitmap 的作用是为了精准定位出来到底是哪一个 page 需要被 invalid。
-```
 
 
 - [ ] page_flush_tb

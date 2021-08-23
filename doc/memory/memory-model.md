@@ -160,7 +160,7 @@ AddressSpace 关联一个 MemoryRegion, 通过 MemoryRegion 可以找到 Flatvie
 
 | function                                                   | desc                                                                                                          |
 |------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的 |
+| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                                      |
 | memory_region_dispatch_read / memory_region_dispatch_write | 最关键的，访问 device, 逐步向下分发的过程                                                                     |
 | memory_region_get_dirty_log_mask                           | 获取 MemoryRegion::dirty_log_mask                                                                             |
 | memory_region_get_ram_addr                                 |                                                                                                               |
@@ -187,11 +187,30 @@ AddressSpace 关联一个 MemoryRegion, 通过 MemoryRegion 可以找到 Flatvie
 
 RAMBlock 结构体分析:
 1. RAMBlock::host : host 的虚拟地址空间，存储 mmap 的返回值
-
+2. RAMBlock::offset : 将所有的 RAMBlock 连续的放到一起，每一个 RAMBlock 的 offset，第一个加入的 offset 为 0
+    - 通过 RAMBlock::offset 可以放一个 RAM 内的 page 知道在 RAMList::dirty_memory 对应的 bit 位
 
 - address_space_rw 和 address_space_stl 之类的关系是什么 ?
   - 含义很清晰(指定 address_space 来访问)，但是，到目前为止，没有指向 address_space_rw 调用路径
   - cpu_physical_memory_rw 是关键的调用者
+
+find_ram_offset 中 RAM 的对齐至少为 0x40000
+```c
+        candidate = ROUND_UP(candidate, BITS_PER_LONG << TARGET_PAGE_BITS);
+```
+再看下面的 RAM 的 offset 既可以发现，其 RAM 就是一个个链接到一起的
+```c
+/*
+huxueshi:ram_block_add pc.ram: offset=0 size=180000000
+huxueshi:ram_block_add vga.vram: offset=180080000 size=800000
+huxueshi:ram_block_add /rom@etc/acpi/tables: offset=180900000 size=200000
+huxueshi:ram_block_add pc.bios: offset=180000000 size=40000
+huxueshi:ram_block_add e1000.rom: offset=1808c0000 size=40000
+huxueshi:ram_block_add pc.rom: offset=180040000 size=20000
+huxueshi:ram_block_add virtio-vga.rom: offset=180880000 size=10000
+huxueshi:ram_block_add /rom@etc/table-loader: offset=180b00000 size=10000
+huxueshi:ram_block_add /rom@etc/acpi/rsdp: offset=180b40000 size=1000
+```
 
 ## render_memory_region : 将 memory region 转化为 FlatRange
 - memory_region_transaction_commit
