@@ -130,6 +130,8 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 #### global / local dirty log
 - [ ] 似乎还是存在 local 的 dirty memory logging 的吗?
 
+memory::listener 中间两个 hook 为: log_sync / log_sync_global 都是做什么的?
+
 memory_global_dirty_log_sync
 
 #### RAMList
