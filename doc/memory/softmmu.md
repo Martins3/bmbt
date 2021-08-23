@@ -21,6 +21,8 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 - [ ] 说实话，tlb_add_large_page 有点没看懂
 
 ## dirty page
+- Dirty page tracking (for code gen, SMC detection, migration and display)
+
 区分一下一些 dirty 
 1. guest os 的 kernel 的 dirty 表示，内存被修改没有被同步到文件系统中间了
 2. QEMU 的 dirty 表示，这个当前虚拟机的内存被修改没有同步到远程的虚拟机中
@@ -29,6 +31,7 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
     - 对于 guest 的代码段，标记上 TLB_NOTDIRTY
     - 遇到了，invalid 掉对应的 tb
     - tcg 需要 dirty 的主要原因是 ： 可以防止反复 invalid 的, 因为 data 和 代码也许会被误判。
+- 那么, display 为什么需要 dirty ?
 
 关联的主要函数以及他们的调用者:
 - tlb_set_dirty
@@ -37,9 +40,6 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
    * atomic_mmu_lookup : 这是整个 atomic 机制调用的地方
    * probe_access / probe_access_flags : x86 guest 从来没有调用过，这个不是我能理解的
    * store_helper
-
-- [ ] dirty page tracing 到底如何实现这些工作的?
-  - Dirty page tracking (for code gen, SMC detection, migration and display)
 
 - notdirty_write 的作用:
   - 在 store_helper 中，会处理 TLB 插入特殊 flag 的情况，例如插入 TLB_WATCHPOINT 就需要考虑 watchpoint 的，还有 TLB_MMIO, 当这个 RAM 被 TLB_NOTDIRTY 保护, 就需要 notdirty_write 特殊处理
@@ -116,6 +116,16 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
     - cpu_physical_memory_sync_dirty_bitmap
 
 总结一下，为了让 dirty log 机制是放到一起的，memory_global_dirty_log_sync 对于 tcg 是一个空函数，实际上，tcg 通过 cpu_physical_memory_sync_dirty_bitmap 将 dirty log 直接可以放到 ramlist.dirty_memory 上
+
+#### VGA 需要 dirty tracking
+使用 dirty memory 可以记录只是发生改变的地方。
+
+- vga 注册的 hook : vga_mem_write
+  - 使用 memory_region_set_dirty 来调用设置 memory dirty 的操作
+
+- 当 vga_draw_graphic 的时候，其可以 memory_region_snapshot_and_clear_dirty
+
+至于为什么和 migration dirty memory 分开，猜测主要是因为其中的
 
 #### global / local dirty log
 - [ ] 似乎还是存在 local 的 dirty memory logging 的吗?
