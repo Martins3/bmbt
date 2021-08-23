@@ -4,7 +4,6 @@
 - [ ] dirty
 - flush
 - [ ] precise SMC
-
 - [ ] 画个图总结一下几个 TLB 的层级啊
 
 ## large page
@@ -114,7 +113,48 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 memory_global_dirty_log_sync
 
 #### RAMList
-- [ ] RAMList 上的注释分析一些 RCU 的事情，暂时没有看懂这个东西。
+```c
+/* The dirty memory bitmap is split into fixed-size blocks to allow growth
+ * under RCU.  The bitmap for a block can be accessed as follows:
+ *
+ *   rcu_read_lock();
+ *
+ *   DirtyMemoryBlocks *blocks =
+ *       qatomic_rcu_read(&ram_list.dirty_memory[DIRTY_MEMORY_MIGRATION]);
+ *
+ *   ram_addr_t idx = (addr >> TARGET_PAGE_BITS) / DIRTY_MEMORY_BLOCK_SIZE;
+ *   unsigned long *block = blocks.blocks[idx];
+ *   ...access block bitmap...
+ *
+ *   rcu_read_unlock();
+ *
+ * Remember to check for the end of the block when accessing a range of
+ * addresses.  Move on to the next block if you reach the end.
+ *
+ * Organization into blocks allows dirty memory to grow (but not shrink) under
+ * RCU.  When adding new RAMBlocks requires the dirty memory to grow, a new
+ * DirtyMemoryBlocks array is allocated with pointers to existing blocks kept
+ * the same.  Other threads can safely access existing blocks while dirty
+ * memory is being grown.  When no threads are using the old DirtyMemoryBlocks
+ * anymore it is freed by RCU (but the underlying blocks stay because they are
+ * pointed to from the new DirtyMemoryBlocks).
+ */
+#define DIRTY_MEMORY_BLOCK_SIZE ((ram_addr_t)256 * 1024 * 8)
+typedef struct {
+    struct rcu_head rcu;
+    unsigned long *blocks[];
+} DirtyMemoryBlocks;
+
+typedef struct RAMList {
+    QemuMutex mutex;
+    RAMBlock *mru_block;
+    /* RCU-enabled, writes protected by the ramlist lock. */
+    QLIST_HEAD(, RAMBlock) blocks;
+    DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+    uint32_t version;
+    QLIST_HEAD(, RAMBlockNotifier) ramblock_notifiers;
+} RAMList;
+```
 
 RAMList::blocks 等分配在 dirty_memory_extend 函数中进行
 
@@ -122,6 +162,16 @@ RAMList::blocks 等分配在 dirty_memory_extend 函数中进行
   - qemu_ram_alloc_internal
     - ram_block_add
       - dirty_memory_extend : 应该是唯一初始化 ram_list.dirty_memory 的位置吧, 另外使用的位置在 cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty
+
+- RAMList::blocks 中间自然是存储所有的 block 但是排序是按照 block 的大小的
+
+所以 RAMList::dirty_memory 是如何索引的?
+- 在 tlb_set_page_with_attrs 中，当 mr 是 RAM 的时候，iotlbentry::addr 存放 ram_addr
+```c
+iotlb = memory_region_get_ram_addr(section->mr) + xlat;
+```
+- 在 notdirty_write 中，获取到 ram_addr , 由此实现记录 dirty memory
+
 
 ## tlb flush
 之后采用 HAMT 之后，这些逻辑会发生改变，但是目前还是如此了。
