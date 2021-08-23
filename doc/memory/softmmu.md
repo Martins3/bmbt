@@ -21,6 +21,14 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 - [ ] 说实话，tlb_add_large_page 有点没看懂
 
 ## dirty page
+区分一下一些 dirty 
+1. guest os 的 kernel 的 dirty 表示，内存被修改没有被同步到文件系统中间了
+2. QEMU 的 dirty 表示，这个当前虚拟机的内存被修改没有同步到远程的虚拟机中
+
+- 请问，tcg 为什么需要 dirty ?
+    - 对于 guest 的代码段，标记上 TLB_NOTDIRTY
+    - 遇到了，invalid 掉对应的 tb
+    - tcg 需要 dirty 的主要原因是 ： 可以防止反复 invalid 的, 因为 data 和 代码也许会被误判。
 
 关联的主要函数以及他们的调用者:
 - tlb_set_dirty
@@ -44,6 +52,8 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 #define DIRTY_MEMORY_MIGRATION 2
 #define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
 ```
+- [ ] 似乎 dirty memory bitmap 为此需要创建出来三份
+
 - 在 cpu_physical_memory_set_dirty_lebitmap 中间, 如果没有打开 global_dirty_log 那么 client 就不会添加上 DIRTY_MEMORY_MIGRATION
 - 在 memory_region_get_dirty_log_mask 中对于 DIRTY_MEMORY_CODE 和 DIRTY_MEMORY_MIGRATION 也是存在类似的特殊处理
 
