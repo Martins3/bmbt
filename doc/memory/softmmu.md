@@ -1,8 +1,6 @@
 # qemu softmmu 设计
 
 其实需要分析的问题:
-- [ ] dirty
-- flush
 - [ ] precise SMC
 - [ ] 画个图总结一下几个 TLB 的层级啊
 
@@ -22,6 +20,18 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 
 ## dirty page
 - Dirty page tracking (for code gen, SMC detection, migration and display)
+
+dirty_memory 划分为三种
+```c
+#define DIRTY_MEMORY_VGA       0
+#define DIRTY_MEMORY_CODE      1
+#define DIRTY_MEMORY_MIGRATION 2
+#define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
+```
+因为三种需求:
+- smc
+- migration
+- vga
 
 区分一下一些 dirty 
 1. guest os 的 kernel 的 dirty 表示，内存被修改没有被同步到文件系统中间了
@@ -43,27 +53,10 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 
 - notdirty_write 的作用:
   - 在 store_helper 中，会处理 TLB 插入特殊 flag 的情况，例如插入 TLB_WATCHPOINT 就需要考虑 watchpoint 的，还有 TLB_MMIO, 当这个 RAM 被 TLB_NOTDIRTY 保护, 就需要 notdirty_write 特殊处理
-  - [ ] cpu_physical_memory_get_dirty : 其实移植也可以，但是如何搞?
-
-- [ ] 为什么直接 dirty memory 会产生三个 client? notdirty_write 的操作
-```c
-#define DIRTY_MEMORY_VGA       0
-#define DIRTY_MEMORY_CODE      1
-#define DIRTY_MEMORY_MIGRATION 2
-#define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
-```
-- [ ] 似乎 dirty memory bitmap 为此需要创建出来三份
+  - cpu_physical_memory_get_dirty : 获取该位置是否发生为 dirty
 
 - 在 cpu_physical_memory_set_dirty_lebitmap 中间, 如果没有打开 global_dirty_log 那么 client 就不会添加上 DIRTY_MEMORY_MIGRATION
 - 在 memory_region_get_dirty_log_mask 中对于 DIRTY_MEMORY_CODE 和 DIRTY_MEMORY_MIGRATION 也是存在类似的特殊处理
-
-
-好的，其实我现在可以猜测，实际上，当 tcg 处理的时候，根本需要 migration 和 vga
-
-可能是因为三种需求吧:
-- smc
-- migration
-- vga
 
 - colo_incoming_start_dirty_log : https://wiki.qemu.org/Features/COLO
   - ramblock_sync_dirty_bitmap
@@ -72,19 +65,6 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 
 - 在正常的 kvm 其中的操作过程中，cpu_physical_memory_test_and_clear_dirty 和  cpu_physical_memory_snapshot_and_clear_dirty 都不会被调用
 - 在 cpu_physical_memory_test_and_clear_dirty 作为 SMC 的基础设施, 这是为数不多的需要支持的接口
-
-- tlb_protect_code
-  - [ ] cpu_physical_memory_test_and_clear_dirty : 从 tcg 的角度，这个函数中间有一堆似乎没用用的东西，之后再去分析吧
-    - memory_region_clear_dirty_bitmap : 因为 tcg 的 memory listener 没有注册 `listener->log_clear`, 所以这个函数什么都是不需要做的
-    - tlb_reset_dirty_range_all
-      - tlb_reset_dirty : 将这个范围内的 TLB 全部添加上 TLB_NOTDIRTY
-
-- store_helper
-  - notdirty_write : 当写向一个 dirty 的位置的处理
-    - cpu_physical_memory_get_dirty_flag
-    - tb_invalidate_phys_page_fast : 
-    - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
-    - tlb_set_dirty
 
 ```c
 /*
@@ -102,6 +82,11 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 #11 0x00007ffff6298609 in start_thread (arg=<optimized out>) at pthread_create.c:477
 #12 0x00007ffff61bd293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
+
+#### migration
+
+QEMU 记录的 dirty page 已经发送到只剩下最后的 max_size 的时候，调用 migration_bitmap_sync 进行 dirty page 同步，
+该函数最终会调用到 ioctl(KVM_GET_DIRTY_LOG) 上，将 dirty page 记录到 ram_list.dirty_memory 中。
 - migration_bitmap_sync
   - memory_global_dirty_log_sync
     - memory_region_sync_dirty_bitmap
@@ -129,9 +114,6 @@ CPUTLBDesc 中间存在两个 field 来记录 large TLB 的范围:
 
 #### kvm ring size
 
-QEMU 记录的 dirty page 已经发送到只剩下最后的 max_size 的时候，调用 migration_bitmap_sync 进行 dirty page 同步，
-该函数最终会调用到 ioctl(KVM_GET_DIRTY_LOG) 上，将 dirty page 记录到 ram_list.dirty_memory 中。
-
 
 ```c
     if (s->kvm_dirty_ring_size) {
@@ -143,6 +125,7 @@ QEMU 记录的 dirty page 已经发送到只剩下最后的 max_size 的时候�
 ```
 这些 global 接口都是 Peter Xu 在 2020 添加的, 可以参考
 https://www.youtube.com/watch?v=YsQJ-Vll3sg
+
 #### RAMList
 ```c
 /* The dirty memory bitmap is split into fixed-size blocks to allow growth

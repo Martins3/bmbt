@@ -105,3 +105,6 @@
 | memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了 |      |
 
 flush 的函数的异步运行其实可以好好简化一下。
+
+实际上整个 ram_addr.h 都是处理 dirty page 的问题，而至于 RAMBlock 的概念具体如何设计，
+需要等到之后在处理。
