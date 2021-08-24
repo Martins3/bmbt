@@ -13,6 +13,12 @@ memory_ldst.inc.h 的方法。
 - flatview_for_each_range 从来不会被调用
 - memory_region_read_with_attrs_accessor 从来不会被调用
 
+## QA
+- [x] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
+  - [x] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
+- [x] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
+  - kvm_set_phys_mem : 使用 memory_region_is_ram 做了判断的
+
 ## report
 1. 首先对比分析一下 kvmtool 的实现方法 ?
   - 处理设备 / 处理内存
@@ -34,21 +40,15 @@ memory_ldst.inc.h 的方法。
 4. 如何和 softmmu 联系起来
 
 ## 需要解决的问题
+- [ ] 就算是每一个 CPU 需要 kernel user SMM 之类的创建出来多个空间，实际上，那也没有必要为每一个 CPU 都注册吧，每一个 CPU 在都是管理一个 memory listener, 那么到底会注册多少次啊!
+
 - [ ] TCG 处理内核态和用户态的东西为此创建出来了两个空间了吧
 
-- [ ] 总结一下类似下面的众多接口
-    - [ ] x86_ldub_phys
-    - [ ] stl_le_phys
-    - [ ] address_space_lduw
-
-- [ ] tcg 需要 memory listener 做什么?
 - [ ] 找到 memory region 发生互相覆盖的例子
   - 看看 Flatview 和 address-space: memory 的结果吧
   - 反而要思考的是，为什么发生了重叠还是对的
-- [x] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
-  - [x] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
-- [x] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
-  - kvm_set_phys_mem : 使用 memory_region_is_ram 做了判断的
+
+- [ ] 我不能理解, flatview_read_continue 中间还会访问 pc.ram
 
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg

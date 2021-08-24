@@ -1,20 +1,14 @@
 # SMC 
 - [ ] TARGET_HAS_PRECISE_SMC : 这个东西是啥效果，对应的支持是什么?
-- [ ] PageDesc 是不是只是用于分析 SMC 的?
+  - [ ] 包含了一堆 TARGET_HAS_PRECISE_SMC, 如果不精确，会怎么样 ?
+    - [ ] 找一个不使用精确 SMC 的例子 ?
+
 - [ ] 类似的问题，如何处理 watchpoint 的
 - [ ] tb_invalidate_phys_page_range__lock
   - [ ] 参数 pages 到底是做什么的?
-  - [ ] 包含了一堆 TARGET_HAS_PRECISE_SMC, 如果不精确，会怎么样 ?
-    - [ ] 找一个不使用精确 SMC 的例子 ?
-- [ ] 是否存在一个 page 有一部分是代码，一部分是数据，然后数据的那一部分老是在修改
-    - 必然是存在的，但是需要考虑这些
 - [ ] 类似 page desc 的 lock 的作用是干什么的，比如 page_lock_pair 
 
 ## 流程
-
-- [ ] 重新理解一下 , 其第二个参数是 ram_addr 的
-    - 到底是使用 ram_addr 还是使用 physics memory address 来索引
-
 - 用户态是如此处理的 通过信号机制(SEGV)，系统态直接在 softmmu 的位置检查
 
 保护代码的流程:
@@ -55,7 +49,6 @@ typedef struct PageDesc {
 #endif
 } PageDesc;
 ```
-- [ ] code_bitmap
 
 #### PageDesc::first_tb 
 在 tb_page_add 中，只要新的 tb 添加进来，那么 PageDesc::first_tb 就会指向其, 
@@ -107,18 +100,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
 逻辑非常简单，如果一个 PageDesc 对应的 page 反复被 invalidate 的时候，那么就会建立 bitmap 将其中真正有代码的位置确认，
 只有命中了翻译了 tb 的位置，才会真正的 invalidate 的，而一般的处理是，直接 invalidate 所有的。
 
-## tb_invalidate_phys_page_fast
-- tb_invalidate_phys_page_fast
-  - page_find
-    - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
-      - 分配空间，还需要考虑 level 什么的
-      - [ ] page_find_alloc 中间为什么需要使用 rcu
-  - build_page_bitmap
-  - tb_invalidate_phys_page_range__locked 
-    - tb_phys_invalidate__locked
-      - do_tb_phys_invalidate
-        - do_tb_phys_invalidate(在 chen 的笔记中叫做 tb_phys_invalidate)，在这里完成真正的工作, 将 tb 从 hash 中间移除之类的
-
 ## page desc tree
 - PageDesc 的 lock 是基于什么的 ?
 
@@ -132,9 +113,7 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
 
 将 tb 放到 PageDesc 的管理中:
 - tb_link_page
-  - tb_page_add
-
-- [ ] 无法理解为什么 tb_page_add 的时候需要将 bitmap invalidate 掉
+  - tb_page_add : 需要将 bitmap invalidate 掉
 
 ```c
 /* Size of the L2 (and L3, etc) page tables.  */
@@ -184,6 +163,28 @@ static void page_table_config_init(void)
 - 需要覆盖架构支持的所有的物理地址
 - 保证 V_L2_BITS 总是 10
 
+## tb_invalidate_phys_page_fast
+- tb_invalidate_phys_page_fast
+  - page_find
+    - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
+      - 分配空间，还需要考虑 level 什么的
+      - [ ] page_find_alloc 中间为什么需要使用 rcu
+  - build_page_bitmap
+  - tb_invalidate_phys_page_range__locked 
+    - tb_phys_invalidate__locked
+      - do_tb_phys_invalidate
+        - do_tb_phys_invalidate(在 chen 的笔记中叫做 tb_phys_invalidate)，在这里完成真正的工作, 将 tb 从 hash 中间移除之类的
+
+- tb_invalidate_phys_page_range__locked : 这是真正进行工作的位置
+  * tb_invalidate_phys_range
+      * invalidate_and_set_dirty : 调用这个的位置超级多
+      * tb_check_watchpoint
+  * tb_invalidate_phys_page_range
+    * tb_invalidate_phys_addr : 没有用户, 或者说是一个很奇怪的架构需要这个东西
+
+- [ ] 我无法理解 invalidate_and_set_dirty 的用户，似乎总是那些 helper 开始调用的
+    - 也可以是，flatview_write_continue 中
+- [ ] 感觉收集回来了，找到那些 `address_space_*` 的所有函数
 
 ## 参考
 [^1]: https://github.com/azru0512/slide/tree/master/QEMU
