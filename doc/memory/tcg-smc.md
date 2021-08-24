@@ -47,6 +47,21 @@ static void tlb_reset_dirty_range_locked(CPUTLBEntry *tlb_entry,
                                          uintptr_t start, uintptr_t length)
 ```
 
+保护代码的流程:
+- tlb_protect_code
+  - cpu_physical_memory_test_and_clear_dirty : 这是 ram_addr.h 中一个处理 dirty page 的标准函数
+    - memory_region_clear_dirty_bitmap
+    - tlb_reset_dirty_range_all
+      - tlb_reset_dirty : 将这个范围内的 TLB 全部添加上 TLB_NOTDIRTY
+
+触发错误的流程:
+- store_helper
+  - notdirty_write : 当写向一个 dirty 的位置的处理
+    - cpu_physical_memory_get_dirty_flag
+    - tb_invalidate_phys_page_fast : 
+    - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
+    - tlb_set_dirty
+
 ## 检测: 当检测
 notdirty_write : 每次调用，都是存在检查到 TLB_NOTDIRTY 的时候，所以其作用是当写入一个 TLB_NOTDIRTY 的位置，然后将 page invalidate 掉
 
