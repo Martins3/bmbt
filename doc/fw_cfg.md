@@ -1,6 +1,7 @@
 # fw_cfg
 
 - [ ] seabios 需要区分处理文件和非文件  
+- [ ] 既然 ROM 是只读的，seabios 分配的空间都是在哪里，或者说，通过 fw_cfg 读去的数据都是从哪里来的
 
 ## 基本原理
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
