@@ -2,27 +2,18 @@
 - [ ] TARGET_HAS_PRECISE_SMC : 这个东西是啥效果，对应的支持是什么?
 - [ ] PageDesc 是不是只是用于分析 SMC 的?
 - [ ] 类似的问题，如何处理 watchpoint 的
-- [ ] 重新理解一下 tb_invalidate_phys_page_fast, 其第二个参数是 ram_addr 的
-    - 到底是使用 ram_addr 还是使用 physics memory address 来索引
 - [ ] tb_invalidate_phys_page_range__lock
   - [ ] 参数 pages 到底是做什么的?
   - [ ] 包含了一堆 TARGET_HAS_PRECISE_SMC, 如果不精确，会怎么样 ?
     - [ ] 找一个不使用精确 SMC 的例子 ?
 - [ ] 是否存在一个 page 有一部分是代码，一部分是数据，然后数据的那一部分老是在修改
     - 必然是存在的，但是需要考虑这些
-- [ ] page_find_alloc 中间为什么需要使用 rcu
+- [ ] 类似 page desc 的 lock 的作用是干什么的，比如 page_lock_pair 
 
 ## 流程
-- tb_invalidate_phys_page_fast
-  - page_find
-    - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
-      - index 索引的标准是什么 ?
-      - 分配空间，还需要考虑 level 什么的
-  - build_page_bitmap
-  - tb_invalidate_phys_page_range__locked 
-    - tb_phys_invalidate__locked
-      - do_tb_phys_invalidate
-        - do_tb_phys_invalidate(在 chen 的笔记中叫做 tb_phys_invalidate)，在这里完成真正的工作, 将 tb 从 hash 中间移除之类的
+
+- [ ] 重新理解一下 , 其第二个参数是 ram_addr 的
+    - 到底是使用 ram_addr 还是使用 physics memory address 来索引
 
 - 用户态是如此处理的 通过信号机制(SEGV)，系统态直接在 softmmu 的位置检查
 
@@ -65,26 +56,23 @@ typedef struct PageDesc {
 } PageDesc;
 ```
 - [ ] code_bitmap
-- [ ] 
 
+#### PageDesc::first_tb 
+在 tb_page_add 中，只要新的 tb 添加进来，那么 PageDesc::first_tb 就会指向其, 
+TranslationBlock::page_next[2] 中
+
+> 注意，TranslationBlock::page_next[2] 存在两个项目，当一个 tb 跨页之后，那么这个 tb 就需要分别添加到
+> 两个 PageDesc::first 的数组中。
+
+只要 PageDesc::first_tb page_already_protected
+
+- PageDesc::first_tb 指针的最低两位可以保存这个 PageDesc 是 tb 的第一个 PageDesc 还是第二个。
+  - 比如 build_page_bitmap 就需要这个的。
 
 - tb_link_page (exec.c) 把新的 TB 加進 tb_phys_hash 和 l1_map 二級頁表。
 tb_find_slow 會用 pc 對映的 GPA 的哈希值索引 tb_phys_hash。
 
 - tb_page_add (exec.c) 設置 TB 的 page_addr 和 page_next，並在 l1_map 中配置 PageDesc 給 TB。
-
-似乎将 PageDesc 是将组织方式是靠 l1_map ，形成树状。
-page_lock_pair 告诉我们，通过 physics address 作为索引调用函数 page_find_alloc 来查询，
-而 page_find_alloc 的查询过程完全类似内核中 page table 的查询过程，只是现在的对象是 PageDesc 而已。
-
-PageDesc 會維護一個 bitmap，這是給 SMC 之用。
-
-在 /home/maritns3/core/notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-01.txt
-中，分析 PageDesc 的作用，可以通过 PageDesc 迅速找到这个 guest page 对应的所有的
-tb，从而将这些 tb 全部 invalidate 掉。
-
-- [ ] 居然 PageDesc 是给 SMC 用的
-  - 一共四个结构体, 去掉一个锁，first_tb 用于获取这个 page 上的所有 tb
 
 tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而是发现 tb_invalidate_phys_page_fast 多次被调用才会创建
 创建 bitmap 的作用是为了精准定位出来到底是哪一个 page 需要被 invalid。
@@ -110,9 +98,92 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
   - tb_link_page : 将 tb 纳入到 QEMU 的管理中
     - tb_page_add
       - [ ] invalidate_page_bitmap : 根本无法理解，link page 的时候为什么会将 bitmap disable 掉
-      - page_already_protected : 这个是什么逻辑
       - tlb_protect_code : 指向 exec.c 中间，应该是通过 dirty / clean 的方式来防止代码被修改 ?
         - [ ] 原则上，guest 代码段被修改必然需要让对应的 tb 也是被 invalidate 的呀
+
+#### PageDesc::code_bitmap / PageDesc::code_write_count
+主要的使用位置 : tb_invalidate_phys_page_fast 
+
+逻辑非常简单，如果一个 PageDesc 对应的 page 反复被 invalidate 的时候，那么就会建立 bitmap 将其中真正有代码的位置确认，
+只有命中了翻译了 tb 的位置，才会真正的 invalidate 的，而一般的处理是，直接 invalidate 所有的。
+
+## tb_invalidate_phys_page_fast
+- tb_invalidate_phys_page_fast
+  - page_find
+    - [ ] page_find_alloc(tb_page_addr_t index, int alloc)
+      - 分配空间，还需要考虑 level 什么的
+      - [ ] page_find_alloc 中间为什么需要使用 rcu
+  - build_page_bitmap
+  - tb_invalidate_phys_page_range__locked 
+    - tb_phys_invalidate__locked
+      - do_tb_phys_invalidate
+        - do_tb_phys_invalidate(在 chen 的笔记中叫做 tb_phys_invalidate)，在这里完成真正的工作, 将 tb 从 hash 中间移除之类的
+
+## page desc tree
+- PageDesc 的 lock 是基于什么的 ?
+
+创建:
+- page_lock_pair
+  - page_find_alloc
+
+查询:
+- page_find
+  - page_find_alloc
+
+将 tb 放到 PageDesc 的管理中:
+- tb_link_page
+  - tb_page_add
+
+- [ ] 无法理解为什么 tb_page_add 的时候需要将 bitmap invalidate 掉
+
+```c
+/* Size of the L2 (and L3, etc) page tables.  */
+#define V_L2_BITS 10
+#define V_L2_SIZE (1 << V_L2_BITS)
+
+# define L1_MAP_ADDR_SPACE_BITS  TARGET_PHYS_ADDR_SPACE_BITS
+
+/*
+ * L1 Mapping properties
+ */
+static int v_l1_size;
+static int v_l1_shift;
+static int v_l2_levels;
+
+/* The bottom level has pointers to PageDesc, and is indexed by
+ * anything from 4 to (V_L2_BITS + 3) bits, depending on target page size.
+ */
+#define V_L1_MIN_BITS 4
+#define V_L1_MAX_BITS (V_L2_BITS + 3)
+#define V_L1_MAX_SIZE (1 << V_L1_MAX_BITS)
+
+static void *l1_map[V_L1_MAX_SIZE];
+
+static void page_table_config_init(void)
+{
+    uint32_t v_l1_bits;
+
+    assert(TARGET_PAGE_BITS);
+    /* The bits remaining after N lower levels of page tables.  */
+    v_l1_bits = (L1_MAP_ADDR_SPACE_BITS - TARGET_PAGE_BITS) % V_L2_BITS;
+
+    if (v_l1_bits < V_L1_MIN_BITS) {
+        v_l1_bits += V_L2_BITS;
+    }
+
+    v_l1_size = 1 << v_l1_bits;
+    v_l1_shift = L1_MAP_ADDR_SPACE_BITS - TARGET_PAGE_BITS - v_l1_bits;
+    v_l2_levels = v_l1_shift / V_L2_BITS - 1;
+
+    assert(v_l1_bits <= V_L1_MAX_BITS);
+    assert(v_l1_shift % V_L2_BITS == 0);
+    assert(v_l2_levels >= 0);
+}
+```
+
+- 需要覆盖架构支持的所有的物理地址
+- 保证 V_L2_BITS 总是 10
+
 
 ## 参考
 [^1]: https://github.com/azru0512/slide/tree/master/QEMU
