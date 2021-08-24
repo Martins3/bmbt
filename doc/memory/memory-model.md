@@ -579,11 +579,16 @@ memory-region: smram
     00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
 ```
 
-## QEMU 和 IOMMU 的关系
+## IOMMU
 在 [^6] 分析了下为什么 guest 需要 vIOMMU
 
-pci_device_iommu_address_space : 如果一个 device 被用于直通，那么其进行 IO 的 address space 就可能不是
-address_space_memory
+pci_device_iommu_address_space : 如果一个 device 被用于直通，那么其进行 IO 的 address space 就不再是 address_space_memory 的，而是需要经过一层映射。
+
+参考 [oracle 的 blog](https://blogs.oracle.com/linux/post/a-study-of-the-linux-kernel-pci-subsystem-with-qemu)
+
+> Nowadays, IOMMU is always used by baremetal machines. QEMU is able to emulate IOMMU to help developers debug and study the Linux kernel IOMMU relevant source code, e.g., how DMA Remapping and Interrupt Remapping work.
+
+blog 并且告诉了 iommu 打开的方法 : `-device intel-iommu` + `-machine q35`
 
 ## PCI Device AddressSpace
 - PCI 设备分配空间上是 mmio 和 pio 的, 都是在 PCI 空间的，而不是 DMA 空间的
