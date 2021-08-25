@@ -507,7 +507,26 @@ A: 指令的读取都是 tb 的事情
 
 从目前看，MemTxAttrs 的主要作用是为了 SMM 模式，完全可以简化。
 
-- [ ] 简化的事情，以后在分析，等待可以编译的之后
+```c
+static inline int x86_asidx_from_attrs(CPUState *cs, MemTxAttrs attrs)
+{
+    return !!attrs.secure;
+}
+```
+
+- [ ] requester_id 也是使用的使用 MemTxAttrs 的位置，但是注意，对于这个数值，似乎只有赋值，没有读取，研究一下。
+```c
+void msi_send_message(PCIDevice *dev, MSIMessage msg)
+{
+    MemTxAttrs attrs = {};
+
+    attrs.requester_id = pci_requester_id(dev);
+    address_space_stl_le(&dev->bus_master_as, msg.address, msg.data,
+                         attrs, NULL);
+}
+```
+
+
 
 ## WatchPoint
 - [ ] 如何实现?

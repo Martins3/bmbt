@@ -549,9 +549,18 @@ memory region 发生变动的时候来通知内核。
 - log_sync : 将内核的 dirty log 读去出来，调用者为 memory_region_sync_dirty_bitmap
 
 现在分析出来，实际上，kvm 注册 memory listener 多出来的就只是 dirty log 了
-## TCG 和 SMM
+
+## SMRAM
+- [ ] 如何将 SMRAM 映射到 SMM 的空间中的 ?
+
+## SMM
 SMM 实际上是给 firmware 使用的
 
+> The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
+can address up to 4 GBytes of memory and can execute all I/O and system instructions. (Intel SDM vol 3 chapter 34)
+
+
+#### SMM address space
 在 tcg_cpu_realizefn 中
 
 - get_system_memory : 获取的 MemoryRegion 的名称为 system, 总会挂到 cpu-memory-0 / cpu-memory-2 上
@@ -573,6 +582,18 @@ memory-region: smram
   0000000000000000-00000000ffffffff (prio 0, i/o): smram
     00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
 ```
+
+#### SMM user
+下面分析 pflash 的使用情况下，这是唯一插入使用 .secure 的位置
+```c
+static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
+{
+    return ((MemTxAttrs) { .secure = (env->hflags & HF_SMM_MASK) != 0 });
+}
+```
+而 HF_SMM_MASK 在 `env->hflags` 的插入和删除位置 smm_helper 中间。
+
+而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。 
 
 ## IOMMU
 在 [^6] 分析了下为什么 guest 需要 vIOMMU
@@ -725,6 +746,7 @@ static inline MemTxResult pci_dma_rw(PCIDevice *dev, dma_addr_t addr, void *buf,
     - 从代码逻辑上，cpu_physical_memory_read 走的 `as` 是 `address_space_memory`,  而 dma_memory_rw 是可以指定自己的 address space 的
     - 两者最后都是调用 address_space_rw 的
     - 感觉从当前的配置，实际上，dma 采用 as 显然也是 address_space_memory
+
 #### endianness
 memory_region_dispatch_read 在最后会调用 adjust_endianness
 而 memory_region_dispatch_write 会在开始的时候调用
