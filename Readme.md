@@ -16,7 +16,8 @@
     /'\_   _/`\
     \___)=(___/
 ```
-[报告](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
+## 报告
+- [裸金属二进制翻译器](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
 
 ## LoongArch Manual
 https://loongson.github.io/LoongArch-Documentation/README-CN.html
