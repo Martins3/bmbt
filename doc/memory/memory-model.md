@@ -40,15 +40,10 @@ memory_ldst.inc.h 的方法。
 4. 如何和 softmmu 联系起来
 
 ## 需要解决的问题
-
-- [ ] TCG 处理内核态和用户态的东西为此创建出来了两个空间了吧
-
 - [ ] 找到 memory region 发生互相覆盖的例子
   - 看看 Flatview 和 address-space: memory 的结果吧
   - 反而要思考的是，为什么发生了重叠还是对的
   - tcg_cpu_realizefn 中 SMM 空间重叠在正常的空间上面
-
-- [ ] 我不能理解, flatview_read_continue 中间还会访问 pc.ram
 
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg
@@ -684,34 +679,52 @@ void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr)
 ```
 
 ## dma
-暂时，认为 dma 并不是很难移植，这些调用过程只是为了组装 address_space_rw 的参数而已
+主要出现的文件: include/sysemu/dma.h 和 softmmu/dma-helpers.c
 
-- [ ] dma_barrier
+- dma 最重要的客户还是 pci 产生的地址空间, 其中 dma_blk_io 和 dma_buf_read 之类的都是 DMA 和 scsi / nvme 相关的, 是一个很容易的封装。
+- dma_memory_rw 另一个用户当然是 fw_cfg，另一个就是 pci_dma_rw 了
+- 实际上，fw_cfg 选择的 as 总是 address_space_memory 的，我甚至感觉根本没有任何必要让 fw_cfg 来走 dma
+
+```c
+/*
+#0  pci_dma_rw (dir=DMA_DIRECTION_TO_DEVICE, len=64, buf=0x7fffffffd210, addr=3221082112, dev=0x555557c86f30) at /home/maritns3/core/kvmqemu/include/hw/pci/pci.h:806
+#1  pci_dma_read (len=64, buf=0x7fffffffd210, addr=3221082112, dev=0x555557c86f30) at /home/maritns3/core/kvmqemu/include/hw/pci/pci.h:824
+#2  nvme_addr_read (n=0x555557c86f30, addr=3221082112, buf=0x7fffffffd210, size=64) at ../hw/nvme/ctrl.c:377
+#3  0x00005555559550b9 in nvme_process_sq (opaque=opaque@entry=0x555557c8a728) at ../hw/nvme/ctrl.c:5514
+*/
+
+static inline MemTxResult pci_dma_rw(PCIDevice *dev, dma_addr_t addr, void *buf, dma_addr_t len, DMADirection dir) {
+    return dma_memory_rw(pci_get_address_space(dev), addr, buf, len, dir);
+}
+```
+
+- dma_memory_set : 只有一个用户 fw_cfg_dma_transfer，就是 DMA 版本的 memset 了
+- dma_barrier : 就是一条 smp_mb，注释说的是，因为 guest 设备模拟和 guest 的执行是同步进行的, 希望让 guest 看到的内存修改就是 host 的这一侧的
+    - 因为设备是被直通的，而且当前是单核，所以暂时也许不用考虑
+
 ```c
 /*
 #0  flatview_read_continue (fv=0x0, addr=655360, attrs=..., ptr=0x7fffe888d7a0, len=93825001741418, addr1=93825012630272, l=16, mr=0x0) at ../softmmu/physmem.c:2818
 #1  0x0000555555d31fce in flatview_read (fv=0x7ffdcc06d2e0, addr=28476, attrs=..., buf=0x7fffe888d9c0, len=16) at ../softmmu/physmem.c:2870
 #2  0x0000555555d3205b in address_space_read_full (as=0x5555567a6b60 <address_space_memory>, addr=28476, attrs=..., buf=0x7fffe888d9c0, len=16) at ../softmmu/physmem.c:2883
 #3  0x0000555555d32187 in address_space_rw (as=0x5555567a6b60 <address_space_memory>, addr=28476, attrs=..., buf=0x7fffe888d9c0, len=16, is_write=false) at ../softmmu/physmem.c:2911
-#4  0x00005555559171ef in dma_memory_rw_relaxed (as=0x5555567a6b60 <address_space_memory>, addr=28476, buf=0x7fffe888d9c0, len=16, dir=DMA_DIRECTION_TO_DEVICE) at /home
-/maritns3/core/kvmqemu/include/sysemu/dma.h:88
-#5  0x000055555591723c in dma_memory_rw (as=0x5555567a6b60 <address_space_memory>, addr=28476, buf=0x7fffe888d9c0, len=16, dir=DMA_DIRECTION_TO_DEVICE) at /home/maritns
-3/core/kvmqemu/include/sysemu/dma.h:127
+#4  0x00005555559171ef in dma_memory_rw_relaxed (as=0x5555567a6b60 <address_space_memory>, addr=28476, buf=0x7fffe888d9c0, len=16, dir=DMA_DIRECTION_TO_DEVICE) at /home/maritns3/core/kvmqemu/include/sysemu/dma.h:88
+#5  0x000055555591723c in dma_memory_rw (as=0x5555567a6b60 <address_space_memory>, addr=28476, buf=0x7fffe888d9c0, len=16, dir=DMA_DIRECTION_TO_DEVICE) at /home/maritns 3/core/kvmqemu/include/sysemu/dma.h:127
 #6  0x0000555555917274 in dma_memory_read (as=0x5555567a6b60 <address_space_memory>, addr=28476, buf=0x7fffe888d9c0, len=16) at /home/maritns3/core/kvmqemu/include/sysemu/dma.h:145
 #7  0x0000555555918732 in fw_cfg_dma_transfer (s=0x555556edda00) at ../hw/nvram/fw_cfg.c:360
 #8  0x0000555555918b73 in fw_cfg_dma_mem_write (opaque=0x555556edda00, addr=4, value=28476, size=4) at ../hw/nvram/fw_cfg.c:469
-#9  0x0000555555ca6ae5 in memory_region_write_accessor (mr=0x555556eddd80, addr=4, value=0x7fffe888db18, size=4, shift=0, mask=4294967295, attrs=...) at ../softmmu/memo
-ry.c:489
-#10 0x0000555555ca6cc2 in access_with_adjusted_size (addr=4, value=0x7fffe888db18, size=4, access_size_min=1, access_size_max=8, access_fn=0x555555ca69f8 <memory_region
-_write_accessor>, mr=0x555556eddd80, attrs=...) at ../softmmu/memory.c:545
+#9  0x0000555555ca6ae5 in memory_region_write_accessor (mr=0x555556eddd80, addr=4, value=0x7fffe888db18, size=4, shift=0, mask=4294967295, attrs=...) at ../softmmu/memo ry.c:489
+#10 0x0000555555ca6cc2 in access_with_adjusted_size (addr=4, value=0x7fffe888db18, size=4, access_size_min=1, access_size_max=8, access_fn=0x555555ca69f8 <memory_region_write_accessor>, mr=0x555556eddd80, attrs=...) at ../softmmu/memory.c:545
 #11 0x0000555555ca9de3 in memory_region_dispatch_write (mr=0x555556eddd80, addr=4, data=28476, op=MO_32, attrs=...) at ../softmmu/memory.c:1507
-#12 0x0000555555d3367a in address_space_stl_internal (as=0x5555567a6b00 <address_space_io>, addr=1304, val=1013907456, attrs=..., result=0x0, endian=DEVICE_NATIVE_ENDIA
-N) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:319
-#13 0x0000555555d33775 in address_space_stl (as=0x5555567a6b00 <address_space_io>, addr=1304, val=1013907456, attrs=..., result=0x0) at /home/maritns3/core/kvmqemu/memo
-ry_ldst.c.inc:350
+#12 0x0000555555d3367a in address_space_stl_internal (as=0x5555567a6b00 <address_space_io>, addr=1304, val=1013907456, attrs=..., result=0x0, endian=DEVICE_NATIVE_ENDIAN) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:319
+#13 0x0000555555d33775 in address_space_stl (as=0x5555567a6b00 <address_space_io>, addr=1304, val=1013907456, attrs=..., result=0x0) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:350
 #14 0x0000555555b458a8 in helper_outl (env=0x555556d66880, port=1304, data=1013907456) at ../target/i386/tcg/sysemu/misc_helper.c:54
 ```
 
+- dma 和 cpu_physical_memory_read 的关系是什么
+    - 从代码逻辑上，cpu_physical_memory_read 走的 `as` 是 `address_space_memory`,  而 dma_memory_rw 是可以指定自己的 address space 的
+    - 两者最后都是调用 address_space_rw 的
+    - 感觉从当前的配置，实际上，dma 采用 as 显然也是 address_space_memory
 #### endianness
 memory_region_dispatch_read 在最后会调用 adjust_endianness
 而 memory_region_dispatch_write 会在开始的时候调用
@@ -863,7 +876,7 @@ struct CPUAddressSpace {
 最后一个问题是，解释一下，为什么需要给每一个 CPU 创建一个 CPUAddressSpace ，而不是公用一个 CPUAddressSpace
 tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlush
 
-##  kvmtool
+## kvmtool
 无论是 pio 还是 mmio，传输数据都是进行传输都是 byte 级别的，所以
 ioport__register 就可以了
 
