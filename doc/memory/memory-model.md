@@ -40,7 +40,6 @@ memory_ldst.inc.h 的方法。
 4. 如何和 softmmu 联系起来
 
 ## 需要解决的问题
-- [ ] 就算是每一个 CPU 需要 kernel user SMM 之类的创建出来多个空间，实际上，那也没有必要为每一个 CPU 都注册吧，每一个 CPU 在都是管理一个 memory listener, 那么到底会注册多少次啊!
 
 - [ ] TCG 处理内核态和用户态的东西为此创建出来了两个空间了吧
 
@@ -826,6 +825,43 @@ but `memory_ldst.inc.c` only two times, both of them defined in exec.c
 ```
 memory_ldst.inc.h 已经被简化到 cpu-all.h 中间了，memory_ldst.inc.c 已经被简化为 memory_ldst.c 了
 因为 cache_slow 版本(只有 virtio 在使用)，也不需要 endianness 版本(主要是设备在使用)
+
+## CPUAddressSpace
+在 tcg_cpu_realizefn 中 tcg_cpu_machine_done 初始化这些地址空间
+
+```diff
+tree a50a83c59f416259a423493cc996646bbeca1f7e
+parent c8bc83a4dd29a9a33f5be81686bfe6e2e628097b
+author Paolo Bonzini <pbonzini@redhat.com> Wed Mar 1 10:34:48 2017 +0100
+committer Paolo Bonzini <pbonzini@redhat.com> Wed Jun 7 18:22:02 2017 +0200
+
+target/i386: use multiple CPU AddressSpaces
+
+This speeds up SMM switches.  Later on it may remove the need to take
+the BQL, and it may also allow to reuse code between TCG and KVM.
+
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+```
+
+但是当时的就是就创建出来了 CPUAddressSpace 了, 制作出来 CPUAddressSpace 只是为了将 tcg CPU AddressSpace 相关的东西放到一起。
+```c
+/**
+ * CPUAddressSpace: all the information a CPU needs about an AddressSpace
+ * @cpu: the CPU whose AddressSpace this is
+ * @as: the AddressSpace itself
+ * @memory_dispatch: its dispatch pointer (cached, RCU protected)
+ * @tcg_as_listener: listener for tracking changes to the AddressSpace
+ */
+struct CPUAddressSpace {
+    CPUState *cpu;
+    AddressSpace *as;
+    struct AddressSpaceDispatch *memory_dispatch;
+    MemoryListener tcg_as_listener;
+};
+```
+
+最后一个问题是，解释一下，为什么需要给每一个 CPU 创建一个 CPUAddressSpace ，而不是公用一个 CPUAddressSpace
+tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlush
 
 ##  kvmtool
 无论是 pio 还是 mmio，传输数据都是进行传输都是 byte 级别的，所以
