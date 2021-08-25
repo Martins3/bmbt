@@ -511,4 +511,7 @@ void device_class_set_parent_realize(DeviceClass *dc,
 
 所以，最后 x86_cpu_realizefn 会调用 cpu_common_realizefn
 
+#### CPUX86State
+- [ ] smbase : 这个地址似乎用于 smm 保存上下文的地方, 这个东西就是 SMRAM 的基地址
+
 [^2]: https://en.wikipedia.org/wiki/Machine-check_exception
