@@ -559,18 +559,12 @@ SMM 实际上是给 firmware 使用的
 > The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
 can address up to 4 GBytes of memory and can execute all I/O and system instructions. (Intel SDM vol 3 chapter 34)
 
+- [ ] 创建出来了地址空间，哪又如何, 还是使用了这些地址空间啊!
 
 #### SMM address space
-在 tcg_cpu_realizefn 中
+在 tcg_cpu_realizefn 和 tcg_cpu_machine_done 构建 cpu memory
 
 - get_system_memory : 获取的 MemoryRegion 的名称为 system, 总会挂到 cpu-memory-0 / cpu-memory-2 上
-
-```plain
-address-space: tcg-cpu-smm-0
-  0000000000000000-ffffffffffffffff (prio 0, i/o): cpu_as_root-memory
-    0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
-    0000000000000000-ffffffffffffffff (prio 0, i/o): alias cpu_as_mem-memory @system 0000000000000000-ffffffffffffffff
-```
 
 通过 qemu_add_machine_init_done_notifier 调用
 在 tcg_cpu_machine_done 中，从而在 cpu_as_root-memory 下创建一个 smram
@@ -581,6 +575,25 @@ address-space: tcg-cpu-smm-0
 memory-region: smram
   0000000000000000-00000000ffffffff (prio 0, i/o): smram
     00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
+```
+
+将 smram 插入到 cpu
+```plain
+address-space: cpu-smm-0
+  0000000000000000-ffffffffffffffff (prio 0, i/o): memory
+    0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
+    0000000000000000-ffffffffffffffff (prio 0, i/o): alias memory @system 0000000000000000-ffffffffffffffff
+```
+
+和 system_memory 中
+```plain
+address-space: cpu-memory-0
+  0000000000000000-ffffffffffffffff (prio 0, i/o): system
+    0000000000000000-00000000bfffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-00000000bfffffff
+    0000000000000000-ffffffffffffffff (prio -1, i/o): pci
+      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
+      // ....
+    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
 ```
 
 #### SMM user
@@ -594,6 +607,8 @@ static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
 而 HF_SMM_MASK 在 `env->hflags` 的插入和删除位置 smm_helper 中间。
 
 而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。 
+这些组装的出来的 MemTxAttrs 的使用位置是: cpu_asidx_from_attrs
+这样，使用相同的地址访问，如果是 SMM 的地址空间，最后就会找到不同的地址空间上。
 
 ## IOMMU
 在 [^6] 分析了下为什么 guest 需要 vIOMMU
