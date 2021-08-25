@@ -47,6 +47,7 @@ memory_ldst.inc.h 的方法。
 - [ ] 找到 memory region 发生互相覆盖的例子
   - 看看 Flatview 和 address-space: memory 的结果吧
   - 反而要思考的是，为什么发生了重叠还是对的
+  - tcg_cpu_realizefn 中 SMM 空间重叠在正常的空间上面
 
 - [ ] 我不能理解, flatview_read_continue 中间还会访问 pc.ram
 
