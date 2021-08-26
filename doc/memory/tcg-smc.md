@@ -1,10 +1,64 @@
 # SMC 
-
 - [ ] 类似的问题，如何处理 watchpoint 的
-- [ ] tb_invalidate_phys_page_range__lock
-  - [ ] 参数 pages 到底是做什么的?
-- [ ] 类似 page desc 的 lock 的作用是干什么的，比如 page_lock_pair, 为什么需要对于 page desc 进行上锁的啊
-  - [ ] 似乎为此构建出来了 page collection 的操作
+
+## lock page
+```c
+/**
+ * struct page_entry - page descriptor entry
+ * @pd:     pointer to the &struct PageDesc of the page this entry represents
+ * @index:  page index of the page
+ * @locked: whether the page is locked
+ *
+ * This struct helps us keep track of the locked state of a page, without
+ * bloating &struct PageDesc.
+ *
+ * A page lock protects accesses to all fields of &struct PageDesc.
+ *
+ * See also: &struct page_collection.
+ */
+struct page_entry {
+    PageDesc *pd;
+    tb_page_addr_t index;
+    bool locked;
+};
+```
+> This struct helps us keep track of the locked state of a page, without bloating &struct PageDesc.
+
+page_collection_lock => page_entry_lock
+
+```c
+/**
+ * struct page_collection - tracks a set of pages (i.e. &struct page_entry's)
+ * @tree:   Binary search tree (BST) of the pages, with key == page index
+ * @max:    Pointer to the page in @tree with the highest page index
+ *
+ * To avoid deadlock we lock pages in ascending order of page index.
+ * When operating on a set of pages, we need to keep track of them so that
+ * we can lock them in order and also unlock them later. For this we collect
+ * pages (i.e. &struct page_entry's) in a binary search @tree. Given that the
+ * @tree implementation we use does not provide an O(1) operation to obtain the
+ * highest-ranked element, we use @max to keep track of the inserted page
+ * with the highest index. This is valuable because if a page is not in
+ * the tree and its index is higher than @max's, then we can lock it
+ * without breaking the locking order rule.
+ *
+ * Note on naming: 'struct page_set' would be shorter, but we already have a few
+ * page_set_*() helpers, so page_collection is used instead to avoid confusion.
+ *
+ * See also: page_collection_lock().
+ */
+struct page_collection {
+    GTree *tree;
+    struct page_entry *max;
+};
+```
+page_collection 收集一堆 page_entry ，通过一个 page_entry 来索引 PageDesc 的
+
+- page_collection_lock 中通过调用 page_trylock_add 来将一个范围的 block 来 lock, 同时保证如果一个 page 上锁了，比它小的 page 不能直接上锁。
+  - 出现 out of order lock 的主要情况 : cross page 的时候，可能先找到 tb 的上半部分所在的 page，然后才找到的下半部分的
+  - page_trylock_add 这个函数写的实际上很糟糕，和其调用者 page_collection_lock 的逻辑强耦合，在 page_collection_lock 中，首先会将 tree 中间的全部 lock 一遍，然后才会开始逐个扫描，所以只要 
+
+- 如果 page_collection_lock 了，这一块的代码还可以同时被另一个 CPU 执行吗, 应该是可以，主要的目的是屏蔽那些调用 page_lock 的位置, 其中一个重要的用户就是 tb_link_page 了，tb_link_page 通过调用 page_lock_pair 将 tb 所需要的两个 tb 保护起来。
 
 ## TARGET_HAS_PRECISE_SMC
 TARGET_HAS_PRECISE_SMC 的使用位置只有 tb_invalidate_phys_page_range__locked
