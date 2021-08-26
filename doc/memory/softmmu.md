@@ -279,35 +279,6 @@ typedef struct CPUTLB {
 
 > IOTLB 的表项和上面的 CPUTLBEntry 分开也是一个需要理解的点。定义里有一些注释，要结合代码才会完全理解。一个 IO 访问，它的地址匹配依然是通过 CPUTLBEntry 的地址来完成，但是由于 IO 访问时 CPUTLBEntry 相关地址的低位不为 0（如果它已经被填充了的话），所以地址不会匹配成功，访存代码会走 slow path。
 
-
-### mmu idx
-```c
-#define NB_MMU_MODES 3
-
-typedef struct CPUTLB {
-    CPUTLBCommon c;
-    CPUTLBDesc d[NB_MMU_MODES];
-    CPUTLBDescFast f[NB_MMU_MODES];
-} CPUTLB;
-```
-
-- [x] 深入理解一下 tlb_hit 和 victim_tlb_hit
-  - tlb_hit 的实现很容易，通过 cpu_mmu_index 获取 mmu_idx, 然后就可以得到对应的 TLB entry 了，然后比较即可
-  - victim_tlb_hit 是一个全相连的 TLB
-
-使用 mmu idx 的原因是，因为为了将各种状态下的 TLB 分类保存，
-例如在用户态下，SMAP[^1] 之类的
-```c
-static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
-{
-    return (env->hflags & HF_CPL_MASK) == 3 ? MMU_USER_IDX :
-        (!(env->hflags & HF_SMAP_MASK) || (env->eflags & AC_MASK))
-        ? MMU_KNOSMAP_IDX : MMU_KSMAP_IDX;
-}
-```
-
-两个 flush 的接口， tlb_flush_page_by_mmuidx 和 tlb_flush_by_mmuidx 一个用于 flush 一个，一个用于 flush 全部 tlb
-
 ### CPUTLBCommon
 ```c
 /*
@@ -526,7 +497,34 @@ void msi_send_message(PCIDevice *dev, MSIMessage msg)
 }
 ```
 
+### mmu idx
+MemTxAttrs 中主要是为了正确选择 AddressSpace, 使用 mmu idx 的原因是为了区分 kernel, user，SMAP[^1] 之类的
+两者的类似指出就是都是通过 env 来构建的
 
+```c
+#define NB_MMU_MODES 3
+
+typedef struct CPUTLB {
+    CPUTLBCommon c;
+    CPUTLBDesc d[NB_MMU_MODES];
+    CPUTLBDescFast f[NB_MMU_MODES];
+} CPUTLB;
+```
+
+- [x] 理解一下 tlb_hit 和 victim_tlb_hit
+  - tlb_hit 的实现很容易，通过 cpu_mmu_index 获取 mmu_idx, 然后就可以得到对应的 TLB entry 了，然后比较即可
+  - victim_tlb_hit 是一个全相连的 TLB
+
+```c
+static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
+{
+    return (env->hflags & HF_CPL_MASK) == 3 ? MMU_USER_IDX :
+        (!(env->hflags & HF_SMAP_MASK) || (env->eflags & AC_MASK))
+        ? MMU_KNOSMAP_IDX : MMU_KSMAP_IDX;
+}
+```
+
+两个 flush 的接口， tlb_flush_page_by_mmuidx 和 tlb_flush_by_mmuidx 一个用于 flush 一个，一个用于 flush 全部 tlb
 
 ## WatchPoint
 - [ ] 如何实现?
