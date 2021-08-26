@@ -19,7 +19,7 @@ memory_ldst.inc.h 的方法。
 - [x] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
   - kvm_set_phys_mem : 使用 memory_region_is_ram 做了判断的
 - [x] 一个 container 的 priority 会影响其 subregions 的 priority 吗? 或者说，如果 container 很 priority 很低，而 subregions 的 priority 再高也没用了
-    - 从 render_memory_region 是递归的向下的, 高优先级的首先部署，所以答案是肯定的。
+  - 从 render_memory_region 是递归的向下的, 高优先级的首先部署，所以答案是肯定的。
 
 ## report
 1. 首先对比分析一下 kvmtool 的实现方法 ?
@@ -41,12 +41,6 @@ memory_ldst.inc.h 的方法。
     - 如何 AddressSpaceDispatch 的
 4. 如何和 softmmu 联系起来
 
-## 需要解决的问题
-- [ ] 找到 memory region 发生互相覆盖的例子
-  - 看看 Flatview 和 address-space: memory 的结果吧
-  - 反而要思考的是，为什么发生了重叠还是对的
-  - tcg_cpu_realizefn 中 SMM 空间重叠在正常的空间上面
-
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg
 
@@ -60,9 +54,6 @@ https://kernelgo.org/images/qemu-address-space.svg
 | Flatview             | ranges : 通过 render_memory_region 生成, 成员 nr nr_allocated 来管理其数量, root : 关联的 MemoryRegions , dispatch  |
 | AddressSpaceDispatch | 保存 GPA 到 HVA 的映射关系                                                                                          |
 
-- [ ] 不能理解为什么 AddressSpaceDispatch 为什么需要单独出来
-
-
 - cpu_address_space_init : 初始化 `CPUAddressSpace *CPUState::cpu_ases`, CPUAddressSpace 的主要成员 AddressSpace + CPUState
   - address_space_init : 使用 MemoryRegion 来初始化 AddressSpace，除了调用
     - address_space_update_topology
@@ -72,7 +63,7 @@ https://kernelgo.org/images/qemu-address-space.svg
         - flatview_simplify
         - address_space_dispatch_new : 初始化 Flatview::dispatch
 
-> info mtree [-f][-d][-o][-D] -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
+> `info mtree [-f][-d][-o][-D]` -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
 
 ## code flow: from helper to memory model
 
@@ -880,57 +871,6 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 
 - [ ] MemoryRegionSection 是最后插入到 AddressSpaceDispatch 中间的，那么 FlatRange 的作用是啥?
     - FlatView 持有了一堆 FlatRange，感觉生成了 AddressSpaceDispatch 之后就没用了
-
-## memory_ldst 的分析
-`#include "exec/memory_ldst.inc.h"` defined four times
-
-```c
-// cpu-all.h
-#define SUFFIX
-#define ARG1         as
-#define ARG1_DECL    AddressSpace *as
-#define TARGET_ENDIANNESS
-#include "exec/memory_ldst.inc.h"
-
-#define SUFFIX       _cached_slow
-#define ARG1         cache
-#define ARG1_DECL    MemoryRegionCache *cache
-#define TARGET_ENDIANNESS
-#include "exec/memory_ldst.inc.h"
-```
-
-```c
-// memory.h
-#define SUFFIX
-#define ARG1         as
-#define ARG1_DECL    AddressSpace *as
-#include "exec/memory_ldst.inc.h"
-
-#define SUFFIX       _cached_slow
-#define ARG1         cache
-#define ARG1_DECL    MemoryRegionCache *cache
-#include "exec/memory_ldst.inc.h"
-```
-but `memory_ldst.inc.c` only two times, both of them defined in exec.c
-```c
-#define ARG1_DECL                AddressSpace *as
-#define ARG1                     as
-#define SUFFIX
-#define TRANSLATE(...)           address_space_translate(as, __VA_ARGS__)
-#define RCU_READ_LOCK(...)       rcu_read_lock()
-#define RCU_READ_UNLOCK(...)     rcu_read_unlock() #include "memory_ldst.inc.c"
-```
-```c
-#define ARG1_DECL                MemoryRegionCache *cache
-#define ARG1                     cache
-#define SUFFIX                   _cached_slow
-#define TRANSLATE(...)           address_space_translate_cached(cache, __VA_ARGS__)
-#define RCU_READ_LOCK()          ((void)0)
-#define RCU_READ_UNLOCK()        ((void)0)
-#include "memory_ldst.inc.c"
-```
-memory_ldst.inc.h 已经被简化到 cpu-all.h 中间了，memory_ldst.inc.c 已经被简化为 memory_ldst.c 了
-因为 cache_slow 版本(只有 virtio 在使用)，也不需要 endianness 版本(主要是设备在使用)
 
 ## CPUAddressSpace
 在 tcg_cpu_realizefn 中 tcg_cpu_machine_done 初始化这些地址空间
