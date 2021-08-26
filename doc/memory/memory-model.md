@@ -13,6 +13,29 @@ memory_ldst.inc.h 的方法。
 - flatview_for_each_range 从来不会被调用
 - memory_region_read_with_attrs_accessor 从来不会被调用
 
+分析 memory.h 吧。
+
+| function                                                   | desc                                                                                                          |
+|------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                                      |
+| memory_region_dispatch_read / memory_region_dispatch_write | 最关键的，访问 device, 逐步向下分发的过程                                                                     |
+| memory_region_get_dirty_log_mask                           | 获取 MemoryRegion::dirty_log_mask                                                                             |
+| memory_region_get_ram_addr                                 |                                                                                                               |
+| devend_memop                                               | 使用一个非常繁杂的宏判断，进行 IO 的时候，设备是否需要进行 endiana 调整，从现在的调用链看，应该永远返回都是 0 |
+| qemu_map_ram_ptr                                           | 仔细看看注释，为了定义从 memory region 中的偏移获取 HVA, 定义了一堆函数                                       |
+| invalidate_and_set_dirty                                   | 将一个范围的 TLB invalidate 利用 DirtyMemoryBlocks 标记这个区域为 dirty                                       |
+| prepare_mmio_access                                        | 如果没有上 QBL 的话，那么把锁加上去                                                                           |
+| memory_access_is_direct                                    | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                                      |
+
+按道理，memory_ldst 提供的是标准访存接口，那么:
+
+- [ ] store_helper 和 io_readx 是如何实现的 ?
+  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read
+  - store_helper 是 address_space_stw_internal 的强化版本
+    - 主要是需要处理 TLB 命中的问题
+    - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
+
+
 ## QA
 - [x] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
   - [x] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
@@ -138,33 +161,6 @@ AddressSpace 关联一个 MemoryRegion, 通过 MemoryRegion 可以找到 Flatvie
 而是 flatview 决定了 io 真正的地址 (address_space_set_flatview)
 
 - 通过  `static GHashTable *flat_views;` 可以找到通过 mr 找到 flatview
-
-## memory_ldst.c 分析
-这几个函数几乎都是对称的，但是 address_space_stl_notdirty 稍有不同
-
-- [ ] address_space_stl_notdirty 还没有分析
-
-分析 memory.h 吧。
-
-| function                                                   | desc                                                                                                          |
-|------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                                      |
-| memory_region_dispatch_read / memory_region_dispatch_write | 最关键的，访问 device, 逐步向下分发的过程                                                                     |
-| memory_region_get_dirty_log_mask                           | 获取 MemoryRegion::dirty_log_mask                                                                             |
-| memory_region_get_ram_addr                                 |                                                                                                               |
-| devend_memop                                               | 使用一个非常繁杂的宏判断，进行 IO 的时候，设备是否需要进行 endiana 调整，从现在的调用链看，应该永远返回都是 0 |
-| qemu_map_ram_ptr                                           | 仔细看看注释，为了定义从 memory region 中的偏移获取 HVA, 定义了一堆函数                                       |
-| invalidate_and_set_dirty                                   | 将一个范围的 TLB invalidate 利用 DirtyMemoryBlocks 标记这个区域为 dirty                                       |
-| prepare_mmio_access                                        | 如果没有上 QBL 的话，那么把锁加上去                                                                           |
-| memory_access_is_direct                                    | 判断内存到底是可以直接写，还是设备空间，需要重新处理一下                                                      |
-
-按道理，memory_ldst 提供的是标准访存接口，那么:
-
-- store_helper 和 io_readx 是如何实现的 ?
-  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read
-  - store_helper 是 address_space_stw_internal 的强化版本
-    - 主要是需要处理 TLB 命中的问题
-    - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
 
 ## RAMBlock
 - qemu_ram_alloc : MemoryRegion::ram_block 总是使用这个初始化
@@ -914,8 +910,6 @@ tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlus
 ioport__register 就可以了
 
 而至于内存分配，使用 kvm__init_ram ，考虑一下 pci_hole 就差不多了
-
-## 外部资料
 
 [^1]: 关键参考: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
