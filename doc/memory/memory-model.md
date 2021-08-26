@@ -18,6 +18,8 @@ memory_ldst.inc.h 的方法。
   - [x] KVM 是如何注册这些 MMIO 空间的，还是说没有注册的空间默认为 MMIO 空间
 - [x] region_add 是处理 block 的，看看 ram block 和 ptr 的处理
   - kvm_set_phys_mem : 使用 memory_region_is_ram 做了判断的
+- [x] 一个 container 的 priority 会影响其 subregions 的 priority 吗? 或者说，如果 container 很 priority 很低，而 subregions 的 priority 再高也没用了
+    - 从 render_memory_region 是递归的向下的, 高优先级的首先部署，所以答案是肯定的。
 
 ## report
 1. 首先对比分析一下 kvmtool 的实现方法 ?
@@ -550,16 +552,71 @@ memory region 发生变动的时候来通知内核。
 
 现在分析出来，实际上，kvm 注册 memory listener 多出来的就只是 dirty log 了
 
-## SMRAM
-- [ ] 如何将 SMRAM 映射到 SMM 的空间中的 ?
-
 ## SMM
 SMM 实际上是给 firmware 使用的
 
 > The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
 can address up to 4 GBytes of memory and can execute all I/O and system instructions. (Intel SDM vol 3 chapter 34)
 
-- [ ] 创建出来了地址空间，哪又如何, 还是使用了这些地址空间啊!
+简单来说（从 FlatView 的差别）, 就是将 vga-low 的地方替代为 ram 了
+
+```plain
+huxueshi:do_smm_enter 38000
+huxueshi:do_smm_enter a8000
+```
+第一次的确是默认值，在 x86_cpu_reset 中间初始化的为 0x30000, 之后的操作范围在 a0000 ~ a0000 + 20000 
+
+```plain
+huxueshi:do_smm_enter 30000
+huxueshi:do_smm_enter a0000
+```
+这是因为 helper_rsm 发生了修正。
+
+- [x] 至于为什么产生开始的时候为什么可以从 0x30000 开始，证据可以从 seabios 中间找到:
+  - seabios src/config.h 中 `#define BUILD_SMM_INIT_ADDR       0x30000`
+
+不过，通过修改映射，FlatView 产生了下面的不同:
+```plain
+FlatView #1
+ AS "cpu-smm-0", root: memory
+ Root memory region: memory
+  0000000000000000-00000000000bffff (prio 0, ram): pc.ram
+  00000000000c0000-00000000000cafff (prio 0, rom): pc.ram @00000000000c0000
+  00000000000cb000-00000000000cdfff (prio 0, ram): pc.ram @00000000000cb000
+  00000000000ce000-00000000000e3fff (prio 0, rom): pc.ram @00000000000ce000
+  00000000000e4000-00000000000effff (prio 0, ram): pc.ram @00000000000e4000
+  00000000000f0000-00000000000fffff (prio 0, rom): pc.ram @00000000000f0000
+  0000000000100000-00000000bfffffff (prio 0, ram): pc.ram @0000000000100000
+  00000000fd000000-00000000fdffffff (prio 1, ram): vga.vram
+
+FlatView #2
+ AS "memory", root: system
+ AS "cpu-memory-0", root: system
+ AS "cpu-memory-1", root: system
+ AS "e1000", root: bus master container
+ AS "piix3-ide", root: bus master container
+ AS "nvme", root: bus master container
+ AS "virtio-9p-pci", root: bus master container
+ Root memory region: system
+  0000000000000000-000000000009ffff (prio 0, ram): pc.ram
+  00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
+  00000000000c0000-00000000000cafff (prio 0, rom): pc.ram @00000000000c0000
+  00000000000cb000-00000000000cdfff (prio 0, ram): pc.ram @00000000000cb000
+  00000000000ce000-00000000000e3fff (prio 0, rom): pc.ram @00000000000ce000
+  00000000000e4000-00000000000effff (prio 0, ram): pc.ram @00000000000e4000
+  00000000000f0000-00000000000fffff (prio 0, rom): pc.ram @00000000000f0000
+  0000000000100000-00000000bfffffff (prio 0, ram): pc.ram @0000000000100000
+  00000000fd000000-00000000fdffffff (prio 1, ram): vga.vram
+```
+在 SMM 模式下，a0000 ~ a0000 + 20000 下是 vga 的 io 地址空间，而在 SMM 下，相当于这里是存在一个内存的。
+
+- 不同的 AddressSpace 只要其 root 的 memory region，那么最后的 FlatView 就会完全相同，是的，但是看上面的两个 FlatView 不同，但是 root 相同
+  - 这是一个误导，只是恰好 cpu-smm 这个地址空间的 container 的名字也是叫做 memory 而已
+
+从这个文档获取的内容 : https://www.ssi.gouv.fr/uploads/IMG/pdf/Cansec_final.pdf
+  - SMRAM 也只是 RAM
+  - 0xa0000: legacy SMRAM location.
+    - [ ] 现在很奇怪，为什么 vga-low 正好在这个位置, 我不能理解。
 
 #### SMM address space
 在 tcg_cpu_realizefn 和 tcg_cpu_machine_done 构建 cpu memory
@@ -568,7 +625,6 @@ can address up to 4 GBytes of memory and can execute all I/O and system instruct
 
 通过 qemu_add_machine_init_done_notifier 调用
 在 tcg_cpu_machine_done 中，从而在 cpu_as_root-memory 下创建一个 smram
-
 
 而在 i440fx_init 中，创建出来了 smram
 ```plain
