@@ -1,12 +1,15 @@
 # SMC 
-- [ ] TARGET_HAS_PRECISE_SMC : 这个东西是啥效果，对应的支持是什么?
-  - [ ] 包含了一堆 TARGET_HAS_PRECISE_SMC, 如果不精确，会怎么样 ?
-    - [ ] 找一个不使用精确 SMC 的例子 ?
 
 - [ ] 类似的问题，如何处理 watchpoint 的
 - [ ] tb_invalidate_phys_page_range__lock
   - [ ] 参数 pages 到底是做什么的?
-- [ ] 类似 page desc 的 lock 的作用是干什么的，比如 page_lock_pair 
+- [ ] 类似 page desc 的 lock 的作用是干什么的，比如 page_lock_pair, 为什么需要对于 page desc 进行上锁的啊
+  - [ ] 似乎为此构建出来了 page collection 的操作
+
+## TARGET_HAS_PRECISE_SMC
+TARGET_HAS_PRECISE_SMC 的使用位置只有 tb_invalidate_phys_page_range__locked
+
+为了处理当前的 tb 正好被 SMC 了
 
 ## 流程
 - 用户态是如此处理的 通过信号机制(SEGV)，系统态直接在 softmmu 的位置检查
@@ -181,10 +184,6 @@ static void page_table_config_init(void)
       * tb_check_watchpoint
   * tb_invalidate_phys_page_range
     * tb_invalidate_phys_addr : 没有用户, 或者说是一个很奇怪的架构需要这个东西
-
-- [ ] 我无法理解 invalidate_and_set_dirty 的用户，似乎总是那些 helper 开始调用的
-    - 也可以是，flatview_write_continue 中
-- [ ] 感觉收集回来了，找到那些 `address_space_*` 的所有函数
 
 ## 参考
 [^1]: https://github.com/azru0512/slide/tree/master/QEMU

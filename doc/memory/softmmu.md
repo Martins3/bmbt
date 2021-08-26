@@ -1,9 +1,5 @@
 # qemu softmmu 设计
 
-其实需要分析的问题:
-- [ ] precise SMC
-- [ ] 画个图总结一下几个 TLB 的层级啊
-
 ## large page
 思考一下，如果使用软件支持 hugepage，那么每次比较还要比较 TLB size，这是不可能的，所以，对于 large page, QEMU softmmu 的处理就是直接不支持。
 但是 large page 需要 flush 的时候，需要将这个范围的 TLB 都 flush
