@@ -917,31 +917,6 @@ ioport__register 就可以了
 
 ## 外部资料
 
-#### QEMU 内存虚拟化源码分析[^1]
-首先，qemu 中用 AddressSpace 用来表示 CPU/设备看到的内存，一个 AddressSpace 下面包含多个 MemoryRegion，这些 MemoryRegion 结构通过树连接起来，树的根是 AddressSpace 的 root 域。
-
-MemoryRegion 有多种类型，可以表示一段 ram，rom，MMIO，alias，alias 表示一个 MemoryRegion 的一部分区域，MemoryRegion 也可以表示一个 container，这就表示它只是其他若干个 MemoryRegion 的容器。在 MemoryRegion 中，'ram_block'表示的是分配的实际内存。
-
-AddressSpace 下面 root 及其子树形成了一个虚拟机的物理地址，但是在往 kvm 进行设置的时候，需要将其转换为一个平坦的地址模型，也就是从 0 开始的。这个就用 FlatView 表示，**一个 AddressSpace 对应一个 FlatView**。
-
-在 FlatView 中，FlatRange 表示按照需要被切分为了几个范围。
-在内存虚拟化中，还有一个重要的结构是 MemoryRegionSection，这个结构通过函数 section_from_flat_range 可由 FlatRange 转换过来。
-
-mr 很多时候是创建一个 alias，指向已经存在的 mr 的一部分，这也是 alias 的作用
-
-*继续 pc_memory_init，函数在创建好了 ram 并且分配好了空间之后，创建了两个 mr alias，ram_below_4g 以及 ram_above_4g，这两个 mr 分别指向 ram 的低 4g 以及高 4g 空间，这两个 alias 是挂在根 system_memory mr 下面的。*
-
-> - [ ] 这个结构很难理解啊，即是一个 memory region 的 subregion，又是另一个 region 的 alias
-
-为了在虚拟机退出时，能够顺利根据物理地址找到对应的 HVA 地址，qemu 会有一个 AddressSpaceDispatch 结构，用来在 AddressSpace 中进行位置的找寻，继而完成对 IO/MMIO 地址的访问。
-> 其实不是获取 HVA，而是通过 GPA 获取到对应的 dispatch 函数
-
-为了监控虚拟机的物理地址访问，对于每一个 AddressSpace，会有一个 MemoryListener 与之对应。每当物理映射（`GPA->HVA`)发生改变时，会回调这些函数。
-
-在上面看到 MemoryListener 之后，我们看看什么时候需要更新内存。 进行内存更新有很多个点，比如我们新创建了一个 AddressSpace address_space_init，再比如我们将一个 mr 添加到另一个 mr 的 subregions 中 memory_region_add_subregion,再比如我们更改了一端内存的属性 memory_region_set_readonly，将一个 mr 设置使能或者非使能 memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个 Listener，这包括各个 AddressSpace 对应的，以及 kvm 注册的，这个过程叫做 commit，通过函数 memory_region_transaction_commit 实现。
-
-进行内存更新有很多个点，比如我们新创建了一个 AddressSpace address_space_init，再比如我们将一个 mr 添加到另一个 mr 的 subregions 中 memory_region_add_subregion,再比如我们更改了一端内存的属性 memory_region_set_readonly，将一个 mr 设置使能或者非使能 memory_region_set_enabled, 总之一句话，我们修改了虚拟机的内存布局/属性时，就需要通知到各个 Listener，这包括各个 AddressSpace 对应的，以及 kvm 注册的，这个过程叫做 commit，通过函数 memory_region_transaction_commit 实现。
-
 [^1]: 关键参考: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
 [^4]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
