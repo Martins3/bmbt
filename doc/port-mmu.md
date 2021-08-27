@@ -107,5 +107,3 @@ uint32_t helper_atomic_xor_fetchl_le
 ```
 
 但是，构造出来的这么多函数，目前使用者只有 helper_atomic_cmpxchgq_le_mmu
-
-- [ ] 到时候，直接展开就可以了, 只是 ref 需要的部分就可以了

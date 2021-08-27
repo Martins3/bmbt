@@ -643,6 +643,62 @@ vapic_write : 只是调用过一次, 在 seabios 中的 callrom 中进行的
 - [ ] 一个关联的 kvm ioctl 命令 : KVM_SET_VAPIC_ADDR
 
 - APICCommonState::vapic_paddr 和 kvmvapic 有关的
+
+### kvmvapic 的 backtrace
+kvm 的 backtrace :
+```c
+/*
+#1  0x0000555555c9f56d in huxueshi () at ../softmmu/physmem.c:2769
+#2  0x0000555555c9fa61 in flatview_read_continue (fv=0x7ffe4c3bc610, addr=833536, attrs=..., ptr=<optimized out>, len=9216, addr1=<optimized out>, l=<optimized out>, mr=<optimized out>) at ../softmmu/physmem.c:2866
+#3  0x0000555555c9fb83 in flatview_read (fv=0x7ffe4c3bc610, addr=833536, attrs=..., buf=0x7ffe4c356840, len=9216) at ../softmmu/physmem.c:2900
+#4  0x0000555555c9fcd6 in address_space_read_full (as=0x555556606820 <address_space_memory>, addr=833536, attrs=..., buf=0x7ffe4c356840, len=9216) at ../softmmu/physmem.c:2913
+#5  0x0000555555ba0c9f in cpu_physical_memory_read (len=<optimized out>, buf=0x7ffe4c356840, addr=833536) at /home/maritns3/core/kvmqemu/include/exec/cpu-common.h:77
+#6  patch_hypercalls (s=0x555556cbc000, s=0x555556cbc000) at ../hw/i386/kvmvapic.c:545
+#7  vapic_prepare (s=s@entry=0x555556cbc000) at ../hw/i386/kvmvapic.c:629
+#8  0x0000555555ba0ec8 in vapic_write (opaque=0x555556cbc000, addr=<optimized out>, data=<optimized out>, size=2) at ../hw/i386/kvmvapic.c:673
+#9  0x0000555555cd34d1 in memory_region_write_accessor (mr=mr@entry=0x555556cbc320, addr=0, value=value@entry=0x7fffe890d0a8, size=size@entry=2, shift=<optimized out>, mask=mask@entry=65535, attrs=...) at ../softmmu/memory.c:492
+#10 0x0000555555ccf95e in access_with_adjusted_size (addr=addr@entry=0, value=value@entry=0x7fffe890d0a8, size=size@entry=2, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=access_fn@entry=0x555555cd3440 <memory_region_write_accessor>, mr=0x555556cbc320, attrs=...) at ../softmmu/memory.c:554
+#11 0x0000555555cd2a07 in memory_region_dispatch_write (mr=0x555556cbc320, addr=0, data=<optimized out>, op=<optimized out>, attrs=...) at ../softmmu/memory.c:1504
+#12 0x0000555555c9f5d0 in flatview_write_continue (fv=0x7ffe4c38ec80, addr=126, attrs=..., ptr=<optimized out>, len=2, addr1=<optimized out>, l=<optimized out>, mr=0x555556cbc320) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
+#13 0x0000555555c9f7f6 in flatview_write (fv=0x7ffe4c38ec80, addr=126, attrs=..., buf=0x7fffeb180000, len=2) at ../softmmu/physmem.c:2836
+#14 0x0000555555c9fdb6 in address_space_write (as=0x555556606880 <address_space_io>, addr=126, attrs=..., buf=0x7fffeb180000, len=2) at ../softmmu/physmem.c:2929
+#15 0x0000555555c8fa79 in kvm_handle_io (count=1, size=2, direction=<optimized out>, data=<optimized out>, attrs=..., port=126) at ../accel/kvm/kvm-all.c:2632
+#16 kvm_cpu_exec (cpu=cpu@entry=0x555556b02a00) at ../accel/kvm/kvm-all.c:2883
+#17 0x0000555555cf2665 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556b02a00) at ../accel/kvm/kvm-accel-ops.c:49
+#18 0x0000555555e567c3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#19 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#20 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+- 曾经认为 kvmvapic 在 tcg 中间没有用的, 我不知道怎么分析的, 实际上，在 tcg 上还有大大用途啊
+```c
+/*
+#1  0x0000555555c9f56d in huxueshi () at ../softmmu/physmem.c:2769
+#2  0x0000555555c9fa61 in flatview_read_continue (fv=0x7ffe0c5d25c0, addr=17568946, attrs=..., ptr=<optimized out>, len=2, addr1=<optimized out>, l=<optimized out>, mr=<optimized out>) at ../softmmu/physmem.c:2867
+#3  0x0000555555c9fb83 in flatview_read (fv=0x7ffe0c5d25c0, addr=17568946, attrs=..., buf=0x7fffe888b956, len=2) at ../softmmu/physmem.c:2901
+#4  0x0000555555c9fcd6 in address_space_read_full (as=0x5555569edd70, addr=17568946, attrs=..., buf=0x7fffe888b956, len=2) at ../softmmu/physmem.c:2914
+#5  0x0000555555ca4b2c in address_space_read (len=2, buf=0x7fffe888b956, attrs=..., addr=17568946, as=<optimized out>) at /home/maritns3/core/kvmqemu/include/exec/memory.h:2805
+#6  cpu_memory_rw_debug (cpu=cpu@entry=0x555556bd5000, addr=addr@entry=18446744071579636914, ptr=ptr@entry=0x7fffe888b956, len=len@entry=2, is_write=is_write@entry=false) at ../softmmu/physmem.c:3462
+#7  0x0000555555ba117e in evaluate_tpr_instruction (access=TPR_ACCESS_WRITE, pip=<synthetic pointer>, cpu=0x555556bd5000, s=0x5555569fac00) at ../hw/i386/kvmvapic.c:250
+#8  vapic_report_tpr_access (dev=<optimized out>, cs=0x555556bd5000, ip=18446744071579636914, access=TPR_ACCESS_WRITE) at ../hw/i386/kvmvapic.c:474
+#9  0x0000555555c6bcb1 in apic_mem_write (opaque=<optimized out>, addr=128, val=16, size=<optimized out>) at ../hw/intc/apic.c:776
+#10 0x0000555555cd34d1 in memory_region_write_accessor (mr=mr@entry=0x55555698b3c0, addr=128, value=value@entry=0x7fffe888bb38, size=size@entry=4, shift=<optimized out>, mask=mask@entry=4294967295, attrs=...) at ../softmmu/memory.c:492
+#11 0x0000555555ccf95e in access_with_adjusted_size (addr=addr@entry=128, value=value@entry=0x7fffe888bb38, size=size@entry=4, access_size_min=<optimized out>, access_size_max=<optimized out>, access_fn=access_fn@entry=0x555555cd3440 <memory_region_write_accessor>, mr=0x55555698b3c0, attrs=...) at ../softmmu/memory.c:554
+#12 0x0000555555cd2a07 in memory_region_dispatch_write (mr=mr@entry=0x55555698b3c0, addr=addr@entry=128, data=<optimized out>, data@entry=16, op=op@entry=MO_32, attrs=...) at ../softmmu/memory.c:1504
+#13 0x0000555555caa8bc in io_writex (env=env@entry=0x555556bdd890, mmu_idx=mmu_idx@entry=2, val=val@entry=16, addr=addr@entry=18446744073699049600, retaddr=140735688117006, op=MO_32, iotlbentry=<optimized out>, iotlbentry=<optimized out>) at ../accel/tcg/cputlb.c:1420
+#14 0x0000555555cb0b70 in store_helper (op=MO_32, retaddr=<optimized out>, oi=<optimized out>, val=16, addr=<optimized out>, env=0x555556bdd890) at ../accel/tcg/cputlb.c:2463
+#15 helper_le_stl_mmu (env=0x555556bdd890, addr=18446744073699049600, val=16, oi=<optimized out>, retaddr=140735688117006) at ../accel/tcg/cputlb.c:2529
+#16 0x00007fff94b28b0e in code_gen_buffer ()
+#17 0x0000555555cd8aed in cpu_tb_exec (tb_exit=<synthetic pointer>, itb=<optimized out>, cpu=0x555556bdd890) at ../accel/tcg/cpu-exec.c:353
+#18 cpu_loop_exec_tb (tb_exit=<synthetic pointer>, last_tb=<synthetic pointer>, tb=<optimized out>, cpu=0x555556bdd890) at ../accel/tcg/cpu-exec.c:812
+#19 cpu_exec (cpu=cpu@entry=0x555556bd5000) at ../accel/tcg/cpu-exec.c:970
+#20 0x0000555555c3fc97 in tcg_cpus_exec (cpu=cpu@entry=0x555556bd5000) at ../accel/tcg/tcg-accel-ops.c:67
+#21 0x0000555555cb9583 in rr_cpu_thread_fn (arg=arg@entry=0x555556b03000) at ../accel/tcg/tcg-accel-ops-rr.c:216
+#22 0x0000555555e567c3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#23 0x00007ffff628d609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#24 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
 ## kvm ioapic
 ```c
 struct KVMIOAPICState {

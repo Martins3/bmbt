@@ -865,8 +865,7 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 ```
 实际上，这个函数的调用者几乎就是 memory listener 了
 
-- [ ] MemoryRegionSection 是最后插入到 AddressSpaceDispatch 中间的，那么 FlatRange 的作用是啥?
-    - FlatView 持有了一堆 FlatRange，感觉生成了 AddressSpaceDispatch 之后就没用了
+- FlatView 持有了一堆 FlatRange，用于生成 MemoryRegionSection 插入到 AddressSpaceDispatch
 
 ## CPUAddressSpace
 在 tcg_cpu_realizefn 中 tcg_cpu_machine_done 初始化这些地址空间
