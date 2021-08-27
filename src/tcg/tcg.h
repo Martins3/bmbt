@@ -384,7 +384,7 @@ static inline TCGMemOpIdx make_memop_idx(MemOp op, unsigned idx) {
 
 void tcg_prologue_init(TCGContext *s);
 
-// FIXME this is function maybe lead to atomic_template.h ?
+// [interface] this is function maybe lead to atomic_template.h ?
 uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
                                        uint64_t cmpv, uint64_t newv,
                                        TCGMemOpIdx oi, uintptr_t retaddr);

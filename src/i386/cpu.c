@@ -681,7 +681,7 @@ static void x86_cpu_common_class_init(CPUState *cpu) {
   cc->synchronize_from_tb = x86_cpu_synchronize_from_tb;
   cc->get_paging_enabled = x86_cpu_get_paging_enabled;
 #ifndef CONFIG_USER_ONLY
-
+  cc->asidx_from_attrs = x86_asidx_from_attrs;
 #endif
 
 #ifdef TARGET_X86_64
