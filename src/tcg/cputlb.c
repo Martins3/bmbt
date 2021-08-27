@@ -23,7 +23,6 @@
 #include <stdlib.h> // for abort
 #include <string.h>
 
-
 #define DIRTY_MEMORY_VGA 0
 #define DIRTY_MEMORY_CODE 1
 #define DIRTY_MEMORY_MIGRATION 2
@@ -331,9 +330,7 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap) {
   }
 }
 
-void tlb_flush(CPUState *cpu) {
-  tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS);
-}
+void tlb_flush(CPUState *cpu) { tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS); }
 
 void tlb_flush_by_mmuidx_all_cpus(CPUState *src_cpu, uint16_t idxmap) {
   const run_on_cpu_func fn = tlb_flush_by_mmuidx_async_work;
@@ -1913,6 +1910,15 @@ void xtm_helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
 void helper_be_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr) {
   store_helper(env, addr, val, oi, retaddr, MO_BEQ);
+}
+
+uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
+                                       uint64_t cmpv, uint64_t newv,
+                                       TCGMemOpIdx oi, uintptr_t retaddr) {
+  uint64_t *haddr = atomic_mmu_lookup(env, addr, oi, retaddr);
+  uint64_t ret;
+  ret = atomic_cmpxchg__nocheck(haddr, cmpv, newv);
+  return ret;
 }
 
 /* Code access functions.  */
