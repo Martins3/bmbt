@@ -1737,6 +1737,14 @@ void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
 #define MMU_USER_IDX 1
 #define MMU_KNOSMAP_IDX 2
 
+static inline int x86_asidx_from_attrs(CPUState *cs, MemTxAttrs attrs)
+{
+    return !!attrs.secure;
+}
+
+// FIXME implement it later
+AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs);
+
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr);
 uint32_t x86_lduw_phys(CPUState *cs, hwaddr addr);
 uint32_t x86_ldl_phys(CPUState *cs, hwaddr addr);
