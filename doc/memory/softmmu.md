@@ -536,22 +536,6 @@ static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
 
 - [ ] 现在理解了其中的基本函数如何设置 CPUIOTLBEntry 和 CPUTLBEntry 的，但是中间还空出来了一大片内容的
 
-## asidx
-在 target/i386/cpu-param.h 中定义了
-```c
-#define NB_MMU_MODES 3
-```
-在 target/i386/cpu.h 中定义的:
-```c
-/* MMU modes definitions */
-#define MMU_KSMAP_IDX   0
-#define MMU_USER_IDX    1
-#define MMU_KNOSMAP_IDX 2
-```
-这个事情，和 CPUAddressSpace 中关联多个 AddressSpace 不是一个事情。
-
-- [ ] 应该不是很麻烦，这个东西具体如何实现需要体现出来。
-
 ## softmmu 快慢路径
 ```c
 /*
