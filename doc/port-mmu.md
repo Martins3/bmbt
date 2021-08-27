@@ -1,4 +1,17 @@
-## memory_ldst 的分析
+# softmmu 和 memory model 的移植的设计 
+到底是在补齐接口还是在设计新的 memory model 的, 我认为应该是首先思考清楚整个东西是如何设计的，
+想清楚了之后，再去验证这些接口的设计，最后具体的留出来的那些接口。
+
+## [ ] 到底那些地方可以简化
+- 因为描述的空间是固定的，所以我猜测可以简化设计，没有必要创建出来 MemoryRegion，但是可以保留出来 FlatRange
+- 因为 IO 空间和 mmio 空间的数量有限，暂时可以直接一个数组循环来遍历这些 FlatRange 的
+- [ ] 我认为没有必要构建出来 RAMBlock 的 FlatRange 出来，实际上，从 AddressSpace 访问出来，最后访问到 RAM 的情况，应该挑出来, 构建一个新的访问路径
+    - 这个事情很容易的，使用 source trail 反向分析就可以了
+    - 容易你妈，看看 subpage_read 的实现
+- [ ] SMM 还是感觉没有分析清楚，如果可以保证安全，那么我有一些大胆的想法，这就是 vga-low 的地方内容发生了替换而已啊
+
+## 移植差异性的记录
+### memory_ldst.h
 `#include "exec/memory_ldst.inc.h"` defined four times
 
 ```c
@@ -49,11 +62,11 @@ but `memory_ldst.inc.c` only two times, both of them defined in exec.c
 memory_ldst.inc.h 已经被简化到 cpu-all.h 中间了，memory_ldst.inc.c 已经被简化为 memory_ldst.c 了
 因为 cache_slow 版本(只有 virtio 在使用)，也不需要 endianness 版本(主要是设备在使用)
 
-## cpu-ldst.h
+### cpu-ldst.h
 类似于 cpu_ldq_data_ra 之类的, 目前就是照抄的
 希望可以修改为 v6.0 的形式
 
-## atomic_template.h
+### atomic_template.h
 atomic_template.h 被 cputlb.c include 了 8 次，四种数据大小 * 两种调用接口
 
 ```c

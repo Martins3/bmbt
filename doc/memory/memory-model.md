@@ -220,65 +220,6 @@ huxueshi:ram_block_add /rom@etc/acpi/rsdp: offset=180b40000 size=1000
 
 ## AddressSpaceDispatch
 
-#### AddressSpaceDispatch 的生成
-这个玩意设计成为多级页面的目的和页表查询的作用应该差不多吧!
-
-```c
-struct AddressSpaceDispatch {
-    MemoryRegionSection *mru_section;
-    /* This is a multi-level map on the physical address space.
-     * The bottom level has pointers to MemoryRegionSections.
-     */
-    PhysPageEntry phys_map;
-    PhysPageMap map;
-};
-```
-- phys_map : 相当于 cr3
-- map : 相当于管理所有的 page tabel 的页面
-- mru_section : ，缓存
-
-```c
-struct PhysPageEntry {
-    /* How many bits skip to next level (in units of L2_SIZE). 0 for a leaf. */
-    uint32_t skip : 6;
-     /* index into phys_sections (!skip) or phys_map_nodes (skip) */
-    uint32_t ptr : 26;
-};
-```
-- skip : 表示还有多少级就可以到 leaf 节点
-- prt : 下标
-  - 如果 leaf 节点，那么就是索引 PhysPageMap::sections 的下标
-  - 如果 non-leaf 节点，那么就是索引  PhysPageMap::nodes 的下标
-
-```c
-typedef PhysPageEntry Node[P_L2_SIZE];
-
-typedef struct PhysPageMap {
-    struct rcu_head rcu;
-
-    unsigned sections_nb;
-    unsigned sections_nb_alloc;
-    unsigned nodes_nb;
-    unsigned nodes_nb_alloc;
-    Node *nodes;
-    MemoryRegionSection *sections;
-} PhysPageMap;
-```
-- Node : 定义这个结构体，相当于定义了一个 page table
-- nodes : 存储所有的 Node，如果分配完了，使用 phys_map_node_reserve 来补充
-- sections : 最终想要获取的
-
-如何构建 PhysPageMap 这颗树:
-- generate_memory_topology
-  - render_memory_region / flatview_simplify  : 将 memory region 转化为了 FlatRange 的
-  - flatview_add_to_dispatch : 将 FlatRange 首先使用 section_from_flat_range 转化为 MemoryRegionSection 然后添加
-    - register_subpage : 如果 MemoryRegionSection 无法完整地覆盖一整个页
-    - register_multipage
-      - phys_section_add : 将 MemoryRegionSection 添加到 PhysPageMap::sections
-      - phys_page_set : 设置对应的 PhysPageMap::nodes
-        - phys_map_node_reserve : 预留空间
-        - phys_page_set_level :
-
 
 #### AddressSpaceDispatch dispatch 的过程 : 百川归海
 进行 pio / mmio 最后总是到达 : memory_region_dispatch_read

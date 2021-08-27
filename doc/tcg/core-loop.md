@@ -104,43 +104,6 @@ tcg/tcg.c 中分别 include 下面几个文件，因为 xqm 抛弃了 tcg, 都�
 
 总之，region 的创建是因为多核，每次分配一个 region，从而用于修改 TCGContext::code_gen_buffer
 
-## tb_tc
-TranslationBlock 和 生成的代码分别放到什么位置 ?
-
-tcg_tb_alloc 的注释说道, TranslationBlock 就是生成的代码左侧
-```c
-/*
- * Allocate TBs right before their corresponding translated code, making
- * sure that TBs and code are on different cache lines.
- */
-```
-
-```c
-/*
- * Translation Cache-related fields of a TB.
- * This struct exists just for convenience; we keep track of TB's in a binary
- * search tree, and the only fields needed to compare TB's in the tree are
- * @ptr and @size.
- * Note: the address of search data can be obtained by adding @size to @ptr.
- */
-struct tb_tc {
-  void *ptr; /* pointer to the translated code */
-  size_t size;
-};
-```
-- TB 是在二叉树中间
-
-在 tb_gen_code 中初始化
-1. `tb->tc.ptr = gen_code_buf;`
-2. `tb->tc.size = gen_code_size;`
-也就是，根据 tb 所在地址和大小。
-
-
-为什么会出现这种需求，根据 tb 所在的地址有啥意义啊 ?
-- 首先，一个 tb 总是对应一个  TranslationBlock 的，通过 tb_tc 可以将生成的代码和 TranslationBlock 联系起来
-- 其次，从 tb 离开的时候，会保存下当时的地址，通过这个地址从而知道当时发生在哪一个 TranslationBlock 上了，这是极好的
-
-
 ## [ ] cpu_exec_nocache
 - [x] nocache 到底指的是什么东西?
     - 这个容易，执行代码，当场翻译，这个 tb 不会给之后复用
