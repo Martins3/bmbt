@@ -29,7 +29,7 @@ memory_ldst.inc.h 的方法。
 
 按道理，memory_ldst 提供的是标准访存接口，那么:
 
-- [ ] store_helper 和 io_readx 是如何实现的 ?
+- store_helper 和 io_readx 是如何实现的 ?
   - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read
   - store_helper 是 address_space_stw_internal 的强化版本
     - 主要是需要处理 TLB 命中的问题
@@ -746,46 +746,6 @@ static inline MemTxResult pci_dma_rw(PCIDevice *dev, dma_addr_t addr, void *buf,
     - 两者最后都是调用 address_space_rw 的
     - 感觉从当前的配置，实际上，dma 采用 as 显然也是 address_space_memory
 
-#### endianness
-memory_region_dispatch_read 在最后会调用 adjust_endianness
-而 memory_region_dispatch_write 会在开始的时候调用
-
-目前只有一个 device 是 big endianness 的，那就是 fwcfg.dma
-- hw/nvram/fw_cfg.c 中 fw_cfg_dma_mem_ops 和 fw_cfg_comb_mem_ops 的确如此定义
-- 从 qemu_cfg_dma_transfer 中也可以找到证据
-
-```c
-/*
-0000000000000510-0000000000000511 (prio 0, i/o): fwcfg
-0000000000000514-000000000000051b (prio 0, i/o): fwcfg.dma
-```
-
-```c
-static void
-qemu_cfg_dma_transfer(void *address, u32 length, u32 control)
-{
-    QemuCfgDmaAccess access;
-
-    access.address = cpu_to_be64((u64)(u32)address);
-    access.length = cpu_to_be32(length);
-    access.control = cpu_to_be32(control);
-
-    barrier();
-
-    outl(cpu_to_be32((u32)&access), PORT_QEMU_CFG_DMA_ADDR_LOW);
-
-    while(be32_to_cpu(access.control) & ~QEMU_CFG_DMA_CTL_ERROR) {
-        yield();
-    }
-}
-```
-
-#### access_size
-access_with_adjusted_size 会计算调用的大小，实际上，最终将大小约束到 1 - 4 之间, 如果需要进行的 io 的大小超过这个 4, 那么就使用循环反复调用 MemoryRegionOps::read
-
-所以，真的会出现 pio/mmio 的 size > 4 的情况吗, 实际测试显示，只有 vga-lowmem 会是如此。
-
-MemoryRegionOps::read 的参数是有 size 的
 
 ## FlatRange 和 MemoryRegionSection
 - section_from_flat_range : 很简单的封装

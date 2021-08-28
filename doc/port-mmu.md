@@ -13,7 +13,9 @@
 - 为了处理各种 device 的情况，制作出来了 stl_le_phys 之类的函数，这是没有必要的
 
 - 你觉得 SMC 真的需要 ramlist.dirty_memory 来维持生活吗?
-  - 算了，改动太大了
+  - [ ] 算了，改动太大了, 不过，现在这么多的 RAM，我只是理解其中的一个
+- memory_ldst.h 无需考虑 `#define SUFFIX                   _cached_slow`, 那是给 virtio 使用的
+
 
 ## 移植差异性的记录
 ### memory_ldst.h
