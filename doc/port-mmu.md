@@ -10,6 +10,11 @@
     - 容易你妈，看看 subpage_read 的实现
 - [ ] SMM 还是感觉没有分析清楚，如果可以保证安全，那么我有一些大胆的想法，这就是 vga-low 的地方内容发生了替换而已啊
 
+- 为了处理各种 device 的情况，制作出来了 stl_le_phys 之类的函数，这是没有必要的
+
+- 你觉得 SMC 真的需要 ramlist.dirty_memory 来维持生活吗?
+  - 算了，改动太大了
+
 ## 移植差异性的记录
 ### memory_ldst.h
 `#include "exec/memory_ldst.inc.h"` defined four times
