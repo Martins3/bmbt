@@ -17,6 +17,8 @@
   - [ ] 也许思考一些，如何保证一个变量只有在初始化之后才可以访问
     - [ ] 其实这很容易，初始化一个对象，然后定义出来其 init 函数，在 init 函数中间必须初始化出来
 
+我忽然意识到一个事情，如果 guest 只有一个串口，那么我们可以在用户态运行很长时间吧!
+
 ## Make linker happy
 - reference glib : 处理文件 /home/maritns3/core/ld/DuckBuBi/src/tcg/glib_stub.h
 - reference capstone #105
