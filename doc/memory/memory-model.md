@@ -29,12 +29,19 @@ memory_ldst.inc.h 的方法。
 
 按道理，memory_ldst 提供的是标准访存接口，那么:
 
-- store_helper 和 io_readx 是如何实现的 ?
-  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read
+- address_space_stw_internal
+  - io_readx 是 address_space_stw_internal 的简化版，相当于直接调用 memory_region_dispatch_read, 没有处理 ram 相关的。
   - store_helper 是 address_space_stw_internal 的强化版本
     - 主要是需要处理 TLB 命中的问题
     - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
 
+- [ ] 从 address_space_rw 到 memory_region_dispatch_read 中间经历了什么东西
+- [ ] store_helper 中除了处理对其的问题，还有什么，为什么 store_helper 就是非要处理这个的
+    - [ ] 处理 not dirty 的
+    - [ ] 处理 watch point 的问题
+
+- [ ] kvmtool 处理地址空间之所以那么简单，是因为其不用模拟设备，
+但是 QEMU 中间从 kvm 中 exit 出来，address_space_rw 的内容感觉还是比 kvmtool 复杂很多啊!
 
 ## QA
 - [x] PCIe 注册的 AddressSpace 是不是因为对应的 MMIO 空间
@@ -43,26 +50,6 @@ memory_ldst.inc.h 的方法。
   - kvm_set_phys_mem : 使用 memory_region_is_ram 做了判断的
 - [x] 一个 container 的 priority 会影响其 subregions 的 priority 吗? 或者说，如果 container 很 priority 很低，而 subregions 的 priority 再高也没用了
   - 从 render_memory_region 是递归的向下的, 高优先级的首先部署，所以答案是肯定的。
-
-## report
-1. 首先对比分析一下 kvmtool 的实现方法 ?
-  - 处理设备 / 处理内存
-2. 要解决什么问题和解决方法?
-    - 设备的地址空间
-    - IOMMU
-    - DMA
-    - memory listener
-    - 地址空间的拆分
-    - AddressSpace 为了做什么?
-    - 有的 memory 是 device 空间，有的是 device 空间的
-    - memory 对于一个固定的板卡是固定的，但是如果总是在动态添加设备，同时处理 kvm / tcg 之类，那就很麻烦了
-2. 使用了那些结构体?
-    - FlatRange Flatview AddressSpace AddressSpaceDispatch MemoryListener MemoryRegion
-3. 那些关键的调用路径
-    - 构建
-    - 制作 FlatRange 的
-    - 如何 AddressSpaceDispatch 的
-4. 如何和 softmmu 联系起来
 
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg
@@ -804,12 +791,6 @@ struct CPUAddressSpace {
 
 最后一个问题是，解释一下，为什么需要给每一个 CPU 创建一个 CPUAddressSpace ，而不是公用一个 CPUAddressSpace
 tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlush
-
-## kvmtool
-无论是 pio 还是 mmio，传输数据都是进行传输都是 byte 级别的，所以
-ioport__register 就可以了
-
-而至于内存分配，使用 kvm__init_ram ，考虑一下 pci_hole 就差不多了
 
 [^1]: 关键参考: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
