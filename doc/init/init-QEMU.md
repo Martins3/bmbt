@@ -164,7 +164,7 @@ huxueshi:qdev_device_add virtio-9p-pci
                 - qbus_init
               - pci_root_bus_init
             - 处理 PCI 的地址空间的映射初始化
-            - init_pam : https://wiki.qemu.org/Documentation/Platforms/PC
+            - init_pam
           - piix3_create
             - pci_create_simple_multifunction : 创建出来设备
             - 设置从 piix3 到 i440fx 的中断路由之类的事情
