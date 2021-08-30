@@ -35,7 +35,8 @@ memory_ldst.inc.h 的方法。
     - 主要是需要处理 TLB 命中的问题
     - 以及非对其访问，因为 address_space_stw_internal 的调用者都是从 helper 哪里来的，所以要容易的多
 
-- [ ] 从 address_space_rw 到 memory_region_dispatch_read 中间经历了什么东西
+- 从 address_space_rw 到 memory_region_dispatch_read 中间经历了什么东西?
+    - 地址转换, 准确来说，是 flatview_translate
 - [ ] store_helper 中除了处理对其的问题，还有什么，为什么 store_helper 就是非要处理这个的
     - [ ] 处理 not dirty 的
     - [ ] 处理 watch point 的问题
@@ -53,8 +54,6 @@ memory_ldst.inc.h 的方法。
 
 ## QEMU Memory Model 结构分析
 https://kernelgo.org/images/qemu-address-space.svg
-
-看上去 info mtree 出来的内容相当的简单啊
 
 关键结构体内容分析:
 | struct               | desc                                                                                                                |
@@ -74,46 +73,6 @@ https://kernelgo.org/images/qemu-address-space.svg
         - address_space_dispatch_new : 初始化 Flatview::dispatch
 
 > `info mtree [-f][-d][-o][-D]` -- show memory tree (-f: dump flat view for address spaces;-d: dump dispatch tree, valid with -f only);-o: dump region owners/parents;-D: dump disabled regions
-
-## code flow: from helper to memory model
-
-- in helper.c, a lot of functions similar functions are defined.
-```c
-uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr);
-uint32_t x86_lduw_phys(CPUState *cs, hwaddr addr);
-uint32_t x86_ldl_phys(CPUState *cs, hwaddr addr);
-uint64_t x86_ldq_phys(CPUState *cs, hwaddr addr);
-void x86_stb_phys(CPUState *cs, hwaddr addr, uint8_t val);
-void x86_stl_phys_notdirty(CPUState *cs, hwaddr addr, uint32_t val);
-void x86_stw_phys(CPUState *cs, hwaddr addr, uint32_t val);
-void x86_stl_phys(CPUState *cs, hwaddr addr, uint32_t val);
-void x86_stq_phys(CPUState *cs, hwaddr addr, uint64_t val);
-```
-```c
-uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr)
-{
-    X86CPU *cpu = X86_CPU(cs);
-    CPUX86State *env = &cpu->env;
-    MemTxAttrs attrs = cpu_get_mem_attrs(env);
-    AddressSpace *as = cpu_addressspace(cs, attrs);
-
-    return address_space_ldub(as, addr, attrs, NULL);
-}
-```
-- in the beginning of `misc_helper.c`, io related function 
-```c
-void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
-{
-#ifdef CONFIG_USER_ONLY
-    fprintf(stderr, "outb: port=0x%04x, data=%02x\n", port, data);
-#else
-    address_space_stb(&address_space_io, port, data,
-                      cpu_get_mem_attrs(env), NULL);
-#endif
-```
-
-- 在 helper.c 中，那些 `x86_*_phys` 其实都是简单的找到的 cpu 的 AddressSpace 即可
-- helper_outb 中，更加简单，因为 address_space_io 总是固定的
 
 ## AddressSpace
 当提到 address space 的时候，因为要处理地址空间的变换的, 所以，实际上是来持有 Flatview 的
@@ -467,119 +426,6 @@ memory region 发生变动的时候来通知内核。
 
 现在分析出来，实际上，kvm 注册 memory listener 多出来的就只是 dirty log 了
 
-## SMM
-SMM 实际上是给 firmware 使用的
-
-> The execution environment after entering SMM is in real address mode with paging disabled (CR0.PE = CR0.PG = 0). In this initial execution environment, the SMI handler 
-can address up to 4 GBytes of memory and can execute all I/O and system instructions. (Intel SDM vol 3 chapter 34)
-
-简单来说（从 FlatView 的差别）, 就是将 vga-low 的地方替代为 ram 了
-
-```plain
-huxueshi:do_smm_enter 38000
-huxueshi:do_smm_enter a8000
-```
-第一次的确是默认值，在 x86_cpu_reset 中间初始化的为 0x30000, 之后的操作范围在 a0000 ~ a0000 + 20000 
-
-```plain
-huxueshi:do_smm_enter 30000
-huxueshi:do_smm_enter a0000
-```
-这是因为 helper_rsm 发生了修正。
-
-- [x] 至于为什么产生开始的时候为什么可以从 0x30000 开始，证据可以从 seabios 中间找到:
-  - seabios src/config.h 中 `#define BUILD_SMM_INIT_ADDR       0x30000`
-
-不过，通过修改映射，FlatView 产生了下面的不同:
-```plain
-FlatView #1
- AS "cpu-smm-0", root: memory
- Root memory region: memory
-  0000000000000000-00000000000bffff (prio 0, ram): pc.ram
-  00000000000c0000-00000000000cafff (prio 0, rom): pc.ram @00000000000c0000
-  00000000000cb000-00000000000cdfff (prio 0, ram): pc.ram @00000000000cb000
-  00000000000ce000-00000000000e3fff (prio 0, rom): pc.ram @00000000000ce000
-  00000000000e4000-00000000000effff (prio 0, ram): pc.ram @00000000000e4000
-  00000000000f0000-00000000000fffff (prio 0, rom): pc.ram @00000000000f0000
-  0000000000100000-00000000bfffffff (prio 0, ram): pc.ram @0000000000100000
-  00000000fd000000-00000000fdffffff (prio 1, ram): vga.vram
-
-FlatView #2
- AS "memory", root: system
- AS "cpu-memory-0", root: system
- AS "cpu-memory-1", root: system
- AS "e1000", root: bus master container
- AS "piix3-ide", root: bus master container
- AS "nvme", root: bus master container
- AS "virtio-9p-pci", root: bus master container
- Root memory region: system
-  0000000000000000-000000000009ffff (prio 0, ram): pc.ram
-  00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
-  00000000000c0000-00000000000cafff (prio 0, rom): pc.ram @00000000000c0000
-  00000000000cb000-00000000000cdfff (prio 0, ram): pc.ram @00000000000cb000
-  00000000000ce000-00000000000e3fff (prio 0, rom): pc.ram @00000000000ce000
-  00000000000e4000-00000000000effff (prio 0, ram): pc.ram @00000000000e4000
-  00000000000f0000-00000000000fffff (prio 0, rom): pc.ram @00000000000f0000
-  0000000000100000-00000000bfffffff (prio 0, ram): pc.ram @0000000000100000
-  00000000fd000000-00000000fdffffff (prio 1, ram): vga.vram
-```
-在 SMM 模式下，a0000 ~ a0000 + 20000 下是 vga 的 io 地址空间，而在 SMM 下，相当于这里是存在一个内存的。
-
-- 不同的 AddressSpace 只要其 root 的 memory region，那么最后的 FlatView 就会完全相同，是的，但是看上面的两个 FlatView 不同，但是 root 相同
-  - 这是一个误导，只是恰好 cpu-smm 这个地址空间的 container 的名字也是叫做 memory 而已
-
-从这个文档获取的内容 : https://www.ssi.gouv.fr/uploads/IMG/pdf/Cansec_final.pdf
-  - SMRAM 也只是 RAM
-  - 0xa0000: legacy SMRAM location.
-    - [ ] 现在很奇怪，为什么 vga-low 正好在这个位置, 我不能理解。
-
-#### SMM address space
-在 tcg_cpu_realizefn 和 tcg_cpu_machine_done 构建 cpu memory
-
-- get_system_memory : 获取的 MemoryRegion 的名称为 system, 总会挂到 cpu-memory-0 / cpu-memory-2 上
-
-通过 qemu_add_machine_init_done_notifier 调用
-在 tcg_cpu_machine_done 中，从而在 cpu_as_root-memory 下创建一个 smram
-
-而在 i440fx_init 中，创建出来了 smram
-```plain
-memory-region: smram
-  0000000000000000-00000000ffffffff (prio 0, i/o): smram
-    00000000000a0000-00000000000bffff (prio 0, ram): alias smram-low @pc.ram 00000000000a0000-00000000000bffff
-```
-
-将 smram 插入到 cpu
-```plain
-address-space: cpu-smm-0
-  0000000000000000-ffffffffffffffff (prio 0, i/o): memory
-    0000000000000000-00000000ffffffff (prio 1, i/o): alias smram @smram 0000000000000000-00000000ffffffff
-    0000000000000000-ffffffffffffffff (prio 0, i/o): alias memory @system 0000000000000000-ffffffffffffffff
-```
-
-和 system_memory 中
-```plain
-address-space: cpu-memory-0
-  0000000000000000-ffffffffffffffff (prio 0, i/o): system
-    0000000000000000-00000000bfffffff (prio 0, ram): alias ram-below-4g @pc.ram 0000000000000000-00000000bfffffff
-    0000000000000000-ffffffffffffffff (prio -1, i/o): pci
-      00000000000a0000-00000000000bffff (prio 1, i/o): vga-lowmem
-      // ....
-    00000000000a0000-00000000000bffff (prio 1, i/o): alias smram-region @pci 00000000000a0000-00000000000bffff
-```
-
-#### SMM user
-下面分析 pflash 的使用情况下，这是唯一插入使用 .secure 的位置
-```c
-static inline MemTxAttrs cpu_get_mem_attrs(CPUX86State *env)
-{
-    return ((MemTxAttrs) { .secure = (env->hflags & HF_SMM_MASK) != 0 });
-}
-```
-而 HF_SMM_MASK 在 `env->hflags` 的插入和删除位置 smm_helper 中间。
-
-而 cpu_get_mem_attrs 的位置在各个 helper 以及 handle_mmu_fault 中。 
-这些组装的出来的 MemTxAttrs 的使用位置是: cpu_asidx_from_attrs
-这样，使用相同的地址访问，如果是 SMM 的地址空间，最后就会找到不同的地址空间上。
 
 ## IOMMU
 在 [^6] 分析了下为什么 guest 需要 vIOMMU
@@ -659,9 +505,18 @@ static void pci_init_bus_master(PCIDevice *pci_dev)
 - memory_region_destroy / memory_region_del_subregion
 - hotplug
 
-## address_space_map 和 address_space_unmap 是如何使用的
-当访问的空间不是 memory_access_is_direct 的时候，那么需要考虑, 目前的系统中并不知道如何触发这个东西，
-所以暂时放到这里，以后再说吧
+## address_space_map 和 address_space_unmap
+正如其注释所言，这个东西可以用于动态的创建一个 guest 物理内存的。
+```c
+/* Map a physical memory region into a host virtual address.
+ * May map a subset of the requested range, given by and returned in *plen.
+ * May return NULL if resources needed to perform the mapping are exhausted.
+ * Use only for reads OR writes - not for read-modify-write operations.
+ * Use cpu_register_map_client() to know when retrying the map operation is
+ * likely to succeed.
+ */
+```
+
 ```c
 typedef struct {
     MemoryRegion *mr;
@@ -671,19 +526,7 @@ typedef struct {
     bool in_use;
 } BounceBuffer;
 ```
-
-否则，address_space_map 和 qemu_map_ram_ptr 一样，只是用于从 GPA 计算出来 HVA 而已
-
-```c
-/* Return a host pointer to ram allocated with qemu_ram_alloc.
- * This should not be used for general purpose DMA.  Use address_space_map
- * or address_space_rw instead. For local memory (e.g. video ram) that the
- * device owns, use memory_region_get_ram_ptr.
- *
- * Called within RCU critical section.
- */
-void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr)
-```
+应该是没有啥用的!
 
 ## dma
 主要出现的文件: include/sysemu/dma.h 和 softmmu/dma-helpers.c
@@ -755,42 +598,19 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 
 - FlatView 持有了一堆 FlatRange，用于生成 MemoryRegionSection 插入到 AddressSpaceDispatch
 
-## CPUAddressSpace
-在 tcg_cpu_realizefn 中 tcg_cpu_machine_done 初始化这些地址空间
+##  flatview_read 
+三个调用者:
+- subpage_read : 注意 AddressSpaceDispatch 中构建的 tree 实际上只是针对于 PAGE_SIZE 大小的页面的，但是实际上，所以对于 subpage 需要重新处理，这些 subpage 都是 MMIO 的
+- address_space_read_full
+- address_space_map
 
-```diff
-tree a50a83c59f416259a423493cc996646bbeca1f7e
-parent c8bc83a4dd29a9a33f5be81686bfe6e2e628097b
-author Paolo Bonzini <pbonzini@redhat.com> Wed Mar 1 10:34:48 2017 +0100
-committer Paolo Bonzini <pbonzini@redhat.com> Wed Jun 7 18:22:02 2017 +0200
+所以，如此看来，当不是很清楚到底是 RAM 还是 ROM 的时候，最后就会到 flatview_read 上。
 
-target/i386: use multiple CPU AddressSpaces
+那么继续向上，分析 address_space_rw 的调用者
+- dma : QEMU 中的 DMA 是模拟设备的操作，其操作对象不应该是 MMIO 的，不然就是一个设备直接搬运数据到另一个设备空间，但是，那是 MMIO 空间啊.
+- cpu_physical_memory_rw : CPU 调用，那么 CPU 应该是知道自己调用的位置的。
 
-This speeds up SMM switches.  Later on it may remove the need to take
-the BQL, and it may also allow to reuse code between TCG and KVM.
-
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-```
-
-但是当时的就是就创建出来了 CPUAddressSpace 了, 制作出来 CPUAddressSpace 只是为了将 tcg CPU AddressSpace 相关的东西放到一起。
-```c
-/**
- * CPUAddressSpace: all the information a CPU needs about an AddressSpace
- * @cpu: the CPU whose AddressSpace this is
- * @as: the AddressSpace itself
- * @memory_dispatch: its dispatch pointer (cached, RCU protected)
- * @tcg_as_listener: listener for tracking changes to the AddressSpace
- */
-struct CPUAddressSpace {
-    CPUState *cpu;
-    AddressSpace *as;
-    struct AddressSpaceDispatch *memory_dispatch;
-    MemoryListener tcg_as_listener;
-};
-```
-
-最后一个问题是，解释一下，为什么需要给每一个 CPU 创建一个 CPUAddressSpace ，而不是公用一个 CPUAddressSpace
-tcg_commit 中，通过 CPUAddressSpace 找到对应的 cpu 然后进行 TLBFlush
+我认为，进行的是 IO 空间还是 memory 空间, 应该很早就可以发现, 而不是推迟到 flatview_read_continue 中间。
 
 [^1]: 关键参考: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
