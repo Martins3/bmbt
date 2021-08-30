@@ -7,6 +7,25 @@
 - 因为 IO 空间和 mmio 空间的数量有限，暂时可以直接一个数组循环来遍历这些 FlatRange 的
 - 为了处理各种 device 的情况，制作出来了 stl_le_phys 之类的函数，这是没有必要的
 - memory_ldst.h 无需考虑 `#define SUFFIX                   _cached_slow`, 那是给 virtio 使用的
+- 几乎无需处理 endianness 的问题
+
+- [ ] 猜测一下需要处理的接口
+    - watch point 的处理
+    - address_space_translate : 将这些全部使用 segment RB tree 管理
+    - CPUAddressSpace : 在 smm 中间发生替换的时候
+      - 进入到 SMM 的时候
+    - 处理 RAMBlock 的
+        - qemu_map_ram_ptr
+        - RAMList 的相关的 dirty memory 的记录
+        - 将其 clean 以及清理出来的
+    - IO 空间和 memory 的空间需要区分。
+
+一些设计的想法:
+- RAMList 的
+- 在 1M 的范围内的空间的变化过于鬼畜啊
+  - 使用一个 segment RB tree 来管理吧! (使用内核的方法)
+  - 根据空间首先命中 MemoryRegion，然后利用 MemoryRegion 来找到 RAMBlock，然后看 RAMBlock 的实际位置
+- 无论如何，RAM 在 host 上的具体地址都是需要进行装换的，所以，RAMBlock::host 是需要的
 
 ## 移植差异性的记录
 ### memory_ldst.h
