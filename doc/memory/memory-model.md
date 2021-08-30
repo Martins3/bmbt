@@ -140,6 +140,9 @@ huxueshi:ram_block_add /rom@etc/table-loader: offset=180b00000 size=10000
 huxueshi:ram_block_add /rom@etc/acpi/rsdp: offset=180b40000 size=1000
 ```
 
+这里分析了，实际上，只有一个东西是 RAM
+https://github.com/Martins3/BMBT/issues/144
+
 ## render_memory_region : 将 memory region 转化为 FlatRange
 - memory_region_transaction_commit
   - flatviews_reset
@@ -596,7 +599,7 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 
 - FlatView 持有了一堆 FlatRange，用于生成 MemoryRegionSection 插入到 AddressSpaceDispatch
 
-##  flatview_read 
+## flatview_read 
 三个调用者:
 - subpage_read : 注意 AddressSpaceDispatch 中构建的 tree 实际上只是针对于 PAGE_SIZE 大小的页面的，但是实际上，所以对于 subpage 需要重新处理，这些 subpage 都是 MMIO 的
 - address_space_read_full
@@ -610,6 +613,8 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 
 我认为，进行的是 IO 空间还是 memory 空间, 应该很早就可以发现, 而不是推迟到 flatview_read_continue 中间。
 
+总结: flatview_read 是一个失败的设计，没有尽早区分 MMIO 和 RAM，其调用者，现在唯一一个无法区分的的人
+就是 cpu_physical_memory_rw 的位置了, 而这个相关的函数现在还是不存在的。
 
 ## Option ROM
 https://en.wikipedia.org/wiki/Option_ROM
@@ -631,12 +636,11 @@ huxueshi:map_pcirom 0xfebe0000
 ```
 最开始的时候，将 ROM 映射到 PCI 空间中，然后拷贝到 ROM 中，然后更新 PCI 空间, 这个 ROM 被隐藏起来了。
 
-```
+```txt
 huxueshi:pci_add_option_rom /home/maritns3/core/kvmqemu/build/pc-bios/vgabios-stdvga.bin
 huxueshi:ram_block_add vga.rom
 ```
-vga 的代码应该是在 :
-https://github.com/qemu/vgabios
+vga 的源代码应该是在 : https://github.com/qemu/vgabios
 
 
 [^1]: 关键参考: https://www.anquanke.com/post/id/86412

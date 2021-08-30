@@ -61,6 +61,6 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 $1 = 0xe92d6
 ```
 然后在 gdb 中:
-```
+```txt
 disass 0xe92d6
 ```

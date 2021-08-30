@@ -536,6 +536,32 @@ static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
 
 - [ ] 现在理解了其中的基本函数如何设置 CPUIOTLBEntry 和 CPUTLBEntry 的，但是中间还空出来了一大片内容的
 
+## x86_stl_phys_notdirty 
+在 target/i386/helper.c 中间的, 提供一系列的类似的 helper，但是这一个唯一一个要求 notdirty 的
+
+```c
+/* warning: addr must be aligned. The ram page is not masked as dirty
+   and the code inside is not invalidated. It is useful if the dirty
+   bits are used to track modified PTEs */
+```
+其使用位置是唯一的，在 `mmu_translate` 中的。
+
+一般 write 是: invalidate_and_set_dirty
+
+cpu_physical_memory_set_dirty_range 的处理:
+
+```c
+        dirty_log_mask = memory_region_get_dirty_log_mask(mr);
+        dirty_log_mask &= ~(1 << DIRTY_MEMORY_CODE);
+        cpu_physical_memory_set_dirty_range(memory_region_get_ram_addr(mr) + addr,
+                                            4, dirty_log_mask);
+```
+因为不会考虑 migration 的问题，所以这个操作永远都是空的
+
+实际上，这个只是一个普通的优化，那就是明明知道这个空间是 PTE，中间不可能放 code, 那么就没有必要去和 code 打交道了
+
+优雅!
+
 ## softmmu 快慢路径
 ```c
 /*
