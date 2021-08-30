@@ -37,9 +37,11 @@ memory_ldst.inc.h 的方法。
 
 - 从 address_space_rw 到 memory_region_dispatch_read 中间经历了什么东西?
     - 地址转换, 准确来说，是 flatview_translate
-- [ ] store_helper 中除了处理对其的问题，还有什么，为什么 store_helper 就是非要处理这个的
-    - [ ] 处理 not dirty 的
-    - [ ] 处理 watch point 的问题
+
+- store_helper 相对于 address_space_stw_internal 的内容对比
+    - not dirty : 都有，address_space_stw_internal 也处理了 
+    - watch point : 多出来的
+    - store_helper_unaligned : 多出来的
 
 - [ ] kvmtool 处理地址空间之所以那么简单，是因为其不用模拟设备，
 但是 QEMU 中间从 kvm 中 exit 出来，address_space_rw 的内容感觉还是比 kvmtool 复杂很多啊!
@@ -119,10 +121,6 @@ RAMBlock 结构体分析:
 1. RAMBlock::host : host 的虚拟地址空间，存储 mmap 的返回值
 2. RAMBlock::offset : 将所有的 RAMBlock 连续的放到一起，每一个 RAMBlock 的 offset，第一个加入的 offset 为 0
     - 通过 RAMBlock::offset 可以放一个 RAM 内的 page 知道在 RAMList::dirty_memory 对应的 bit 位
-
-- address_space_rw 和 address_space_stl 之类的关系是什么 ?
-  - 含义很清晰(指定 address_space 来访问)，但是，到目前为止，没有指向 address_space_rw 调用路径
-  - cpu_physical_memory_rw 是关键的调用者
 
 find_ram_offset 中 RAM 的对齐至少为 0x40000
 ```c
@@ -611,6 +609,21 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 - cpu_physical_memory_rw : CPU 调用，那么 CPU 应该是知道自己调用的位置的。
 
 我认为，进行的是 IO 空间还是 memory 空间, 应该很早就可以发现, 而不是推迟到 flatview_read_continue 中间。
+
+
+## Option ROM
+https://en.wikipedia.org/wiki/Option_ROM
+
+> 这下好了，似乎没有 option ROM，连 VGA 都是没有的了
+
+好像是 vga.rom 和 e1000.rom 两个都需要的:
+
+```txt
+huxueshi:pci_update_mappings pci febe0000 vga.rom
+huxueshi:pci_update_mappings pci feb80000 e1000.rom
+```
+
+- [ ] 更新了，为什么在地址空间中间看不到 pci 的 rom 啊
 
 [^1]: 关键参考: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode

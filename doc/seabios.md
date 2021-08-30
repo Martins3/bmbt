@@ -6,7 +6,6 @@
 
 ## 问题
 - [ ] 如果通过 boot_disk 中加载的 MBR，那么 MBR 中是什么
-- [ ] 又看到好朋友 smm 了
 
 - [ ] pci_probe_host 中间说明实际上可以暂时 disable 掉这些 PCI
 但是 qemu_detect 说明似乎至少需要提供一个关于 PCI host 的 IO 操作, 所以最小的需要 PCI 支持是什么 ？

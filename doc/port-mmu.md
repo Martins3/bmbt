@@ -5,17 +5,8 @@
 ## [ ] 到底那些地方可以简化
 - 因为描述的空间是固定的，所以我猜测可以简化设计，没有必要创建出来 MemoryRegion，但是可以保留出来 FlatRange
 - 因为 IO 空间和 mmio 空间的数量有限，暂时可以直接一个数组循环来遍历这些 FlatRange 的
-- [ ] 我认为没有必要构建出来 RAMBlock 的 FlatRange 出来，实际上，从 AddressSpace 访问出来，最后访问到 RAM 的情况，应该挑出来, 构建一个新的访问路径
-    - 这个事情很容易的，使用 source trail 反向分析就可以了
-    - 容易你妈，看看 subpage_read 的实现
-- [ ] SMM 还是感觉没有分析清楚，如果可以保证安全，那么我有一些大胆的想法，这就是 vga-low 的地方内容发生了替换而已啊
-
 - 为了处理各种 device 的情况，制作出来了 stl_le_phys 之类的函数，这是没有必要的
-
-- 你觉得 SMC 真的需要 ramlist.dirty_memory 来维持生活吗?
-  - [ ] 算了，改动太大了, 不过，现在这么多的 RAM，我只是理解其中的一个
 - memory_ldst.h 无需考虑 `#define SUFFIX                   _cached_slow`, 那是给 virtio 使用的
-
 
 ## 移植差异性的记录
 ### memory_ldst.h

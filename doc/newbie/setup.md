@@ -53,3 +53,14 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 ## 开发环境
 小项目 : sshfs
 大项目 : rsync
+
+## 调试
+
+```gdb
+>>> p /x ((CPUX86State *)current_cpu->env_ptr)->eip
+$1 = 0xe92d6
+```
+然后在 gdb 中:
+```
+disass 0xe92d6
+```
