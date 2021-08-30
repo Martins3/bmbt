@@ -49,3 +49,7 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 ../configure --target-list=x86_64-softmmu  --disable-werror --extra-cflags='-save-temps'
 ```
 但是这似乎导致无法 `make -j10`, 只能串行编译
+
+## 开发环境
+小项目 : sshfs
+大项目 : rsync
