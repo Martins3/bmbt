@@ -20,7 +20,7 @@ memory_ldst.inc.h 的方法。
 | address_space_translate                                    | 通过 hwaddr 参数找到 MemoryRegion 这里和 Flatview 有关的                                                      |
 | memory_region_dispatch_read / memory_region_dispatch_write | 最关键的，访问 device, 逐步向下分发的过程                                                                     |
 | memory_region_get_dirty_log_mask                           | 获取 MemoryRegion::dirty_log_mask                                                                             |
-| memory_region_get_ram_addr                                 |                                                                                                               |
+| memory_region_get_roptionrom_setupam_addr                                 |                                                                                                               |
 | devend_memop                                               | 使用一个非常繁杂的宏判断，进行 IO 的时候，设备是否需要进行 endiana 调整，从现在的调用链看，应该永远返回都是 0 |
 | qemu_map_ram_ptr                                           | 仔细看看注释，为了定义从 memory region 中的偏移获取 HVA, 定义了一堆函数                                       |
 | invalidate_and_set_dirty                                   | 将一个范围的 TLB invalidate 利用 DirtyMemoryBlocks 标记这个区域为 dirty                                       |
@@ -623,7 +623,21 @@ huxueshi:pci_update_mappings pci febe0000 vga.rom
 huxueshi:pci_update_mappings pci feb80000 e1000.rom
 ```
 
-- [ ] 更新了，为什么在地址空间中间看不到 pci 的 rom 啊
+- [x] 更新了，为什么在地址空间中间看不到 pci 的 rom 啊
+这个地址之后被隐藏了
+```txt
+Option rom sizing returned febe0000 ffff0000
+huxueshi:map_pcirom 0xfebe0000
+```
+最开始的时候，将 ROM 映射到 PCI 空间中，然后拷贝到 ROM 中，然后更新 PCI 空间, 这个 ROM 被隐藏起来了。
+
+```
+huxueshi:pci_add_option_rom /home/maritns3/core/kvmqemu/build/pc-bios/vgabios-stdvga.bin
+huxueshi:ram_block_add vga.rom
+```
+vga 的代码应该是在 :
+https://github.com/qemu/vgabios
+
 
 [^1]: 关键参考: https://www.anquanke.com/post/id/86412
 [^3]: https://wiki.osdev.org/System_Management_Mode
