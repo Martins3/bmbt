@@ -722,7 +722,8 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
   }
 
   is_ram = memory_region_is_ram(section->mr);
-  is_romd = memory_region_is_romd(section->mr);
+  // is_romd = memory_region_is_romd(section->mr);
+  is_romd = false;
 
   if (is_ram || is_romd) {
     /* RAM and ROMD both have associated host memory. */
