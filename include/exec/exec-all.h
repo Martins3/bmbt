@@ -501,7 +501,7 @@ void page_size_init(void);
  * it refers to. @index will have been initially created and returned
  * by memory_region_section_get_iotlb().
  */
-struct MemoryRegionSection *iotlb_to_section(CPUState *cpu, hwaddr index,
+struct MemoryRegion* iotlb_to_section(CPUState *cpu, hwaddr index,
                                              MemTxAttrs attrs);
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

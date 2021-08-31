@@ -19,7 +19,8 @@ typedef struct MemoryRegion {
 } MemoryRegion;
 
 typedef struct AddressSpace {
-
+    // [interface 8]
+    MemoryRegion * segments;
 } AddressSpace;
 
 extern AddressSpace address_space_io;
