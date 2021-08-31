@@ -83,6 +83,7 @@ typedef unsigned long int uint64_t;
 
 #define QEMU_ALWAYS_INLINE __attribute__((always_inline))
 
+// FIXME move to compiler.h
 #define qemu_build_not_reached() g_assert_not_reached()
 
 #define QEMU_BUILD_BUG_ON_STRUCT(x)                                            \

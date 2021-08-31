@@ -934,7 +934,32 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
 static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, int mmu_idx,
                       uint64_t val, target_ulong addr, uintptr_t retaddr,
                       MemOp op) {
-  // FIXME we will rewrite this
+  CPUState *cpu = env_cpu(env);
+  hwaddr mr_offset;
+  MemoryRegionSection *section;
+  MemoryRegion *mr;
+  bool locked = false;
+  MemTxResult r;
+
+  section = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
+  mr = section->mr;
+  mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
+  if (!cpu->can_do_io) {
+    cpu_io_recompile(cpu, retaddr);
+  }
+  cpu->mem_io_pc = retaddr;
+
+  if (mr->global_locking && !qemu_mutex_iothread_locked()) {
+    qemu_mutex_lock_iothread();
+    locked = true;
+  }
+  r = memory_region_dispatch_write(mr, mr_offset, val, op, iotlbentry->attrs);
+  if (r != MEMTX_OK) {
+    // [interface 7] x86 doesn't need handle failed io transaction
+  }
+  if (locked) {
+    qemu_mutex_unlock_iothread();
+  }
 }
 
 static inline target_ulong tlb_read_ofs(CPUTLBEntry *entry, size_t ofs) {
