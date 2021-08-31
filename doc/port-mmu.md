@@ -61,6 +61,7 @@ flush 的函数的异步运行其实可以好好简化一下。
 
 ## memory.h
 - address_space_translate
+- memory_region_dispatch_write / memory_region_dispatch_read
 
 
 ## 移植差异性的记录
