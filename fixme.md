@@ -11,12 +11,6 @@
 | trace                      |                                                                                                                                                                                                |
 | 存在好几个数据结构需要重构 |qht.h 和 glib 的 qtree                                                                                                                                                                |
 
-1. memory model
-    1. include/exec/ram_addr.h
-    3. memory.h
-    12. 分析 cpu-ldst.h 一方面重构为 v6.0 的做法，同时分析 mmuidx 的具体实现啊
-    6. io_readx 和 io_writex
-    1. 重新构建 iotlb
 2. apic
     1. DeviceState 中定义为空
     2. /home/maritns3/core/ld/DuckBuBi/include/hw/i386/apic.h 都是空函数
@@ -82,14 +76,3 @@
   - error_report
 9. pit 和 hpet 需要模拟?
 
-## 移植方案
-| function                          | 作用                                                                                                          | 方案 |
-|-----------------------------------|---------------------------------------------------------------------------------------------------------------|------|
-| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                               |      |
-| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了        |      |
-| qemu_map_ram_ptr                  | 这是一个神仙设计的接口，如果参数 ram_block 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |      |
-
-flush 的函数的异步运行其实可以好好简化一下。
-
-实际上整个 ram_addr.h 都是处理 dirty page 的问题，而至于 RAMBlock 的概念具体如何设计，
-需要等到之后在处理。
