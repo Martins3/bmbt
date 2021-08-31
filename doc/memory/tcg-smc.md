@@ -1,5 +1,4 @@
 # SMC 
-- [ ] 类似的问题，如何处理 watchpoint 的
 
 ## lock page
 ```c
@@ -128,7 +127,6 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
 创建 bitmap 的作用是为了精准定位出来到底是哪一个 page 需要被 invalid。
 
 - [ ] page_flush_tb
-  - [ ] tb 和 page 大致是怎么关联起来的
 
 - [ ] 结构体 PageDesc 的作用是什么 ?
   - 难道时候首先分配 page，然后这些 tb 都是 page
