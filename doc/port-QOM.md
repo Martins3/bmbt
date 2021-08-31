@@ -485,4 +485,3 @@ static inline G_GNUC_UNUSED RTCState *MC146818_RTC(const void *obj) {
       ((Object *)(obj)), ("mc146818rtc"), "a.c", 69, __func__));
 }
 ```
-
