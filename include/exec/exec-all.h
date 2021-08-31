@@ -196,6 +196,7 @@ void tlb_flush(CPUState *cpu);
 bool cpu_restore_state(CPUState *cpu, uintptr_t searched_pc, bool will_exit);
 
 void QEMU_NORETURN cpu_loop_exit_noexc(CPUState *cpu);
+void QEMU_NORETURN cpu_io_recompile(CPUState *cpu, uintptr_t retaddr);
 TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
                               target_ulong cs_base, uint32_t flags, int cflags);
 
@@ -455,7 +456,8 @@ static inline MemoryRegionSection *
 address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
                                   hwaddr *xlat, hwaddr *plen, MemTxAttrs attrs,
                                   int *prot) {
-  // [interface 2] @todo Please return MemoryRegion instead of MemoryRegionSection
+  // [interface 2] @todo Please return MemoryRegion instead of
+  // MemoryRegionSection
   return NULL;
 }
 hwaddr memory_region_section_get_iotlb(CPUState *cpu,
@@ -489,5 +491,17 @@ TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
                                    uint32_t cf_mask);
 
 void page_size_init(void);
+
+/**
+ * iotlb_to_section:
+ * @cpu: CPU performing the access
+ * @index: TCG CPU IOTLB entry
+ *
+ * Given a TCG CPU IOTLB entry, return the MemoryRegionSection that
+ * it refers to. @index will have been initially created and returned
+ * by memory_region_section_get_iotlb().
+ */
+struct MemoryRegionSection *iotlb_to_section(CPUState *cpu, hwaddr index,
+                                             MemTxAttrs attrs);
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */

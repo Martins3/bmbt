@@ -2122,6 +2122,7 @@ void cpu_io_recompile(CPUState *cpu, uintptr_t retaddr) {
      the first instruction in a TB then re-execute the preceding
      branch.  */
   n = 1;
+  // FIXME we should define this 
 #if defined(TARGET_MIPS)
   if ((env->hflags & MIPS_HFLAG_BMASK) != 0 && env->active_tc.PC != tb->pc) {
     env->active_tc.PC -= (env->hflags & MIPS_HFLAG_B16 ? 2 : 4);
