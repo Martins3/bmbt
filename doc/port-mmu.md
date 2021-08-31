@@ -8,9 +8,10 @@
 - 为了处理各种 device 的情况，制作出来了 stl_le_phys 之类的函数，这是没有必要的
 - memory_ldst.h 无需考虑 `#define SUFFIX                   _cached_slow`, 那是给 virtio 使用的
 - 几乎无需处理 endianness 的问题
+- 对于 PAM 和 SMM 我们存在更加深入的观察，这让 render_memory_region 之类的复杂操作毫无意义
+  - 没有必要采用 AddressSpace 的概念
 
 - [ ] 猜测一下需要处理的接口
-    - watch point 的处理
     - address_space_translate : 将这些全部使用 segment RB tree 管理
     - CPUAddressSpace : 在 smm 中间发生替换的时候
       - 进入到 SMM 的时候
@@ -19,13 +20,22 @@
         - RAMList 的相关的 dirty memory 的记录
         - 将其 clean 以及清理出来的
     - IO 空间和 memory 的空间需要区分。
+        - SMM 空间也是可以区分的
+    - 各种 invalidate 的接口
+        - 比如 invalidate_and_set_dirty, 实际上，dirty_log_mask 之类的设计可以简化很多的
+
+
 
 一些设计的想法:
 - RAMList 的
 - 在 1M 的范围内的空间的变化过于鬼畜啊
   - 使用一个 segment RB tree 来管理吧! (使用内核的方法)
   - 根据空间首先命中 MemoryRegion，然后利用 MemoryRegion 来找到 RAMBlock，然后看 RAMBlock 的实际位置
+  - 还不如直接划分为 BIOS 空间 / PCI 空间 / RAM 空间，反正 PCI 空间都是确定的
 - 无论如何，RAM 在 host 上的具体地址都是需要进行装换的，所以，RAMBlock::host 是需要的
+
+实际上，设计需要保留的接口:
+- address_space_stb
 
 ## 移植差异性的记录
 ### memory_ldst.h

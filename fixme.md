@@ -14,7 +14,6 @@
 1. memory model
     1. include/exec/ram_addr.h
     3. memory.h
-    4. memory_region_section_get_iotlb 补齐接口
     5. /home/maritns3/core/ld/DuckBuBi/include/exec/address-space.h 中一堆接口
     6. 实际上，io_readx 和 io_writex 中间的还是存在一些骚操作的啊
     8. 在 translate-all.c 中的一些逻辑需要仔细分析一下
@@ -101,10 +100,11 @@
 9. pit 和 hpet 需要模拟?
 
 ## 移植方案
-| function                          | 作用                                                                                                 | 方案 |
-|-----------------------------------|------------------------------------------------------------------------------------------------------|------|
-| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                      |      |
-| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了 |      |
+| function                          | 作用                                                                                                          | 方案 |
+|-----------------------------------|---------------------------------------------------------------------------------------------------------------|------|
+| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                               |      |
+| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了        |      |
+| qemu_map_ram_ptr                  | 这是一个神仙设计的接口，如果参数 ram_block 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |      |
 
 flush 的函数的异步运行其实可以好好简化一下。
 
