@@ -260,6 +260,8 @@ mr 而已，在 kvm_handle_io 中经过了 as 到 flatview 再到 mr 的过程�
     - address_space_translate_internal
        - address_space_lookup_region : 通过 AddressSpaceDispatch 进行分析下去了
 
+address_space_translate_internal 中，计算了一个关键的返回值 xlat, 表示在 MemoryRegion 中的偏移。
+
 ## 神奇的 memory_region_get_flatview_root
 这个函数，其实有点硬编码, 参考其中的注释，感觉这个东西就是为了实现处理 PCIDevice 的
 
