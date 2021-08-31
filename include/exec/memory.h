@@ -15,7 +15,7 @@ typedef struct MemoryRegion {
   bool ram;
 
   RAMBlock *ram_block;
-
+  bool global_locking;
 } MemoryRegion;
 
 typedef struct AddressSpace {
