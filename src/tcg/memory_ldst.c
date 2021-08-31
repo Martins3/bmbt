@@ -204,7 +204,7 @@ void address_space_stl_notdirty(AddressSpace *as, hwaddr addr, uint32_t val,
   hwaddr l = 4;
   hwaddr addr1;
   MemTxResult r;
-  uint8_t dirty_log_mask;
+  // uint8_t dirty_log_mask;
   bool release_lock = false;
 
   rcu_read_lock();
@@ -217,10 +217,11 @@ void address_space_stl_notdirty(AddressSpace *as, hwaddr addr, uint32_t val,
     ptr = qemu_map_ram_ptr(mr->ram_block, addr1);
     stl_p(ptr, val);
 
-    dirty_log_mask = memory_region_get_dirty_log_mask(mr);
-    dirty_log_mask &= ~(1 << DIRTY_MEMORY_CODE);
-    cpu_physical_memory_set_dirty_range(memory_region_get_ram_addr(mr) + addr,
-                                        4, dirty_log_mask);
+    // [interface 1]
+    // dirty_log_mask = memory_region_get_dirty_log_mask(mr);
+    // dirty_log_mask &= ~(1 << DIRTY_MEMORY_CODE);
+    // cpu_physical_memory_set_dirty_range(memory_region_get_ram_addr(mr) + addr,
+                                        // 4, dirty_log_mask);
     r = MEMTX_OK;
   }
   if (result) {

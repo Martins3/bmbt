@@ -62,17 +62,6 @@ MemTxResult memory_region_dispatch_write(MemoryRegion *mr, hwaddr addr,
                                          MemTxAttrs attrs);
 
 /**
- * memory_region_get_dirty_log_mask: return the clients for which a
- * memory region is logging writes.
- *
- * Returns a bitmap of clients, in which the DIRTY_MEMORY_* constants
- * are the bit indices.
- *
- * @mr: the memory region being queried
- */
-uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr);
-
-/**
  * memory_region_get_ram_addr: Get the ram address associated with a memory
  *                             region
  */
