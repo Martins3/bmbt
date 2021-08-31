@@ -14,26 +14,9 @@
 1. memory model
     1. include/exec/ram_addr.h
     3. memory.h
-    5. /home/maritns3/core/ld/DuckBuBi/include/exec/address-space.h 中一堆接口
-    6. 实际上，io_readx 和 io_writex 中间的还是存在一些骚操作的啊
-    8. 在 translate-all.c 中的一些逻辑需要仔细分析一下
-        - page_unlock : 根本不理解为什么会出现将 page lock 的操作
-    9. 4k 和 16k 页的问题如何解决 ?
-    10. 在地址上，有没有什么骚操作:
-        1. TB 需要走 TLB 吗 ? 这样就可以进行自动属性检查
-        2. 但是核心代码不走 TLB 从而加速一下
-    11. 思考一下用户态和内核态的安全性如何
-        1. 地址空间的防护
-            - 在进程里面，访问总是自己的地址空间，如果 TLB 没有，那么让 QEMU page walk, 如果 walk 没有就是 page fault, 所以其实问题不大
-        2. 生成指令
-            - 生成的时候，就可以产生 exception 还是到执行 ？(精确异常，所以执行的时候吧)
     12. 分析 cpu-ldst.h 一方面重构为 v6.0 的做法，同时分析 mmuidx 的具体实现啊
-    1. 移除掉 softmmu.c 之类的对于 memory model 的依赖 (主要出现在 include/exec/memory.h 中)
+    6. io_readx 和 io_writex
     1. 重新构建 iotlb
-    1. understand how smm works in tcg
-    1. CPUAddressSpace : 这是 tcg 下单独搞出来的吗 ?
-    1. exec/ram_addr.h : 定义了几个 physical memory dirty 相关的问题
-    2. stl_le_phys : 这个在 memory_ldst.c 中并没有配套的实现
 2. apic
     1. DeviceState 中定义为空
     2. /home/maritns3/core/ld/DuckBuBi/include/hw/i386/apic.h 都是空函数
