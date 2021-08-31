@@ -4,6 +4,7 @@
 2. use `git rebase` to merge code, commit message like `Merge pull request #5 from kernelrookie/grub` is annoying and distractive
     1. what's [`git rebase`](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase)
     2. [how to use it](https://stackoverflow.com/questions/16358418/how-to-avoid-merge-commit-hell-on-github-bitbucket)
+3. Don't commit code together with doc. Only doc or code.
 
 ## how to collaborate 
 1. 新手更加应该参与到 review

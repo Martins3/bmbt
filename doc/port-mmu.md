@@ -1,11 +1,5 @@
 # softmmu 和 memory model 的移植的设计 
 
-- [ ] memory.h
-  - 需要 MemoryRegion，但是不需要 MemoryRegionSection，因为 MemoryRegion 中间不会被划分，MemoryRegion 就是最小的对象
-- [ ] io_readx 和 io_writex
-- [ ] 重新构建 iotlb
-
-
 ## [ ] 到底那些地方可以简化
 - 因为描述的空间是固定的，所以我猜测可以简化设计，没有必要创建出来 MemoryRegion，但是可以保留出来 FlatRange
 - 因为 IO 空间和 mmio 空间的数量有限，暂时可以直接一个数组循环来遍历这些 FlatRange 的
@@ -37,6 +31,45 @@
   - 还不如直接划分为 BIOS 空间 / PCI 空间 / RAM 空间，反正 PCI 空间都是确定的
 - 无论如何，RAM 在 host 上的具体地址都是需要进行装换的，所以，RAMBlock::host 是需要的
 
+1. 一个 CPUAddressSpace 持有一个 AddressSpace
+2. 在 AddressSpace 中持有一个数组(因为 iotlb_to_section 需要的)
+  - iotlb_to_section 是一定需要的，从 store_helper 中直接判断，那才是最重要的入口
+
+3. 暂时直接在这个数组上移动就可以了
+  - 对于 1M 直接判断，然后就是 RAM 或者 PCI 了，而 IO 和 memory 早就可以区分
+  - 如果 PAM 打开，不需要存在一棵树的
+
+在 1M 的 MemoryRegion 直接创建出来，分配到数组中:
+```c
+/*
+ * SMRAM memory area and PAM memory area in Legacy address range for PC.
+ * PAM: Programmable Attribute Map registers
+ *
+ * 0xa0000 - 0xbffff compatible SMRAM
+ *
+ * 0xc0000 - 0xc3fff Expansion area memory segments
+ * 0xc4000 - 0xc7fff
+ * 0xc8000 - 0xcbfff
+ * 0xcc000 - 0xcffff
+ * 0xd0000 - 0xd3fff
+ * 0xd4000 - 0xd7fff
+ * 0xd8000 - 0xdbfff
+ * 0xdc000 - 0xdffff
+ * 0xe0000 - 0xe3fff Extended System BIOS Area Memory Segments
+ * 0xe4000 - 0xe7fff
+ * 0xe8000 - 0xebfff
+ * 0xec000 - 0xeffff
+ *
+ * 0xf0000 - 0xfffff System BIOS Area Memory Segments
+ */
+```
+1. 如果是 SMM，将这个空间替换掉
+2. PAM 每一个寄存器分别对应一个，当进行修改的时候，直接修改对应的属性啊
+
+address_space_translate_internal 中，计算了一个关键的返回值 xlat, 表示在 MemoryRegion 中的偏移。
+因为取消掉了 MemoryRegion 的操作，所以，实际上，需要
+
+
 ## 需要保留的接口
 实际上，为了防止和原来的设计出现巨大的差异，需要保留的接口:
 - address_space_stb -> 所以我们需要 AddressSpace 的
@@ -62,6 +95,8 @@ flush 的函数的异步运行其实可以好好简化一下。
 ## memory.h
 - address_space_translate
 - memory_region_dispatch_write / memory_region_dispatch_read
+
+- 需要 MemoryRegion，但是不需要 MemoryRegionSection，因为 MemoryRegion 中间不会被划分，MemoryRegion 就是最小的对象
 
 
 ## 移植差异性的记录

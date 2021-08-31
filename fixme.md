@@ -49,6 +49,7 @@
     1. iothread
     1. async_run_on_cpu
     2. memory_ldst 中的 prepare_mmio_access 的操作
+    3. MemoryRegion::global_locking
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
