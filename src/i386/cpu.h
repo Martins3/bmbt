@@ -1573,7 +1573,7 @@ typedef struct CPUX86State {
 #endif
 
 #if defined(CONFIG_XTM_TEST)
-    int exit_test;
+  int exit_test;
 #endif
 } CPUX86State;
 
@@ -1737,11 +1737,9 @@ void cpu_x86_update_dr7(CPUX86State *env, uint32_t new_dr7);
 #define MMU_USER_IDX 1
 #define MMU_KNOSMAP_IDX 2
 
-static inline int x86_asidx_from_attrs(CPUState *cs, MemTxAttrs attrs)
-{
-    return !!attrs.secure;
+static inline int x86_asidx_from_attrs(CPUState *cs, MemTxAttrs attrs) {
+  return !!attrs.secure;
 }
-
 
 /**
  * cpu_get_address_space:
@@ -1751,13 +1749,13 @@ static inline int x86_asidx_from_attrs(CPUState *cs, MemTxAttrs attrs)
  * Return the requested address space of this CPU. @asidx
  * specifies which address space to read.
  */
-AddressSpace *cpu_get_address_space(CPUState *cpu, int asidx){
-    /* Return the AddressSpace corresponding to the specified index */
-    return cpu->cpu_ases[asidx].as;
+AddressSpace *cpu_get_address_space(CPUState *cpu, int asidx) {
+  /* Return the AddressSpace corresponding to the specified index */
+  return cpu->cpu_ases[asidx].as;
 }
 
-AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs){
-    return cpu_get_address_space(cs, cpu_asidx_from_attrs(cs, attrs));
+AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs) {
+  return cpu_get_address_space(cs, cpu_asidx_from_attrs(cs, attrs));
 }
 
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr);
@@ -1975,16 +1973,15 @@ typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;
 
 /* n must be a constant to be efficient */
-static inline target_long lshift(target_long x, int n)
-{
-    if (n >= 0) {
-        return x << n;
-    } else {
-        return x >> (-n);
-    }
+static inline target_long lshift(target_long x, int n) {
+  if (n >= 0) {
+    return x << n;
+  } else {
+    return x >> (-n);
+  }
 }
 
 // FIXME the only user is test-def.h
-void x86_update_hflags(CPUX86State* env);
+void x86_update_hflags(CPUX86State *env);
 
 #endif /* end of include guard: CPU_H_CJEDABLV */
