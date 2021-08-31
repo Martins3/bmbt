@@ -8,9 +8,9 @@
 
 // FIXME we will remove this file later, memory model will be redesinged
 typedef struct MemoryRegion {
-
+  bool readonly;
+  bool ram;
   RAMBlock *ram_block;
-
 } MemoryRegion;
 
 typedef struct AddressSpace {
@@ -30,8 +30,6 @@ typedef struct MemoryRegionSection {
 MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
                                       hwaddr *xlat, hwaddr *len, bool is_write,
                                       MemTxAttrs attrs);
-
-bool memory_access_is_direct(MemoryRegion *mr, bool is_write);
 
 /**
  * memory_region_dispatch_read: perform a read directly to the specified
@@ -71,24 +69,13 @@ ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr);
 #ifdef NEED_CPU_H
 /* enum device_endian to MemOp.  */
 static inline MemOp devend_memop(enum device_endian end) {
-  QEMU_BUILD_BUG_ON(DEVICE_HOST_ENDIAN != DEVICE_LITTLE_ENDIAN &&
-                    DEVICE_HOST_ENDIAN != DEVICE_BIG_ENDIAN);
-
-#if defined(HOST_WORDS_BIGENDIAN) != defined(TARGET_WORDS_BIGENDIAN)
-  /* Swap if non-host endianness or native (target) endianness */
-  return (end == DEVICE_HOST_ENDIAN) ? 0 : MO_BSWAP;
-#else
-  const int non_host_endianness =
-      DEVICE_LITTLE_ENDIAN ^ DEVICE_BIG_ENDIAN ^ DEVICE_HOST_ENDIAN;
-
+  const int non_host_endianness = DEVICE_BIG_ENDIAN;
   /* In this case, native (target) endianness needs no swap.  */
   return (end == non_host_endianness) ? MO_BSWAP : 0;
-#endif
 }
 #endif
 #undef NEED_CPU_H
 
-// FIXME originally defined in exec.c
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr);
 void invalidate_and_set_dirty(MemoryRegion *mr, hwaddr addr, hwaddr length);
 bool prepare_mmio_access(MemoryRegion *mr);
@@ -100,24 +87,7 @@ bool prepare_mmio_access(MemoryRegion *mr);
  *
  * @mr: the memory region being queried
  */
-static inline bool memory_region_is_ram(MemoryRegion *mr) {
-  // FIXME
-  return false;
-}
-
-/**
- * memory_region_is_romd: check whether a memory region is in ROMD mode
- *
- * Returns %true if a memory region is a ROM device and currently set to allow
- * direct reads.
- *
- * @mr: the memory region being queried
- */
-static inline bool memory_region_is_romd(MemoryRegion *mr) {
-  // rom device is related with pflash_cfi01_realize
-  // we can delete this function, but for simplicity, just return false
-  return false;
-}
+static inline bool memory_region_is_ram(MemoryRegion *mr) { return mr->ram; }
 
 /**
  * memory_region_get_ram_ptr: Get a pointer into a RAM memory region.
@@ -136,6 +106,15 @@ static inline bool memory_region_is_romd(MemoryRegion *mr) {
 static inline void *memory_region_get_ram_ptr(MemoryRegion *mr) {
   // FIXME
   return NULL;
+}
+
+static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write) {
+  // [interface 3]
+  if (is_write) {
+    return memory_region_is_ram(mr) && !mr->readonly;
+  } else {
+    return memory_region_is_ram(mr);
+  }
 }
 
 #endif /* end of include guard: MEMORY_H_E0UHP2JS */

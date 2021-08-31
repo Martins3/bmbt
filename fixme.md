@@ -48,6 +48,7 @@
     1. TB hash table : hash table RCU 机制
     1. iothread
     1. async_run_on_cpu
+    2. memory_ldst 中的 prepare_mmio_access 的操作
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
