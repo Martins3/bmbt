@@ -522,8 +522,38 @@ static inline int cpu_mmu_index(CPUX86State *env, bool ifetch)
 
 两个 flush 的接口， tlb_flush_page_by_mmuidx 和 tlb_flush_by_mmuidx 一个用于 flush 一个，一个用于 flush 全部 tlb
 
-## WatchPoint
-- [ ] 如何实现?
+## WatchPoint 和 BreakPoint 实现
+```c
+struct CPUState{
+    /* ice debug support */
+    QTAILQ_HEAD(, CPUBreakpoint) breakpoints;
+
+    QTAILQ_HEAD(, CPUWatchpoint) watchpoints;
+    CPUWatchpoint *watchpoint_hit;
+}
+```
+
+在 tlb_set_page_with_attrs 中如果 cpu_watchpoint_address_matches, 那么该 TLB 将会插入 watchpoints，而
+
+在 store_helper 中间，检查 TLB_WATCHPOINT, 调用 cpu_check_watchpoint 
+
+```c
+/* Return flags for watchpoints that match addr + prot.  */
+int cpu_watchpoint_address_matches(CPUState *cpu, vaddr addr, vaddr len)
+{
+    CPUWatchpoint *wp;
+    int ret = 0;
+
+    QTAILQ_FOREACH(wp, &cpu->watchpoints, entry) {
+        if (watchpoint_address_matches(wp, addr, len)) {
+            ret |= wp->flags;
+        }
+    }
+    return ret;
+}
+```
+
+而 breakpoints 知道一定是发生在代码段上的，所以只是需要向代码段上加上标记就可以了。
 
 ## tlb_set_page_with_attrs 
 - tlb_set_page_with_attrs 的功能就是添加一个 LTB entry 的
