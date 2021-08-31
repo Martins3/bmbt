@@ -1,13 +1,7 @@
 # softmmu 和 memory model 的移植的设计 
 
-需要重构的四个部分:
-- [ ] ram_addr.h
-  - [ ] RAMBlock 中间存储什么东西？
-      - host:addr
-      - 没有 offset 了
-      - 实际上一共只有一个 RAM，就设置大小为 1G 吧
-  - 需要 MemoryRegion，但是不需要 MemoryRegionSection，因为 MemoryRegion 中间不会被划分，MemoryRegion 就是最小的对象
 - [ ] memory.h
+  - 需要 MemoryRegion，但是不需要 MemoryRegionSection，因为 MemoryRegion 中间不会被划分，MemoryRegion 就是最小的对象
 - [ ] io_readx 和 io_writex
 - [ ] 重新构建 iotlb
 
@@ -46,7 +40,6 @@
 ## 需要保留的接口
 实际上，为了防止和原来的设计出现巨大的差异，需要保留的接口:
 - address_space_stb -> 所以我们需要 AddressSpace 的
-- 
 
 
 ## 每一个函数移植方案
@@ -65,6 +58,10 @@ flush 的函数的异步运行其实可以好好简化一下。
 ## ram_addr.h
 - cpu_physical_memory_test_and_clear_dirty : clear dirty，但是这个一个宽接口，在 BMBT 修改为 cpu_physical_memory_clear_dirty，无需向上汇报是否存在 dirty 的问题，那是给 RAMList 使用的
 - 实际上，cpu_physical_memory_is_clean 因为现在只有一个 client，所以应该可以被很容易的修改了
+
+## memory.h
+- address_space_translate
+
 
 ## 移植差异性的记录
 ### memory_ldst.h
