@@ -7,7 +7,8 @@
 #include "memop.h"
 #include "ram_addr.h"
 
-// FIXME we will remove this file later, memory model will be redesinged
+struct AddressSpace;
+
 typedef struct MemoryRegion {
   bool readonly;
   // BMBT: In QEMU ram_block != NULL doesn't mean ram == true
@@ -16,26 +17,27 @@ typedef struct MemoryRegion {
 
   RAMBlock *ram_block;
   bool global_locking;
+
+  hwaddr offset_in_ram_block;
+  struct AddressSpace *as; // memory region is shared between AddressSpace
 } MemoryRegion;
 
 typedef struct AddressSpace {
-    // [interface 8]
-    MemoryRegion * segments;
+  // [interface 8]
+  MemoryRegion *segments;
 } AddressSpace;
 
 extern AddressSpace address_space_io;
 
-typedef struct MemoryRegionSection {
-  MemoryRegion *mr;
-
-  bool readonly;
-} MemoryRegionSection;
-
 #define RAM_ADDR_INVALID (~(ram_addr_t)0)
 
-MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
-                                      hwaddr *xlat, hwaddr *len, bool is_write,
-                                      MemTxAttrs attrs);
+static inline MemoryRegion *address_space_translate(AddressSpace *as,
+                                                    hwaddr addr, hwaddr *xlat,
+                                                    hwaddr *len, bool is_write,
+                                                    MemTxAttrs attrs) {
+  // FIXME port later
+  return NULL;
+}
 
 /**
  * memory_region_dispatch_read: perform a read directly to the specified
@@ -47,9 +49,14 @@ MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
  * @op: size, sign, and endianness of the memory operation
  * @attrs: memory transaction attributes to use for the access
  */
-MemTxResult memory_region_dispatch_read(MemoryRegion *mr, hwaddr addr,
-                                        uint64_t *pval, MemOp op,
-                                        MemTxAttrs attrs);
+static inline MemTxResult memory_region_dispatch_read(MemoryRegion *mr,
+                                                      hwaddr addr,
+                                                      uint64_t *pval, MemOp op,
+                                                      MemTxAttrs attrs) {
+  // FIXME port later
+  MemTxResult res;
+  return res;
+}
 
 /**
  * memory_region_dispatch_write: perform a write directly to the specified
@@ -63,7 +70,11 @@ MemTxResult memory_region_dispatch_read(MemoryRegion *mr, hwaddr addr,
  */
 MemTxResult memory_region_dispatch_write(MemoryRegion *mr, hwaddr addr,
                                          uint64_t data, MemOp op,
-                                         MemTxAttrs attrs);
+                                         MemTxAttrs attrs) {
+  // FIXME port later
+  MemTxResult res;
+  return res;
+}
 
 /**
  * memory_region_get_ram_addr: Get the ram address associated with a memory

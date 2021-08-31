@@ -682,7 +682,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
   CPUArchState *env = cpu->env_ptr;
   CPUTLB *tlb = env_tlb(env);
   CPUTLBDesc *desc = &tlb->d[mmu_idx];
-  MemoryRegionSection *section;
+  MemoryRegion *mr;
   unsigned int index;
   target_ulong address;
   target_ulong write_address;
@@ -705,7 +705,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
   vaddr_page = vaddr & TARGET_PAGE_MASK;
   paddr_page = paddr & TARGET_PAGE_MASK;
 
-  section = address_space_translate_for_iotlb(cpu, asidx, paddr_page, &xlat,
+  mr = address_space_translate_for_iotlb(cpu, asidx, paddr_page, &xlat,
                                               &sz, attrs, &prot);
   assert(sz >= TARGET_PAGE_SIZE);
 
@@ -722,13 +722,13 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
     address |= TLB_BSWAP;
   }
 
-  is_ram = memory_region_is_ram(section->mr);
+  is_ram = memory_region_is_ram(mr);
   // is_romd = memory_region_is_romd(section->mr);
   is_romd = false;
 
   if (is_ram || is_romd) {
     /* RAM and ROMD both have associated host memory. */
-    addend = (uintptr_t)memory_region_get_ram_ptr(section->mr) + xlat;
+    addend = (uintptr_t)memory_region_get_ram_ptr(mr) + xlat;
   } else {
     /* I/O does not; force the host address to NULL. */
     addend = 0;
@@ -736,13 +736,13 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
 
   write_address = address;
   if (is_ram) {
-    iotlb = memory_region_get_ram_addr(section->mr) + xlat;
+    iotlb = memory_region_get_ram_addr(mr) + xlat;
     /*
      * Computing is_clean is expensive; avoid all that unless
      * the page is actually writable.
      */
     if (prot & PAGE_WRITE) {
-      if (section->readonly) {
+      if (mr->readonly) {
         write_address |= TLB_DISCARD_WRITE;
       } else if (cpu_physical_memory_is_clean(iotlb)) {
         write_address |= TLB_NOTDIRTY;
@@ -750,7 +750,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
     }
   } else {
     /* I/O or ROMD */
-    iotlb = memory_region_section_get_iotlb(cpu, section) + xlat;
+    iotlb = memory_region_section_get_iotlb(cpu, mr) + xlat;
     /*
      * Writes to romd devices must go through MMIO to enable write.
      * Reads to romd devices go through the ram_ptr found above,
