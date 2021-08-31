@@ -901,14 +901,12 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                          MMUAccessType access_type, MemOp op) {
   CPUState *cpu = env_cpu(env);
   hwaddr mr_offset;
-  MemoryRegionSection *section;
   MemoryRegion *mr;
   uint64_t val;
   bool locked = false;
   MemTxResult r;
 
-  section = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
-  mr = section->mr;
+  mr = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
   mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
   cpu->mem_io_pc = retaddr;
   if (!cpu->can_do_io) {
@@ -936,13 +934,11 @@ static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, int mmu_idx,
                       MemOp op) {
   CPUState *cpu = env_cpu(env);
   hwaddr mr_offset;
-  MemoryRegionSection *section;
   MemoryRegion *mr;
   bool locked = false;
   MemTxResult r;
 
-  section = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
-  mr = section->mr;
+  mr = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
   mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
   if (!cpu->can_do_io) {
     cpu_io_recompile(cpu, retaddr);
