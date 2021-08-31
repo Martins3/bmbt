@@ -2,6 +2,7 @@
 #define GLIB_STUB_H_78QYZX2K
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef struct GTree {
   struct GTree *left;
