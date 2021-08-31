@@ -106,7 +106,6 @@ typedef enum MMUAccessType {
  * State of one CPU core or thread.
  */
 
-// FIXME oh shit address space
 struct CPUAddressSpace {
   AddressSpace *as;
 };

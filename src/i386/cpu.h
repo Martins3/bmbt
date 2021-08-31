@@ -1742,8 +1742,23 @@ static inline int x86_asidx_from_attrs(CPUState *cs, MemTxAttrs attrs)
     return !!attrs.secure;
 }
 
-// FIXME implement it later
-AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs);
+
+/**
+ * cpu_get_address_space:
+ * @cpu: CPU to get address space from
+ * @asidx: index identifying which address space to get
+ *
+ * Return the requested address space of this CPU. @asidx
+ * specifies which address space to read.
+ */
+AddressSpace *cpu_get_address_space(CPUState *cpu, int asidx){
+    /* Return the AddressSpace corresponding to the specified index */
+    return cpu->cpu_ases[asidx].as;
+}
+
+AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs){
+    return cpu_get_address_space(cs, cpu_asidx_from_attrs(cs, attrs));
+}
 
 uint8_t x86_ldub_phys(CPUState *cs, hwaddr addr);
 uint32_t x86_lduw_phys(CPUState *cs, hwaddr addr);
