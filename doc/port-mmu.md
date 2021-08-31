@@ -1,6 +1,16 @@
 # softmmu 和 memory model 的移植的设计 
-到底是在补齐接口还是在设计新的 memory model 的, 我认为应该是首先思考清楚整个东西是如何设计的，
-想清楚了之后，再去验证这些接口的设计，最后具体的留出来的那些接口。
+
+需要重构的四个部分:
+- [ ] ram_addr.h
+  - [ ] RAMBlock 中间存储什么东西？
+      - host:addr
+      - 没有 offset 了
+      - 实际上一共只有一个 RAM，就设置大小为 1G 吧
+  - 需要 MemoryRegion，但是不需要 MemoryRegionSection，因为 MemoryRegion 中间不会被划分，MemoryRegion 就是最小的对象
+- [ ] memory.h
+- [ ] io_readx 和 io_writex
+- [ ] 重新构建 iotlb
+
 
 ## [ ] 到底那些地方可以简化
 - 因为描述的空间是固定的，所以我猜测可以简化设计，没有必要创建出来 MemoryRegion，但是可以保留出来 FlatRange
@@ -25,7 +35,6 @@
         - 比如 invalidate_and_set_dirty, 实际上，dirty_log_mask 之类的设计可以简化很多的
 
 
-
 一些设计的想法:
 - RAMList 的
 - 在 1M 的范围内的空间的变化过于鬼畜啊
@@ -34,8 +43,28 @@
   - 还不如直接划分为 BIOS 空间 / PCI 空间 / RAM 空间，反正 PCI 空间都是确定的
 - 无论如何，RAM 在 host 上的具体地址都是需要进行装换的，所以，RAMBlock::host 是需要的
 
-实际上，设计需要保留的接口:
-- address_space_stb
+## 需要保留的接口
+实际上，为了防止和原来的设计出现巨大的差异，需要保留的接口:
+- address_space_stb -> 所以我们需要 AddressSpace 的
+- 
+
+
+## 每一个函数移植方案
+| function                          | 作用                                                                                                          | 方案 |
+|-----------------------------------|---------------------------------------------------------------------------------------------------------------|------|
+| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                               |      |
+| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了        |      |
+| qemu_map_ram_ptr                  | 这是一个神仙设计的接口，如果参数 ram_block 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |      |
+| cpu_addressspace |
+
+flush 的函数的异步运行其实可以好好简化一下。
+
+实际上整个 ram_addr.h 都是处理 dirty page 的问题，而至于 RAMBlock 的概念具体如何设计，
+需要等到之后在处理。
+
+## ram_addr.h
+- cpu_physical_memory_test_and_clear_dirty : clear dirty，但是这个一个宽接口，在 BMBT 修改为 cpu_physical_memory_clear_dirty，无需向上汇报是否存在 dirty 的问题，那是给 RAMList 使用的
+- 实际上，cpu_physical_memory_is_clean 因为现在只有一个 client，所以应该可以被很容易的修改了
 
 ## 移植差异性的记录
 ### memory_ldst.h
