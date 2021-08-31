@@ -452,7 +452,7 @@ void tlb_set_dirty(CPUState *cpu, target_ulong vaddr);
 /* exec.c */
 void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr);
 
-static inline MemoryRegionSection *
+static inline MemoryRegion *
 address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
                                   hwaddr *xlat, hwaddr *plen, MemTxAttrs attrs,
                                   int *prot) {
@@ -460,8 +460,11 @@ address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
   // MemoryRegionSection
   return NULL;
 }
-hwaddr memory_region_section_get_iotlb(CPUState *cpu,
-                                       MemoryRegionSection *section);
+
+static inline hwaddr memory_region_section_get_iotlb(CPUState *cpu,
+                                                     MemoryRegion *section) {
+  return section - section->as->segments;
+}
 #endif
 
 void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr);
@@ -501,7 +504,7 @@ void page_size_init(void);
  * it refers to. @index will have been initially created and returned
  * by memory_region_section_get_iotlb().
  */
-struct MemoryRegion* iotlb_to_section(CPUState *cpu, hwaddr index,
-                                             MemTxAttrs attrs);
+struct MemoryRegion *iotlb_to_section(CPUState *cpu, hwaddr index,
+                                      MemTxAttrs attrs);
 
 #endif /* end of include guard: EXEC_ALL_H_SFIHOIQZ */
