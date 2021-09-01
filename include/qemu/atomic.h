@@ -48,6 +48,8 @@
         (unsigned short)1,                                                         \
       (expr)+0))))))
 
+# define ATOMIC_REG_SIZE  8
+
 #define atomic_read(ptr) (*ptr)
 
 #define atomic_set(ptr, i)                                                     \
@@ -58,7 +60,9 @@
 #define atomic_cmpxchg(ptr, old, new) ({ (old); })
 
 #define atomic_mb_set(ptr, i)                                                  \
-  {}
+  do {                                                                         \
+    *ptr = i;                                                                  \
+  } while (0)
 
 #define atomic_rcu_read(ptr) (*ptr)
 
@@ -76,5 +80,15 @@
     _old;                                                               \
 })
 
+#define atomic_fetch_and(ptr, n) __atomic_fetch_and(ptr, n, __ATOMIC_SEQ_CST)
+
+#define atomic_xchg(ptr, i)    ({                           \
+    QEMU_BUILD_BUG_ON(sizeof(*ptr) > ATOMIC_REG_SIZE);      \
+    *ptr = i; \
+})
+
+/* Compiler barrier */
+#define barrier()   ({ asm volatile("" ::: "memory"); (void)0; })
+#define smp_mb()                     ({ barrier(); __atomic_thread_fence(__ATOMIC_SEQ_CST); })
 
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */
