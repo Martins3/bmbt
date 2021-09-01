@@ -24,3 +24,15 @@ repos:
         description: check Chinese doc
         entry: script/hook/lint-md.sh
         language: script
+
+    -   id: code-test
+        name: code test
+        description: test the code
+        entry: script/hook/code-test.sh
+        language: script
+
+    -   id: separate-doc-code
+        name: separate-doc-code
+        description: Don't mix code and doc
+        entry: script/hook/separate-doc-code.sh
+        language: script

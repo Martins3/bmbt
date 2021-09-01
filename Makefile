@@ -18,7 +18,6 @@ c_source_files += $(wildcard src/hw/qemu/*.c)
 c_source_files += $(wildcard src/fpu/*.c)
 c_source_files += $(wildcard src/qemu/*.c)
 c_source_files += $(wildcard src/util/*.c)
-
 c_source_files += $(wildcard src/i386/LATX/*.c)
 c_source_files += $(wildcard src/i386/LATX/translator/*.c)
 c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
