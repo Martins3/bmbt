@@ -1,7 +1,9 @@
 #include <stdio.h>
 
 // --------------------- 一般用于检查都是触发了那些类型的中断 ------------------
-static void huxueshi(long irq) { printf("huxueshi:%s %lx\n", __FUNCTION__, irq); }
+static void huxueshi(long irq) {
+  printf("huxueshi:%s %lx\n", __FUNCTION__, irq);
+}
 
 static long database[100];
 static int counter = 0;
