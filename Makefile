@@ -55,8 +55,6 @@ $(info $(BASE_DIR))
 
 all: $(kernel) $(LIBCAPSTONE)
 
-format:
-
 -include $(dependency_files)
 
 # Build target for every single object file.
