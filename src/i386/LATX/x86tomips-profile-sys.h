@@ -160,7 +160,7 @@ typedef struct xtm_profile_sys {
     struct {
         uint64_t unchange_nr;
         uint64_t change_nr;
-    } tbf_ss32; 
+    } tbf_ss32;
 
 } xtm_profile_sys_t ;
 

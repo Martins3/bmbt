@@ -29,7 +29,7 @@ question:
 [    0.000000] irq: Added domain unknown-1
 [    0.000000] irq: irq_domain_associate_many(<no-node>, irqbase=50, hwbase=0, count=14)
 
-[    0.000000] irq: Added domain irqchip@(____ptrval____) 
+[    0.000000] irq: Added domain irqchip@(____ptrval____)
 
 [    0.000000] Support EXT interrupt.
 [    0.000000] irq: Added domain irqchip@(____ptrval____)
@@ -53,7 +53,7 @@ question:
 static int parent_irq[LIOINTC_NUM_PARENT] = {LOONGSON_LINTC_IRQ, LOONGSON_BRIDGE_IRQ};
 ```
 
-实际上，irq_domain_ops::map 中, 
+实际上，irq_domain_ops::map 中,
 - loongarch_cpu_intc_map
   - plat_irq_dispatch : 默认的 int 入口这个
     - 会根据 irq_domain 找到 hwriq 对应的 irq ，已经进一步的 irq_desc
@@ -76,7 +76,7 @@ of_setup_pch_irqs 挂载到 parent 靠 irq_find_matching_fwnode 实现
 
 - [ ] 最开始的时候，内核是被加载什么位置，让其可以在直接映射的地址空间的
 
-- [ ] 应该分析一下  -M ls3a5k 
+- [ ] 应该分析一下  -M ls3a5k
 
 - [ ] vint 的内容是什么？
 
@@ -93,7 +93,7 @@ of_setup_pch_irqs 挂载到 parent 靠 irq_find_matching_fwnode 实现
 
 - extioi_irq_dispatch : 本身就是在中断上下文中间，现在在做下一级的跳转, TODO 问题是，怎么知道是从上一级跳转到下
   - irq_linear_revmap : 通过 iocsr_writeq 可以获取物理上的中断
-  - generic_handle_irq 
+  - generic_handle_irq
 
 - [ ] 到底存在那些 irq domain
 

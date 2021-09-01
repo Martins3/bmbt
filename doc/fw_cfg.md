@@ -1,6 +1,6 @@
 # fw_cfg
 
-- [ ] seabios 需要区分处理文件和非文件  
+- [ ] seabios 需要区分处理文件和非文件
 - [ ] 既然 ROM 是只读的，seabios 分配的空间都是在哪里，或者说，通过 fw_cfg 读去的数据都是从哪里来的
 
 ## 基本原理
@@ -20,7 +20,7 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
         - 一堆 fw_cfg_add_i16 之类的，添加默认配置
     - sysbus_add_io
       - memory_region_add_subregion
-    - 一堆 fw_cfg_add_i16 添加 x86 特有的配置 
+    - 一堆 fw_cfg_add_i16 添加 x86 特有的配置
     - 处理 NUMA 相关的内容
 
 ## 流程分析 : etc/acpi/rsdp 如何通过 fw_cfg 告知 guest 的
@@ -135,7 +135,7 @@ huxueshi:qemu_cfg_init filename=etc/tpm/log
 huxueshi:qemu_cfg_init filename=genroms/kvmvapic.bin
 huxueshi:qemu_cfg_init filename=genroms/linuxboot_dma.bin
 ```
-之后 seabios 就可以通过 
+之后 seabios 就可以通过
 
 
 
@@ -272,7 +272,7 @@ DSDT address to be filled by Guest linker at runtime
 
 ## memory region
 1. 在 fw_cfg_io_realize 中创建
-2. 在 fw_cfg_init_io_dma 中和 link 到 get_system_io() 上 
+2. 在 fw_cfg_init_io_dma 中和 link 到 get_system_io() 上
 
 ```plain
 address-space: I/O

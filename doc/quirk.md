@@ -98,10 +98,10 @@ index 3361663144a1..f8b4c4a35e00 100644
 +static inline void cpufreq_enable_fast_switch(struct cpufreq_policy *policy) {}
 +static inline void cpufreq_disable_fast_switch(struct cpufreq_policy *policy) {}
  #endif
- 
+
  #ifdef CONFIG_CPU_FREQ_STAT
 ```
-2. make 
+2. make
 
 ## 测试
 
@@ -115,7 +115,7 @@ echo init | cpio -o -H newc | gzip >${disk_img}
 ${qemu}  -M ls3a5k -m 2048 -kernel ${kernel} -initrd ${disk_img} -smp 1
 ```
 
-log 
+log
 ```plain
 mips_ls3a7a_init: num_nodes 1
 mips_ls3a7a_init: node 0 mem 0x80000000

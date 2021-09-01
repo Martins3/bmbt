@@ -131,7 +131,7 @@ fix_up_2:
             }
             if (opnd)  opnd->size  = data_size;
             if (opnd2) opnd2->size = data_size;
-                
+
         }
     }
 }
@@ -585,7 +585,7 @@ static void translate_jmp_far_pe_imm(
     ADDRX next_eip = ir1_addr_next(pir1);
 
     /*                  ptr16:16 ptr16:32
-     * opnd[0]:selector    16       16    
+     * opnd[0]:selector    16       16
      * opnd[1]:offset      16       32    */
     IR1_OPND *opnd1 = ir1_get_opnd(pir1,1);
     int opnd1_size  = ir1_opnd_size(opnd1);
@@ -658,7 +658,7 @@ static void translate_jmp_far_pe_mem(
             /* load 16-bit selector */
             gen_ldst_softmmu_helper(LISA_LD_HU, &selector_opnd, &mem_opnd_adjusted, 1);
             break;
-        default: 
+        default:
             lsassertm_illop(ir1_addr(pir1), 0,
                     "unsupported opnd size %d in ljmp mem.\n", opnd_size);
             break;
@@ -700,7 +700,7 @@ static void translate_jmp_far_real_imm(IR1_INST *pir1, IR1_OPND *opnd0)
     IR2_OPND tmp1 = ra_alloc_itemp();
 
     /*                  ptr16:16 ptr16:32
-     * opnd[0]:selector    16       16    
+     * opnd[0]:selector    16       16
      * opnd[1]:offset      16       32    */
     selector = ir1_opnd_uimm(opnd0);
     base     = selector << 0x4;
@@ -732,7 +732,7 @@ static void translate_jmp_far_real_mem(IR1_INST *pir1, IR1_OPND *opnd0)
         gen_ldst_softmmu_helper(LISA_LD_W, &dest, &mem_opnd, 1);
 
         append_ir2_opnd2_(lisa_mov16z, &next_eip, &dest);
-        
+
         append_ir2_opnd2i(LISA_SRLI_W, &tmp0, &dest, 0x10);
         append_ir2_opnd2_(lisa_mov16z, &tmp0, &tmp0);
         append_ir2_opnd2i(LISA_ST_W, &tmp0, &env_ir2_opnd,
@@ -976,7 +976,7 @@ bool translate_out(IR1_INST *pir1)
         default:
             lsassertm(0, "Unsupported X86_INS_OUT data size %d.\n", data_size);
     }
-    
+
     /* 3. restore native context */
     tr_sys_gen_call_to_helper_epilogue_cfg(default_helper_cfg);
 
@@ -1094,7 +1094,7 @@ void tr_gen_io_bpt(IR1_INST *ir1, IR1_OPND *port, int size)
     tr_sys_gen_call_to_helper_epilogue_cfg(default_helper_cfg);
 }
 
-void tr_gen_tb_start(void) 
+void tr_gen_tb_start(void)
 {
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
     xtm_pf_step_gen_tb_start();
@@ -1135,7 +1135,7 @@ void tr_gen_tb_start(void)
     ra_free_temp(&count);
 }
 
-void tr_gen_tb_end(void) 
+void tr_gen_tb_end(void)
 {
     if (xtm_sigint_opt()) return;
 //    lsassertm(0, "tb end to be implemented in LoongArch.\n");
@@ -1202,7 +1202,7 @@ void tr_gen_io_start(void)
 //        IR2_OPND tmp = ra_alloc_itemp();
 //        append_ir2_opnd2i(mips_ori, &tmp, &zero_ir2_opnd, 1);
 //        append_ir2_opnd2i(mips_sw, &tmp, &env_ir2_opnd,
-//                (int32)offsetof(X86CPU, parent_obj.can_do_io) - 
+//                (int32)offsetof(X86CPU, parent_obj.can_do_io) -
 //                (int32)offsetof(X86CPU, env));
 //        ra_free_temp(&tmp);
     }
@@ -1216,7 +1216,7 @@ void tr_gen_io_end(void)
     if (cflags & CF_USE_ICOUNT) {
         lsassertm(0, "[ICOUNT mode] IO end to be implemented in LoongArch.\n");
 //        append_ir2_opnd2i(mips_sw, &zero_ir2_opnd, &env_ir2_opnd,
-//                (int32)offsetof(X86CPU, parent_obj.can_do_io) - 
+//                (int32)offsetof(X86CPU, parent_obj.can_do_io) -
 //                (int32)offsetof(X86CPU, env));
     }
 }
@@ -1225,7 +1225,7 @@ void tr_gen_io_end(void)
  *
  * In system-mode, for precise exception, the effect of instruction
  * should be executed at the end of this instruction's translated code.
- * 
+ *
  * For pop, these two things need to be done at the end:
  *  1> save the read value into destination
  *  2> update esp register
@@ -1315,7 +1315,7 @@ bool translate_pop(IR1_INST *pir1)
     IR2_OPND tmp = ra_alloc_itemp();
     int ss_addr_size = get_sys_stack_addr_size();
     load_ir1_mem_to_ir2(&tmp, &mem_ir1_opnd, ZERO_EXTENSION, false, ss_addr_size);
-    
+
     /* 2. update ESP */
     IR2_OPND esp_opnd = ra_alloc_gpr(esp_index);
     if (is_gpr_esp) {
@@ -1769,7 +1769,7 @@ bool translate_into(IR1_INST *pir1)
 
     /* 3. restore context */
     tr_sys_gen_call_to_helper_epilogue_cfg(cfg);
- 
+
     return true;
 }
 
@@ -2128,7 +2128,7 @@ bool translate_callin(IR1_INST *pir1)
     }
 
     /* 5. shadow statck : not ready for system-mode
-    if(option_shadow_stack) 
+    if(option_shadow_stack)
          ss_gen_push(pir1);  */
 
     /* 6. adjust em to defaul em : why? */
@@ -2195,7 +2195,7 @@ static void translate_call_far_imm(IR1_INST *pir1)
     append_ir2_opnd2i(LISA_ORI, &arg3_ir2_opnd, &zero_ir2_opnd, shift);
     /* 3.4 arg4 : next eip */
     load_imm32_to_ir2(&arg4_ir2_opnd, (uint32_t)next_eip, ZERO_EXTENSION);
- 
+
     /* 4. call the helper */
     if (td->sys.pe && !td->sys.vm86) {
         tr_gen_call_to_helper((ADDR)helper_lcall_protected);
@@ -2234,7 +2234,7 @@ static void translate_call_far_mem(IR1_INST *pir1)
      *  opndtype |      opnd[0]    |     opnd[1]
      * -------------------------------------------
      *    m16:16 |   mem  size = 4 |       --
-     *    m16:32 |   mem  size = 6 |       --      
+     *    m16:32 |   mem  size = 6 |       --
      * ------------------------------------------- */
     IR1_OPND *opnd0 = ir1_get_opnd(pir1, 0);
     IR2_OPND mem_opnd;
@@ -2465,7 +2465,7 @@ static bool do_translate_pusha(IR1_INST *pir1, int size)
         /* 2.2 adjust ESP
          *     i = 0 : esp_inc =  -4 or  -2
          *     i = 1 : esp_inc =  -8 or  -4
-         *     
+         *
          *     i = 7 : esp_inc = -32 or -16 */
         esp_dec = esp_dec + esp_dec_step;
         /* 2.3 load GPR value from ENV */
@@ -2559,7 +2559,7 @@ static bool do_translate_popa(IR1_INST *pir1, int size)
         /* 2.2 adjust ESP
          *     i = 0 : esp_inc = 28 or 14
          *     i = 1 : esp_inc = 24 or 12
-         *     
+         *
          *     i = 7 : esp_inc = 0        */
         esp_inc = esp_inc + esp_inc_step;
         /* 2.3 ignore ESP pop */
@@ -2647,7 +2647,7 @@ static bool do_translate_bcd(IR1_INST *pir1, int val)
     case X86_INS_AAD:
         tr_sys_gen_call_to_helper2_cfg((ADDR)helper_aad, val, cfg);
         break;
-    default: 
+    default:
         /* should never reach here */
         break;
     }
@@ -2953,7 +2953,7 @@ bool translate_clgi(IR1_INST *pir1)
     tr_gen_save_curr_eip();
     helper_cfg_t cfg = default_helper_cfg;
     tr_sys_gen_call_to_helper1_cfg((ADDR)helper_clgi, cfg);
-    
+
     return true;
 }
 
@@ -3083,7 +3083,7 @@ bool translate_xadd(IR1_INST *pir1)
         store_ir2_to_ir1(&src0, opnd1, false);
         store_ir2_to_ir1(&sum, opnd0, false);
     } else {
-        if (ir1_has_prefix_lock(pir1) && 
+        if (ir1_has_prefix_lock(pir1) &&
             td->sys.cflags & CF_PARALLEL) {
 //            /* helper_atomic_fetch_addb
 //             * helper_atomic_fetch_addw_le
@@ -3339,7 +3339,7 @@ bool translate_arpl(IR1_INST *pir1)
 //    append_ir2_opnd2(mips_bgez, &rpl0, &label1);
 //    ra_free_temp(&rpl0);
 //
-//    /* 3.3 RPL0 < RPL1 
+//    /* 3.3 RPL0 < RPL1
 //     *     1. set ZF
 //     *     2. set seg0.rpl as seg1.rpl */
 //    append_ir2_opnd3(mips_nor, &rpl_mask, &rpl_mask, &zero_ir2_opnd); /* 111...111 1100 */
@@ -3399,7 +3399,7 @@ static bool do_translate_lar_lsl(IR1_INST *pir1, int is_lar)
 //     *
 //     * >> eflags is used and updated
 //     * >> exception might be generated                          */
-//     
+//
 //    helper_cfg_t cfg = default_helper_cfg;
 //
 //    /* 2.1 save native context */
@@ -3443,7 +3443,7 @@ static bool do_translate_lar_lsl(IR1_INST *pir1, int is_lar)
 //
 //    /* 6. exit label */
 //    append_ir2_opnd1(mips_label, &label);
-     
+
     return true;
 }
 bool translate_lar(IR1_INST *pir1)
@@ -3561,7 +3561,7 @@ bool translate_lzcnt(IR1_INST *pir1)
 //    /* 1. load source data */
 //    IR2_OPND value = ra_alloc_itemp();
 //    load_ir1_to_ir2(&value, opnd1, SIGN_EXTENSION, false);
-//    
+//
 //    /* 2. count leading zero use mips_clz */
 //    IR2_OPND lz_num = ra_alloc_itemp();
 //    append_ir2_opnd2(mips_clz, &lz_num, &value);
@@ -3648,7 +3648,7 @@ bool translate_tzcnt(IR1_INST *pir1)
     /* 1. load source data */
     IR2_OPND value = ra_alloc_itemp();
     load_ir1_to_ir2(&value, opnd1, SIGN_EXTENSION, false);
-    
+
     /* 2. count tailing zero */
     IR2_OPND tz_num = ra_alloc_itemp();
     append_ir2_opnd2_(lisa_mov, &tz_num, &zero_ir2_opnd);
@@ -3779,7 +3779,7 @@ bool translate_bound(IR1_INST *pir1)
 //    cfg.sv_allgpr = 1;
 //    cfg.sv_eflags = 1;
 //    cfg.cvt_fp80  = default_helper_cfg.cvt_fp80;
-//    
+//
 //    IR2_OPND func_addr_opnd = ra_alloc_dbt_arg2();
 //
 //    tr_sys_gen_call_to_helper_prologue_cfg(cfg);
@@ -3806,7 +3806,7 @@ bool translate_bound(IR1_INST *pir1)
 //    convert_mem_opnd(&ir2_opnd1, ir1_opnd1, -1);
 //    IR2_OPND mem_opnd1 = convert_mem_ir2_opnd_no_offset(&ir2_opnd1);
 //    IR2_OPND addr_opnd1 = ir2_opnd_new(IR2_OPND_IREG, ir2_opnd_base_reg_num(&mem_opnd1));
-//    /* ir2_opnd1:  IR2_OPND_MEM 
+//    /* ir2_opnd1:  IR2_OPND_MEM
 //     * mem_opnd1:  IR2_OPND_MEM
 //     * addr_opnd1: IR2_OPND_IREG */
 //    append_ir2_opnd3(mips_or, &arg2_ir2_opnd, &addr_opnd1, &zero_ir2_opnd);

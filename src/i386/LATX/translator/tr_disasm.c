@@ -186,7 +186,7 @@ void tr_disasm(TranslationBlock *tb)
     /* ir1 hasn't been disasmbled, get it */
     if (etb->_ir1_instructions == NULL) {
         ir1_list = get_ir1_list(etb, pc, &ir1_num);
-       
+
         etb->_ir1_instructions = ir1_list;
         etb->_ir1_num = ir1_num;
         etb->_tb_type = get_etb_type(ir1_list + ir1_num - 1);

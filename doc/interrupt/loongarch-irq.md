@@ -52,7 +52,7 @@ register_pch_pic 中初始化了 pch 的中断控制器。
 
 14.3.1 中可以可以 pch_pic_ack_irq 的行为
 
-## 分析 legacy 的 io controller 在被谁使用 
+## 分析 legacy 的 io controller 在被谁使用
 当中断到了，根据路由规则，进入到 ip2 / ip3，然后 cpu 执行，
 然后在 liointc_chained_handle_irq 中检查，找到正确的 irq，然后继续向下。
 
@@ -82,7 +82,7 @@ legacy 中断控制器的入口是:
 #define LIOINTC_DEFAULT_PHYS_BASE	(LOONGSON_REG_BASE + 0x1400)
 ```
 
-参考 11.1.1 按地址访问，表 11-2 
+参考 11.1.1 按地址访问，表 11-2
 
 32 个中断源每一个都对应 8 位的路由规则。
 
@@ -279,7 +279,7 @@ pch_msi_compose_msi_msg 的调用路径，最后发送的 msi 应该是给 extio
 // parent_irq[i] = 52
 irq_set_chained_handler_and_data(parent_irq[i], liointc_chained_handle_irq, &priv->handler[i]);
 ```
-这个和 extioi 其实相同的, ip3_irqdispatch 触发 52 
+这个和 extioi 其实相同的, ip3_irqdispatch 触发 52
 也就是 `do_IRQ(LOONGSON_BRIDGE_IRQ)`
 ```c
 /*
@@ -434,7 +434,7 @@ irq_set_chained_handler_and_data(parent_irq[i], liointc_chained_handle_irq, &pri
 [    0.288765] irq: irq_domain_set_mapping  hwirq=17 virq=17
 ```
 
-## pch_pic 真的是 apic 吗 
+## pch_pic 真的是 apic 吗
 
 # Loongarch irq
 - [ ] virq 的分配规则
@@ -454,7 +454,7 @@ irq_set_chained_handler_and_data(parent_irq[i], liointc_chained_handle_irq, &pri
 后面超级重要的 ip2 ip3 入口了, 这种初始化的方法很僵硬，
 这些入口都会被后面的代码覆盖。
 
-参考: chen P89, 可以验证，lpc 占据中断号 (0 - 15), 
+参考: chen P89, 可以验证，lpc 占据中断号 (0 - 15),
 lpc 接入到 pch_pic 的 16 上，
 
 两者对应的调用路径图:

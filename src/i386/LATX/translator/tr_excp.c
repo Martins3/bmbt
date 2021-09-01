@@ -13,18 +13,18 @@
 #endif
 
 /* Exception Check during translation.
- * 
+ *
  * Generate native code that call the helper to
  * raise exception.
  *
  * target/i386/excp_helper.c
  * void helper_raise_exception(
  *      CPUX86State *env,
- *      int exception_index) 
+ *      int exception_index)
  *
  * Note1:   Exception must always be raised during execution.
  *
- * Note2:   Some exceptions that are related to memory access 
+ * Note2:   Some exceptions that are related to memory access
  *          are handled inside the QEMU's softmmu helper.
  *          <#PF>   page fault
  *
@@ -48,7 +48,7 @@ void tr_gen_raise_exception_addr(ADDRX addr, int excp_index, int end);
  *    # PE : CPU is running in protect mode
  * 3> generated exception
  *    # GP : general exception
- *    # ILLOP : illegal operation exception 
+ *    # ILLOP : illegal operation exception
  */
 #define EC_CPLEQ_GP_AND_RETURN(num) do { \
     if (td->sys.cpl != num) { \
@@ -146,7 +146,7 @@ int tr_gen_excp_check(IR1_INST *pir1)
         case X86_INS_CLTS:
         case X86_INS_WRMSR:
         case X86_INS_RDMSR:
-            EC_CPLEQ_GP_AND_RETURN(0); 
+            EC_CPLEQ_GP_AND_RETURN(0);
             break;
         /* Only not allowed in Real-Address mode
          * > [OK]  PE && !vm86
@@ -340,7 +340,7 @@ int tr_gen_excp_check(IR1_INST *pir1)
             }
             break;
         case X86_INS_WAIT:
-            if ((td->sys.flags & (HF_MP_MASK | HF_TS_MASK)) == 
+            if ((td->sys.flags & (HF_MP_MASK | HF_TS_MASK)) ==
                 (HF_MP_MASK | HF_TS_MASK)) {
                 GEN_EXCP_PREX_AND_RETURN();
             }

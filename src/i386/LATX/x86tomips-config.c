@@ -324,7 +324,7 @@ void x86_to_mips_alloc_lsenv(void)
 
     lsenv = malloc(sizeof(*lsenv));
     // same to malloc then memset to zero
-    lsenv->tr_data = calloc(1, sizeof(*(lsenv->tr_data))); 
+    lsenv->tr_data = calloc(1, sizeof(*(lsenv->tr_data)));
     lsenv->fp_data = calloc(1, sizeof(*(lsenv->fp_data)));
 
 //    TRANSLATION_DATA *td = lsenv->tr_data;
@@ -364,7 +364,7 @@ void x86_to_mips_init_env(CPUX86State *env)
 #if 0
     x86_to_mips_alloc_lsenv();
     lsenv->cpu_state = env;
-    env->vregs[4] = (uint64_t)ss._ssi_current; 
+    env->vregs[4] = (uint64_t)ss._ssi_current;
     if (option_dump) {
         fprintf(stderr, "[X86toMIPS] lsenv@%p env init : %p\n", lsenv, lsenv->cpu_state);
     }
@@ -381,7 +381,7 @@ void x86_to_mips_init_env(CPUX86State *env)
 #endif
 }
 
- /* This function is needed to be execute every time before the native 
+ /* This function is needed to be execute every time before the native
   * code proceeds. Mainly adjust the fpu top ptr and synchornized eflags.
   */
 void x86_to_mips_before_exec_tb(CPUState *cpu, struct TranslationBlock *tb)
@@ -460,7 +460,7 @@ void x86_to_mips_after_exec_tb(CPUX86State *env, TranslationBlock *tb)
 #ifdef N64
         if(last_executed_tb) {
             last_executed_tb =(TranslationBlock*)((uintptr_t)last_executed_tb |\
-                    ((uintptr_t)tb & 0xffffffff00000000)); 
+                    ((uintptr_t)tb & 0xffffffff00000000));
             //lsenv_set_last_executed_tb(lsenv,(ADDR)last_executed_tb);
         }
 #endif
@@ -598,7 +598,7 @@ void x86_to_mips_after_exec_tb(CPUX86State *env, TranslationBlock *tb)
  *      Easy to control only exec it when necessary.
  *
  * Disadvantage of plan 1: Too many ways to call cpu_loop_exit()!
- *      
+ *
  *      It is hard to tell when this fix is really needed and when it
  *      should not be executed such as exception happends and the CPU
  *      has to restore.
@@ -648,26 +648,26 @@ static int fastcs_tblink_flag(ETB *e1, ETB *e2)
     uint8_t m1 = (e1->fast_cs_mask) & 0x3;
     uint8_t m2 = (e2->fast_cs_mask) & 0x3;
 
-    /* m1 => m2 |  00  |  01  |  10  |  11  
+    /* m1 => m2 |  00  |  01  |  10  |  11
      * ---------+------+------+------+------
-     * 00       |  --  |  FP  |  MM  |  AL 
+     * 00       |  --  |  FP  |  MM  |  AL
      * ---------+------+------+------+------
-     * 01       |  --  |  FP  |  MM  |  AL 
+     * 01       |  --  |  FP  |  MM  |  AL
      * ---------+------+------+------+------
-     * 10       |  --  |  FP  |  --  |  FP 
+     * 10       |  --  |  FP  |  --  |  FP
      * ---------+------+------+------+------
-     * 11       |  --  |  FP  |  --  |  FP 
+     * 11       |  --  |  FP  |  --  |  FP
      * -------------------------------------
      *
-     * LSFPU    |  00  |  01  |  10  |  11  
+     * LSFPU    |  00  |  01  |  10  |  11
      * -------------------------------------
-     * 00       |  --  |  FP  |  MM  |  AL 
+     * 00       |  --  |  FP  |  MM  |  AL
      * ---------+------+------+------+------
-     * 01       |  --  |  --  |  MM  |  MM 
+     * 01       |  --  |  --  |  MM  |  MM
      * ---------+------+------+------+------
-     * 10       |  --  |  FP  |  --  |  FP 
+     * 10       |  --  |  FP  |  --  |  FP
      * ---------+------+------+------+------
-     * 11       |  --  |  --  |  --  |  -- 
+     * 11       |  --  |  --  |  --  |  --
      * -------------------------------------
      */
 
@@ -969,7 +969,7 @@ void x86_to_mips_init_thread_signal(CPUState *cpu)
 
     /* 3. set the range of code buffer */
     code_buffer_lo = (uint64_t)tcg_ctx->code_gen_buffer;
-    code_buffer_hi = (uint64_t)tcg_ctx->code_gen_buffer + 
+    code_buffer_hi = (uint64_t)tcg_ctx->code_gen_buffer +
                      (uint64_t)tcg_ctx->code_gen_buffer_size;
 
     fprintf(stderr, "[Signal] monitor code buffer %llx to %llx\n",

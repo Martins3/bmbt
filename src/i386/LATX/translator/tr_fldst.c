@@ -403,7 +403,7 @@ bool translate_fnstsw(IR1_INST *pir1)
     load_imm32_to_ir2(&mask, 0xc7ff, ZERO_EXTENSION);
     append_ir2_opnd3(LISA_AND, &sw_value, &sw_value, &mask);
     ra_free_temp(&mask);
-//    append_ir2_opnd2i(mips_andi, &sw_value, &sw_value, 0xc7ff); 
+//    append_ir2_opnd2i(mips_andi, &sw_value, &sw_value, 0xc7ff);
 
     IR2_OPND top = ra_alloc_itemp();
     if (!option_lsfpu) {
@@ -414,7 +414,7 @@ bool translate_fnstsw(IR1_INST *pir1)
     } else {
         append_ir2_opnd1(LISA_X86MFTOP, &top);
         append_ir2_opnd2i(LISA_ANDI, &top, &top, 0x7);
-    } 
+    }
     append_ir2_opnd2i(LISA_SLLI_W, &top, &top, 11);
     append_ir2_opnd3(LISA_OR, &sw_value, &sw_value, &top);
     /* status_word in memory won't get timely update, write back to help a bit */

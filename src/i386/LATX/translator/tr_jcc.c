@@ -56,7 +56,7 @@ extern void get_eflag_condition(IR2_OPND *value, IR1_INST *pir1);
 
 bool translate_jz(IR1_INST *pir1)
 {
-    IR2_OPND target_label_opnd = ir2_opnd_new_label(); 
+    IR2_OPND target_label_opnd = ir2_opnd_new_label();
 
 //#ifndef CONFIG_SOFTMMU
 //    if (fp_translate_pattern_tail(pir1, target_label_opnd)) {
@@ -142,7 +142,7 @@ bool translate_js(IR1_INST *pir1)
         SET_JCC_AND_RECORD_MIPS_BRANCH_INST;
         append_ir2_opnd2(LISA_BNEZ, &cond, &target_label_opnd);
         ra_free_temp(&cond);
-//        append_ir2_opnd1(mips_x86js, &target_label_opnd);            
+//        append_ir2_opnd1(mips_x86js, &target_label_opnd);
     } else {
         IR2_OPND sf_opnd = ra_alloc_itemp();
         append_ir2_opnd2i(LISA_ANDI, &sf_opnd, &eflags_ir2_opnd, SF_BIT);
@@ -577,7 +577,7 @@ bool translate_jle(IR1_INST *pir1)
         append_ir2_opnd2i(LISA_ANDI, &sfzf_opnd, &eflags_ir2_opnd, SF_BIT | ZF_BIT);   //sf | zf
         append_ir2_opnd2i(LISA_ANDI, &of_opnd, &eflags_ir2_opnd, OF_BIT);              //of
         append_ir2_opnd2i(LISA_SRLI_D, &of_opnd, &of_opnd, 4);
-        append_ir2_opnd3(LISA_XOR, &sfzf_opnd, &sfzf_opnd, &of_opnd);               //sfzf xor of  
+        append_ir2_opnd3(LISA_XOR, &sfzf_opnd, &sfzf_opnd, &of_opnd);               //sfzf xor of
         SET_JCC_AND_RECORD_MIPS_BRANCH_INST;
         append_ir2_opnd2(LISA_BNEZ, &sfzf_opnd, &target_label_opnd);
         ra_free_temp(&sfzf_opnd);

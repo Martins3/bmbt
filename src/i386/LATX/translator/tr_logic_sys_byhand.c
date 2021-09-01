@@ -4,7 +4,7 @@
 #include "../x86tomips-options.h"
 #include "../include/flag_lbt.h"
 
-static 
+static
 void translate_test_byhand_gpr_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_gpr(ir1_opnd_base_reg_num(opnd0));
@@ -32,7 +32,7 @@ void translate_test_byhand_gpr_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_test_byhand_gpr_imm(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_gpr(ir1_opnd_base_reg_num(opnd0));
@@ -50,7 +50,7 @@ void translate_test_byhand_gpr_imm(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_test_byhand_mem_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_itemp();
@@ -69,7 +69,7 @@ void translate_test_byhand_mem_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_test_byhand_mem_imm(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_itemp();
@@ -114,7 +114,7 @@ bool translate_test_byhand(IR1_INST *pir1)
 
 
 
-static 
+static
 void translate_xor_and_or_byhand_gpr_gpr(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -165,7 +165,7 @@ void translate_xor_and_or_byhand_gpr_gpr(
     }
 }
 
-static 
+static
 void translate_xor_and_or_byhand_gpr_imm(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -199,7 +199,7 @@ void translate_xor_and_or_byhand_gpr_imm(
     }
 }
 
-static 
+static
 void translate_xor_and_or_byhand_gpr_mem(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -233,7 +233,7 @@ void translate_xor_and_or_byhand_gpr_mem(
     }
 }
 
-static 
+static
 void translate_xor_and_or_byhand_mem_gpr(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -267,7 +267,7 @@ void translate_xor_and_or_byhand_mem_gpr(
     }
 }
 
-static 
+static
 void translate_xor_and_or_byhand_mem_imm(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -420,7 +420,7 @@ bool translate_not_byhand(IR1_INST *pir1)
 
 
 
-static 
+static
 void translate_shr_byhand_gpr_cl(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg1 = ra_alloc_gpr(ecx_index);
@@ -442,7 +442,7 @@ void translate_shr_byhand_gpr_cl(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_shr_byhand_gpr_imm8(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     int num = ir1_opnd_simm(opnd1) & 0x1f;
@@ -462,12 +462,12 @@ void translate_shr_byhand_gpr_imm8(IR1_OPND *opnd0, IR1_OPND *opnd1)
         append_ir2_opnd2i(LISA_ORI, &tmp, &zero_ir2_opnd, num);
         append_ir2_opnd2(LISA_X86SRL_B + (os >> 4), &reg0, &tmp);
         append_ir2_opnd2i(LISA_SRLI_W, &reg0, &reg0, num);
-        
+
         store_ir2_to_ir1_gpr(&reg0, opnd0);
     }
 }
 
-static 
+static
 void translate_shr_byhand_mem_cl(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_itemp();
@@ -502,7 +502,7 @@ void translate_shr_byhand_mem_cl(IR1_OPND *opnd0, IR1_OPND *opnd1)
     append_ir2_opnd1(LISA_LABEL, &label_exit);
 }
 
-static 
+static
 void translate_shr_byhand_mem_imm8(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     int num = ir1_opnd_simm(opnd1) & 0x1f;

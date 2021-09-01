@@ -1,5 +1,5 @@
 ## [Gensim](https://github.com/gensim-project/gensim)
--  [ ] How the data transfer from 
+-  [ ] How the data transfer from
 
 
 ISADescriptionParser::ParseFile
@@ -10,7 +10,7 @@ ISADescriptionParser::ParseFile
   - > ISADescriptionParser::load_from_node
     - > ISADescriptionParser::ParseFile
 
-  
+
 - [x] so, how gensim is used for by ArcSim
 
 ```plain
@@ -18,18 +18,18 @@ ISADescriptionParser::ParseFile
 1.0 The Gensim Compiler
 ------------------------------------------------------------------------
 
-The Gensim Compiler reads in Gensim ADL models, performs some 
-processing, and outputs (generally) C++ source code. 
+The Gensim Compiler reads in Gensim ADL models, performs some
+processing, and outputs (generally) C++ source code.
 
 A Gensim model consists of several main components:
 1. The System description, which contains information on register banks,
    features, etc.
 2. The Syntactic description, which specifies how instructions are
    encoded
-3. The Semantic description, which specifies how instructions are 
+3. The Semantic description, which specifies how instructions are
    executed.
 
-Each of these components is processed by a different part of the 
+Each of these components is processed by a different part of the
 toolchain. The most complex processing is performed on the Semantic
 component (which is also usually the largest component).
 
@@ -57,7 +57,7 @@ cmake trick:
 - [ ] ArchDescriptionParser seems have a similar way
 
 - [ ] why we can generate several C++ file
-- [ ] What if we can't 
+- [ ] What if we can't
 
 - ISADescriptionParser::ParseFile : build the syntax tree
   - archcLexerNew
@@ -70,11 +70,11 @@ cmake trick:
 - main
   - section One : prase files
     - `arch::ArchDescription &description = *parser.Get();`
-  - section Two : isa 
+  - section Two : isa
     - `isa->BuildSSAContext`
     - `isa->GetSSAContext().Optimise();`
     - `isa->GetSSAContext().Resolve(root_context);`
-  - section three : component 
+  - section three : component
 
 ```plain
 COMMAND ${gensim-binary} -a ${CMAKE_CURRENT_SOURCE_DIR}/${arch-file} ${gensim-options} -t ${CMAKE_CURRENT_BINARY_DIR}/output-${arch-name}/
@@ -161,7 +161,7 @@ execute(ldrt2)
 	uint32 offset = inst.u ? addr + imm32 : addr - imm32;
 
 	addr = (inst.rn == 15) ? addr & (uint32)0xfffffffc : addr;
-	
+
 	if(memory_read_32_user(addr, imm32))
 	{
 		imm32 = (inst.rd == 15) ? imm32 & (uint32)0xfffffffe : imm32;
@@ -170,7 +170,7 @@ execute(ldrt2)
 		{
 			write_register_bank(RB, inst.rn, offset);
 		}
-		
+
 		write_register_bank(RB, inst.rd, imm32);
 	}
 }
@@ -212,7 +212,7 @@ So, it will furture too something else.
 ### /home/maritns3/core/captive-project/gensim/gensim/src/isa/ISADescriptionParser.cpp
 ISADescriptionParser::load_isa_from_node
   - case AC_MODIFIERS
-  - case AC_BEHAVIOURS 
+  - case AC_BEHAVIOURS
   - case AC_DECODES
   - case AC_EXECUTE
   - case SET_DECODER
@@ -307,7 +307,7 @@ helper uint32 read_cpacr()
 {
 	// if no cp15, we're in user mode simulation so pretend all coprocs are enabled
 	if(!probe_device(15)) return 0x7fffffff;
-	
+
 	return read_coproc_reg(15, 0, 2, 1, 0);
 }
 ```
@@ -316,7 +316,7 @@ seems only prototype analzyed
 #### /home/maritns3/core/captive-project/gensim/gensim/src/isa/AsmMapDescriptionParser.cpp
 - [ ] Work as expected, but we need it ?
 ```c
-	ac_asm_map reg 
+	ac_asm_map reg
 	{
 		"r"[0..15] = [0..15];
 		//"a"[1..4] = [0..3];

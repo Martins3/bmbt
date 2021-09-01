@@ -47,7 +47,7 @@ static inline void rcu_read_unlock(void)
           4. qemu_event_wait(&rcu_gp_event); 等待
       - try_dequeue && `node->func(node)` : 从队列中间取出需要执行的函数来
 
-`rcu_gp_ongoing` is used to check whether the there is a read in critical section. 
+`rcu_gp_ongoing` is used to check whether the there is a read in critical section.
 If it is, the new `rcu_gp_ctr` will not be the same as the `rcu_reader_data->ctr` and will set `rcu_reader_data->waiting` to be true.
 If `registry` is empty it means all readers has leaves the critical section and this means no old reader hold the old version pointer
 and the RCU thread can call the callback which insert to the RCU queue.
@@ -97,7 +97,7 @@ void address_space_destroy(AddressSpace *as)
       }),                                                                \
       (RCUCBFunc *)g_free);
 ```
-这两个 macro 都是两个简单的封装函数，通过数组下标不能为负数保证 
+这两个 macro 都是两个简单的封装函数，通过数组下标不能为负数保证
 `struct rcu_head rcu;` 在结构体的开始位置。
 
 在 call_rcu1 中间，
@@ -140,8 +140,8 @@ reader 获取了指针 p 之后，之后通过 p 进行各种操作可以保证 
     rcu_read_unlock();
 ```
 
-## [^1] 
-In QEMU, when a lock is used, this will often be the "iothread mutex", also known as the "big QEMU lock" (BQL). 
+## [^1]
+In QEMU, when a lock is used, this will often be the "iothread mutex", also known as the "big QEMU lock" (BQL).
 
 ## [ ] 分析一下在当前项目中使用到的 RCU
 ```plain

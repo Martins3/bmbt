@@ -115,8 +115,8 @@ static int context_restore(helper_cfg_t cfg)
     return -1;
 }
 
-/* Prologue and Epilogue for helper function in system-mode 
- * 
+/* Prologue and Epilogue for helper function in system-mode
+ *
  * If the helper requires complete ENV context, set @all_gpr to save
  * all the mapping registers.
  *
@@ -165,7 +165,7 @@ void tr_sys_gen_call_to_helper_prologue_cfg(helper_cfg_t cfg)
 
     if (likely(cfg.sv_allgpr)) {
 //        tr_save_em_eb();
-        tr_save_registers_to_env(0xff, 0xff, 1, 0xff, 0xff, 0x7|options_to_save()); 
+        tr_save_registers_to_env(0xff, 0xff, 1, 0xff, 0xff, 0x7|options_to_save());
 #ifdef CONFIG_XTM_PROFILE
         tr_pf_inc_helper_allgpr();
 #ifdef CONFIG_XTM_FAST_CS
@@ -188,7 +188,7 @@ void tr_sys_gen_call_to_helper_prologue_cfg(helper_cfg_t cfg)
                 FPR_USEDEF_TO_SAVE, 1,
                 XMM_LO_USEDEF_TO_SAVE,
                 XMM_HI_USEDEF_TO_SAVE,
-                0x7|options_to_save()); 
+                0x7|options_to_save());
     }
 
     if (likely(cfg.sv_eflags))
@@ -267,7 +267,7 @@ void tr_sys_gen_call_to_helper0_cfg(ADDR func, helper_cfg_t cfg)
     tr_sys_gen_call_to_helper_epilogue_cfg(cfg);
 }
 
-/* helper with 1 default arg(CPUArchState*) */ 
+/* helper with 1 default arg(CPUArchState*) */
 void tr_sys_gen_call_to_helper1(ADDR func, int all_gpr, int eflags)
 {
     helper_cfg_t cfg;
@@ -291,7 +291,7 @@ void tr_sys_gen_call_to_helper1_cfg(ADDR func, helper_cfg_t cfg)
     tr_sys_gen_call_to_helper_epilogue_cfg(cfg);
 }
 
-/* helper with 2 arg(CPUArchState*, int) */ 
+/* helper with 2 arg(CPUArchState*, int) */
 void tr_sys_gen_call_to_helper2(ADDR func, int arg2, int all_gpr, int eflags)
 {
     helper_cfg_t cfg;
@@ -316,7 +316,7 @@ void tr_sys_gen_call_to_helper2_cfg(ADDR func, int arg2, helper_cfg_t cfg)
     tr_sys_gen_call_to_helper_epilogue_cfg(cfg);
 }
 
-/* helper with 3 arg(CPUArchState*, int, int) */ 
+/* helper with 3 arg(CPUArchState*, int, int) */
 void tr_sys_gen_call_to_helper3(ADDR func, int arg2, int arg3, int all_gpr, int eflags)
 {
     helper_cfg_t cfg;
@@ -342,7 +342,7 @@ void tr_sys_gen_call_to_helper3_cfg(ADDR func, int arg2, int arg3, helper_cfg_t 
     tr_sys_gen_call_to_helper_epilogue_cfg(cfg);
 }
 
-/* helper with 3 arg(CPUArchState*, uint64, uint64) */ 
+/* helper with 3 arg(CPUArchState*, uint64, uint64) */
 void tr_sys_gen_call_to_helper3_u64(ADDR func, uint64 arg2, uint64 arg3, int all_gpr, int eflags)
 {
     helper_cfg_t cfg;
@@ -395,7 +395,7 @@ void tr_sys_gen_call_to_helper4_u64_cfg(ADDR func, uint64 arg2, uint64 arg3, uin
 
 void tr_gen_infinite_loop(void)
 {
-    IR2_OPND label_opnd = ir2_opnd_new_label(); 
+    IR2_OPND label_opnd = ir2_opnd_new_label();
     append_ir2_opnd1(LISA_LABEL, &label_opnd);
     append_ir2_opnd1(LISA_B, &label_opnd);
     append_ir2_opnd0_(lisa_nop);
@@ -575,14 +575,14 @@ void generate_static_sys_helper_prologue_cfg(helper_cfg_t cfg)
     /* FPU TOP will be stored outside */
     if ((cfg.sv_allgpr)) {
         tr_gen_static_save_registers_to_env(
-                0xff, 0xff, 0xff, 0xff, 0x7); 
+                0xff, 0xff, 0xff, 0xff, 0x7);
     } else {
         tr_gen_static_save_registers_to_env(
                 GPR_USEDEF_TO_SAVE,
                 FPR_USEDEF_TO_SAVE,
                 XMM_LO_USEDEF_TO_SAVE,
                 XMM_HI_USEDEF_TO_SAVE,
-                0x7); 
+                0x7);
     }
 
     if (cfg.sv_eflags) tr_gen_static_save_eflags();

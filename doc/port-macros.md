@@ -54,14 +54,14 @@ void helper_syscall(CPUX86State *env, int next_eip_addend)
     cpu_loop_exit(cs);
 }
 ```
-- cpu_handle_exception : 因为  cpu_loop_exit 
-  - x86_cpu_do_interrupt : 调用对应的 handler 
+- cpu_handle_exception : 因为  cpu_loop_exit
+  - x86_cpu_do_interrupt : 调用对应的 handler
     - do_interrupt_user : 如果参数 is_int 是话，这个函数才有意义
 
 从这两个位置设置 is_int 为 true:
 - helper_raise_interrupt
   * gen_interrupt
-      * disas_insn : 这里其中是两种情况 : int3 和 int N 其中 int N 需要检查权限的 
+      * disas_insn : 这里其中是两种情况 : int3 和 int N 其中 int N 需要检查权限的
 - helper_into : 跳转到 overflow 的位置
 
 所以，exception 的检查其实是有一定的道理的, 因为 int3, int0, syscall

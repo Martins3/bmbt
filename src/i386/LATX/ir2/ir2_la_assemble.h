@@ -101,7 +101,7 @@ GM_OPERAND_PLACE_RELATION bit_field_table[] = {
     {OPD_CA, {15,17}, {-1,-1}},
     {OPD_CD, {0,2}, {-1,-1}},
     {OPD_CJ, {5,7}, {-1,-1}},
-    {OPD_CODE, {0,14}, {-1,-1}}, 
+    {OPD_CODE, {0,14}, {-1,-1}},
     {OPD_CONDF, {15,19}, {-1,-1}},
     {OPD_CONDH, {10,13}, {-1,-1}},
     {OPD_CONDL, {0,3}, {-1,-1}},
@@ -449,7 +449,7 @@ GM_LA_OPCODE_FORMAT lisa_format_table[] = {
     {LISA_BSTRPICK_W, 0x00608000, {OPD_RD, OPD_RJ, OPD_MSBW, OPD_LSBW}},
     {LISA_BSTRINS_D, 0x00800000, {OPD_RD, OPD_RJ, OPD_MSBD, OPD_LSBD}},
     {LISA_BSTRPICK_D, 0x00C00000, {OPD_RD, OPD_RJ, OPD_MSBD, OPD_LSBD}},
-    
+
     /* 12-bit immediate instruction */
     {LISA_SLTI, 0x02000000, {OPD_RD, OPD_RJ, OPD_SI12}},
     {LISA_SLTUI, 0x02400000, {OPD_RD, OPD_RJ, OPD_SI12}},
@@ -2862,4 +2862,3 @@ GM_LA_OPERAND_PLACE_TYPE ir2_type_check_table[] = {
 };
 
 #endif
-

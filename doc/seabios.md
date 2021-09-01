@@ -52,7 +52,7 @@ describing memory types for physical ranges, and are typically set up by the sys
 functions of the PCD and PWT bits in page tables to allow all five of the memory types that can be assigned with the
 MTRRs (plus one additional memory type) to also be assigned dynamically to pages of the linear address space.[^4]
 
-## threads 
+## threads
 The goal of these threads is to reduce overall boot time by parallelizing hardware delays. (For example, by allowing the wait for an ATA hard drive to spin-up and respond to commands to occur in parallel with the wait for a PS/2 keyboard to respond to a setup command.) These hardware setup threads are only available during the "setup" sub-phase of the POST phase.[^1]
 
 ## 基本调用路径
@@ -121,12 +121,12 @@ This code calls romlayout.S:entry_post() which then calls post.c:handle_post() i
                   - pci_bios_init_root_regions_io : 映射 ioport
                   - pci_region_map_entries
                     - pci_region_map_one_entry
-                      - pci_config_writeb : 
+                      - pci_config_writeb :
                 - pci_bios_init_devices
                   - `if (pin != 0) pci_config_writeb(bdf, PCI_INTERRUPT_LINE, pci_slot_get_irq(pci, pin));` : 如果可以，那么分配中断给他
                 - pci_enable_default_vga
               - smm_device_setup : System Management Mode[^5] 探测 isapci 和 pmpci
-              - smm_setup 
+              - smm_setup
               - mtrr_setup
               - msr_feature_control_setup :pear: 应该是空的
               - smp_setup
@@ -379,7 +379,7 @@ parse_resource: small: 0x5 (len 3)
   - rom_add_blob
     - fw_cfg_add_file_callback
       - ...(多次调用，跟踪 acpi_build_update 的传递)  fw_cfg_add_bytes_callback 中注册这个函数指针
-  
+
 - [ ] 暂时搞不清楚了，只是知道在 fw_cfg 的 dma select 的时候最后会调用
 
 ## qemu_detect
@@ -546,7 +546,7 @@ huxueshi:e1000_write_config d 40 1
 ```
 
 - 感觉 e1000 被重新初始化了一次
-- 这就是将所有的 bar 空间全部扫描一次  
+- 这就是将所有的 bar 空间全部扫描一次
 - 这些在进行 e1000_probe 之前已经完成了。
 
 真相就是在这里:

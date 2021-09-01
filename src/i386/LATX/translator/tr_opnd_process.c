@@ -431,7 +431,7 @@ void load_imm64(IR2_OPND *opnd2, int64_t value)
         } else {
             append_ir2_opnd1i(LISA_LU12I_W, opnd2, value >> 12);
             append_ir2_opnd2i(LISA_ORI, opnd2, opnd2, value & 0xfff);
-            append_ir2_opnd1i(LISA_LU32I_D, opnd2, value >> 32); 
+            append_ir2_opnd1i(LISA_LU32I_D, opnd2, value >> 32);
         }
         append_ir2_opnd2i(LISA_LU52I_D, opnd2, opnd2, (value >> 52) & 0xfff);
     }
@@ -926,7 +926,7 @@ void load_ir1_dr_to_ir2(
      * target/i386/bpt_helper.c
      * target_ulong helper_get_dr(
      *      CPUX86State *env,
-     *      int         reg)       
+     *      int         reg)
      * >> might generate exception
      */
 
@@ -1129,7 +1129,7 @@ void load_eflags_cf_to_ir2(IR2_OPND *opnd2)
     } else {
         append_ir2_opnd2i(LISA_ANDI, opnd2, &eflags_ir2_opnd, 1);
     }
-    
+
     return;
 }
 
@@ -1263,7 +1263,7 @@ void store_ir2_to_ir1_seg(IR2_OPND *seg_value_opnd, IR1_OPND *opnd1)
     /* real-address mode || vm86 mode */
     /* 0.1 selector = 16-bits */
     IR2_OPND _selector_reg = ra_alloc_itemp();
-    append_ir2_opnd2_(lisa_mov16z, &_selector_reg, seg_value_opnd); 
+    append_ir2_opnd2_(lisa_mov16z, &_selector_reg, seg_value_opnd);
     append_ir2_opnd2i(LISA_ST_W, &_selector_reg, &env_ir2_opnd,
                       lsenv_offset_of_seg_selector(lsenv, seg_num));
     ra_free_temp(&_selector_reg);
@@ -1417,7 +1417,7 @@ _GEN_EOB_:
  *                   - Segment selector
  *                   - CR, DR
  *                   - MMX, XMM
- *                   - Memory             
+ *                   - Memory
  */
 void store_ir2_to_ir1(
         IR2_OPND *opnd2,
@@ -1915,7 +1915,7 @@ static void store_freg_to_ir1_mmx(IR2_OPND *opnd2, IR1_OPND *opnd1)
     // IR2_OPND mmx_opnd = ra_alloc_mmx(opnd1->_reg_num);
     IR2_OPND mmx_opnd = ra_alloc_mmx(ir1_opnd_base_reg_num(opnd1));
 
-    
+
     if (ir2_opnd_cmp(opnd2, &mmx_opnd))
         append_ir2_opnd2(LISA_FMOV_D, &mmx_opnd, opnd2);
 }
@@ -2103,7 +2103,7 @@ IR2_OPND convert_mem_opnd_with_bias_within_imm_bits(IR1_OPND *opnd1, int bias, i
 //
 //    /* 4. segment? */
 //    if (ir1_opnd_has_seg(opnd1)) {
-//        // lsassertm(0, "not implemented in %s\n", __FUNCTION__); 
+//        // lsassertm(0, "not implemented in %s\n", __FUNCTION__);
 //        IR2_OPND seg_base_opnd = ra_alloc_itemp_internal();
 //        append_ir2_opnd2i(mips_load_addrx, &seg_base_opnd, &env_ir2_opnd,
 //                          lsenv_offset_of_seg_base(

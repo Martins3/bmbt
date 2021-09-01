@@ -74,7 +74,7 @@ huxueshi:qdev_device_add virtio-9p-pci
 | hpet         | TYPE_SYS_BUS_DEVICE |
 | i8259        | TYPE_ISA_DEVICE     |
 
-从 type info 上可以轻易的看到一个设备是不是 TYPE_ISA_DEVICE 
+从 type info 上可以轻易的看到一个设备是不是 TYPE_ISA_DEVICE
 
 ## call graph
 - qemu_init : 这里面存在很长的参数解析的内容
@@ -107,14 +107,14 @@ huxueshi:qdev_device_add virtio-9p-pci
             - x86_cpus_init : 在主线程中间多次调用 x86_cpu_new , 可能会创建新的 CPU 来
               - x86_cpu_new
                 - qdev_realize : 经过 QOM 的 object_property 机制，最后调用到 device_set_realized :
-                  - device_set_realized : 
+                  - device_set_realized :
                     - x86_cpu_realizefn : 需要重点分析一下
                       - cpu_list_add
                       - cpu_exec_realizefn
                         - accel_cpu_realizefn
                           - kvm_cpu_realizefn
                           - tcg_cpu_realizefn : 主要就是 address space 的初始化
-                            - cpu_address_space_init 
+                            - cpu_address_space_init
                               - memory_listener_register
                                 - tcg_commit
                         - tcg_exec_realizefn
@@ -126,7 +126,7 @@ huxueshi:qdev_device_add virtio-9p-pci
                       - mce_init : machine check exception, 初始化之后，那些 helper 就可以正确工作了, mce 参考[^2]
                       - qemu_init_vcpu : 创建执行线程
                         - rr_cpu_thread_fn : 进行一些基本的注册工作，然后等待, 注意，此时在另一个线程中间了
-                      - x86_cpu_apic_realize 
+                      - x86_cpu_apic_realize
                         - 通过 QOM 调用到 apic_common_realize
                            - 通过 QOM 调用 apic_realize
                         - 添加对应的 memory region
@@ -152,7 +152,7 @@ huxueshi:qdev_device_add virtio-9p-pci
           - smbios_set_defaults : 初始化一些 smbios 变量，为下一步制作 smbios table 打下基础
           - [ ] pc_gsi_create : 关于中断的事情可以重新看看狼书好好分析一下
           - i440fx_init : 只有 pcmc->pci_enabled 才会调用的
-            - qdev_new("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数 
+            - qdev_new("i440FX-pcihost") : 这当然会调用 i440fx_pcihost_initfn 和 i440fx_pcihost_class_init 之类的函数
               - i440fx_pcihost_initfn : 初始化出来 0xcf8 0xcfb 这两个关键地址
             - pci_root_bus_new : 创建 PCIBus
               - [ ] PCIHostState 和分别是啥关系 ? host bridge 和 bus 的关系 ?
@@ -200,7 +200,7 @@ huxueshi:qdev_device_add virtio-9p-pci
         - notifier_list_notify : 通过 qemu_add_machine_init_done_notifier 的 references 可以很快的知道都注册了什么
           - pc_machine_done
             - [ ] x86_rtc_set_cpus_count : 神奇的机制，和 seabios 对称的看看
-            - [ ] fw_cfg_add_extra_pci_roots 
+            - [ ] fw_cfg_add_extra_pci_roots
             - [ ] acpi_setup
               - 依赖于 acpi 的 `x86ms->fw_cfg` 和 pcms->acpi_build_enabled, 否则都会失败
           - tcg_cpu_machine_done : 注册 smram 相关的工作
@@ -210,7 +210,7 @@ huxueshi:qdev_device_add virtio-9p-pci
         - vm_prepare_start
         - resume_all_vcpus
   - qemu_init_displays
-  - accel_setup_post 
+  - accel_setup_post
   - os_setup_post
   - resume_mux_open
 - qemu_main_loop
@@ -278,7 +278,7 @@ static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
 }
 ```
 
-在 qemu_init 中进行 `current_machine->cpu_type` 的初始化, 
+在 qemu_init 中进行 `current_machine->cpu_type` 的初始化,
 而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
 
 ```c
@@ -410,9 +410,9 @@ x86_cpu_get_bit_prop 从来都不会被调用啊, 那么存在什么意义啊
 
 
 - cpu_index : 赋值位置
-  - cpu_list_add / cpu_list_remove 
+  - cpu_list_add / cpu_list_remove
   - cpu_common_initfn
-  - x86_cpu_pre_plug : 
+  - x86_cpu_pre_plug :
     - 这是实际上初始化的位置，实际上，这个 idx 获取似乎有点麻烦，但是实际上，并没有必要
 - cluster_index
 - halted
@@ -491,7 +491,7 @@ x86_cpu_common_class_init 中注册是什么，然后找 cpu_class_init 注册�
 - [x] model 如何处理的 : 用于 list 所有可选 cpu 的, 参考 x86_cpu_list
 - [x] parent_realize 处理的
 
-在 x86_cpu_common_class_init 中，将通过 
+在 x86_cpu_common_class_init 中，将通过
 ```plain
     device_class_set_parent_realize(dc, x86_cpu_realizefn,
                                     &xcc->parent_realize);

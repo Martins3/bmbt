@@ -27,7 +27,7 @@
 
 3. CPUState::cflags_next_tb 作用?
 
-在 cpu_handle_exception 的下面，是这个数值唯一读取的时候: 
+在 cpu_handle_exception 的下面，是这个数值唯一读取的时候:
 ```c
       /* When requested, use an exact setting for cflags for the next
          execution.  This is used for icount, precise smc, and stop-
@@ -39,7 +39,7 @@
 而 tb_find 可能会查询以及生成 tb
 只有 cpu_io_recompile 和 TARGET_HAS_PRECISE_SMC 特别的初始化这个东西
 
-4. 如何理解 curr_cflags ? 
+4. 如何理解 curr_cflags ?
   - 其实就是封装 parallel_cpus 和 icount 在目前的配置，因为 mttcg 和 icount 都不支持，只是返回 0 了
   - 其实是相当于标准 cflags 了
 
@@ -82,7 +82,7 @@ typedef struct TCGContext {
 - data_gen_ptr : 只有两次赋值为 NULL
 
 
-#### code_gen_buffer 
+#### code_gen_buffer
 赋值的地方:
 - code_gen_alloc <- tcg_exec_init : 这个位置初始化是需要调用到 mmap 的, 这是发生在主线程中间的, 其实实际上，这是分配一个全局的
 - tcg_prologue_init : 因为生成 prologue 和 epilogue 所以需要调整属性
@@ -100,5 +100,5 @@ code_gen_ptr : 下一个 tb 应该存放的位置
                        CODE_GEN_ALIGN));
 ```
 
-- [ ] 上面的 search_size 是做啥的? 
-  - 用于实现精确异常的, 具体可以参考 tb_encode_search 
+- [ ] 上面的 search_size 是做啥的?
+  - 用于实现精确异常的, 具体可以参考 tb_encode_search

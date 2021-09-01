@@ -44,7 +44,7 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 
 ## 处理 QEMU 的 macro
 
-生成中间文件 
+生成中间文件
 ```plain
 ../configure --target-list=x86_64-softmmu  --disable-werror --extra-cflags='-save-temps'
 ```

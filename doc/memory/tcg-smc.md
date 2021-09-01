@@ -1,4 +1,4 @@
-# SMC 
+# SMC
 
 ## lock page
 ```c
@@ -55,7 +55,7 @@ page_collection 收集一堆 page_entry ，通过一个 page_entry 来索引 Pag
 
 - page_collection_lock 中通过调用 page_trylock_add 来将一个范围的 block 来 lock, 同时保证如果一个 page 上锁了，比它小的 page 不能直接上锁。
   - 出现 out of order lock 的主要情况 : cross page 的时候，可能先找到 tb 的上半部分所在的 page，然后才找到的下半部分的
-  - page_trylock_add 这个函数写的实际上很糟糕，和其调用者 page_collection_lock 的逻辑强耦合，在 page_collection_lock 中，首先会将 tree 中间的全部 lock 一遍，然后才会开始逐个扫描，所以只要 
+  - page_trylock_add 这个函数写的实际上很糟糕，和其调用者 page_collection_lock 的逻辑强耦合，在 page_collection_lock 中，首先会将 tree 中间的全部 lock 一遍，然后才会开始逐个扫描，所以只要
 
 - 如果 page_collection_lock 了，这一块的代码还可以同时被另一个 CPU 执行吗, 应该是可以，主要的目的是屏蔽那些调用 page_lock 的位置, 其中一个重要的用户就是 tb_link_page 了，tb_link_page 通过调用 page_lock_pair 将 tb 所需要的两个 tb 保护起来。
 
@@ -82,7 +82,7 @@ TARGET_HAS_PRECISE_SMC 的使用位置只有 tb_invalidate_phys_page_range__lock
 - store_helper
   - notdirty_write : 当写向一个 dirty 的位置的处理
     - cpu_physical_memory_get_dirty_flag
-    - tb_invalidate_phys_page_fast : 
+    - tb_invalidate_phys_page_fast :
     - cpu_physical_memory_set_dirty_range : Set both VGA and migration bits for simplicity and to remove the notdirty callback faster.
     - tlb_set_dirty
 
@@ -106,8 +106,8 @@ typedef struct PageDesc {
 } PageDesc;
 ```
 
-#### PageDesc::first_tb 
-在 tb_page_add 中，只要新的 tb 添加进来，那么 PageDesc::first_tb 就会指向其, 
+#### PageDesc::first_tb
+在 tb_page_add 中，只要新的 tb 添加进来，那么 PageDesc::first_tb 就会指向其,
 TranslationBlock::page_next[2] 中
 
 > 注意，TranslationBlock::page_next[2] 存在两个项目，当一个 tb 跨页之后，那么这个 tb 就需要分别添加到
@@ -150,7 +150,7 @@ tb_invalidate_phys_page_fast : 一个 PageDesc 并不会立刻创建 bitmap, 而
         - [ ] 原则上，guest 代码段被修改必然需要让对应的 tb 也是被 invalidate 的呀
 
 #### PageDesc::code_bitmap / PageDesc::code_write_count
-主要的使用位置 : tb_invalidate_phys_page_fast 
+主要的使用位置 : tb_invalidate_phys_page_fast
 
 逻辑非常简单，如果一个 PageDesc 对应的 page 反复被 invalidate 的时候，那么就会建立 bitmap 将其中真正有代码的位置确认，
 只有命中了翻译了 tb 的位置，才会真正的 invalidate 的，而一般的处理是，直接 invalidate 所有的。
@@ -225,7 +225,7 @@ static void page_table_config_init(void)
       - 分配空间，还需要考虑 level 什么的
       - [ ] page_find_alloc 中间为什么需要使用 rcu
   - build_page_bitmap
-  - tb_invalidate_phys_page_range__locked 
+  - tb_invalidate_phys_page_range__locked
     - tb_phys_invalidate__locked
       - do_tb_phys_invalidate
         - do_tb_phys_invalidate(在 chen 的笔记中叫做 tb_phys_invalidate)，在这里完成真正的工作, 将 tb 从 hash 中间移除之类的

@@ -90,7 +90,7 @@ int xtm_tb_need_cpc(TranslationBlock *tb, IR1_INST *jmp, int n)
         pc_end = ir1_target_addr(jmp) & TARGET_PAGE_MASK;
         if (pc_end != pc_start) return 1;
     }
-    
+
     if (ir1_is_jump(jmp) && !ir1_is_indirect_jmp(jmp)) {
         pc_end = ir1_target_addr(jmp) & TARGET_PAGE_MASK;
         if (pc_end != pc_start) return 1;
@@ -148,7 +148,7 @@ int generate_cross_page_check(void *code_buffer, int n)
 //                     &arg2_ir2_opnd);
 //    ir2_opnd_set_em(&arg3_ir2_opnd, EM_MIPS_ADDRESS, 32);
 //    append_ir2_opnd2i(mips_lbu, &arg4_ir2_opnd, &arg3_ir2_opnd, 0);
-//    
+//
 //    /* arg5: tag to compare = GPA | (valid - 1) */
 //    append_ir2_opnd2i(mips_dsubiu, &arg5_ir2_opnd, &arg4_ir2_opnd, 1);
 //    append_ir2_opnd3(mips_or, &arg5_ir2_opnd, &arg5_ir2_opnd, &arg1_ir2_opnd);
@@ -168,7 +168,7 @@ int generate_cross_page_check(void *code_buffer, int n)
 //    IR2_OPND label_context_switch = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    append_ir2_opnd3(mips_bne, &arg5_ir2_opnd, &arg6_ir2_opnd,
 //            &label_context_switch);
-//    
+//
 //    append_ir2_opnd2i(mips_ld, &arg3_ir2_opnd, stmp1,
 //            offsetof(TranslationBlock, tc) + offsetof(struct tb_tc, ptr));
 //#ifdef CONFIG_XTM_PROFILE
@@ -200,7 +200,7 @@ int generate_jmp_glue_cpc(void *code_buffer, int n)
     } else {
         native_jmp_glue_cpc_0 = (ADDR)code_buf;
     }
-    
+
     mips_num += generate_cross_page_check(code_buf, n);
     code_buf = code_buffer + (mips_num << 2);
 

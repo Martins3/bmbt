@@ -7,7 +7,7 @@
  *
  * 1. translation should follow precise exception
  * 2. generate illop exception instead of exit()
- * 3. div zero should generate DIVZ exception 
+ * 3. div zero should generate DIVZ exception
  *
  * *. only i386 is considered
  * *. only N64 is considered */
@@ -388,7 +388,7 @@ bool translate_imul(IR1_INST *pir1)
 
     load_ir1_to_ir2(&src_opnd_0, srcopnd0, SIGN_EXTENSION, false);
     load_ir1_to_ir2(&src_opnd_1, srcopnd1, SIGN_EXTENSION, false);
-        
+
     IR2_OPND dest_opnd = ra_alloc_itemp();
 
     int opnd_size = ir1_opnd_size(ir1_get_opnd(pir1, 0));
@@ -588,7 +588,7 @@ bool translate_idiv(IR1_INST *pir1)
     tr_gen_excp_divz(pir1, 0);
     /* 1.2 branch: go on finish div operation */
     append_ir2_opnd1(LISA_LABEL, &label_not_zero);
-        
+
     IR2_OPND div_res = ra_alloc_itemp();
     IR2_OPND div_mod = ir2_opnd_new_inv();
 

@@ -12,8 +12,8 @@
 
 1. 三层结构: QemuOptsList QemuOpts 和 QemuOpt 的关系可以从下面两个参数理解
 ```plain
--device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1 
--device nvme,drive=nvme2,serial=foo -drive file=${ext4_img2},format=raw,if=none,id=nvme2 
+-device nvme,drive=nvme1,serial=foo -drive file=${ext4_img1},format=raw,if=none,id=nvme1
+-device nvme,drive=nvme2,serial=foo -drive file=${ext4_img2},format=raw,if=none,id=nvme2
 ```
 创建的 device 都在 QEMU_OPTION_device 中，每一个 `-device` 创建出来一个 QemuOpts，而 `format=raw` 对应一个 QemuOpt
 
@@ -144,7 +144,7 @@ for(;;) {
 ```
 其两个参数返回值为
 poptarg = file,path=/tmp/seabios.log,id=seabios
-15 = poptind 
+15 = poptind
 同时函数返回值为命中的 QEMUOption
 
 ## 移植的方案

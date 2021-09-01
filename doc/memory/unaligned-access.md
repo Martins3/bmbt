@@ -2,7 +2,7 @@
 
 - [x] 所以，x86 为什么不害怕这个非对其访问的问题 ?
 
-1. 搜索符号，convert_to_tcgmemop 上的注释对于 
+1. 搜索符号，convert_to_tcgmemop 上的注释对于
 MemOp 这个 enum 做出来一些解释, 包含了 size / signed / endian / aligned
 2. get_alignment_bits 的逻辑看，就是检查一下 MemOp 的 6:4 的 bit 而已
 3. 目前的代码，所有的位置都没有插入过 `MO_ALIGN_x` 的

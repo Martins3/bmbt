@@ -280,7 +280,7 @@ bool translate_bsf(IR1_INST *pir1)
     /* ------------------ LABEL 2 ---------------------- */
     append_ir2_opnd1(LISA_LABEL, &label_2);
 
-    store_ir2_to_ir1(&count, ir1_get_opnd(pir1, 0), false); 
+    store_ir2_to_ir1(&count, ir1_get_opnd(pir1, 0), false);
     if (ir1_is_zf_def(pir1)) {
         if (option_lbt) {
             append_ir2_opnd1i(LISA_X86MTFLAG, &zero_ir2_opnd, 0x8);
@@ -293,7 +293,7 @@ bool translate_bsf(IR1_INST *pir1)
             ra_free_temp(&mask);
         }
     }
-    
+
     /* ------------------ LABEL exit ------------------- */
     append_ir2_opnd1(LISA_LABEL, &label_exit);
 
@@ -344,7 +344,7 @@ bool translate_bsr(IR1_INST *pir1)
     /* ------------------ LABEL 2 ---------------------- */
     append_ir2_opnd1(LISA_LABEL, &label_2);
 
-    store_ir2_to_ir1(&count, ir1_get_opnd(pir1, 0), false); 
+    store_ir2_to_ir1(&count, ir1_get_opnd(pir1, 0), false);
     if (ir1_is_zf_def(pir1)) {
         if (option_lbt) {
             append_ir2_opnd1i(LISA_X86MTFLAG, &zero_ir2_opnd, 0x8);
@@ -406,7 +406,7 @@ bool translate_btx(IR1_INST *pir1)
         mem_no_offset = convert_mem_ir2_opnd_no_offset(&mem_opnd,
                 &mem_no_offset_new_tmp);
         IR2_OPND mem = ir2_opnd_mem_get_base(&mem_no_offset);
-        if (mem_no_offset_new_tmp) ra_free_temp(&mem_opnd); 
+        if (mem_no_offset_new_tmp) ra_free_temp(&mem_opnd);
 #else
         IR2_OPND mem = ir2_opnd_mem_get_base(&mem_opnd);
         if (!ir2_opnd_is_reg_temp(&mem)) {
@@ -420,7 +420,7 @@ bool translate_btx(IR1_INST *pir1)
 
         /* bit offset
          * 31                            7       0
-         * xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx 
+         * xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx
          * \                           / \       /
          *  \  byte offset for memory /  bit offset
          *   -------------------------   inside Byte

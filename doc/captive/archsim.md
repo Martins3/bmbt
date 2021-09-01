@@ -14,7 +14,7 @@
           - BasicJITExecutionEngine::Execute
             - BasicJITExecutionEngine::ExecuteLoop
               - BasicJITExecutionEngine::lookupBlock
-              - BaseBlockJITTranslate::translate_block : /home/maritns3/core/captive-project/gensim/archsim/src/blockjit 
+              - BaseBlockJITTranslate::translate_block : /home/maritns3/core/captive-project/gensim/archsim/src/blockjit
                   - BaseBlockJITTranslate::build_block
                     - BaseBlockJITTranslate::emit_block
                       - BaseBlockJITTranslate::emit_instruction
@@ -160,7 +160,7 @@ So, how Lower is reimplemented ?
 
 - [ ] IRBuilder: so many macros ?
 
-- TranslationContext 
+- TranslationContext
   - `shared::IRBlockId _current_block_id;`
   - `shared::IRInstruction *_ir_insns;`
 
@@ -175,7 +175,7 @@ IRBuilder provide all kinds of function to add IRInstruction to TranslationConte
 ## LLVM block JIT
 related dir src/translate, it really resembling how blockjit works.
 
-## Wow, the last question, how abi, arch works for them 
+## Wow, the last question, how abi, arch works for them
 - [ ] we even try to simulate syscall
 
 - abi is used for emulate device for system, and syscall for userspace
@@ -238,4 +238,3 @@ RegisterComponent(MemoryModel, ContiguousMemoryModel, "contiguous", "");
 
 - [ ] What's relation with ContiguousMemoryModel::Write and ContiguousMemoryModel::Write32 ?
   - [ ] Whatever how ContiguousMemoryModel::Write or ContiguousMemoryModel::Write32 are called, they are called before BasicJITExecutionEngine::Execute
-

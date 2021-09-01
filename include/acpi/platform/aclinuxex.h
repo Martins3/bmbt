@@ -11,7 +11,7 @@
 #define __ACLINUXEX_H__
 
 // FIXME the macro
-// 
+//
 // TODO this file is used for export interface to acpi
 // create a symmetrical file named acduckex.h
 // I think this is fairly easy

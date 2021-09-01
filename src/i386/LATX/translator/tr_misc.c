@@ -156,7 +156,7 @@ bool translate_invvpid(IR1_INST *pir1) { VMX_NOT_SUPPORT_BY_I386 }
 bool translate_swapgs(IR1_INST *pir1) { return false; } // only support in x86-64
 bool translate_prefetch(IR1_INST *pir1) { return true; }
 bool translate_prefetchw(IR1_INST *pir1) { return true; }
-//// 128-bit and 256-bit media extension currently is partially 
+//// 128-bit and 256-bit media extension currently is partially
 //// supported by QEMU (current newest version: 5.0.0-rc4),
 //// "partially" refers to those instruction start with "v",
 ////========= Start of not supported instructions ==========////
@@ -677,7 +677,7 @@ bool translate_movbe(IR1_INST *pir1)
 //    IR1_OPND* opnd1 = ir1_get_opnd(pir1, 1);
 //    TRANSLATION_DATA *td = lsenv->tr_data;
 //    TranslationBlock *tb = td->curr_tb;
-//    if (tb->cflags & CF_USE_ICOUNT 
+//    if (tb->cflags & CF_USE_ICOUNT
 //        && ir1_opnd_is_cr(opnd1)) {
 //        tr_gen_io_start();
 //        store_ir2_to_ir1(&source_opnd, ir1_get_opnd(pir1, 0), false);
@@ -776,7 +776,7 @@ bool translate_pinsrb(IR1_INST *pir1)
 //        int64_t temp = (int64_t)0xff << (imm3*8);
 //        load_imm64_to_ir2(&mask_byte_ones, temp);
 //        append_ir2_opnd3(mips_nor, &mask_byte_zeros, &mask_byte_ones, &zero_ir2_opnd);
-//    }                                                                       //        0123456789abcdef 
+//    }                                                                       //        0123456789abcdef
 //                                                                            // xmm = "----------------"
 //    bool lo_or_hi = imm4>7; // higher 64bits:true, lower 64bits:false
 //    IR2_OPND dst = ra_alloc_itemp();
@@ -821,7 +821,7 @@ bool translate_insertps(IR1_INST *pir1)
 //        int64_t temp = (int64_t)0xffffffff << ((count_d&1)*32);
 //        load_imm64_to_ir2(&mask_byte_ones, temp);
 //        append_ir2_opnd3(mips_nor, &mask_byte_zeros, &mask_byte_ones, &zero_ir2_opnd);
-//    }                                                                       //            0123456789abcdef 
+//    }                                                                       //            0123456789abcdef
 //                                                                            // xmm_dst = "----------------"
 //    IR2_OPND dst = ra_alloc_itemp();
 //    load_ir1_to_ir2(&dst, dst_ir1, ZERO_EXTENSION, count_d>1);  // dst     =         "--------"
@@ -860,7 +860,7 @@ bool translate_insertps(IR1_INST *pir1)
 //        append_ir2_opnd3(mips_and, &dst_hi, &dst_hi, &mask_byte_zeros); // clear 4th 32bits
 //    store_ir2_to_ir1(&dst_lo, dst_ir1, false);
 //    store_ir2_to_ir1(&dst_hi, dst_ir1, true);
-    
+
     return true;
 }
 
@@ -881,7 +881,7 @@ bool translate_pinsrd(IR1_INST *pir1)
 //        int64_t temp = (int64_t)0xffffffff << (imm1*32);
 //        load_imm64_to_ir2(&mask_byte_ones, temp);
 //        append_ir2_opnd3(mips_nor, &mask_byte_zeros, &mask_byte_ones, &zero_ir2_opnd);
-//    }                                                                       //        0123456789abcdef 
+//    }                                                                       //        0123456789abcdef
 //                                                                            // xmm = "----------------"
 //    bool lo_or_hi = imm2>1; // higher 64bits:true, lower 64bits:false
 //    IR2_OPND dst = ra_alloc_itemp();
@@ -912,7 +912,7 @@ bool translate_pinsrq(IR1_INST *pir1)
     lsassertm(0, "MISC pinsrq to be implemented in LoongArch.\n");
 //    IR1_OPND *dst_ir1 = ir1_get_opnd(pir1, 0);
 //    IR1_OPND *src_ir1 = ir1_get_opnd(pir1, 1);
-//    int64_t imm = ir1_get_opnd(pir1, 2)->imm;                               //        0123456789abcdef 
+//    int64_t imm = ir1_get_opnd(pir1, 2)->imm;                               //        0123456789abcdef
 //                                                                            // xmm = "----------------"
 //    bool lo_or_hi = imm; // higher 64bits:true, lower 64bits:false
 //    IR2_OPND dst = ra_alloc_itemp();
@@ -982,7 +982,7 @@ void ss_gen_push(IR1_INST *pir1) {
 //        //debug_type = 2;//callin
 //    }
 //
-//    // 3. store ret_tb onto ss 
+//    // 3. store ret_tb onto ss
 //    IR2_OPND ret_tb_opnd = ra_alloc_itemp();
 //    ETB *etb = etb_cache_find(ir1_addr_next(pir1), false);
 //    load_addr_to_ir2(&ret_tb_opnd, (ADDR)etb);
@@ -996,10 +996,10 @@ void ss_gen_push(IR1_INST *pir1) {
 //    //IR2_OPND param_1 = ir2_opnd_new(IR2_OPND_IREG, 4);
 //    //load_ireg_from_addr(&target_opnd, (ADDR)dump_shadow_stack);
 //    //append_ir2_opnd1_not_nop(mips_jalr, &target_opnd);
-//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, debug_type); 
+//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, debug_type);
 //    //tr_load_all_regs_from_env();
 //
-//    
+//
 //    ra_free_temp(&ret_tb_opnd);
     return;
 }
@@ -1088,7 +1088,7 @@ bool translate_callnext(IR1_INST *pir1)
 //
     return true;
 }
-#endif 
+#endif
 
 #ifndef CONFIG_SOFTMMU
 /* user-mode call indirect */
@@ -1128,8 +1128,8 @@ bool translate_callin(IR1_INST *pir1)
 //    ra_free_temp(&return_addr_opnd);
 //
 //    /* 4. push esp, callee_addr, ret_tb onto shadow statck */
-//    if(option_shadow_stack) 
-//         ss_gen_push(pir1); 
+//    if(option_shadow_stack)
+//         ss_gen_push(pir1);
 //
 //    /* 5. adjust em to defaul em */
 //    tr_adjust_em();
@@ -1171,7 +1171,7 @@ bool translate_ret_with_ss_opt(IR1_INST *pir1) {
 //    int esp_change_imm = 4;
 //    if(pir1!=NULL && ir1_opnd_num(pir1) && ir1_opnd_type(ir1_get_opnd(pir1, 0))==X86_OP_IMM)
 //        esp_change_imm = ir1_opnd_uimm(ir1_get_opnd(pir1, 0)) + 4;
-//    
+//
 //    /*1. load supposed returning target TB */
 //    IR2_OPND ss_opnd = ra_alloc_ss();
 //    IR2_OPND ss_etb = ra_alloc_itemp();
@@ -1200,7 +1200,7 @@ bool translate_ret_with_ss_opt(IR1_INST *pir1) {
 //
 //    // 5. find next tb,dirctly jmp
 //    IR2_OPND supposed_native_addr = ra_alloc_itemp();
-//    append_ir2_opnd2i(mips_load_addr, &supposed_native_addr, &supposed_tb, 
+//    append_ir2_opnd2i(mips_load_addr, &supposed_native_addr, &supposed_tb,
 //        offsetof(TranslationBlock, tc) + offsetof(struct tb_tc,ptr));
 //    append_ir2_opnd2i(mips_addi_addr, &ss_opnd, &ss_opnd, -(int)sizeof(SS_ITEM));
 //    /* debug */
@@ -1209,7 +1209,7 @@ bool translate_ret_with_ss_opt(IR1_INST *pir1) {
 //    //IR2_OPND param_1 = ir2_opnd_new(IR2_OPND_IREG, 4);
 //    //load_ireg_from_addr(&target_opnd, (ADDR)dump_shadow_stack);
 //    //append_ir2_opnd1_not_nop(mips_jalr, &target_opnd);
-//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, 3);//ret && direct chaining 
+//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, 3);//ret && direct chaining
 //    //tr_load_all_regs_from_env();
 //
 //    // 6. check if top_out == top_in, if so, jump to native code, else rotate the fpu
@@ -1221,9 +1221,9 @@ bool translate_ret_with_ss_opt(IR1_INST *pir1) {
 //    IR2_OPND rotate_step = ra_alloc_dbt_arg1();
 //    IR2_OPND rotate_ret_addr = ra_alloc_dbt_arg2();
 //    IR2_OPND label_no_rotate = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2i(mips_lbu, &top_out, &last_executed_tb, 
+//    append_ir2_opnd2i(mips_lbu, &top_out, &last_executed_tb,
 //        offsetof(TranslationBlock, extra_tb) + offsetof(ETB,_top_out));
-//    append_ir2_opnd2i(mips_lbu, &top_in, &supposed_tb, 
+//    append_ir2_opnd2i(mips_lbu, &top_in, &supposed_tb,
 //        offsetof(TranslationBlock, extra_tb) + offsetof(ETB,_top_in));
 //    append_ir2_opnd3(mips_beq, &top_out, &top_in, &label_no_rotate);
 //    ra_free_temp(&supposed_tb);
@@ -1246,7 +1246,7 @@ bool translate_ret_with_ss_opt(IR1_INST *pir1) {
 //    //tr_save_all_regs_to_env();
 //    //load_ireg_from_addr(&target_opnd, (ADDR)dump_shadow_stack);
 //    //append_ir2_opnd1_not_nop(mips_jalr, &target_opnd);
-//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, 4);//ret && direct chaining 
+//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, 4);//ret && direct chaining
 //    //tr_load_all_regs_from_env();
 //    IR2_OPND tb_ptr_opnd = ra_alloc_dbt_arg1();
 //    uint64_t value = (uint64_t)curr_tb;
@@ -1267,19 +1267,19 @@ bool translate_ret_with_ss_opt(IR1_INST *pir1) {
 //    append_ir2_opnd1(mips_label, &label_match_fail);
 //    append_ir2_opnd2i(mips_addi_addrx, &esp_opnd, &esp_opnd, -esp_change_imm);
 //    IR2_OPND esp_change_bytes = ra_alloc_mda();
-//    append_ir2_opnd2i(mips_addiu, &esp_change_bytes, &zero_ir2_opnd, esp_change_imm); 
+//    append_ir2_opnd2i(mips_addiu, &esp_change_bytes, &zero_ir2_opnd, esp_change_imm);
 //    // prepare the last executed tb, and jump to the adjustment
 //    /* debug */
 //    //tr_save_all_regs_to_env();
 //    //load_ireg_from_addr(&target_opnd, (ADDR)dump_shadow_stack);
 //    //append_ir2_opnd1_not_nop(mips_jalr, &target_opnd);
-//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, 5);//ret && match fail 
+//    //append_ir2_opnd2i(mips_ori, &param_1, &zero_ir2_opnd, 5);//ret && match fail
 //    //tr_load_all_regs_from_env();
-//    
+//
 //    load_imm64_to_ir2(&tb_ptr_opnd, (ADDR)curr_tb );
 //    append_ir2_opnda(mips_j, ss_match_fail_native);
 //    ra_free_temp(&tb_ptr_opnd);
-    
+
     return true;
 }
 #endif
@@ -1288,8 +1288,8 @@ bool translate_ret_with_ss_opt(IR1_INST *pir1) {
 bool translate_ret(IR1_INST *pir1)
 {
     if (option_shadow_stack)
-        return translate_ret_with_ss_opt(pir1); 
-    else 
+        return translate_ret_with_ss_opt(pir1);
+    else
         return translate_ret_without_ss_opt(pir1);
 }
 #endif
@@ -1484,7 +1484,7 @@ bool translate_sahf(IR1_INST *pir1)
     return true;
 }
 
-bool translate_lahf(IR1_INST *pir1) 
+bool translate_lahf(IR1_INST *pir1)
 {
     lsassertm(0, "lahf to be implemented in LoongArch.\n");
 //    IR2_OPND ah = ra_alloc_itemp();
@@ -1494,7 +1494,7 @@ bool translate_lahf(IR1_INST *pir1)
 //    } else {
 //        append_ir2_opnd2i(mips_andi, &ah, &eflags_ir2_opnd, 0xd7);
 //    }
-//    store_ir2_to_ir1(&ah, &ah_ir1_opnd, false); 
+//    store_ir2_to_ir1(&ah, &ah_ir1_opnd, false);
 //    ra_free_temp(&ah);
     return true;
 }
@@ -1641,7 +1641,7 @@ bool translate_fnsave(IR1_INST *pir1)
 //        IR2_OPND st = ra_alloc_st(i);
 //        IR2_OPND mem_opnd = ir2_opnd_new2(IR2_OPND_MEM, base_reg_num, offset + 28 + 10 * i);
 //        store_64_bit_freg_to_ir1_80_bit_mem(&st, &mem_opnd);
-//            
+//
 //    }
 //
 //    /* initialize FPU state */

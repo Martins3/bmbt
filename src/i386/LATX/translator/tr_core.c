@@ -129,9 +129,9 @@ int FPR_USEDEF_TO_SAVE      = 0xff;
 int XMM_LO_USEDEF_TO_SAVE   = 0xf;
 int XMM_HI_USEDEF_TO_SAVE   = 0xf;
 
-/* Paired with tr_fini, it marks a translated code session start. 
- * Every time translation will use a pair of tr_init/tr_fini to 
- * identifying an session. 
+/* Paired with tr_fini, it marks a translated code session start.
+ * Every time translation will use a pair of tr_init/tr_fini to
+ * identifying an session.
  * */
 void tr_init(TranslationBlock *tb)
 {
@@ -382,7 +382,7 @@ bool tr_ir2_generate(TranslationBlock *tb)
             && (td->sys.cflags & CF_LAST_IO))
             tr_gen_io_start();
 #endif
-	
+
         bool translation_success = ir1_translate(pir1);
         if (option_dump_ir1) {
             fprintf(stderr, "ir1 translate >>> ");
@@ -392,7 +392,7 @@ bool tr_ir2_generate(TranslationBlock *tb)
         lsassertm(translation_success,
                 "translate failed for inst %s\n",
                 pir1->info->mnemonic);
-        
+
 #ifdef CONFIG_SOFTMMU
         if (t->end_with_exception) {
             /* 1. get real number of IR1 */
@@ -568,7 +568,7 @@ _NEXT_IR2_:
 
         td->curr_tb->icount = td->x86_ins_nr;
         td->curr_tb->size = x86ins_size;
-    
+
         if (option_dump) {
             int i;;
             ADDRX x86_addr;

@@ -104,7 +104,7 @@ static int pch_pic_alloc(struct irq_domain *domain, unsigned int virq,
 }
 ```
 在 `extioi_vec_init` 中，
-`irq_set_chained_handler_and_data(LOONGSON_BRIDGE_IRQ, extioi_irq_dispatch, extioi_priv);` 
+`irq_set_chained_handler_and_data(LOONGSON_BRIDGE_IRQ, extioi_irq_dispatch, extioi_priv);`
 的参数 parent_irq = LOONGSON_BRIDGE_IRQ, 这个 handler 就是注册到了 extioi_irq_dispatch 上了
 
 注意，LOONGSON_BRIDGE_IRQ = 50 + 3
@@ -352,4 +352,3 @@ backtrace of input_event
 [ 1075.597660] [<9000000000203e80>] __cpu_wait+0x20/0x24
 [ 1075.597662] [<900000000020fa90>] calculate_cpu_foreign_map+0x148/0x180
 ```
-

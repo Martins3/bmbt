@@ -594,7 +594,7 @@ bool translate_shufpd(IR1_INST *pir1)
 //        IR2_OPND src = load_freg128_from_ir1(ir1_get_opnd(pir1, 1));
 //        uint8_t imm8 = ir1_opnd_uimm(ir1_get_opnd(pir1, 2));
 //        imm8 &= 3;
-//        uint8_t shfd_imm8 = 0; 
+//        uint8_t shfd_imm8 = 0;
 //        if (imm8 == 0){
 //            shfd_imm8 = 0x8;
 //        }
@@ -697,7 +697,7 @@ bool translate_xorps(IR1_INST *pir1)
 //        IR2_OPND src = load_freg128_from_ir1(ir1_get_opnd(pir1, 1));
 //        append_ir2_opnd3(mips_xorv, &dest, &dest, &src);
 //        return true;
-//    }   
+//    }
 //
 //    IR2_OPND src_hi = load_freg_from_ir1_1(ir1_get_opnd(pir1, 0) + 1, true, true);
 //    IR2_OPND src_lo = load_freg_from_ir1_1(ir1_get_opnd(pir1, 0) + 1, false, true);
@@ -933,7 +933,7 @@ bool translate_cvttsd2si(IR1_INST *pir1)
 //    if (tr_gen_sse_common_excp_check(pir1)) return true;
 //#endif
 //
-//    IR2_OPND src_lo;                                         
+//    IR2_OPND src_lo;
 //
 //    if (option_xmm128map){
 //        src_lo = load_freg128_from_ir1(ir1_get_opnd(pir1, 1));

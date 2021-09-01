@@ -102,8 +102,8 @@ int ir1_is_eob_in_sys(IR1_INST *ir1)
     }
     return ir1_is_mov_to_cr(ir1) ||         /* mov cr, src */
            ir1_is_mov_to_dr(ir1) ||         /* mov dr, src */
-           ir1_is_pop_eflags(ir1) ||        /* popf */ 
-           ir1_is_sysenter(ir1) ||          /* sysenter */ 
+           ir1_is_pop_eflags(ir1) ||        /* popf */
+           ir1_is_sysenter(ir1) ||          /* sysenter */
            ir1_is_sysexit(ir1) ||           /* sysexit */
            ir1_is_rsm(ir1) ||               /* rsm */
            ir1_is_sti(ir1) ||               /* sti */
@@ -135,7 +135,7 @@ void tr_gen_hflags_set(uint32 mask)
 
     if (td->sys.flags & mask)
         return;
-    
+
     IR2_OPND mask_reg   = ra_alloc_itemp();
     IR2_OPND hflags_reg = ra_alloc_itemp();
 
@@ -154,7 +154,7 @@ void tr_gen_hflags_clr(uint32 mask)
 
     if (!(td->sys.flags & mask))
         return;
-    
+
     IR2_OPND mask_reg   = ra_alloc_itemp();
     IR2_OPND hflags_reg = ra_alloc_itemp();
 
@@ -186,11 +186,11 @@ void tr_gen_eob(void)
      *
      * is used by special system FP instructions that load TOP
      * from memory and save it into env->fpstt in helper
-     * 
+     *
      * Since the env->fpstt already contains the correct TOP,
      * there is no need to update again. If we do update TOP
      * here we will ruin the correct TOP value.
-     * 
+     *
      * > with LSFPU enabled
      *
      * No need to update TOP after every TB's execution
@@ -254,7 +254,7 @@ int is_system_eob(IR1_INST *ir1)
                    || (pc_next & ~TARGET_PAGE_MASK) == 0)) {
             return 1;
 	}
-	else 
+	else
 	{
 	/* io instructions is eob in icount mode */
 	    switch (ir1_opcode(ir1)) {
@@ -280,13 +280,13 @@ int is_system_eob(IR1_INST *ir1)
     }
     else if ((pc_next - pc_first) >= (TARGET_PAGE_SIZE - 32)) {
         return 1;
-    } 
+    }
 
     return 0;
 }
 
 /* Generate exit tb for system EOB situation, no TB-Link.
- * 
+ *
  * Called after all IR1s' translation and
  * translation is not ended with exception.
  * > Normal TB-End: pir1 will be NULL, do nothing

@@ -11,7 +11,7 @@ const char *ir2_name(int value)
     };
 
     static const char *ir2_cc_name[] = {
-        "$cc0" , "$cc1" , "$cc2" , "$cc3" , 
+        "$cc0" , "$cc1" , "$cc2" , "$cc3" ,
         "$cc4" , "$cc5" , "$cc6" , "$cc7" ,
     };
     #endif
@@ -2933,7 +2933,7 @@ const char *ir2_name(int value)
     "XVFMADDSUB_Q",
     "XVFMSUBADD_H",
     "XVFMSUBADD_Q",
-    
+
     /* unimplemented vector instructions */
     "VADDW_Q_Q_D",
     "VADDW_Q_Q_DU",

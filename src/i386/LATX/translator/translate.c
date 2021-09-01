@@ -24,7 +24,7 @@ extern unsigned long debug_pc_stop;
 bool ir1_translate(IR1_INST *ir1)
 {
     static bool (*translate_functions[])(IR1_INST *) = {
-        //implemented , but not in X86_INS_...        
+        //implemented , but not in X86_INS_...
         //lods,pusha,finit,popa,fstenv,xlat,fclex,movs,jmp_far,fsave,call_far,fstcw,
         translate_invalid,   //X86_INS_INVALID = 0,
         translate_aaa,       //X86_INS_AAA,
@@ -1580,7 +1580,7 @@ void tr_gen_exit_tb_load_tb_addr(IR2_OPND *tbptr, ADDR tb_addr)
         load_imm64_to_ir2(tbptr, tb_addr);
     } else {
         /* when guest == 0, tb_addr with have high 32bit not zero, to minimize
-           generated code here, we load only low 32bit for current tb, and 
+           generated code here, we load only low 32bit for current tb, and
            rely on the fact that all tb share the same high32 bit
            Be sure to extend this tb address into full address before use it
          */
@@ -1622,7 +1622,7 @@ void tr_gen_exit_tb_j_tb_link(TranslationBlock *tb, int succ_id)
 }
 
 void tr_gen_exit_tb_load_next_eip(
-        int reload_eip_from_env, 
+        int reload_eip_from_env,
         IR2_OPND *eip_opnd, ADDRX eip, int opnd_size)
 {
     if (reload_eip_from_env) {
@@ -1772,7 +1772,7 @@ void tr_generate_exit_tb(IR1_INST *branch, int succ_id)
 #endif
 
     /* Load this TB's address into $t8
-     * 
+     *
      *        |       | need TB addr   |
      * FastCS | LSFPU | for jmp glue ? | Reason
      * -----------------------------------------------------
@@ -1832,7 +1832,7 @@ IGNORE_LOAD_TB_ADDR_FOR_JMP_GLUE:
     /* Standard process:
      * 1. prepare t8 and t9
      *    > t8: Current TranslationBlock's address
-     *    > t9: Next TranslationBlock's EIP 
+     *    > t9: Next TranslationBlock's EIP
      * 2. prepare the return value (v0) for TB-link
      * 3. jump to context switch native to bt */
     switch (opcode) {
@@ -1999,7 +1999,7 @@ void tr_save_registers_to_env(
     tr_save_vreg_to_env(vreg_to_save);
 
     /* 3. load the fast context switch mask
-     *    
+     *
      *    mask[0] : FPU need to save
      *    mask[1] : XMM need to save
      */
@@ -2046,8 +2046,8 @@ void tr_load_registers_from_env(
     tr_load_gprs_from_env(gpr_to_load);
 
     /* 3. load the fast context switch mask
-     *    
-     *    mask[0] : FPU need to load 
+     *
+     *    mask[0] : FPU need to load
      *    mask[1] : XMM need to load
      */
     IR2_OPND fast_cs_mask = ra_alloc_itemp();
@@ -2252,7 +2252,7 @@ void tr_gen_call_to_helper_prologue(int use_fp)
             GPR_USEDEF_TO_SAVE,
             FPR_USEDEF_TO_SAVE, 1,
             XMM_LO_USEDEF_TO_SAVE, XMM_HI_USEDEF_TO_SAVE,
-            0x1|options_to_save()); 
+            0x1|options_to_save());
 
 #ifdef CONFIG_SOFTMMU
     tr_save_eflags();
@@ -2297,7 +2297,7 @@ void tr_gen_call_to_helper0(ADDR func_addr)
     ra_free_temp(&func_addr_opnd);
     tr_gen_call_to_helper_epilogue(0);
 }
-/* helper with 1 default arg(CPUArchState*) */ 
+/* helper with 1 default arg(CPUArchState*) */
 void tr_gen_call_to_helper1(ADDR func, int use_fp)
 {
     tr_gen_call_to_helper_prologue(use_fp);
@@ -2308,7 +2308,7 @@ void tr_gen_call_to_helper1(ADDR func, int use_fp)
     ra_free_temp(&func_addr_opnd);
     tr_gen_call_to_helper_epilogue(use_fp);
 }
-/* helper with 2 arg(CPUArchState*, int) */ 
+/* helper with 2 arg(CPUArchState*, int) */
 void tr_gen_call_to_helper2(ADDR func, int arg2)
 {
     tr_gen_call_to_helper_prologue(1);
@@ -2349,7 +2349,7 @@ void tr_cvt_fp80_to_64(void)
     load_addr_to_ir2(&func_addr_opnd, (ADDR)convert_fpregs_x80_to_64);
     append_ir2_opnd1_(lisa_call, &func_addr_opnd);
     ra_free_temp(&func_addr_opnd);
- 
+
     /* 3. restore return value */
     append_ir2_opnd2i(LISA_LD_D, &ret0_ir2_opnd, &env_ir2_opnd,
                       lsenv_offset_of_mips_iregs(lsenv, 0x2));

@@ -39,7 +39,7 @@ memory_ldst.inc.h 的方法。
     - 地址转换, 准确来说，是 flatview_translate
 
 - store_helper 相对于 address_space_stw_internal 的内容对比
-    - not dirty : 都有，address_space_stw_internal 也处理了 
+    - not dirty : 都有，address_space_stw_internal 也处理了
     - watch point : 多出来的
     - store_helper_unaligned : 多出来的
 
@@ -147,7 +147,7 @@ https://github.com/Martins3/BMBT/issues/144
 - memory_region_transaction_commit
   - flatviews_reset
     - generate_memory_topology : Render a memory topology into a list of disjoint absolute ranges.
-      - render_memory_region : 虽然是一个很长的函数, 
+      - render_memory_region : 虽然是一个很长的函数,
         1. 如果是 alias, 那么 render alias
         2. 如果存在 child，那么按照优先级 render child, memory_region_add_subregion_common 优先级是满足的
         3. 最后，Render the region itself into any gaps left by the current view.
@@ -502,7 +502,7 @@ static void pci_init_bus_master(PCIDevice *pci_dev)
 和 bus_master_as / bus_master_container_region / bus_master_enable_region 区分的是，这个就是设备的配置空间
 最后都是放到 system_memory / system_io 上的
 
-## MemoryRegionSection and RCU 
+## MemoryRegionSection and RCU
 [^4] 中间提到了一个非常有意思的事情，将 MemoryRegion 的 inaccessible 和 destroy 划分为两个阶段
 所以使用 rcu, 其中涉及到
 - memory_region_destroy / memory_region_del_subregion
@@ -601,7 +601,7 @@ static inline MemoryRegionSection section_from_flat_range(FlatRange *fr, FlatVie
 
 - FlatView 持有了一堆 FlatRange，用于生成 MemoryRegionSection 插入到 AddressSpaceDispatch
 
-## flatview_read 
+## flatview_read
 三个调用者:
 - subpage_read : 注意 AddressSpaceDispatch 中构建的 tree 实际上只是针对于 PAGE_SIZE 大小的页面的，但是实际上，所以对于 subpage 需要重新处理，这些 subpage 都是 MMIO 的
 - address_space_read_full

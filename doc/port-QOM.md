@@ -93,7 +93,7 @@ e=0x7fffffffd510) at ../qom/object.c:1091
 #### TypeInfo::class_init
 无论是 nvme 还是 x86_cpu_type_info 的 class_init 的调用位置都是相同的:
 
-让我们看看 select_machine 中的  object_class_get_list 得到的结果: 
+让我们看看 select_machine 中的  object_class_get_list 得到的结果:
 
 ```plain
 - object_class_get_list
@@ -105,8 +105,8 @@ e=0x7fffffffd510) at ../qom/object.c:1091
 ```
 
 - 这次循环，应该会导致所有的 type 都被 type_initialize 掉。
-- type_initialize 
-  - 分配 TypeImpl::class, 
+- type_initialize
+  - 分配 TypeImpl::class,
   - 会将自己 以及各级 parent 注册的 class_init 被调用
 
 - 一个 TypeImpl::class 和自己 parent TypeImpl 关联的 ObjectClass 是同一个
@@ -131,7 +131,7 @@ static const TypeInfo x86_cpu_type_info = {
 };
 ```
 
-#### instance 如何初始化 
+#### instance 如何初始化
 通过 object_new 初始化的
 
 - x86_cpu_new
@@ -154,7 +154,7 @@ static const TypeInfo x86_cpu_type_info = {
 
 在 x86_cpu_new 的一行代码，相当于获取从 X86MachineState 获取 MachineState, 从而知道 cpu_type, 从而初始化 x86
 - [ ] 其中的 x86ms (X86MachineState) 如何靠 MACHINE 的这个 marco 装换为 MachineState
-- [ ] 当两个 OBJECT_DECLARE_TYPE 展开到底得到什么东西 ? 根本没有提到 
+- [ ] 当两个 OBJECT_DECLARE_TYPE 展开到底得到什么东西 ? 根本没有提到
 
 
 ```c
@@ -283,7 +283,7 @@ qdev_prop_set_bit(dev, "dma_enabled", false);
       - qobject_input_visitor_new : 将 Qbool 作为参数，创建 Visitor
       - object_property_set
          - object_property_find_err
-            - object_property_find 
+            - object_property_find
                 - object_get_class
                 - object_class_property_find : 从上向下 property
                 - g_hash_table_lookup(obj->properties, name) : 首先查找完成 parent 然后查找 child 的部分
@@ -333,7 +333,7 @@ reported when running under TCG.
 
 To hide this, the -cpu option tcg-cpuid=off can be used.
 ```
-                
+
 #### object_property_add_alias
 - [ ] 干啥用的啊
   - 因为一些
@@ -397,7 +397,7 @@ QemuOptsList qemu_global_opts = {
 
 ## [ ] object_property_add_child
 - x86_cpu_apic_create : 中调用的，创建一个 apic 然后添加 lapic 作为 child
-  - 问题是，apic 在当前的语境下面，本身就是 lapic 
+  - 问题是，apic 在当前的语境下面，本身就是 lapic
 - ioapic_init_gsi : 中出现类似的操作
 
 ## 附录: 宏展开

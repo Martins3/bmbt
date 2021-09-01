@@ -120,7 +120,7 @@ bool translate_syscall(IR1_INST *pir1);
 bool translate_clts(IR1_INST *pir1);
 bool translate_sysret(IR1_INST *pir1);
 bool translate_invd(IR1_INST *pir1);
-bool translate_wbinvd(IR1_INST *pir1); 
+bool translate_wbinvd(IR1_INST *pir1);
 bool translate_ud2(IR1_INST *pir1);
 bool translate_femms(IR1_INST *pir1);
 bool translate_nop(IR1_INST *pir1);
@@ -1130,7 +1130,7 @@ typedef struct TRANSLATION_DATA {
      * one TB usually does mamny memory access. If the TOP
      * is already saved in the last memory access, then it
      * is OK to not save TOP again.
-     * 
+     *
      * Once the TOP changes, it should be saved again. */
     int is_top_saved;
 
@@ -1353,7 +1353,7 @@ int         em_validate_address(int);
 void tr_generate_exit_tb(IR1_INST *branch, int succ_id);
 void tr_gen_exit_tb_load_tb_addr(IR2_OPND *tbptr, ADDR tb_addr);
 void tr_gen_exit_tb_j_tb_link(TranslationBlock *tb, int succ_id);
-void tr_gen_exit_tb_load_next_eip(int reload_eip_from_env, 
+void tr_gen_exit_tb_load_next_eip(int reload_eip_from_env,
         IR2_OPND *eip_opnd, ADDRX eip, int opnd_size);
 void tr_gen_exit_tb_j_context_switch(IR2_OPND *tbptr, int can_link, int succ_id);
 

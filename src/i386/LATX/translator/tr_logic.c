@@ -254,7 +254,7 @@ bool translate_rol(IR1_INST *pir1)
 //        }
 //        else if(ir1_opnd_size(ir1_get_opnd(pir1, 0)) == 32){
 //            append_ir2_opnd2(mips_x86rotlvw, &original_count, &dest);
-//        } 
+//        }
 //    }
 //
 //
@@ -317,7 +317,7 @@ bool translate_ror(IR1_INST *pir1)
 //        }
 //        else if(ir1_opnd_size(ir1_get_opnd(pir1, 0)) == 32){
 //            append_ir2_opnd2(mips_x86rotrvw, &original_count, &dest);
-//        } 
+//        }
 //    }
 //
 //

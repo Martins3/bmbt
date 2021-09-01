@@ -22,7 +22,7 @@ void __gen_ldst_softmmu_helper_native(
         IR2_OPND   *opnd_mem,
         int save_temp);
 void tr_gen_ldst_slow_path(
-        IR2_OPCODE op, 
+        IR2_OPCODE op,
         IR2_OPND  *gpr_opnd,
         IR2_OPND  *mem_opnd,
         IR2_OPND  *label_slow_path,
@@ -119,7 +119,7 @@ void __gen_ldst_softmmu_helper_native(
  *   They are usually used to simulate target's atomic instructions.
  *   They are not used in current user-mode X86toMIPS.
  *   -----------------------------------
- *   lbu lhu lwu 
+ *   lbu lhu lwu
  *   lb  lh  lw  lwl lwr ld  ldl ldr
  *   sb  sh  sw  swl swr sdi sdl sdr
  *   -----------------------------------
@@ -431,7 +431,7 @@ void td_rcd_softmmu_slow_path(
     /* get Slow Path Record entry */
 
     softmmu_sp_rcd_t *sp = NULL;
-    
+
     if (sp_nr == sp_max) {
         td->slow_path_rcd_max = sp_max << 1;
         sp_max = sp_max << 1;
@@ -484,7 +484,7 @@ void __tr_gen_softmmu_sp_rcd(softmmu_sp_rcd_t *sp)
     /* 2. prepare arguments for softmmu helper */
 
     /* build arguemnts for the helper
-     *               LOAD     |  STORE  
+     *               LOAD     |  STORE
      * ---------------------------------------
      * helper arg0 : env      |  env
      * helper arg1 : x86vaddr |  x86vaddr
@@ -530,7 +530,7 @@ void __tr_gen_softmmu_sp_rcd(softmmu_sp_rcd_t *sp)
     case LISA_ST_D : tr_gen_call_to_helper((ADDR)helper_le_stq_mmu  );break;
     case LISA_LD_B : tr_gen_call_to_helper((ADDR)helper_ret_ldsb_mmu);break;
     case LISA_LD_BU: tr_gen_call_to_helper((ADDR)helper_ret_ldub_mmu);break;
-    case LISA_LD_H : tr_gen_call_to_helper((ADDR)helper_le_ldsw_mmu );break; 
+    case LISA_LD_H : tr_gen_call_to_helper((ADDR)helper_le_ldsw_mmu );break;
     case LISA_LD_HU: tr_gen_call_to_helper((ADDR)helper_le_lduw_mmu );break;
     case LISA_LD_W : tr_gen_call_to_helper((ADDR)helper_le_ldsl_mmu );break;
     case LISA_LD_WU: tr_gen_call_to_helper((ADDR)helper_le_ldul_mmu );break;
@@ -570,7 +570,7 @@ void tr_gen_softmmu_slow_path(void)
 }
 
 void tr_gen_ldst_slow_path(
-        IR2_OPCODE op, 
+        IR2_OPCODE op,
         IR2_OPND  *gpr_opnd, /* temp(t0-t7) or mapping(s1-s8) */
         IR2_OPND  *mem_opnd,
         IR2_OPND  *label_slow_path,
@@ -606,12 +606,12 @@ void tr_gen_ldst_slow_path(
 //    case LISA_LD_D:  tr_gen_call_to_helper((ADDR)xtm_helper_le_ldq_mmu);  break;
 //    default:       lsassert(0);                                                break;
 //    }
-    
+
 }
 
 
 /// Attention: IR1 OPCODE with IR2 OPRANDS! In order to simulate atomic operation, cannot split ir1 into ir2
-/// @param 
+/// @param
 void gen_helper_atomic(IR1_OPCODE op, IR2_OPND *opr1, IR2_OPND *opr2, int save_temp)
 {
     lsassertm(0, "softmmu atomic to be implemented in LoongArch.\n");
@@ -638,7 +638,7 @@ void gen_helper_atomic(IR1_OPCODE op, IR2_OPND *opr1, IR2_OPND *opr2, int save_t
 //            // int mem_reg_off = ir2_opnd_imm(opnd_mem);
 //            // int mmu_index   = td->sys.mem_index;
 //
-//            // arg1 = a1 = target_ulong addr 
+//            // arg1 = a1 = target_ulong addr
 //            int mem_reg_num = ir2_opnd_base_reg_num(opr2);
 //            IR2_OPND mem_reg = ir2_opnd_new(IR2_OPND_IREG, mem_reg_num);
 //            append_ir2_opnd3(mips_or, &arg1_ir2_opnd, &mem_reg, &zero_ir2_opnd);
@@ -654,7 +654,7 @@ void gen_helper_atomic(IR1_OPCODE op, IR2_OPND *opr1, IR2_OPND *opr2, int save_t
 //            ir2_opnd_build(&oi, IR2_OPND_IMM, oi_int);
 //            append_ir2_opnd3(mips_ori, &arg3_ir2_opnd, &zero_ir2_opnd, &oi);
 //            // End of preparation of helper arguments //
-//            
+//
 //            tr_gen_call_to_helper((ADDR)helper_atomic_fetch_orl_le);
 //            // return value
 //            append_ir2_opnd3(mips_or, &dest_reg, &ret_ir2_opnd, &zero_ir2_opnd);

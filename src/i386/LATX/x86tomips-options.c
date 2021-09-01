@@ -786,7 +786,7 @@ void x86_to_mips_parse_options(QemuOpts *opts)
     opt = qemu_opt_find(opts, "risk");
     if (opt)
         parse_options_bool(XTM_OPT_risk, opt->value.boolean);
-    
+
     opt = qemu_opt_find(opts, "optbranch");
     if (opt)
         parse_options_bool(XTM_OPT_branch_opt, opt->value.boolean);

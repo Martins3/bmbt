@@ -84,7 +84,7 @@ typedef enum {
     LISA_SUBIU,
     LISA_DSUBI,
     LISA_DSUBIU,
-    
+
     /* LA insns */
     LISA_GR2SCR,
     LISA_SCR2GR,
@@ -342,7 +342,7 @@ typedef enum {
     LISA_BSTRPICK_W,
     LISA_BSTRINS_D,
     LISA_BSTRPICK_D,
-    
+
     /* 12 bit imm instruction */
     LISA_SLTI,
     LISA_SLTUI,
@@ -2953,7 +2953,7 @@ typedef enum {
     LISA_XVFMADDSUB_Q,
     LISA_XVFMSUBADD_H,
     LISA_XVFMSUBADD_Q,
-    
+
     /* unimplemented vector instructions */
     LISA_VADDW_Q_Q_D,
     LISA_VADDW_Q_Q_DU,

@@ -9,7 +9,7 @@
   - 因为曾经硬件没有保证 cache 一致性
 
 ## 可以借鉴的代码
-- [ ] captive 
+- [ ] captive
    - IncludeOS 中间应该有类似的东西, 不然 C++ 的 new 都是需要自己重写的
 
 - [x] 找到更多的 IncludeOS, 那种可以直接在硬件上运行的那种

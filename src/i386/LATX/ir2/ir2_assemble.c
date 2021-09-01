@@ -11,7 +11,7 @@ uint32_t ir2_assemble(IR2_INST *pir2)
     lsassertm(format.type == ir2_opc,
             "IR2 assemble check type fail %s\n",
             ir2_name(ir2_opc));
-    
+
     uint32_t ins = format.opcode;
     for (int i = 0; i < 4; i++) {
         GM_OPERAND_TYPE opnd_type = format.opnd[i];

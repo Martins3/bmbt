@@ -4,7 +4,7 @@
 #include "../x86tomips-options.h"
 #include "../include/flag_lbt.h"
 
-static 
+static
 void translate_cmp_byhand_gpr_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_gpr(ir1_opnd_base_reg_num(opnd0));
@@ -32,7 +32,7 @@ void translate_cmp_byhand_gpr_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_cmp_byhand_gpr_imm(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_gpr(ir1_opnd_base_reg_num(opnd0));
@@ -55,7 +55,7 @@ void translate_cmp_byhand_gpr_imm(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_cmp_byhand_gpr_mem(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_gpr(ir1_opnd_base_reg_num(opnd0));
@@ -73,7 +73,7 @@ void translate_cmp_byhand_gpr_mem(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_cmp_byhand_mem_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_itemp();
@@ -91,7 +91,7 @@ void translate_cmp_byhand_mem_gpr(IR1_OPND *opnd0, IR1_OPND *opnd1)
     }
 }
 
-static 
+static
 void translate_cmp_byhand_mem_imm(IR1_OPND *opnd0, IR1_OPND *opnd1)
 {
     IR2_OPND reg0 = ra_alloc_itemp();
@@ -147,7 +147,7 @@ bool translate_cmp_byhand(IR1_INST *pir1)
 
 
 
-static 
+static
 void translate_add_sub_byhand_gpr_gpr(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -182,7 +182,7 @@ void translate_add_sub_byhand_gpr_gpr(
     }
 }
 
-static 
+static
 void translate_add_sub_byhand_gpr_imm(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -233,7 +233,7 @@ void translate_add_sub_byhand_gpr_imm(
     }
 }
 
-static 
+static
 void translate_add_sub_byhand_gpr_mem(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -265,7 +265,7 @@ void translate_add_sub_byhand_gpr_mem(
     }
 }
 
-static 
+static
 void translate_add_sub_byhand_mem_gpr(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,
@@ -290,7 +290,7 @@ void translate_add_sub_byhand_mem_gpr(
     append_ir2_opnd2(lbt_op + (os >> 4), &reg0, &reg1);
 }
 
-static 
+static
 void translate_add_sub_byhand_mem_imm(
         IR1_OPND   *opnd0,
         IR1_OPND   *opnd1,

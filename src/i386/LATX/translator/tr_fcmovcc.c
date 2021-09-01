@@ -12,7 +12,7 @@ bool translate_fcmovb(IR1_INST *pir1)
     lsassertm(0, "fcmovb to be implemented in LoongArch.\n");
 //    IR2_OPND cf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&cf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_beq, &cf_opnd, &zero_ir2_opnd, &label_exit);
@@ -37,7 +37,7 @@ bool translate_fcmove(IR1_INST *pir1)
     lsassertm(0, "fcmove to be implemented in LoongArch.\n");
 //    IR2_OPND zf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&zf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_beq, &zf_opnd, &zero_ir2_opnd, &label_exit);
@@ -62,7 +62,7 @@ bool translate_fcmovbe(IR1_INST *pir1)
     lsassertm(0, "fcmovbe to be implemented in LoongArch.\n");
 //    IR2_OPND cfzf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&cfzf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_beq, &cfzf_opnd, &zero_ir2_opnd, &label_exit);
@@ -87,7 +87,7 @@ bool translate_fcmovu(IR1_INST *pir1)
     lsassertm(0, "fcmovu to be implemented in LoongArch.\n");
 //    IR2_OPND pf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&pf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_beq, &pf_opnd, &zero_ir2_opnd, &label_exit);
@@ -112,7 +112,7 @@ bool translate_fcmovnb(IR1_INST *pir1)
     lsassertm(0, "fcmovnb to be implemented in LoongArch.\n");
 //    IR2_OPND cf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&cf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_bne, &cf_opnd, &zero_ir2_opnd, &label_exit);
@@ -137,7 +137,7 @@ bool translate_fcmovne(IR1_INST *pir1)
     lsassertm(0, "fcmovne to be implemented in LoongArch.\n");
 //    IR2_OPND zf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&zf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_bne, &zf_opnd, &zero_ir2_opnd, &label_exit);
@@ -162,7 +162,7 @@ bool translate_fcmovnbe(IR1_INST *pir1)
     lsassertm(0, "fcmovnbe to be implemented in LoongArch.\n");
 //    IR2_OPND cfzf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&cfzf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_bne, &cfzf_opnd, &zero_ir2_opnd, &label_exit);
@@ -187,7 +187,7 @@ bool translate_fcmovnu(IR1_INST *pir1)
     lsassertm(0, "fcmovnu to be implemented in LoongArch.\n");
 //    IR2_OPND pf_opnd = ra_alloc_itemp();
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//	
+//
 //    get_eflag_condition(&pf_opnd, pir1);
 //
 //    append_ir2_opnd3(mips_bne, &pf_opnd, &zero_ir2_opnd, &label_exit);

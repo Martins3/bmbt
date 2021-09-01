@@ -799,7 +799,7 @@ bool translate_shld_imm(IR1_INST *pir1)
             "shld imm operand2 is not imm.\n");
     int shift = ir1_opnd_simm(opnd2) & 0x1f;
     if (!shift) return true;
-        
+
     IR2_OPND dest = ra_alloc_itemp();
     IR2_OPND src  = ra_alloc_itemp();
 

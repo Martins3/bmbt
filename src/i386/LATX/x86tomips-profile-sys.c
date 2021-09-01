@@ -232,7 +232,7 @@ void dump_xtm_tc_profile(xtm_profile_sys_t *pf)
 void dump_xtm_tc_profile_diff(xtm_profile_sys_t *pf, xtm_profile_sys_t *pr)
 {
     if (!option_monitor_tc) return;
-    
+
     uint64_t ss_diff, ns_diff;
 
     _XTM_MONITOR_TC_PRINT_DIFF_("TC -- ALL Execution ---- ", exe, all);
@@ -1241,7 +1241,7 @@ void xtm_pf_inc_tbf_cs32(int oldv, int newv)
 {
     if (!option_monitor_tbf) return;
     xtm_profile_sys_t *pf = &xtm_pf_data;
-    
+
     if (oldv != newv)
         pf->tbf_cs32.change_nr += 1;
     else
@@ -1353,7 +1353,7 @@ void dump_xtmdiff_profile(void)
 }
 
 /* Dump while execution
- * 
+ *
  * Basic design:
  *   > count the number of TB's execution
  *     call specific dump function
@@ -1517,7 +1517,7 @@ void xtm_pf_step_gen_tb_start(void)
     case 3: tr_pf_inc_tb_cpl3_exec(); break;
     default: break;
     }
-    
+
     /* JC. clear jmpin flag */
     if (option_monitor_jc) {
         append_ir2_opnd2i(LISA_ST_B, &zero_ir2_opnd, &env_ir2_opnd,

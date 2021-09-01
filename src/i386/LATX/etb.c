@@ -65,7 +65,7 @@ void etb_free(ETB* etb)
 {
     if (etb == NULL) return;
 
-    /* Since we do not keep the disasm result 
+    /* Since we do not keep the disasm result
      * etb->ir1_instructions will always be NULL
      * outside the translation process */
     if (etb->_ir1_instructions != NULL) {
@@ -143,7 +143,7 @@ void etb_cache_clear(void)
     qht_iter_remove(etb_cache_qht, etb_free_qht_iter_func, NULL);
 }
 
-void etb_add_succ(ETB *etb,int depth) 
+void etb_add_succ(ETB *etb,int depth)
 {
     if (depth==0 || (etb->flags & SUCC_IS_SET_MASK))
         return;
@@ -153,26 +153,26 @@ void etb_add_succ(ETB *etb,int depth)
         succ[0] = ir1_addr_next(pir1_last);
         succ[1] = ir1_target_addr(pir1_last);
     }
-    else if (etb->_tb_type == TB_TYPE_JUMP || etb->_tb_type == TB_TYPE_CALL) { 
+    else if (etb->_tb_type == TB_TYPE_JUMP || etb->_tb_type == TB_TYPE_CALL) {
         succ[0] = ir1_target_addr(pir1_last);
     }
     for (int i=0;i<2;i++) {
-        if (succ[i] == 0) 
+        if (succ[i] == 0)
             break;
-        
+
         ETB* succ_etb = etb_cache_find(linear_address(succ[i]), false);
         etb->succ[i] = succ_etb;
-      
+
         IR1_INST *ir1_list = succ_etb->_ir1_instructions;
         int ir1_num = succ_etb->_ir1_num;
         if (ir1_list == NULL) {
             ir1_list = get_ir1_list(succ_etb, linear_address(succ[i]), &ir1_num);
             succ_etb->_ir1_instructions = ir1_list;
             succ_etb->_ir1_num = ir1_num;
-            succ_etb->_tb_type = get_etb_type(ir1_list + ir1_num - 1); 
+            succ_etb->_tb_type = get_etb_type(ir1_list + ir1_num - 1);
         }
         etb_add_succ(succ_etb, depth-1);
-    
+
     }
     return;
 }
@@ -191,7 +191,7 @@ int8 get_etb_type(IR1_INST *pir1)
         return (int8)TB_TYPE_CALLIN;
     else if (ir1_opcode(pir1) == X86_INS_JMP && ir1_is_indirect_jmp(pir1))
         return (int8)TB_TYPE_JUMPIN;
-    else 
+    else
         return (int8)TB_TYPE_NONE;
 }
 #endif

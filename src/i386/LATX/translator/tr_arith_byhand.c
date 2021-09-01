@@ -193,7 +193,7 @@ static bool translate_sub_byhand_32(IR1_INST *pir1, bool is_sub)
 //                ir2_opnd_new(IR2_OPND_IMM, ir1_opnd_simm(ir1_get_opnd(pir1, 0) + 1));
 //        else
 //            load_ir1_to_ir2(&src_opnd_1, ir1_get_opnd(pir1, 0) + 1, SIGN_EXTENSION, false);
-//                
+//
 //        mips_opcode = mips_subu;
 //        is_opnd_sx = true;
 //    }
