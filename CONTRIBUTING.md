@@ -6,8 +6,11 @@
     2. [how to use it](https://stackoverflow.com/questions/16358418/how-to-avoid-merge-commit-hell-on-github-bitbucket)
 3. Don't commit code together with doc. Only doc or code.
 
-## how to collaborate 
+## how to collaborate
 1. 新手更加应该参与到 review
 2. 如何让 reviewer 愉快的 review 你的代码[^1]
+
+## 使用 git pre-commit
+- 我希望尽量不要出现 typo fix, code format 之类的提交，这对于 reviewer 和 commiter 都是毫无意义的精力浪费。
 
 [^1]: https://mtlynch.io/code-review-love/#12-award-all-ties-to-your-reviewer
