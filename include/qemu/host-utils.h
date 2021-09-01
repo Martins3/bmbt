@@ -2,6 +2,8 @@
 #define HOST_UTILS_H_0IEAPEGH
 
 #include "../types.h"
+#include <limits.h>
+#include <stdint.h>
 
 /**
  * clz64 - count leading zeros in a 64-bit value.
@@ -55,5 +57,36 @@ static inline int clz32(uint32_t val) { return val ? __builtin_clz(val) : 32; }
  * @val: The value to search
  */
 static inline int ctpop16(uint16_t val) { return __builtin_popcount(val); }
+
+/**
+ * ctz64 - count trailing zeros in a 64-bit value.
+ * @val: The value to search
+ *
+ * Returns 64 if the value is zero.  Note that the GCC builtin is
+ * undefined if the value is zero.
+ */
+static inline int ctz64(uint64_t val) {
+  return val ? __builtin_ctzll(val) : 64;
+}
+
+/* Host type specific sizes of these routines.  */
+
+#if ULONG_MAX == UINT32_MAX
+#define clzl clz32
+#define ctzl ctz32
+#define clol clo32
+#define ctol cto32
+#define ctpopl ctpop32
+#define revbitl revbit32
+#elif ULONG_MAX == UINT64_MAX
+#define clzl clz64
+#define ctzl ctz64
+#define clol clo64
+#define ctol cto64
+#define ctpopl ctpop64
+#define revbitl revbit64
+#else
+#error Unknown sizeof long
+#endif
 
 #endif /* end of include guard: HOST_UTILS_H_0IEAPEGH */
