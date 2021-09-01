@@ -58,7 +58,6 @@ typedef uint64_t tcg_insn_unit;
 #define TCG_MAX_INSNS 512
 
 typedef struct TCGContext {
-
   /* goto_tb support */
   tcg_insn_unit *code_buf;
   u16 *tb_jmp_reset_offset;      /* tb->jmp_reset_offset */
@@ -87,7 +86,6 @@ typedef struct TCGContext {
   TCGRegSet reserved_regs;
 
   size_t tb_phys_invalidate_count;
-
 } TCGContext;
 
 extern TCGContext tcg_init_ctx;

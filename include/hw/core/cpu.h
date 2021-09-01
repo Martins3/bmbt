@@ -291,7 +291,6 @@ typedef struct CPUClass {
 
   vaddr (*adjust_watchpoint_address)(CPUState *cpu, vaddr addr, int len);
   void (*tcg_initialize)(void);
-
 } CPUClass;
 
 #define CPU_GET_CLASS(cpu) cpu->cc

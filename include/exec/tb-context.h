@@ -10,7 +10,6 @@ typedef struct TBContext TBContext;
 extern TBContext tb_ctx;
 
 struct TBContext {
-
     struct qht htable;
 
     /* statistics */
