@@ -13,14 +13,15 @@ assembly_source_files :=
 c_source_files += $(wildcard src/*.c)
 c_source_files := $(wildcard src/tcg/*.c)
 c_source_files += $(wildcard src/i386/*.c)
-c_source_files += $(wildcard src/i386/LATX/*.c)
-c_source_files += $(wildcard src/i386/LATX/translator/*.c)
-c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
 c_source_files += $(wildcard src/hw/core/*.c)
 c_source_files += $(wildcard src/hw/qemu/*.c)
 c_source_files += $(wildcard src/fpu/*.c)
 c_source_files += $(wildcard src/qemu/*.c)
 c_source_files += $(wildcard src/util/*.c)
+
+c_source_files += $(wildcard src/i386/LATX/*.c)
+c_source_files += $(wildcard src/i386/LATX/translator/*.c)
+c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
 
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
@@ -54,6 +55,8 @@ $(info $(BASE_DIR))
 
 all: $(kernel) $(LIBCAPSTONE)
 
+format:
+
 -include $(dependency_files)
 
 # Build target for every single object file.
@@ -75,7 +78,6 @@ $(kernel) : $(obj_files)
 	# Just link all the object files.
 	echo "happy"
 	# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
-	
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86
