@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# https://ortogonal.github.io/cpp/git-clang-format/
+
 # Test clang-format
 clangformatout=$(git clang-format --diff -q)
 
@@ -10,7 +12,7 @@ if [ "$clangformatout" == "no modified files to format" ]; then
     exit 0
 fi
 
-if [ "$clangformatout" != "no modified files to format" ]; then
+if [ "$clangformatout" != "" ]; then
     echo "---------------------------------------------------------------------"
     echo "$clangformatout"
     echo "---------------------------------------------------------------------"
