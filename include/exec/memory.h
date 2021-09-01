@@ -5,9 +5,12 @@
 #include "hwaddr.h"
 #include "memattrs.h"
 #include "memop.h"
-#include "ram_addr.h"
+#include "cpu-common.h"
+
+// #include "ram_addr.h"
 
 struct AddressSpace;
+struct RAMBlock;
 
 typedef struct MemoryRegion {
   bool readonly;
@@ -15,7 +18,7 @@ typedef struct MemoryRegion {
   // see memory_region_init_rom_device_nomigrate, but BMBT is simplified
   bool ram;
 
-  RAMBlock *ram_block;
+  struct RAMBlock *ram_block;
   bool global_locking;
 
   hwaddr offset_in_ram_block;
@@ -76,14 +79,6 @@ MemTxResult memory_region_dispatch_write(MemoryRegion *mr, hwaddr addr,
   return res;
 }
 
-/**
- * memory_region_get_ram_addr: Get the ram address associated with a memory
- *                             region
- */
-static inline ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr) {
-  return mr->ram_block ? mr->ram_block->offset : RAM_ADDR_INVALID;
-}
-
 #define NEED_CPU_H
 #ifdef NEED_CPU_H
 /* enum device_endian to MemOp.  */
@@ -94,22 +89,6 @@ static inline MemOp devend_memop(enum device_endian end) {
 }
 #endif
 #undef NEED_CPU_H
-
-/* Return a host pointer to ram allocated with qemu_ram_alloc.
- * This should not be used for general purpose DMA.  Use address_space_map
- * or address_space_rw instead. For local memory (e.g. video ram) that the
- * device owns, use memory_region_get_ram_ptr.
- *
- * Called within RCU critical section.
- */
-static inline void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr) {
-  // [interface 5]
-  if (ram_block == NULL) {
-    g_assert_not_reached();
-  }
-
-  return ramblock_ptr(ram_block, addr);
-}
 void invalidate_and_set_dirty(MemoryRegion *mr, hwaddr addr, hwaddr length);
 bool prepare_mmio_access(MemoryRegion *mr);
 
@@ -121,6 +100,9 @@ bool prepare_mmio_access(MemoryRegion *mr);
  * @mr: the memory region being queried
  */
 static inline bool memory_region_is_ram(MemoryRegion *mr) { return mr->ram; }
+
+ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr);
+void *qemu_map_ram_ptr(struct RAMBlock *ram_block, ram_addr_t addr);
 
 /**
  * memory_region_get_ram_ptr: Get a pointer into a RAM memory region.

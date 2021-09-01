@@ -1,6 +1,7 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/memory.h"
+#include "../../include/exec/ram_addr.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/error-report.h"
 #include <errno.h>
@@ -222,6 +223,24 @@ MemoryRegion *iotlb_to_section(CPUState *cpu,
     MemoryRegion *sections = cpuas->as->segments;
     return &sections[index & ~TARGET_PAGE_MASK];
 }
+
+
+/* Return a host pointer to ram allocated with qemu_ram_alloc.
+ * This should not be used for general purpose DMA.  Use address_space_map
+ * or address_space_rw instead. For local memory (e.g. video ram) that the
+ * device owns, use memory_region_get_ram_ptr.
+ *
+ * Called within RCU critical section.
+ */
+void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr) {
+  // [interface 5]
+  if (ram_block == NULL) {
+    g_assert_not_reached();
+  }
+
+  return ramblock_ptr(ram_block, addr);
+}
+
 
 static void tlb_reset_dirty_range_all(ram_addr_t start, ram_addr_t length)
 {

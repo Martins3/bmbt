@@ -5,6 +5,7 @@
 #include "../qemu/rcu.h"
 #include "cpu-common.h"
 #include "cpu-para.h"
+#include "cpu-all.h"
 #include "ramlist.h"
 #include <assert.h>
 
