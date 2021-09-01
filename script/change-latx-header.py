@@ -1,11 +1,11 @@
 #!/bin/python3
 
-import os
 """
 Apparently, using ccls to check the code firstly is convenient and efficient,
 but ccls depends on correct header path or compile_commands.json, as latter one
 rely on the code compiles.
 """
+import os
 
 work_dir = "/home/maritns3/core/ld/DuckBuBi"
 latx_dir = work_dir + "/src/i386/LATX/"
@@ -95,7 +95,7 @@ def change_header_style(abs_path):
             if in_dir:
                 new_header = "../"
 
-            if c_header_locations[header] != None:
+            if c_header_locations[header] is not None:
                 new_header = new_header + c_header_locations[header] + "/"
 
             new_header = prefix + new_header + header + suffix
