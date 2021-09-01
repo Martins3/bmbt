@@ -85,7 +85,6 @@ typedef struct ExtraBlock {
 #endif
 
 typedef struct TranslationBlock {
-
   /* simulated PC corresponding to this block (EIP + CS base) */
   target_ulong pc;
   target_ulong cs_base; /* CS base for this block */
@@ -159,7 +158,6 @@ typedef struct TranslationBlock {
      of the pointer tells the index in page_next[].
      The list is protected by the TB's page('s) lock(s) */
   uintptr_t page_next[2];
-
 } TranslationBlock;
 
 // FIXME todo we doesn't supported mttcg, so init it as zero
