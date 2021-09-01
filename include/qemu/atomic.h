@@ -57,6 +57,8 @@
     *ptr = i;                                                                  \
   } while (0)
 
+#define atomic_or(ptr, n)  ((void) __atomic_fetch_or(ptr, n, __ATOMIC_SEQ_CST))
+
 #define atomic_cmpxchg(ptr, old, new) ({ (old); })
 
 #define atomic_mb_set(ptr, i)                                                  \

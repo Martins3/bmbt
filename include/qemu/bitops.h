@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <assert.h>
 #include "../types.h"
+#include "atomic.h"
 #include "osdep.h"
 
 #define BIT(nr)                 (1UL << (nr))
@@ -16,6 +17,8 @@
 #define BIT_WORD(nr)            ((nr) / BITS_PER_LONG)
 #define BIT_WORD(nr)            ((nr) / BITS_PER_LONG)
 #define BITS_TO_LONGS(nr)       DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
+
+#define BIT_MASK(nr)            (1UL << ((nr) % BITS_PER_LONG))
 
 /**
  * test_bit - Determine whether a bit is set
@@ -107,5 +110,21 @@ static inline uint32_t rol32(uint32_t word, unsigned int shift)
 {
     return (word << shift) | (word >> ((32 - shift) & 31));
 }
+
+/**
+ * set_bit_atomic - Set a bit in memory atomically
+ * @nr: the bit to set
+ * @addr: the address to start counting from
+ */
+static inline void set_bit_atomic(long nr, unsigned long *addr)
+{
+    unsigned long mask = BIT_MASK(nr);
+    unsigned long *p = addr + BIT_WORD(nr);
+
+    atomic_or(p, mask);
+}
+
+unsigned long find_next_bit(const unsigned long *addr, unsigned long size,
+                            unsigned long offset);
 
 #endif /* end of include guard: BITOPS_H_Z29X3LYD */

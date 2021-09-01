@@ -31,4 +31,6 @@ bool bitmap_test_and_clear_atomic(unsigned long *map, long start, long nr);
 #define BITMAP_FIRST_WORD_MASK(start) (~0UL << ((start) & (BITS_PER_LONG - 1)))
 #define BITMAP_LAST_WORD_MASK(nbits) (~0UL >> (-(nbits) & (BITS_PER_LONG - 1)))
 
+void bitmap_set_atomic(unsigned long *map, long start, long nr);
+
 #endif /* end of include guard: BITMAP_H_ENRPTXFD */
