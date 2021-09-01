@@ -1,4 +1,5 @@
 #include "../../include/qemu/bitops.h"
+#include "../../include/qemu/host-utils.h"
 
 /*
  * Find the next set bit in a memory region.
