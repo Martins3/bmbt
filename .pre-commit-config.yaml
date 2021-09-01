@@ -18,3 +18,9 @@ repos:
         description: check whether modified code is formatted or not
         entry: scrpit/hook/format-code.sh
         language: script
+
+    -   id: lint-md
+        name: lint-md
+        description: check Chinese doc
+        entry: scrpit/hook/lint-md.sh
+        language: script
