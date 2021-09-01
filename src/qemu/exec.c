@@ -222,3 +222,69 @@ MemoryRegion *iotlb_to_section(CPUState *cpu,
     MemoryRegion *sections = cpuas->as->segments;
     return &sections[index & ~TARGET_PAGE_MASK];
 }
+
+static void tlb_reset_dirty_range_all(ram_addr_t start, ram_addr_t length)
+{
+    CPUState *cpu;
+    ram_addr_t start1;
+    RAMBlock *block;
+    ram_addr_t end;
+
+    assert(tcg_enabled());
+    end = TARGET_PAGE_ALIGN(start + length);
+    start &= TARGET_PAGE_MASK;
+
+    RCU_READ_LOCK_GUARD();
+    block = qemu_get_ram_block(start);
+    assert(block == qemu_get_ram_block(end - 1));
+    start1 = (uintptr_t)ramblock_ptr(block, start - block->offset);
+    CPU_FOREACH(cpu) {
+        tlb_reset_dirty(cpu, start1, length);
+    }
+}
+
+/* Note: start and end must be within the same ram block.  */
+inline bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
+                                                            ram_addr_t length,
+                                                            unsigned client) {
+  DirtyMemoryBlocks *blocks;
+  unsigned long end, page;
+  bool dirty = false;
+  RAMBlock *ramblock;
+  uint64_t mr_offset, mr_size;
+
+  if (length == 0) {
+    return false;
+  }
+
+  end = TARGET_PAGE_ALIGN(start + length) >> TARGET_PAGE_BITS;
+  page = start >> TARGET_PAGE_BITS;
+
+  WITH_RCU_READ_LOCK_GUARD() {
+    blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
+    ramblock = qemu_get_ram_block(start);
+    /* Range sanity check on the ramblock */
+    assert(start >= ramblock->offset &&
+           start + length <= ramblock->offset + ramblock->used_length);
+
+    while (page < end) {
+      unsigned long idx = page / DIRTY_MEMORY_BLOCK_SIZE;
+      unsigned long offset = page % DIRTY_MEMORY_BLOCK_SIZE;
+      unsigned long num = MIN(end - page, DIRTY_MEMORY_BLOCK_SIZE - offset);
+
+      dirty |= bitmap_test_and_clear_atomic(blocks->blocks[idx], offset, num);
+      page += num;
+    }
+
+    mr_offset = (ram_addr_t)(page << TARGET_PAGE_BITS) - ramblock->offset;
+    mr_size = (end - page) << TARGET_PAGE_BITS;
+
+    // memory_region_clear_dirty_bitmap(ramblock->mr, mr_offset, mr_size);
+  }
+
+  if (dirty && tcg_enabled()) {
+    tlb_reset_dirty_range_all(start, length);
+  }
+
+  return dirty;
+}

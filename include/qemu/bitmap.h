@@ -26,4 +26,9 @@ static inline void bitmap_set(unsigned long *map, long i, long len) {
 
 #define DECLARE_BITMAP(name, bits) unsigned long name[BITS_TO_LONGS(bits)]
 
+bool bitmap_test_and_clear_atomic(unsigned long *map, long start, long nr);
+
+#define BITMAP_FIRST_WORD_MASK(start) (~0UL << ((start) & (BITS_PER_LONG - 1)))
+#define BITMAP_LAST_WORD_MASK(nbits) (~0UL >> (-(nbits) & (BITS_PER_LONG - 1)))
+
 #endif /* end of include guard: BITMAP_H_ENRPTXFD */

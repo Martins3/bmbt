@@ -1,22 +1,32 @@
 #ifndef RAM_ADDR_H_ACNMERX5
 #define RAM_ADDR_H_ACNMERX5
+#include "../qemu/rcu.h"
 #include "cpu-common.h"
 #include "ramlist.h"
 #include <assert.h>
 
 typedef struct RAMBlock {
   uint8_t *host;
-  ram_addr_t offset; // is zero
+  ram_addr_t offset;      // is zero
   ram_addr_t used_length; // size of ram
 
 } RAMBlock;
 
-/* Note: start and end must be within the same ram block.  */
-static inline void cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
-                                                            ram_addr_t length,
-                                                            unsigned client) {
-  // FIXME
+typedef struct RAMList {
+  DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+} RAMList;
+extern RAMList ram_list;
+
+/* Called from RCU critical section */
+static RAMBlock *qemu_get_ram_block(ram_addr_t addr) {
+  // FIXME add the only RAMBlock to RAMList, check the addr in range and return
+  // the RAMBlock
+  return NULL;
 }
+
+bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
+                                              ram_addr_t length,
+                                              unsigned client);
 
 static inline void cpu_physical_memory_set_dirty_flag(ram_addr_t addr,
                                                       unsigned client) {
