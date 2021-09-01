@@ -23,12 +23,6 @@
         - 比如 invalidate_and_set_dirty, 实际上，dirty_log_mask 之类的设计可以简化很多的
 
 
-一些设计的想法:
-- RAMList 的
-- 在 1M 的范围内的空间的变化过于鬼畜啊
-  - 使用一个 segment RB tree 来管理吧! (使用内核的方法)
-  - 根据空间首先命中 MemoryRegion，然后利用 MemoryRegion 来找到 RAMBlock，然后看 RAMBlock 的实际位置
-  - 还不如直接划分为 BIOS 空间 / PCI 空间 / RAM 空间，反正 PCI 空间都是确定的
 - 无论如何，RAM 在 host 上的具体地址都是需要进行装换的，所以，RAMBlock::host 是需要的
 
 1. 一个 CPUAddressSpace 持有一个 AddressSpace
