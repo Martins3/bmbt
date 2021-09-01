@@ -8,10 +8,10 @@ platform :
 2. user
 3. virt
 
-- [ ] I think code in arch are auto generated, but how are called from 
+- [ ] I think code in arch are auto generated, but how are called from
 - [ ] captive only works on armv8, but no I don't know how to run it
 
-binary translation 
+binary translation
 
 - 之所以出现了很多 unikernel 的代码，是因为这个 hypervisor 自己在 kvm 中间运行是需要二进制翻译的
 
@@ -128,7 +128,7 @@ void KVMCpu::raise_guest_interrupt(uint8_t irq) {
 - [ ] why so many code about devices ?
 
 实在是想不通，对于各种设备访问，captive 是如何模拟的 ?
-  - xqm 是如何实现的，我也是很好奇的 
+  - xqm 是如何实现的，我也是很好奇的
 
 ## 文章阅读记录
 - [ ] 2.3.2 Translation : 建立 DAG 实验部分。

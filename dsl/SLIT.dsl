@@ -2,7 +2,7 @@
  * Intel ACPI Component Architecture
  * AML/ASL+ Disassembler version 20190509 (64-bit version)
  * Copyright (c) 2000 - 2019 Intel Corporation
- * 
+ *
  * Disassembly of SLIT, Fri Jun  4 20:42:15 2021
  *
  * ACPI Data Table [SLIT]

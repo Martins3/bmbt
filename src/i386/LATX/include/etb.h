@@ -26,7 +26,7 @@ void tb_flag_usedef(TranslationBlock *tb);
 
 #ifndef CONFIG_SOFTMMU
 
-#define MAX_DEPTH 5 
+#define MAX_DEPTH 5
 typedef enum {
     TB_TYPE_NONE = 80,
     TB_TYPE_BRANCH,

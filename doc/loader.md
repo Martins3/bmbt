@@ -197,7 +197,7 @@ mized out>, name@entry=0x555555eeba75 "etc/table-loader") at ../hw/acpi/utils.c:
 ## boot device
 关联文件 softmmu/bootdevice.c
 
-在 seabios 的 loadBootOrder 中需要读读去 fw_cfg 的 bootorder, 
+在 seabios 的 loadBootOrder 中需要读读去 fw_cfg 的 bootorder,
 seabios 的 boot order 是受到 fw_cfg 制作的 bootorder 控制的, 此处就是在制作 bootorder
 
 ```c

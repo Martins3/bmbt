@@ -18,7 +18,7 @@ uint8 pending_use_of_succ(ETB* etb, int max_depth)
         uint8 succ_pending_use = pending_use_of_succ(succ_etb, max_depth - 1);
         for (int j = etb_ir1_num(succ_etb) - 1; j >= 0; --j) {
             IR1_INST *pir1 = etb_ir1_inst(succ_etb, j);
-    
+
             IR1_EFLAG_USEDEF curr_usedef =
                 *ir1_opcode_to_eflag_usedef(pir1);
             // IR1_EFLAG_USEDEF curr_usedef;
@@ -27,7 +27,7 @@ uint8 pending_use_of_succ(ETB* etb, int max_depth)
             // curr_usedef.undef = ir1_get_eflag_inherent_undef(pir1);
 
             curr_usedef.def &= succ_pending_use;
-    
+
             succ_pending_use &= (~curr_usedef.def);
             if (ir1_prefix(pir1) != 0 &&
                 (ir1_opcode(pir1) == X86_INS_CMPSB ||
@@ -40,7 +40,7 @@ uint8 pending_use_of_succ(ETB* etb, int max_depth)
                )
                 succ_pending_use |=
                     curr_usedef.def; /* "rep cmps" may not define eflags */
-    
+
             /* 4.4 this instruction may have new pending use */
             succ_pending_use |= curr_usedef.use;
         }

@@ -433,7 +433,7 @@ bool translate_xsetbv(IR1_INST *pir1)
     /* 1. get EDX:EAX */
     IR2_OPND mask = ra_alloc_itemp();
     IR2_OPND eax_opnd32 = ra_alloc_itemp();
-    
+
     append_ir2_opnd2_(lisa_mov32z, &mask, &edx_opnd);
     append_ir2_opnd2i(LISA_SLLI_D, &mask, &mask, 32);
     append_ir2_opnd2_(lisa_mov32z, &eax_opnd32, &eax_opnd);
@@ -708,7 +708,7 @@ bool translate_fdecstp(IR1_INST *pir1)
     append_ir2_opnd3(LISA_AND, &value_status, &value_status, &mask);
     append_ir2_opnd2i(LISA_ST_H, &value_status, &env_ir2_opnd,
                       lsenv_offset_of_status_word(lsenv)); /* status_word */
-    
+
     return true;
 }
 

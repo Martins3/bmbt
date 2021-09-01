@@ -63,7 +63,7 @@ ADDR context_switch_native_to_bt;
 
 #ifdef CONFIG_SOFTMMU
 /* Static codes to context switch for helper in system-mode
- * Temp registers will be used to save/restore context. 
+ * Temp registers will be used to save/restore context.
  *
  * Usage: jalr $t9 */
 ADDR sys_helper_prologue_default;
@@ -92,7 +92,7 @@ ADDR fpu_inc_top;
 ADDR fpu_dec_top;
 
 /* Enter context switch bt_to_native use function call:
- * $a0: TB's generate code start address 
+ * $a0: TB's generate code start address
  * $a1: Address of CPUX86State */
 void generate_context_switch_bt_to_native(void *code_buf)
 {
@@ -131,7 +131,7 @@ void generate_context_switch_bt_to_native(void *code_buf)
 //     * as temp register later. So we just save it to $t9.
 //     *
 //     * use $s2 to save the address of CPUX86State, which is store in $a1 */
-//     
+//
 //    /* 2.1 t9: TB's start address in code cache */
 //    IR2_OPND native_addr_opnd = ir2_opnd_new(IR2_OPND_IREG, 25);
 //    _reg_opnd = ir2_opnd_new(IR2_OPND_IREG, 4);
@@ -332,7 +332,7 @@ static int generate_native_jmp_glue(void *code_buf, int n)
 //#endif
 
     /* @ret_opnd: next TB
-     * 
+     *
      * > for direct jump, next TB is loaded from this TB's ETB
      * > for indirect jump, next TB is obtained through:
      *   > CAM lookup
@@ -563,7 +563,7 @@ _TB_LOOKUP_LL_:
         /* else compare tb->top_out and next_tb->top_in */
         /* next_tb_exist: */
         append_ir2_opnd1(LISA_LABEL, &label_next_tb_exist);
-//        
+//
 //#ifndef CONFIG_SOFTMMU /* enable IBTC in user-mode only */
 //        append_ir2_opnd2i(mips_load_addr, &tmp_opnd, &env_ir2_opnd,
 //                          lsenv_offset_of_eip(lsenv));
@@ -581,7 +581,7 @@ _TB_LOOKUP_LL_:
     }
     if (!option_lsfpu) {
 //#if defined(CONFIG_SOFTMMU) && defined(CONFIG_XTM_FAST_CS)
-//        /* jmp glue for fast-cs that allows all kinds of TB-link 
+//        /* jmp glue for fast-cs that allows all kinds of TB-link
 //         *
 //         * TB1 -> TB2
 //         * TB1: $t8, @tb
@@ -732,7 +732,7 @@ _TB_LOOKUP_LL_:
 //#if defined(CONFIG_SOFTMMU) && defined(CONFIG_XTM_FAST_CS)
 //        /* When LSFPU is enabled with FastCS, we need to check
 //         * wether should we load FPU or XMM context for next TB
-//         * 
+//         *
 //         * NO more FPU rotate ! */
 //
 //        /* 1.1 mask1: param1_opnd = TB1.fast_cs_mask = CPUX86State.vreg[5] */
@@ -775,7 +775,7 @@ _TB_LOOKUP_LL_:
 //        append_ir2_opnd1(mips_label, &no_load_fpu);
 //
 //        /* With LSFPU enabled, no more FPU rotate here  */
-// 
+//
 //        /* 4. direct jump to TB2 */
 //        ir2_opnd_set_em(&ret_opnd, EM_MIPS_ADDRESS, 32);
 //        append_ir2_opnd2i(mips_ld, &tmp_opnd, &ret_opnd,
@@ -784,7 +784,7 @@ _TB_LOOKUP_LL_:
 //#else
         /* When LSFPU is enabled without FastCS:
          * we can direct jump to next TB.
-         * 
+         *
          * In fact, the jmp glue 0 and jmp glue 1 will never be
          * used in TB-Link when LSFPU is enabled without FastCS.
          *
@@ -895,7 +895,7 @@ static void generate_fastcs_jmp_glue_fpu(void *code_buf, int n)
 //
 //    /* With LSFPU enabled, no more FPU rotate here  */
 //    if (option_lsfpu) goto NO_ROTATE_FPU;
-// 
+//
 //    /* 3. rotate FPU */
 //    /* 3.1.1 load current top: param1_opnd = CPUX86State.fpstt */
 //    append_ir2_opnd2i(mips_lw, &param1_opnd, &env_ir2_opnd,
@@ -1235,7 +1235,7 @@ void ss_generate_match_fail_native_code(void* code_buf)
 //    append_ir2_opnd2i(mips_load_addrx, &ss_esp, &ss_opnd, -(int)sizeof(SS_ITEM) + (int)offsetof(SS_ITEM, x86_esp));
 //    IR2_OPND esp_opnd = ra_alloc_gpr(esp_index);
 //    IR2_OPND temp_result = ra_alloc_itemp();
-//    
+//
 //    // if esp < ss_esp, that indicates ss has less item
 //    IR2_OPND label_exit_with_fail_match = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    append_ir2_opnd3_not_nop(mips_bne, &temp_result, &zero_ir2_opnd, &label_exit_with_fail_match);
@@ -1282,9 +1282,9 @@ void ss_generate_match_fail_native_code(void* code_buf)
 //    IR2_OPND last_executed_tb = ra_alloc_dbt_arg1();
 //    IR2_OPND top_out = ra_alloc_itemp();
 //    IR2_OPND top_in = ra_alloc_itemp();
-//    append_ir2_opnd2i(mips_lbu, &top_out, &last_executed_tb, 
+//    append_ir2_opnd2i(mips_lbu, &top_out, &last_executed_tb,
 //        offsetof(TranslationBlock, extra_tb) + offsetof(ETB,_top_out));
-//    append_ir2_opnd2i(mips_lbu, &top_in, &ret_tb_addr, 
+//    append_ir2_opnd2i(mips_lbu, &top_in, &ret_tb_addr,
 //        offsetof(TranslationBlock, extra_tb) + offsetof(ETB,_top_in));
 //    append_ir2_opnd3(mips_beq, &top_in, &top_out, &label_no_rotate);
 //    //top_in != top_out, rotate fpu
@@ -1298,7 +1298,7 @@ void ss_generate_match_fail_native_code(void* code_buf)
 //    append_ir2_opnd1(mips_jr, &ret_mips_addr);
 //    ra_free_temp(&ret_tb_addr);
 //    ra_free_temp(&ret_mips_addr);
-//    
+//
 //    // finally match failed: adjust esp, load last_execut_tb
 //    append_ir2_opnd1(mips_label, &label_exit_with_fail_match);
 //    append_ir2_opnd3(mips_add_addrx, &esp_opnd, &esp_opnd, &esp_change_bytes);
@@ -1308,7 +1308,7 @@ void ss_generate_match_fail_native_code(void* code_buf)
 //    //load_ireg_from_addr(&indirect_lookup_code_addr, tb_look_up_native);
 //    //append_ir2(mips_jr, indirect_lookup_code_addr);
 //    //ra_free_temp(&indirect_lookup_code_addr);
-//    
+//
 //    ra_free_temp(&ss_esp);
 //    ra_free_temp(&ss_x86_addr);
 }
@@ -1402,7 +1402,7 @@ int target_x86_to_mips_static_codes(void *code_buf)
     x86_to_mips_alloc_lsenv();
 
     /* genfn 1) only generate IR2
-     *       2) no return 
+     *       2) no return
      *       3) get the number of IR2 via assembling */
 #define XTM_STATIC_CODE_GEN_1(genfn, ...) do { \
     tr_init(NULL); \
@@ -1495,7 +1495,7 @@ int target_x86_to_mips_static_codes(void *code_buf)
                 generate_native_break_code,
                 code_buffer);
     }
-    
+
 #ifndef CONFIG_SOFTMMU
     /* Shadown Stack in user-mode */
     if (option_shadow_stack) {

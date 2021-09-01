@@ -80,7 +80,7 @@ NESTED(handle_sys_wrap, 0, sp)
 
 - [ ] 在什么情况下 ERTN 需要控制 LLBCTL 的位置
   - [ ] LLBCTL 的 ROLLB 返回当前 LLBit 的值, 内核的测试中间显示，每次返回的都是 1
-  
+
 一共三个 exception 入口: TLB, general, reset
 
 中断信号被采样到 CSR.ESTA.IS 和 CSR.ECFG.LIE, 得到 13 bit 的中断向量
@@ -179,7 +179,7 @@ PWCL 和 PWCH : 描述 pagewalk 的地址，虚拟地址用于在各个级别进
 
 badvaddr 从哪里找，取决于是否是 TLB refill exception 的 PGD 的取值取决于是否出错的地址
 ### 向量指令
-3.1.3 : IR 只读, CSR : 浮点 eflags, FCCR : 控制寄存器 
+3.1.3 : IR 只读, CSR : 浮点 eflags, FCCR : 控制寄存器
 
 两个配置寄存器的作用:
 - [ ] KVM_REG_LOONGARCH_VIR
@@ -210,7 +210,7 @@ IMPCTL
 		case KVM_CSR_ESTAT:
 		write_gcsr_estat(v);
 		write_csr_gintc((v & 0x3fc) >> 2);
-		
+
 2. 在 vcpu_load 和 vcpu_set 的时候存在一些作用
 	- kvm_loongarch_deliver_interrupts
 
@@ -224,7 +224,7 @@ IMPCTL
   - 对于 timer 的设置比较复杂
 
 - [ ] 难道 guest 中间无法使用 load / store 监视吗, 应该是可以的
-  - [ ] 似乎只是现在的 kvm 对于这个事情没有增加任何支持的 
+  - [ ] 似乎只是现在的 kvm 对于这个事情没有增加任何支持的
   - [ ] 所以 load / store 都是最近才支持的吗 ?
 
 - [ ] STLBSZ 为什么没有出现 vcpu_load 和 set 中间
@@ -305,7 +305,7 @@ index 1c7e7d53820a..8c656910d349 100644
 +++ b/arch/loongarch/kernel/genex.S
 @@ -84,10 +84,8 @@ NESTED(except_vec_vi_handler, 0, sp)
  	move	s1, sp # Preserve the sp
- 
+
  	/* Get IRQ stack for this CPU */
 -	csrrd	t0, LOONGARCH_CSR_TMID
  	la		t1, irq_stack
@@ -313,7 +313,7 @@ index 1c7e7d53820a..8c656910d349 100644
 -	LONG_ADDU	t1, t1, t0
 +	LONG_ADDU	t1, t1, $r21
  	LONG_L		t0, t1, 0
- 
+
  	# Check if already on IRQ stack
 ```
 似乎将 $r21 作为内核的 percpu 使用了!

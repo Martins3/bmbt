@@ -110,7 +110,7 @@ static void tr_gen_string_loop_end(
          *     3>    ecx == 0 (always)   */
         IR2_OPND condition  = ra_alloc_itemp(); /* <3>       */
         IR2_OPND condition2 = ra_alloc_itemp(); /* <1> & <2> */
-         
+
         /*     3>    ecx == 0            */
         IR2_OPND ecx_opnd = ra_alloc_gpr(ecx_index);
         int addr_size = ir1_addr_size(pir1);
@@ -132,7 +132,7 @@ static void tr_gen_string_loop_end(
          *     2> result == 0 (repne)    */
         if (ir1_has_prefix_repe(pir1)) {
             /* set 1 when 0 < result, i.e., result!=0 */
-            append_ir2_opnd3(LISA_SLTU, &condition2, &zero_ir2_opnd, result); 
+            append_ir2_opnd3(LISA_SLTU, &condition2, &zero_ir2_opnd, result);
         }
         if (ir1_has_prefix_repne(pir1)) {
             /* set 1 when result < 1, i.e., result==0 */
@@ -253,7 +253,7 @@ bool translate_outs(IR1_INST *pir1)
 
     tr_gen_io_start();
 
-    /* 2. read from MEM(ES:(E)DI)  : softmmu helper 
+    /* 2. read from MEM(ES:(E)DI)  : softmmu helper
      * 3. I/O write to I/O port DX : helper_outb/w/l
      * 4. adjust EDI               : according to opnd size */
 
@@ -352,7 +352,7 @@ bool translate_movs(IR1_INST *pir1)
         ra_free_temp(&si_opnd);
         ra_free_temp(&di_opnd);
     }
- 
+
     /* 4. loop ends */
     tr_gen_string_loop_end(pir1, label_loop, label_exit, NULL);
 

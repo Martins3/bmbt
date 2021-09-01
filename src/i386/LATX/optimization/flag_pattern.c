@@ -606,7 +606,7 @@ void fp_init(void)
 //        item->dest_reg_num = -1;
 //    }
 //    /* 3. flag reduction again, but ignore the pattern tails */
-//    uint8 pending_use = pending_use_of_succ(petb, MAX_DEPTH); 
+//    uint8 pending_use = pending_use_of_succ(petb, MAX_DEPTH);
 //    for (IR1_INST *pir1 = etb_ir1_inst_last(petb); pir1 != item->head; --pir1) {
 //        /* 3.1 pending use may be satisfied by this instruction */
 //        pending_use &= (~(ir1_get_eflag_def(pir1)));

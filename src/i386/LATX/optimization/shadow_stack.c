@@ -5,20 +5,20 @@
 #include "../x86tomips-options.h"
 #include <string.h>
 
-SS_ITEM* ss_pop(SS* ss) 
+SS_ITEM* ss_pop(SS* ss)
 {
     ss->_ssi_current--;
     assert(ss->_ssi_current>ss->_ssi_first);
     return ss->_ssi_current;
 }
 
-SS_ITEM* ss_top(SS* ss) 
+SS_ITEM* ss_top(SS* ss)
 {
     assert(ss->_ssi_current>ss->_ssi_first);
     return ss->_ssi_current-1;
 }
 
-void ss_init(SS* ss) 
+void ss_init(SS* ss)
 {
     if (option_shadow_stack)
         ss->_ssi_first = (SS_ITEM*) mm_calloc(800000, sizeof(SS_ITEM));
@@ -33,14 +33,14 @@ void ss_init(SS* ss)
     ss->_ssi_current = ss->_ssi_first+1;
 }
 
-void ss_duplicate(SS* ss, SS* from) 
+void ss_duplicate(SS* ss, SS* from)
 {
     ss_init(ss);
     if(from->_ssi_first !=NULL)
         memcpy(ss->_ssi_first, from->_ssi_first, (from->_ssi_current-from->_ssi_first-1)*sizeof(SS_ITEM));
 }
 
-void ss_fini(SS* ss) 
+void ss_fini(SS* ss)
 {
     if (ss->_ssi_first)
         mm_free(ss->_ssi_first);
@@ -50,7 +50,7 @@ void ss_fini(SS* ss)
 }
 
 
-void ss_push(SS* ss, ADDRX x86_esp, ADDRX x86_callee_addr, void *return_tb) 
+void ss_push(SS* ss, ADDRX x86_esp, ADDRX x86_callee_addr, void *return_tb)
 {
     // 1. make sure ss have enough space
     if (ss->_ssi_current == ss->_ssi_last) {
@@ -69,7 +69,7 @@ void ss_push(SS* ss, ADDRX x86_esp, ADDRX x86_callee_addr, void *return_tb)
 }
 
 
-void ss_pop_till_find(SS* ss, ADDRX x86_esp) 
+void ss_pop_till_find(SS* ss, ADDRX x86_esp)
 {
     // 1. find that ss item
     SS_ITEM *ssi = ss_top(ss);

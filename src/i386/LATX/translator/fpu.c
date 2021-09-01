@@ -66,7 +66,7 @@ void tr_gen_save_curr_top(void)
 {
     TRANSLATION_DATA *td = lsenv->tr_data;
 #ifdef CONFIG_SOFTMMU
-#ifdef CONFIG_XTM_FAST_CS 
+#ifdef CONFIG_XTM_FAST_CS
     TranslationBlock *tb = td->curr_tb;
     if (tb) {
         /* Under fast context switch, if current TB
@@ -283,7 +283,7 @@ IR2_OPND set_fpu_fcsr_rounding_field_by_x86(void)
     /*IR2_OPND temp_mxcsr = ra_alloc_itemp_internal();
     IR2_OPND mem_opnd = ir2_opnd_new2(
         IR2_OPND_MEM, ir2_opnd_base_reg_num(&env_ir2_opnd),
-        lsenv_offset_of_mxcsr(lsenv)); 
+        lsenv_offset_of_mxcsr(lsenv));
     append_ir2_opnd2(mips_lwu, &temp_mxcsr, &mem_opnd);
     append_ir2_opnd2i(mips_dsrl, &temp_mxcsr, &temp_mxcsr, 0x13);
     append_ir2_opnd2i(mips_andi, &temp_mxcsr, &temp_mxcsr, 0x3);

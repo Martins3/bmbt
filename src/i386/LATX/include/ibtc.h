@@ -1,9 +1,9 @@
 #ifndef _X86toMIPS_IBTC_H_
 #define _X86toMIPS_IBTC_H_
 
-#define IBTC_BIT 10 
+#define IBTC_BIT 10
 #define IBTC_SIZE (1U << IBTC_BIT)
-#define IBTC_MASK (IBTC_SIZE - 1) 
+#define IBTC_MASK (IBTC_SIZE - 1)
 
 #include "../include/types.h"
 

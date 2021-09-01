@@ -94,12 +94,12 @@
       - liointc_init
       - extioi_vec_init
         - [ ] irq_domain_alloc_fwnode : domain handle 是怎么回事, 可以通过 domain handle 创建 irq domain
-        - irq_domain_create_linear : 
+        - irq_domain_create_linear :
         - extioi_init : 初始化一下 ext io 中断控制器的状态，例如，将所有的中断定位到 ip3
         - irq_set_chained_handler_and_data : 将 `LOONGSON_BRIDGE_IRQ` 作为自己的 parent_irq 来传递到这里
           - [ ] 那么，上面一层的 irq_domain 是怎么知道其 handler 是这个，或者说，ip3_irqdispatch 向下调用的时候，其 irq_desc 的 handler 是怎么注册的
         - pch_msi_init
-      - of_setup_pch_irqs : 在 extioi 下初始化 apic 
+      - of_setup_pch_irqs : 在 extioi 下初始化 apic
     - setup_vi_handler
 - timekeeping_init
 - time_init
@@ -109,7 +109,7 @@
   - n_tty_init
   - [ ] initcall_from_entry : 似乎有一些调用通过 section 注册的函数的操作
 - setup_per_cpu_pageset : 应该是 percpu page 设置
-- numa_policy_init 
+- numa_policy_init
 - [ ] acpi_early_init : 调用这三个函数都是 acpi 库提供的标准函数，这些都是 acpi 的初始化，那么之后使用在哪里?
   - acpi_reallocate_root_table
   - acpi_initialize_subsystem

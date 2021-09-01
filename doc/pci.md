@@ -139,7 +139,7 @@ static void piix_isa_bridge_setup(struct pci_device *pci, void *arg)
         - pci_irq_handler
 
 
-分析一下 piix3_set_irq 的使用位置: 
+分析一下 piix3_set_irq 的使用位置:
 1. nvme_init_cq : 注册是 timer 上的，会周期性的触发 nvme_post_cqes
   - nvme_post_cqes
     - nvme_irq_assert

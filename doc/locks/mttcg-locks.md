@@ -75,8 +75,8 @@ Virtio-blk-data-plane 允许块 I/O 处理操作与其他的虚拟设备并行�
 ## [^5]
 在 A TCG primer 很好的总结了 TCG 的工作模式以及退出的原因。
 
-在 Atomics, 
-Save load value/address and check on store, 
+在 Atomics,
+Save load value/address and check on store,
 Load-link/store-conditional instruction support via SoftMMU,
 Link helpers and instrumented stores,
 中应该是分析了在 TCG 需要增加的工作
@@ -100,7 +100,7 @@ void memory_region_clear_global_locking(MemoryRegion *mr);
 ```
 - 从上下文知道，这里的 QEMU's global lock 就是 QEMU big lock
 - 而且 QEMU big lock 就是用于处理 memory region 的
-- memory_region_clear_global_locking 从来都不会被调用 
+- memory_region_clear_global_locking 从来都不会被调用
 
 - [ ] 用于进一步简化 memory_ldst
 
@@ -221,7 +221,7 @@ extern CPUState *current_cpu;
 ```
 
 观察:
-1. current_cpu 永远不会被赋值为 NULL 
+1. current_cpu 永远不会被赋值为 NULL
 2. current_cpu 被赋值为空的情况可以用于判断当前 thread 是否为 VCPU thread
 3. rr_start_vcpu_thread : 只有会为 CPUState 创建线程，接下来的 CPUState 都是共享这个线程的
 4. -accel tcg,thread=single 通过 rr_wait_io_event 来唤醒
@@ -291,7 +291,7 @@ extern CPUState *current_cpu;
 在 pic_irq_request 中，利用 first_cpu 来访问 apic_state, 猜测是因为
 apic_state 要么在每一个 cpu 都有，要都没有，所以随便选一个就可以了
 
-## run_on_cpu 
+## run_on_cpu
 - [ ] 关于 CPU_FOREACH 的问题，这里存在一个一直都在思考的问题, 为什么不能直接让这个线程持有 CPUState 直接调用
   - [ ] 其实可以找到最开始的 run_on_cpu 的例子的
   - [ ] 如何移除掉整个 run_on_cpu 的机制

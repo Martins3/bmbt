@@ -199,7 +199,7 @@ ADDRX    ir1_addr(IR1_INST *ir1);
 ADDRX    ir1_addr_next(IR1_INST *ir1);
 ADDRX    ir1_target_addr(IR1_INST *ir1);
 int      ir1_addr_size(IR1_INST *ir1);  /* Address Size */
-int      ir1_inst_size(IR1_INST *ir1); 
+int      ir1_inst_size(IR1_INST *ir1);
 #ifdef CONFIG_SOFTMMU
 uint8*   ir1_inst_opbytes(IR1_INST *ir1);
 int      ir1_data_size(IR1_INST *ir1);  /* Operand Size */

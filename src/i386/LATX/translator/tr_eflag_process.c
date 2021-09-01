@@ -31,7 +31,7 @@ void tr_gen_eflags_clr_bit_10(IR2_OPND *dest, IR2_OPND *eflags, uint32_t flag_ma
     append_ir2_opnd2i(LISA_ORI, &mask, &zero_ir2_opnd, flag_mask);
     append_ir2_opnd3 (LISA_NOR, &mask, &mask, &zero_ir2_opnd);
     append_ir2_opnd3 (LISA_AND, dest,  eflags, &mask);
- 
+
     ra_free_temp(&mask);
 }
 #else
@@ -106,7 +106,7 @@ static void generate_cf(IR2_OPND *dest, IR2_OPND *src0, IR2_OPND *src1)
 //    case X86_INS_SUB:
 //    case X86_INS_CMPSB:
 //    case X86_INS_CMPSW:
-//    case X86_INS_CMPSD:    
+//    case X86_INS_CMPSD:
 //    case X86_INS_CMP:
 //    case X86_INS_CMPXCHG:
 //    case X86_INS_DEC: {
@@ -626,7 +626,7 @@ static void generate_of(IR2_OPND *dest, IR2_OPND *src0, IR2_OPND *src1)
 //    }
 //    case X86_INS_SCASB:
 //    case X86_INS_SCASW:
-//    case X86_INS_SCASD:    
+//    case X86_INS_SCASD:
 //    case X86_INS_SBB:
 //    case X86_INS_CMPSB:
 //    case X86_INS_CMPSW:

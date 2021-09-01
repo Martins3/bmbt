@@ -48,7 +48,7 @@ DynamicTranslationGenerator::Generate
 
 only 500 LOC
 
-### io 
+### io
 AssemblyReader::Parse used by genc-opt.cpp
 
 - [ ] genc-opt.cpp
@@ -57,15 +57,15 @@ AssemblyReader::Parse used by genc-opt.cpp
 All kind of statement variable with basic line, accept with visitor.
 
 
-## how components works 
+## how components works
 
 ## SSA
 
-### how to ssa print 
+### how to ssa print
 - [x] why DynamicTranslationGenerator::Generate() never called ?
 
 - DynamicTranslationGenerator::Generate
-  - SSAContextPrinter::Print : although we can't generate the code, but 
+  - SSAContextPrinter::Print : although we can't generate the code, but
 
 - [ ] SSA
 
@@ -239,7 +239,7 @@ use /home/maritns3/core/captive-project/gensim/gensim/src/generators/BlockJIT/Ji
 
 - [x] how BlockJITExecutionEngineGenerator generated ?
 
-by component ee_blockjit, instead of 
+by component ee_blockjit, instead of
 ```cpp
 DEFINE_COMPONENT(BlockJITExecutionEngineGenerator, ee_blockjit);
 ```

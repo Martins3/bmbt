@@ -36,7 +36,7 @@ static inline void profile_sum(void) {
         for (int j=0; j<etb->_ir1_num; ++j) {
             IR1_INST *pir1 = etb->_ir1_instructions + j;
             ir1_inst_executed_by_opcode[ir1_opcode(pir1)] += etb->_execution_times;
-            
+
 
             if (pir1->info->detail->groups_count) {
                 int j;
@@ -122,7 +122,7 @@ static inline void profile_sort_tb(void) {
         mm_free(unique_tb);
     unique_tb = (ETB **)mm_calloc(tb_num, sizeof(ETB *));
     int n = 0;
-    
+
     for (int i=0; i<tb_num; ++i) {
         ETB *etb = etb_array[i];
         if (etb->_execution_times > 10)
@@ -177,13 +177,13 @@ static inline void profile_dump_tb_type(void) {
     for (int i=0; i<num; i++)
         rank[i] = i;
     qsort(rank, num, sizeof(int), cmp_tb_type);
-    
+
     fprintf(stderr, " TB types rank are:\n");
     fprintf(stderr, " rank    tb_type  exec_count percentage \n");
     for (int i=0; i<num; i++) {
         int index = rank[i];
         fprintf(stderr, " [%2d] %10s %11" PRId64 "     %5.2f%% \n",
-                i+1, tb_type_to_string[index], tb_executed_by_type[index], 
+                i+1, tb_type_to_string[index], tb_executed_by_type[index],
                 tb_executed_by_type[index]*100.0/tb_executed);
     }
 }
@@ -214,7 +214,7 @@ static inline void profile_dump_fpu_call_helper(void) {
     }
 }
 
-    
+
 static inline void profile_dump_tb(int top_n) {
     if (top_n >unique_tb_num)
         top_n = unique_tb_num;
@@ -223,9 +223,9 @@ static inline void profile_dump_tb(int top_n) {
     fprintf(stderr, " rank ir1_num ir2_num  exec_count percentage x86_addr <function>\n");
     for (int i=0; i<top_n; ++i) {
         ETB *etb = unique_tb[i];
-        fprintf(stderr, " [%2d] %7d %7ld %11" PRId64 "     %5.2f%% %8" PRIADDRX " %s\n", 
-            i+1, etb->_ir1_num, etb->tb->tc.size/4, etb->_execution_times, 
-            etb->_execution_times*100.0/tb_executed, (uint32_t)etb->pc, lookup_symbol(etb->tb->pc)); 
+        fprintf(stderr, " [%2d] %7d %7ld %11" PRId64 "     %5.2f%% %8" PRIADDRX " %s\n",
+            i+1, etb->_ir1_num, etb->tb->tc.size/4, etb->_execution_times,
+            etb->_execution_times*100.0/tb_executed, (uint32_t)etb->pc, lookup_symbol(etb->tb->pc));
     }
 
     //for (int i=0; i<top_n; ++i) {
@@ -241,7 +241,7 @@ static inline void profile_dump_opcode(int top_n) {
     fprintf(stderr, " rank     opcode  exec_count percentage \n");
     for (int i=0; i<top_n; ++i) {
         int opc = unique_opcode[i];
-        fprintf(stderr, " [%2d] %10s %11" PRId64 "     %5.2f%%\n", 
+        fprintf(stderr, " [%2d] %10s %11" PRId64 "     %5.2f%%\n",
             i+1, ir1_name(opc), ir1_inst_executed_by_opcode[opc],
             ir1_inst_executed_by_opcode[opc]*100.0/ir1_inst_executed);
     }

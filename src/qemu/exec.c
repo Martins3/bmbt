@@ -357,4 +357,3 @@ ram_addr_t qemu_ram_addr_from_host(void *ptr) {
 
   return block->offset + offset;
 }
-

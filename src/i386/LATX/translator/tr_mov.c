@@ -36,7 +36,7 @@ bool translate_pop(IR1_INST *pir1)
 //        IR1_OPND mem_ir1_opnd;
 //        // ir1_opnd_build_mem(&mem_ir1_opnd, IR1_OPND_MEM, 16, 4,
 //        //                -esp_increment - lsenv->tr_data->curr_esp_need_decrease);
-//        ir1_opnd_build_mem(&mem_ir1_opnd, 16, X86_REG_ESP, 
+//        ir1_opnd_build_mem(&mem_ir1_opnd, 16, X86_REG_ESP,
 //                        -esp_increment - lsenv->tr_data->curr_esp_need_decrease);
 //
 //        if (ir1_opnd_is_gpr(ir1_get_opnd(pir1, 0)) &&
@@ -573,7 +573,7 @@ bool translate_cmovo(IR1_INST *pir1)
     ra_free_temp(&condition);
     return true;
 }
-                         
+
 bool translate_cmovno(IR1_INST *pir1)
 {
     IR2_OPND condition = ra_alloc_itemp(); /* OF */
@@ -584,7 +584,7 @@ bool translate_cmovno(IR1_INST *pir1)
 #else
     get_eflag_condition(&condition, pir1);
 #endif
-                         
+
     IR1_OPND *opnd0 = ir1_get_opnd(pir1, 0); /* GPR     */
     IR1_OPND *opnd1 = ir1_get_opnd(pir1, 1); /* GPR/MEM */
 
@@ -633,7 +633,7 @@ bool translate_cmovb(IR1_INST *pir1)
     ra_free_temp(&condition);
     return true;
 }
-                         
+
 bool translate_cmovae(IR1_INST *pir1)
 {
     IR2_OPND condition = ra_alloc_itemp(); /* CF */
@@ -644,7 +644,7 @@ bool translate_cmovae(IR1_INST *pir1)
 #else
     get_eflag_condition(&condition, pir1);
 #endif
-                         
+
     IR1_OPND *opnd0 = ir1_get_opnd(pir1, 0); /* GPR     */
     IR1_OPND *opnd1 = ir1_get_opnd(pir1, 1); /* GPR/MEM */
 
@@ -1190,7 +1190,7 @@ bool translate_movq(IR1_INST *pir1)
         load_freg_from_ir1_2(&dest_opnd, src, false, false);
         return true;
     }
-    
+
     if (ir1_opnd_is_mmx(src)) { /* src mmx  : dest mmx/mem */
         IR2_OPND source_opnd = load_freg_from_ir1_1(src, false, false);
         store_freg_to_ir1(&source_opnd, dest, false, false);

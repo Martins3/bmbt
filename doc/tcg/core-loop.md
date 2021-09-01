@@ -1,5 +1,5 @@
 # TCG
-在 notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-02.txt 中存在一些简单的描述 tcg 
+在 notes/zhangfuxin/qemu-llvm-docs/QEMU/QEMU-tcg-02.txt 中存在一些简单的描述 tcg
 的大致执行流程，但是这些内容有点老，很多问题也没有分析清楚，下面重新分析一下
 
 ## 问题
@@ -45,7 +45,7 @@
 ## 文件结构
 > `target-ARCH/*` 定義了如何將 ARCH binary 反匯編成 TCG IR。tcg/ARCH 定義了如何將 TCG IR 翻譯成 ARCH binary。
 
-所以 ./tcg 还存在作用只有 tcg.c 了, 
+所以 ./tcg 还存在作用只有 tcg.c 了,
 tcg/tcg.c 中分别 include 下面几个文件，因为 xqm 抛弃了 tcg, 都是没有作用的了:
 ```c
 #include "tcg-ldst.inc.c"
@@ -82,7 +82,7 @@ tcg/tcg.c 中分别 include 下面几个文件，因为 xqm 抛弃了 tcg, 都�
 - x86_cpu_realizefn
   - qemu_init_vcpu : 这里进行选择执行引擎
     - qemu_tcg_init_vcpu : 在 exec thread 中进行执行的, 这里检查了一下，保证即使是多个 cpu ，也只会发生
-      - tcg_region_init 
+      - tcg_region_init
           - tcg_n_regions : 计算出来创建多少个 region 出来，因为不同的 cpu 生成 tb 的数量不同，所以一般让 region 多于 cpu 的数量
           - 在 tcg_region_init 使用 tcg_init_ctx.code_gen_buffer 来对于 region 进行赋值
           - 初始化 static struct tcg_region_state region; 关于 region 的所有信息都是放到此处的

@@ -844,8 +844,8 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
 #if 0 // def CONFIG_BTMMU
     if (btmmu_enabled()) {
         if ((memory_region_is_ram(section->mr) || memory_region_is_romd(section->mr))) {
-            if (tn.addr_write != vaddr_page) prot &= ~PROT_WRITE; 
-            if (tn.addr_read != vaddr_page) prot &= ~PROT_READ; 
+            if (tn.addr_write != vaddr_page) prot &= ~PROT_WRITE;
+            if (tn.addr_read != vaddr_page) prot &= ~PROT_READ;
             if (prot & PROT_READ) {
                 btmmu_map_page(cpu, vaddr_page, addend, mmu_idx, prot & PROT_WRITE ? 1 : 0);
             }

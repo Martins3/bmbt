@@ -38,4 +38,3 @@ void prom_init_env(void) {
   loongson_special_attribute =
       (struct loongson_special_attribute *)(base + lp->special_offset);
 }
-

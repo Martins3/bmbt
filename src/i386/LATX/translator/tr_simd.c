@@ -391,7 +391,7 @@ bool translate_paddd(IR1_INST *pir1)
 }
 
 bool translate_paddsb(IR1_INST *pir1)
-{ 
+{
     lsassertm(0, "SIMD to be implemented in LoongArch.\n");
 //#ifdef CONFIG_SOFTMMU
 //    if (tr_gen_sse_common_excp_check(pir1)) return true;
@@ -483,7 +483,7 @@ bool translate_paddusb(IR1_INST *pir1)
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_paddusb, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_paddusb, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -512,12 +512,12 @@ bool translate_paddusw(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_paddush, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_paddush, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_paddush, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_paddush, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -545,12 +545,12 @@ bool translate_pand(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_fand, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_fand, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_fand, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_fand, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -578,12 +578,12 @@ bool translate_pandn(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pandn, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pandn, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pandn, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pandn, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -608,12 +608,12 @@ bool translate_pcmpeqb(IR1_INST *pir1)
     IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
     IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 
-    append_ir2_opnd3(LISA_VSEQ_B, &dest_lo, &dest_lo, &src_lo); 
+    append_ir2_opnd3(LISA_VSEQ_B, &dest_lo, &dest_lo, &src_lo);
 
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pcmpeqb, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pcmpeqb, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -641,12 +641,12 @@ bool translate_pcmpeqw(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pcmpeqh, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pcmpeqh, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pcmpeqh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pcmpeqh, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -674,12 +674,12 @@ bool translate_pcmpeqd(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pcmpeqw, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pcmpeqw, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(ir1_get_opnd(pir1, 0))) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pcmpeqw, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pcmpeqw, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -707,12 +707,12 @@ bool translate_pcmpgtb(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pcmpgtb, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pcmpgtb, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pcmpgtb, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pcmpgtb, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -740,12 +740,12 @@ bool translate_pcmpgtw(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pcmpgth, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pcmpgth, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pcmpgth, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pcmpgth, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -773,12 +773,12 @@ bool translate_pcmpgtd(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pcmpgtw, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pcmpgtw, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pcmpgtw, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pcmpgtw, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -806,12 +806,12 @@ bool translate_pmaddwd(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pmaddhw, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pmaddhw, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_pmaddhw, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pmaddhw, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -839,18 +839,18 @@ bool translate_pmulhuw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) { /* dest mmx */
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_pmulhuh, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_pmulhuh, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_pmulhuh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_pmulhuh, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_pmulhuh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pmulhuh, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -878,18 +878,18 @@ bool translate_pmulhw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) { /* dest mmx */
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_pmulhh, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_pmulhh, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_pmulhh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_pmulhh, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_pmulhh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pmulhh, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -917,18 +917,18 @@ bool translate_pmullw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) { /* dest mmx */
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_pmullh, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_pmullh, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_pmullh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_pmullh, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_pmullh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pmullh, &dest_hi, &dest_hi, &src_hi);
 //    }
 //
     return true;
@@ -982,15 +982,15 @@ bool translate_psllw(IR1_INST *pir1)
 //            uint8 imm = ir1_opnd_uimm(ir1_get_opnd(pir1, 0) + 1);
 //
 //            if (imm > 15) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //            }
 //            else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psllh, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psllh, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1005,13 +1005,13 @@ bool translate_psllw(IR1_INST *pir1)
 //
 //            load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_psllh, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_psllh, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -1024,8 +1024,8 @@ bool translate_psllw(IR1_INST *pir1)
 //            IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //
 //            if (imm > 15) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //            }
 //            else {
 //                IR2_OPND itemp = ra_alloc_itemp();
@@ -1033,9 +1033,9 @@ bool translate_psllw(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
-//                append_ir2_opnd3(mips_psllh, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psllh, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
+//                append_ir2_opnd3(mips_psllh, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psllh, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1056,18 +1056,18 @@ bool translate_psllw(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
 //
-//                append_ir2_opnd3(mips_psllh, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_psllh, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_psllh, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_psllh, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -1084,15 +1084,15 @@ bool translate_psllw(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_psllh, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_psllh, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_psllh, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_psllh, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -1151,14 +1151,14 @@ bool translate_pslld(IR1_INST *pir1)
 //            uint8 imm = ir1_opnd_uimm(opnd1);
 //
 //            if (imm > 31) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //            } else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psllw, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psllw, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1173,13 +1173,13 @@ bool translate_pslld(IR1_INST *pir1)
 //
 //            load_imm32_to_ir2(&temp_imm, 0xffffff80, SIGN_EXTENSION);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_psllw, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_psllw, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -1191,18 +1191,18 @@ bool translate_pslld(IR1_INST *pir1)
 //            IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //
 //            if (imm > 31) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //            }
 //            else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psllw, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_psllw, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_psllw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_psllw, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1222,16 +1222,16 @@ bool translate_pslld(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xffffff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
-//                append_ir2_opnd3(mips_psllw, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psllw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
+//                append_ir2_opnd3(mips_psllw, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psllw, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -1247,15 +1247,15 @@ bool translate_pslld(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_psllw, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_psllw, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_psllw, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_psllw, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -1314,14 +1314,14 @@ bool translate_psllq(IR1_INST *pir1)
 //            uint8 imm = ir1_opnd_uimm(opnd1);
 //
 //            if (imm > 63) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //            } else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_fdsll, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_fdsll, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1336,13 +1336,13 @@ bool translate_psllq(IR1_INST *pir1)
 //
 //            load_imm64_to_ir2(&temp_imm, 0xffffffffffffff80ULL);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_fdsll, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_fdsll, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -1354,17 +1354,17 @@ bool translate_psllq(IR1_INST *pir1)
 //            IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //
 //            if (imm > 63) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //            } else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_fdsll, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_fdsll, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_fdsll, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_fdsll, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1384,16 +1384,16 @@ bool translate_psllq(IR1_INST *pir1)
 //
 //                load_imm64_to_ir2(&temp_imm, 0xffffffffffffff80ULL);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
-//                append_ir2_opnd3(mips_fdsll, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_fdsll, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
+//                append_ir2_opnd3(mips_fdsll, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_fdsll, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -1409,15 +1409,15 @@ bool translate_psllq(IR1_INST *pir1)
 //
 //                load_imm64_to_ir2(&temp_imm, 0xffffffffffffff80ULL);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_fdsll, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_fdsll, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_fdsll, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_fdsll, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -1476,14 +1476,14 @@ bool translate_psrlw(IR1_INST *pir1)
 //            uint8 imm = ir1_opnd_uimm(opnd1);
 //
 //            if (imm > 15) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //            } else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrlh, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psrlh, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1498,13 +1498,13 @@ bool translate_psrlw(IR1_INST *pir1)
 //
 //            load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_psrlh, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_psrlh, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -1516,17 +1516,17 @@ bool translate_psrlw(IR1_INST *pir1)
 //            IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //
 //            if (imm > 15) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //            } else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrlh, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_psrlh, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrlh, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_psrlh, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1546,16 +1546,16 @@ bool translate_psrlw(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
-//                append_ir2_opnd3(mips_psrlh, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psrlh, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
+//                append_ir2_opnd3(mips_psrlh, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psrlh, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -1571,15 +1571,15 @@ bool translate_psrlw(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_psrlh, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_psrlh, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_psrlh, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_psrlh, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -1638,14 +1638,14 @@ bool translate_psrld(IR1_INST *pir1)
 //            uint8 imm = ir1_opnd_uimm(opnd1);
 //
 //            if (imm > 31) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //            } else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrlw, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psrlw, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1660,13 +1660,13 @@ bool translate_psrld(IR1_INST *pir1)
 //
 //            load_imm32_to_ir2(&temp_imm, 0xffffff80, SIGN_EXTENSION);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_psrlw, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_psrlw, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -1678,18 +1678,18 @@ bool translate_psrld(IR1_INST *pir1)
 //            IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //
 //            if (imm > 31) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //            }
 //            else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrlw, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_psrlw, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrlw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_psrlw, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1709,16 +1709,16 @@ bool translate_psrld(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xffffff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
-//                append_ir2_opnd3(mips_psrlw, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psrlw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
+//                append_ir2_opnd3(mips_psrlw, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psrlw, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -1734,15 +1734,15 @@ bool translate_psrld(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_psrlw, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_psrlw, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_psrlw, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_psrlw, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -1801,14 +1801,14 @@ bool translate_psrlq(IR1_INST *pir1)
 //            uint8 imm = ir1_opnd_uimm(opnd1);
 //
 //            if (imm > 63) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //            } else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_fdsrl, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_fdsrl, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1823,13 +1823,13 @@ bool translate_psrlq(IR1_INST *pir1)
 //
 //            load_imm64_to_ir2(&temp_imm, 0xffffffffffffff80ULL);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//            append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_fdsrl, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_fdsrl, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -1841,18 +1841,18 @@ bool translate_psrlq(IR1_INST *pir1)
 //            IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //
 //            if (imm > 63) {
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //            }
 //            else {
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_fdsrl, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_fdsrl, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1872,16 +1872,16 @@ bool translate_psrlq(IR1_INST *pir1)
 //
 //                load_imm64_to_ir2(&temp_imm, 0xffffffffffffff80ULL);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
-//                append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_fdsrl, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
+//                append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_fdsrl, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -1897,15 +1897,15 @@ bool translate_psrlq(IR1_INST *pir1)
 //
 //                load_imm64_to_ir2(&temp_imm, 0xffffffffffffff80ULL);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo); 
-//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_lo);
+//                append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &dest_hi);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_fdsrl, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_fdsrl, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -1969,9 +1969,9 @@ bool translate_psraw(IR1_INST *pir1)
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, 0x10, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrah, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psrah, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1979,9 +1979,9 @@ bool translate_psraw(IR1_INST *pir1)
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrah, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psrah, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -1997,17 +1997,17 @@ bool translate_psraw(IR1_INST *pir1)
 //
 //            load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
 //
 //            load_imm32_to_ir2(&temp_imm, 0x10, UNKNOWN_EXTENSION);
 //
-//            append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp); 
-//            append_ir2_opnd3(mips_psrah, &dest, &dest, &ftemp); 
+//            append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp);
+//            append_ir2_opnd3(mips_psrah, &dest, &dest, &ftemp);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_psrah, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_psrah, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -2023,11 +2023,11 @@ bool translate_psraw(IR1_INST *pir1)
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, 0x10, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -2035,11 +2035,11 @@ bool translate_psraw(IR1_INST *pir1)
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp); 
+//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp);
 //
-//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -2059,19 +2059,19 @@ bool translate_psraw(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
 //
 //                load_imm32_to_ir2(&temp_imm, 0x10, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp); 
-//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp);
+//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
-//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
+//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -2088,19 +2088,19 @@ bool translate_psraw(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
 //
 //                load_imm32_to_ir2(&temp_imm, 0x10, UNKNOWN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp); 
-//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp);
+//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &ftemp);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_psrah, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_psrah, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -2164,9 +2164,9 @@ bool translate_psrad(IR1_INST *pir1)
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, 0x20, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psraw, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psraw, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -2175,9 +2175,9 @@ bool translate_psrad(IR1_INST *pir1)
 //                IR2_OPND itemp = ra_alloc_itemp();
 //                IR2_OPND ftemp = ra_alloc_ftemp();
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //
-//                append_ir2_opnd3(mips_psraw, &dest, &dest, &ftemp); 
+//                append_ir2_opnd3(mips_psraw, &dest, &dest, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -2193,16 +2193,16 @@ bool translate_psrad(IR1_INST *pir1)
 //
 //            load_imm32_to_ir2(&temp_imm, 0xffffff80, SIGN_EXTENSION);
 //
-//            append_ir2_opnd2(mips_dmfc1, &temp, &src); 
-//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
+//            append_ir2_opnd2(mips_dmfc1, &temp, &src);
+//            append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//            append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
 //
 //            load_imm32_to_ir2(&temp_imm, 0x20, UNKNOWN_EXTENSION);
-//            append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp); 
-//            append_ir2_opnd3(mips_psraw, &dest, &dest, &ftemp); 
+//            append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp);
+//            append_ir2_opnd3(mips_psraw, &dest, &dest, &ftemp);
 //
-//            append_ir2_opnd1(mips_label, &target_label); 
-//            append_ir2_opnd3(mips_psraw, &dest, &dest, &src); 
+//            append_ir2_opnd1(mips_label, &target_label);
+//            append_ir2_opnd3(mips_psraw, &dest, &dest, &src);
 //
 //            ra_free_temp(&temp_imm);
 //            ra_free_temp(&temp);
@@ -2220,9 +2220,9 @@ bool translate_psrad(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&itemp, 0x20, UNKNOWN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -2232,9 +2232,9 @@ bool translate_psrad(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&itemp, imm, UNKNOWN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&itemp);
 //                ra_free_temp(&ftemp);
@@ -2254,20 +2254,20 @@ bool translate_psrad(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xffffff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &dest_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
 //
 //                load_imm32_to_ir2(&temp_imm, 0x20, UNKNOWN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo); 
-//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd2(mips_mov_d, &ftemp, &dest_lo);
+//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp);
 //
 //                ra_free_temp(&ftemp);
 //                ra_free_temp(&temp_imm);
@@ -2284,19 +2284,19 @@ bool translate_psrad(IR1_INST *pir1)
 //
 //                load_imm32_to_ir2(&temp_imm, 0xffffff80, SIGN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo); 
-//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp); 
-//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label); 
+//                append_ir2_opnd2(mips_dmfc1, &temp, &src_lo);
+//                append_ir2_opnd3(mips_and, &temp_imm, &temp_imm, &temp);
+//                append_ir2_opnd3(mips_beq, &temp_imm, &zero_ir2_opnd, &target_label);
 //
 //                load_imm32_to_ir2(&temp_imm, 0x20, UNKNOWN_EXTENSION);
 //
-//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp); 
-//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp); 
+//                append_ir2_opnd2(mips_dmtc1, &temp_imm, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &ftemp);
+//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &ftemp);
 //
-//                append_ir2_opnd1(mips_label, &target_label); 
-//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &src_lo); 
-//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &src_lo); 
+//                append_ir2_opnd1(mips_label, &target_label);
+//                append_ir2_opnd3(mips_psraw, &dest_lo, &dest_lo, &src_lo);
+//                append_ir2_opnd3(mips_psraw, &dest_hi, &dest_hi, &src_lo);
 //
 //                ra_free_temp(&temp_imm);
 //                ra_free_temp(&temp);
@@ -2330,17 +2330,17 @@ bool translate_psubb(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_psubb, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_psubb, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_psubb, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_psubb, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_psubb, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubb, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -2368,18 +2368,18 @@ bool translate_psubw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_psubh, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_psubh, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_psubh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_psubh, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_psubh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubh, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -2407,18 +2407,18 @@ bool translate_psubd(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_psubw, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_psubw, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_psubw, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_psubw, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_psubw, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubw, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -2446,18 +2446,18 @@ bool translate_psubsb(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_psubsb, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_psubsb, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_psubsb, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_psubsb, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_psubsb, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubsb, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -2485,17 +2485,17 @@ bool translate_psubsw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_psubsh, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_psubsh, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_psubsh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_psubsh, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
-//        append_ir2_opnd3(mips_psubsh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubsh, &dest_hi, &dest_hi, &src_hi);
 //    }
 //
     return true;
@@ -2523,18 +2523,18 @@ bool translate_psubusb(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_psubusb, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_psubusb, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_psubusb, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_psubusb, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_psubusb, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubusb, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -2562,18 +2562,18 @@ bool translate_psubusw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_psubush, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_psubush, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_psubush, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_psubush, &dest_lo, &dest_lo, &src_lo);
 //
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_psubush, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubush, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -2601,15 +2601,15 @@ bool translate_punpckhbw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_punpckhbh, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_punpckhbh, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_punpcklbh, &dest_lo, &dest_hi, &src_hi); 
-//        append_ir2_opnd3(mips_punpckhbh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_punpcklbh, &dest_lo, &dest_hi, &src_hi);
+//        append_ir2_opnd3(mips_punpckhbh, &dest_hi, &dest_hi, &src_hi);
 //    }
 //
     return true;
@@ -2637,15 +2637,15 @@ bool translate_punpckhwd(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_punpckhhw, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_punpckhhw, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_punpcklhw, &dest_lo, &dest_hi, &src_hi); 
-//        append_ir2_opnd3(mips_punpckhhw, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_punpcklhw, &dest_lo, &dest_hi, &src_hi);
+//        append_ir2_opnd3(mips_punpckhhw, &dest_hi, &dest_hi, &src_hi);
 //    }
 //
     return true;
@@ -2673,15 +2673,15 @@ bool translate_punpckhdq(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, true);
-//        append_ir2_opnd3(mips_punpckhwd, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_punpckhwd, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd0 + 1, true, true);
 //
-//        append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_hi, &src_hi); 
-//        append_ir2_opnd3(mips_punpckhwd, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_hi, &src_hi);
+//        append_ir2_opnd3(mips_punpckhwd, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -2707,15 +2707,15 @@ bool translate_punpcklbw(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
         IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
         IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, false);
-        append_ir2_opnd3(LISA_VILVL_B, &dest, &src, &dest); 
+        append_ir2_opnd3(LISA_VILVL_B, &dest, &src, &dest);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_punpckhbh, &dest_hi, &dest_lo, &src_lo); 
-//        append_ir2_opnd3(mips_punpcklbh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_punpckhbh, &dest_hi, &dest_lo, &src_lo);
+//        append_ir2_opnd3(mips_punpcklbh, &dest_lo, &dest_lo, &src_lo);
 //    }
 
     return true;
@@ -2744,15 +2744,15 @@ bool translate_punpcklwd(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, false);
-//        append_ir2_opnd3(mips_punpcklhw, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_punpcklhw, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_punpckhhw, &dest_hi, &dest_lo, &src_lo); 
-//        append_ir2_opnd3(mips_punpcklhw, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_punpckhhw, &dest_hi, &dest_lo, &src_lo);
+//        append_ir2_opnd3(mips_punpcklhw, &dest_lo, &dest_lo, &src_lo);
 //    }
 
     return true;
@@ -2781,15 +2781,15 @@ bool translate_punpckldq(IR1_INST *pir1)
 //    if (ir1_opnd_is_mmx(opnd0)) {
 //        IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND src  = load_freg_from_ir1_1(opnd1, false, false);
-//        append_ir2_opnd3(mips_punpcklwd, &dest, &dest, &src); 
+//        append_ir2_opnd3(mips_punpcklwd, &dest, &dest, &src);
 //    }
 //    else {
 //        IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//        append_ir2_opnd3(mips_punpckhwd, &dest_hi, &dest_lo, &src_lo); 
-//        append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_punpckhwd, &dest_hi, &dest_lo, &src_lo);
+//        append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &src_lo);
 //    }
 
     return true;
@@ -2822,8 +2822,8 @@ bool translate_addps(IR1_INST *pir1)
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_add_ps, &dest_lo, &dest_lo, &src_lo); 
-//        append_ir2_opnd3(mips_add_ps, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_add_ps, &dest_lo, &dest_lo, &src_lo);
+//        append_ir2_opnd3(mips_add_ps, &dest_hi, &dest_hi, &src_hi);
 //
 //    }
 //    else {
@@ -2858,7 +2858,7 @@ bool translate_addsd(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_add_d, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_add_d, &dest_lo, &dest_lo, &src_lo);
 
     return true;
 }
@@ -2889,9 +2889,9 @@ bool translate_addss(IR1_INST *pir1)
 //
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_add_s, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_add_s, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_dest);
     return true;
@@ -2921,8 +2921,8 @@ bool translate_andnpd(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//    append_ir2_opnd3(mips_pandn, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_pandn, &dest_hi, &dest_hi, &src_hi); 
+//    append_ir2_opnd3(mips_pandn, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_pandn, &dest_hi, &dest_hi, &src_hi);
 
     return true;
 }
@@ -2957,8 +2957,8 @@ bool translate_andps(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//    append_ir2_opnd3(mips_fand, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_fand, &dest_hi, &dest_hi, &src_hi); 
+//    append_ir2_opnd3(mips_fand, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_fand, &dest_hi, &dest_hi, &src_hi);
 
     return true;
 }
@@ -2992,35 +2992,35 @@ bool translate_cmpeqpd(IR1_INST *pir1)
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 64 bits of dest and src are not equal */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_high);
 //    /* the low 64 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit  = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_eq_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_eq_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
 //    /* the high 64 bits of dest and src are not equal */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the high 64 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3055,35 +3055,35 @@ bool translate_cmpltpd(IR1_INST *pir1)
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 64 bits of dest is not less than that of src */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    append_ir2_opnd1(mips_b, &label_high);
 //    /* the low 64 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit  = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_lt_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_lt_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
 //    /* the high 64 bits of dest is not less than that of src */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the high 64 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3118,33 +3118,33 @@ bool translate_cmplepd(IR1_INST *pir1)
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1t, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit  = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_le_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3179,32 +3179,32 @@ bool translate_cmpunordpd(IR1_INST *pir1)
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1t, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit  = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_un_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3239,30 +3239,30 @@ bool translate_cmpneqpd(IR1_INST *pir1)
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_eq_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_eq_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3297,36 +3297,36 @@ bool translate_cmpnltpd(IR1_INST *pir1)
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
 //    /* the low 64 bits of dest is less than that of src */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    append_ir2_opnd1(mips_b, &label_high);
 //    /* the low 64 bits of dest is not less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_lt_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_lt_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
 //    /* the high 64 bits of dest is less than that of src */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the high 64 bits of dest is not less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3362,32 +3362,32 @@ bool translate_cmpnlepd(IR1_INST *pir1)
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit  = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_le_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3423,31 +3423,31 @@ bool translate_cmpordpd(IR1_INST *pir1)
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
 //    /* high 64 bits */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_un_d, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_un_d, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -3482,91 +3482,91 @@ bool translate_cmpeqps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* eq? */
-//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 32 bits of dest and src are not equal */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    append_ir2_opnd1(mips_b, &label_high);
 //    /* the low 32 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
 //    /* the high 32 bits of dest and src are not equal */
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);          
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the high 32 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* eq? */
-//    append_ir2_opnd2(mips_c_eq_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_eq_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true3); 
+//    append_ir2_opnd1(mips_bc1t, &label_true3);
 //    /* the low 32 bits of dest and src are not equal */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1); 
+//    append_ir2_opnd1(mips_b, &label_high1);
 //    /* the low 32 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true4); 
+//    append_ir2_opnd1(mips_bc1t, &label_true4);
 //    /* the high 32 bits of dest and src are not equal */
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);           
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
 //    /* the high 32 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -3603,89 +3603,89 @@ bool translate_cmpltps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* lt? */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 32 bits of dest is not less than that of src */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    append_ir2_opnd1(mips_b, &label_high);
 //    /* the low 32 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
 //    /* the high 32 bits of dest is not less than that of src */
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);          
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the high 32 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* lt? */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_lt_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true3); 
+//    append_ir2_opnd1(mips_bc1t, &label_true3);
 //    /* the low 32 bits of dest is not less than that of src */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1); 
+//    append_ir2_opnd1(mips_b, &label_high1);
 //    /* the low 32 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true4); 
+//    append_ir2_opnd1(mips_bc1t, &label_true4);
 //    /* the high 32 bits of dest is not less than that of src */
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);           
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
 //    /* the high 32 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -3722,92 +3722,92 @@ bool translate_cmpleps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* le? */
-//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 32 bits of dest is not less equal than that of src */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_high);
 //    /* the low 32 bits of dest is less equal than that of src */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
 //    /* the high 32 bits of dest is not less equal than that of src */
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);          
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the high 32 bits of dest is less equal than that of src */
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* lt? */
-//    append_ir2_opnd2(mips_c_le_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_le_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true3); 
+//    append_ir2_opnd1(mips_bc1t, &label_true3);
 //    /* the low 32 bits of dest is not less equal than that of src */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1); 
+//    append_ir2_opnd1(mips_b, &label_high1);
 //    /* the low 32 bits of dest is less equal than that of src */
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true4); 
+//    append_ir2_opnd1(mips_bc1t, &label_true4);
 //    /* the high 32 bits of dest is not less equal than that of src */
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);           
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
 //    /* the high 32 bits of dest is less equal than that of src */
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -3844,85 +3844,85 @@ bool translate_cmpunordps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* un? */
-//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1t, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true2); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1t, &label_true2);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* un? */
-//    append_ir2_opnd2(mips_c_un_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_un_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true3); 
+//    append_ir2_opnd1(mips_bc1t, &label_true3);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1);     
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high1);
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true4); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1t, &label_true4);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2);     
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -3959,85 +3959,85 @@ bool translate_cmpneqps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* eq? */
-//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* eq? */
-//    append_ir2_opnd2(mips_c_eq_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_eq_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true3); 
+//    append_ir2_opnd1(mips_bc1f, &label_true3);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1);     
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high1);
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_eq_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true4); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true4);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2);     
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -4074,85 +4074,85 @@ bool translate_cmpnltps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* lt? */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* lt? */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_lt_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true3); 
+//    append_ir2_opnd1(mips_bc1f, &label_true3);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1);     
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high1);
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true4); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true4);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2);     
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -4189,85 +4189,85 @@ bool translate_cmpnleps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* le? */
-//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* lt? */
-//    append_ir2_opnd2(mips_c_le_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_le_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true3); 
+//    append_ir2_opnd1(mips_bc1f, &label_true3);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1);     
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high1);
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_le_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true4); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true4);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2);     
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -4304,85 +4304,85 @@ bool translate_cmpordps(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo and src_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* un? */
-//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    append_ir2_opnd1(mips_b, &label_high);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    IR2_OPND label_true2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true2); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true2);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);      
-//    append_ir2_opnd1(mips_label, &label_true2); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true2);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* high 64 bits */
 //    /* save high 32 bits of dest_hi and src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_high1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* un? */
-//    append_ir2_opnd2(mips_c_un_s, &dest_hi, &src_hi);                 
+//    append_ir2_opnd2(mips_c_un_s, &dest_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true3); 
+//    append_ir2_opnd1(mips_bc1f, &label_true3);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
-//    append_ir2_opnd1(mips_b, &label_high1);     
-//    append_ir2_opnd1(mips_label, &label_true3); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_high1);
+//    append_ir2_opnd1(mips_label, &label_true3);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, true);
 //    /* the second single */
-//    append_ir2_opnd1(mips_label, &label_high1); 
+//    append_ir2_opnd1(mips_label, &label_high1);
 //
 //    IR2_OPND label_true4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);               
+//    append_ir2_opnd2(mips_c_un_s, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true4); 
-//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);               
+//    append_ir2_opnd1(mips_bc1f, &label_true4);
+//    append_ir2_opnd2(mips_dmtc1, &zero_ir2_opnd, &temp_dest);
 //
-//    append_ir2_opnd1(mips_b, &label_exit2);     
-//    append_ir2_opnd1(mips_label, &label_true4); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit2);
+//    append_ir2_opnd1(mips_label, &label_true4);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &temp_dest);
 //
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -4413,27 +4413,27 @@ bool translate_cmpeqsd(IR1_INST *pir1)
 //
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
-//     
+//
 //    IR2_OPND temp_int = ra_alloc_itemp();
-//     
+//
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 64 bits of dest and src are not equal */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);  
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the low 64 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4464,25 +4464,25 @@ bool translate_cmpltsd(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
 //    IR2_OPND temp_int = ra_alloc_itemp();
-//     
+//
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 64 bits of dest is not less than that of src */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);  
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the low 64 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4516,22 +4516,22 @@ bool translate_cmplesd(IR1_INST *pir1)
 //
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 64 bits of dest is not less equal than that of src */
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);  
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the low 64 bits of dest is less equal than that of src */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4565,20 +4565,20 @@ bool translate_cmpunordsd(IR1_INST *pir1)
 //
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);   
+//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4612,20 +4612,20 @@ bool translate_cmpneqsd(IR1_INST *pir1)
 //
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);   
+//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4663,20 +4663,20 @@ bool translate_cmpnltsd(IR1_INST *pir1)
 //
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);   
+//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4714,19 +4714,19 @@ bool translate_cmpnlesd(IR1_INST *pir1)
 //
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
 //
-//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);   
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4760,17 +4760,17 @@ bool translate_cmpordsd(IR1_INST *pir1)
 //
 //    /* low 64 bits */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_d, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
-//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);   
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
-//    store_ir2_to_ir1(&temp_int, opnd0, false);                
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    store_ir2_to_ir1(&temp_int, opnd0, false);
+//    append_ir2_opnd1(mips_label, &label_exit);
 //
 //    ra_free_temp(&temp_int);
     return true;
@@ -4805,26 +4805,26 @@ bool translate_cmpeqss(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* eq? */
-//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 32 bits of dest and src are not equal */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the low 32 bits of dest and src are equal */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -4860,26 +4860,26 @@ bool translate_cmpltss(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* lt? */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
 //    /* the low 32 bits of dest is not less than that of src */
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);            
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
 //    /* the low 32 bits of dest is less than that of src */
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -4916,23 +4916,23 @@ bool translate_cmpless(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -4963,29 +4963,29 @@ bool translate_cmpunordss(IR1_INST *pir1)
 //
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, false);
-//     
+//
 //    IR2_OPND temp_int = ra_alloc_itemp();
 //
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_bc1t, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -5022,23 +5022,23 @@ bool translate_cmpneqss(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_eq_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -5079,24 +5079,24 @@ bool translate_cmpnltss(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -5137,24 +5137,24 @@ bool translate_cmpnless(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_le_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -5191,24 +5191,24 @@ bool translate_cmpordss(IR1_INST *pir1)
 //    /* low 64 bits */
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* the first single scalar operand */
 //    IR2_OPND label_true = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);                
+//    append_ir2_opnd2(mips_c_un_s, &dest_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_bc1f, &label_true); 
-//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);                
-//    append_ir2_opnd1(mips_b, &label_exit);     
-//    append_ir2_opnd1(mips_label, &label_true); 
-//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd); 
+//    append_ir2_opnd1(mips_bc1f, &label_true);
+//    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, false);
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_true);
+//    append_ir2_opnd3(mips_nor, &temp_int, &zero_ir2_opnd, &zero_ir2_opnd);
 //
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //    /* merge */
-//    append_ir2_opnd1(mips_label, &label_exit); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_exit);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_int);
 //    ra_free_temp(&temp_dest);
@@ -5228,8 +5228,8 @@ bool translate_comisd(IR1_INST *pir1)
 //    if (option_xmm128map){
 //        lsassert(ir1_opnd_num(pir1) == 2);
 //
-//        IR2_OPND dest = load_freg128_from_ir1(opnd0); 
-//        IR2_OPND src  = load_freg128_from_ir1(opnd1); 
+//        IR2_OPND dest = load_freg128_from_ir1(opnd0);
+//        IR2_OPND src  = load_freg128_from_ir1(opnd1);
 //        IR2_OPND temp;
 //
 //        IR2_OPND label_nun  = ir2_opnd_new_type(IR2_OPND_LABEL);
@@ -5243,21 +5243,21 @@ bool translate_comisd(IR1_INST *pir1)
 //        }
 //
 //        /*  case 1: are they unordered? */
-//        append_ir2_opnd2(mips_c_un_d, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1f, &label_nun);   
+//        append_ir2_opnd2(mips_c_un_d, &dest, &src);
+//        append_ir2_opnd1(mips_bc1f, &label_nun);
 //        /* at least one of the operands is NaN */
 //        // set zf,pf,cf = 111
 //        if (option_lbt) {
 //            append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //        } else {
-//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //        }
-//        append_ir2_opnd1(mips_b, &label_exit); 
+//        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 2: not unordered. are they equal? */
-//        append_ir2_opnd1(mips_label, &label_nun);  
-//        append_ir2_opnd2(mips_c_eq_d, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1f, &label_neq);   
+//        append_ir2_opnd1(mips_label, &label_nun);
+//        append_ir2_opnd2(mips_c_eq_d, &dest, &src);
+//        append_ir2_opnd1(mips_bc1f, &label_neq);
 //        /* two operands are equal */
 //        // set zf,pf,cf = 100
 //        if (option_lbt) {
@@ -5271,9 +5271,9 @@ bool translate_comisd(IR1_INST *pir1)
 //        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 3: not unordered, not equal. less than? */
-//        append_ir2_opnd1(mips_label, &label_neq);  
-//        append_ir2_opnd2(mips_c_lt_d, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1f, &label_gt);    
+//        append_ir2_opnd1(mips_label, &label_neq);
+//        append_ir2_opnd2(mips_c_lt_d, &dest, &src);
+//        append_ir2_opnd1(mips_bc1f, &label_gt);
 //        /* less than */
 //        // set zf.pf.cf = 001
 //        if (option_lbt) {
@@ -5328,21 +5328,21 @@ bool translate_comisd(IR1_INST *pir1)
 //    }
 //
 //    /*  case 1: are they unordered? */
-//    append_ir2_opnd2(mips_c_un_d, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1f, &label_nun);   
+//    append_ir2_opnd2(mips_c_un_d, &dest, &src);
+//    append_ir2_opnd1(mips_bc1f, &label_nun);
 //    /* at least one of the operands is NaN */
 //    // set zf,pf,cf = 111
 //    if (option_lbt) {
 //        append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //    } else {
-//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //    }
-//    append_ir2_opnd1(mips_b, &label_exit); 
+//    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 2: not unordered. are they equal? */
-//    append_ir2_opnd1(mips_label, &label_nun);  
-//    append_ir2_opnd2(mips_c_eq_d, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1f, &label_neq);   
+//    append_ir2_opnd1(mips_label, &label_nun);
+//    append_ir2_opnd2(mips_c_eq_d, &dest, &src);
+//    append_ir2_opnd1(mips_bc1f, &label_neq);
 //    /* two operands are equal */
 //    // set zf,pf,cf = 100
 //    if (option_lbt) {
@@ -5356,9 +5356,9 @@ bool translate_comisd(IR1_INST *pir1)
 //    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 3: not unordered, not equal. less than? */
-//    append_ir2_opnd1(mips_label, &label_neq);  
-//    append_ir2_opnd2(mips_c_lt_d, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1f, &label_gt);    
+//    append_ir2_opnd1(mips_label, &label_neq);
+//    append_ir2_opnd2(mips_c_lt_d, &dest, &src);
+//    append_ir2_opnd1(mips_bc1f, &label_gt);
 //    /* less than */
 //    // set zf.pf.cf = 001
 //    if (option_lbt) {
@@ -5423,21 +5423,21 @@ bool translate_comiss(IR1_INST *pir1)
 //        }
 //
 //        /*  case 1: are they unordered? */
-//        append_ir2_opnd2(mips_c_un_s, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1f, &label_nun);   
+//        append_ir2_opnd2(mips_c_un_s, &dest, &src);
+//        append_ir2_opnd1(mips_bc1f, &label_nun);
 //        /* at least one of the operands is NaN */
 //        // set zf,pf,cf = 111
 //        if (option_lbt) {
 //            append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //        } else {
-//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //        }
 //        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 2: not unordered. are they equal? */
-//        append_ir2_opnd1(mips_label, &label_nun);  
-//        append_ir2_opnd2(mips_c_eq_s, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1f, &label_neq);   
+//        append_ir2_opnd1(mips_label, &label_nun);
+//        append_ir2_opnd2(mips_c_eq_s, &dest, &src);
+//        append_ir2_opnd1(mips_bc1f, &label_neq);
 //        /* two operands are equal */
 //        // set zf,pf,cf = 100
 //        if (option_lbt) {
@@ -5451,9 +5451,9 @@ bool translate_comiss(IR1_INST *pir1)
 //        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 3: not unordered, not equal. less than? */
-//        append_ir2_opnd1(mips_label, &label_neq);  
-//        append_ir2_opnd2(mips_c_lt_s, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1f, &label_gt);    
+//        append_ir2_opnd1(mips_label, &label_neq);
+//        append_ir2_opnd2(mips_c_lt_s, &dest, &src);
+//        append_ir2_opnd1(mips_bc1f, &label_gt);
 //        /* less than */
 //        // set zf.pf.cf = 001
 //        if (option_lbt) {
@@ -5507,21 +5507,21 @@ bool translate_comiss(IR1_INST *pir1)
 //    }
 //
 //    /*  case 1: are they unordered? */
-//    append_ir2_opnd2(mips_c_un_s, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1f, &label_nun);   
+//    append_ir2_opnd2(mips_c_un_s, &dest, &src);
+//    append_ir2_opnd1(mips_bc1f, &label_nun);
 //    /* at least one of the operands is NaN */
 //    // set zf,pf,cf = 111
 //    if (option_lbt) {
 //        append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //    } else {
-//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //    }
 //    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 2: not unordered. are they equal? */
-//    append_ir2_opnd1(mips_label, &label_nun);  
-//    append_ir2_opnd2(mips_c_eq_s, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1f, &label_neq);   
+//    append_ir2_opnd1(mips_label, &label_nun);
+//    append_ir2_opnd2(mips_c_eq_s, &dest, &src);
+//    append_ir2_opnd1(mips_bc1f, &label_neq);
 //    /* two operands are equal */
 //    // set zf,pf,cf = 100
 //    if (option_lbt) {
@@ -5535,9 +5535,9 @@ bool translate_comiss(IR1_INST *pir1)
 //    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 3: not unordered, not equal. less than? */
-//    append_ir2_opnd1(mips_label, &label_neq);  
-//    append_ir2_opnd2(mips_c_lt_s, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1f, &label_gt);    
+//    append_ir2_opnd1(mips_label, &label_neq);
+//    append_ir2_opnd2(mips_c_lt_s, &dest, &src);
+//    append_ir2_opnd1(mips_bc1f, &label_gt);
 //    /* less than */
 //    // set zf.pf.cf = 001
 //    if (option_lbt) {
@@ -5612,11 +5612,11 @@ bool translate_cvtdq2pd(IR1_INST *pir1)
 //    IR2_OPND ftemp_src_lo32 = ra_alloc_ftemp();
 //    IR2_OPND ftemp_src_hi32 = ra_alloc_ftemp();
 //
-//    append_ir2_opnd3(mips_fdsll, &ftemp_src_lo32, &src, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src_lo32, &ftemp_src_lo32, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src_hi32, &src, &f32_ir2_opnd); 
-//    append_ir2_opnd2(mips_cvt_d_w, &dest_lo, &ftemp_src_lo32); 
-//    append_ir2_opnd2(mips_cvt_d_w, &dest_hi, &ftemp_src_hi32); 
+//    append_ir2_opnd3(mips_fdsll, &ftemp_src_lo32, &src, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src_lo32, &ftemp_src_lo32, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src_hi32, &src, &f32_ir2_opnd);
+//    append_ir2_opnd2(mips_cvt_d_w, &dest_lo, &ftemp_src_lo32);
+//    append_ir2_opnd2(mips_cvt_d_w, &dest_hi, &ftemp_src_hi32);
 //
 //    ra_free_temp(&ftemp_src_lo32);
 //    ra_free_temp(&ftemp_src_hi32);
@@ -5666,28 +5666,28 @@ bool translate_cvtdq2ps(IR1_INST *pir1)
 //    /* low 64bit */
 //    IR2_OPND ftemp_src_lo32 = ra_alloc_ftemp();
 //    IR2_OPND ftemp_src_hi32 = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsll, &ftemp_src_lo32, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsll, &ftemp_src_lo32, &src_lo, &f32_ir2_opnd);
 //
 //    /* ftemp_src_lo32 is low 32bit of src_lo */
 //    append_ir2_opnd3(mips_fdsrl, &ftemp_src_lo32, &ftemp_src_lo32, &f32_ir2_opnd);
-//                                    
+//
 //    /* ftemp_src_hi32 is high 32bit of src_lo */
 //    append_ir2_opnd3(mips_fdsrl, &ftemp_src_hi32, &src_lo, &f32_ir2_opnd);
-//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_lo32, &ftemp_src_lo32); 
-//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_hi32, &ftemp_src_hi32); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src_lo32, &ftemp_src_hi32); 
+//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_lo32, &ftemp_src_lo32);
+//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_hi32, &ftemp_src_hi32);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src_lo32, &ftemp_src_hi32);
 //
 //    /* high 64bit */
-//    append_ir2_opnd3(mips_fdsll, &ftemp_src_lo32, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsll, &ftemp_src_lo32, &src_hi, &f32_ir2_opnd);
 //
 //    /* ftemp_src_lo32 is low 32bit of src_hi */
 //    append_ir2_opnd3(mips_fdsrl, &ftemp_src_lo32, &ftemp_src_lo32, &f32_ir2_opnd);
-//                                    
+//
 //    /* ftemp_src_hi32 is high 32bit of src_hi */
 //    append_ir2_opnd3(mips_fdsrl, &ftemp_src_hi32, &src_hi, &f32_ir2_opnd);
-//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_lo32, &ftemp_src_lo32); 
-//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_hi32, &ftemp_src_hi32); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &ftemp_src_lo32, &ftemp_src_hi32); 
+//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_lo32, &ftemp_src_lo32);
+//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src_hi32, &ftemp_src_hi32);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &ftemp_src_lo32, &ftemp_src_hi32);
 //
 //    ra_free_temp(&ftemp_src_lo32);
 //    ra_free_temp(&ftemp_src_hi32);
@@ -5706,7 +5706,7 @@ bool translate_cvtpd2dq(IR1_INST *pir1)
 //
 //    IR2_OPND src_lo;
 //    IR2_OPND src_hi;
-//    IR2_OPND dest_lo;                                         
+//    IR2_OPND dest_lo;
 //
 //    if (option_xmm128map){
 //        src_lo = load_freg128_from_ir1(opnd1);
@@ -5725,64 +5725,64 @@ bool translate_cvtpd2dq(IR1_INST *pir1)
 //    load_imm64_to_ir2(&temp_int, 0x41dfffffffdffffcULL);
 //
 //    IR2_OPND ftemp_over_flow = ra_alloc_ftemp();
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow);
 //
 //    /* double for 0x80000000.499999 */
 //    load_imm64_to_ir2(&temp_int, 0xc1dfffffffdffffcULL);
 //
 //    IR2_OPND ftemp_under_flow = ra_alloc_ftemp();
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow);
 //
 //    IR2_OPND label_for_flow1 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* low 64bit */
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src_lo = ra_alloc_ftemp();
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_lo, &src_lo); 
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);  
+//    append_ir2_opnd2(mips_c_un_d, &src_lo, &src_lo);
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
 //    /* is overflow? */
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_lo);                     
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_lo);
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
 //    /* is under flow? */
-//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &ftemp_under_flow);           
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
+//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &ftemp_under_flow);
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
 //    /* is normal */
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_lo, &src_lo); 
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_lo, &src_lo);
 //
 //    IR2_OPND label_high = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd1(mips_b, &label_high);  
-//    append_ir2_opnd1(mips_label, &label_for_flow1); 
+//    append_ir2_opnd1(mips_b, &label_high);
+//    append_ir2_opnd1(mips_label, &label_for_flow1);
 //
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_lo);           
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_lo);
 //
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //    IR2_OPND label_for_flow2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    /* high 64bit */
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src_hi = ra_alloc_ftemp();
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_hi, &src_hi); 
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);  
+//    append_ir2_opnd2(mips_c_un_d, &src_hi, &src_hi);
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
 //    /* is overflow? */
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_hi);                     
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_c_lt_d, &src_hi, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_c_lt_d, &src_hi, &ftemp_under_flow);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
 //    /* is normal */
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_hi, &src_hi); 
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_hi, &src_hi);
 //
 //    IR2_OPND label_over = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd1(mips_b, &label_over);  
+//    append_ir2_opnd1(mips_b, &label_over);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow2); 
+//    append_ir2_opnd1(mips_label, &label_for_flow2);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_hi);           
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_hi);
 //
-//    append_ir2_opnd1(mips_label, &label_over); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src_lo, &ftemp_src_hi); 
+//    append_ir2_opnd1(mips_label, &label_over);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src_lo, &ftemp_src_hi);
 //
 //    if (option_xmm128map) {
 //        append_ir2_opnd2i(mips_vclrstriv, &dest_lo, &dest_lo, 7);
@@ -5823,7 +5823,7 @@ bool translate_cvtpd2pi(IR1_INST *pir1)
 //    IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
 //
 //    IR2_OPND src_lo;
-//    IR2_OPND src_hi;                                         
+//    IR2_OPND src_hi;
 //    if (option_xmm128map) {
 //        src_lo = load_freg128_from_ir1(opnd1);
 //        src_hi = ra_alloc_ftemp();
@@ -5845,63 +5845,63 @@ bool translate_cvtpd2pi(IR1_INST *pir1)
 //
 //    /* double for 0x7fffffff.499999 */
 //    load_imm64_to_ir2(&temp_int, 0x41dfffffffdffffcULL);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow);
 //
 //    /* double for 0x80000000.499999 */
 //    load_imm64_to_ir2(&temp_int, 0xc1dfffffffdffffcULL);
-//        
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow); 
+//
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow);
 //
 //    /* low 64bit */
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src_lo = ra_alloc_ftemp();
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_lo, &src_lo); 
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);  
+//    append_ir2_opnd2(mips_c_un_d, &src_lo, &src_lo);
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
 //    /* is overflow? */
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_lo);                     
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_lo);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &ftemp_under_flow);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_lo, &src_lo);             
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_lo, &src_lo);
 //
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    append_ir2_opnd1(mips_b, &label_high);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow1); 
+//    append_ir2_opnd1(mips_label, &label_for_flow1);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_lo);           
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_lo);
 //
 //    /* high 64bit */
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src_hi = ra_alloc_ftemp();
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_hi, &src_hi); 
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);  
+//    append_ir2_opnd2(mips_c_un_d, &src_hi, &src_hi);
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
 //    /* is overflow? */
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_hi);                     
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_hi);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
 //    /* is under flow? */
-//    append_ir2_opnd2(mips_c_lt_d, &src_hi, &ftemp_under_flow);           
+//    append_ir2_opnd2(mips_c_lt_d, &src_hi, &ftemp_under_flow);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_hi, &src_hi);             
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src_hi, &src_hi);
 //
-//    append_ir2_opnd1(mips_b, &label_over); 
+//    append_ir2_opnd1(mips_b, &label_over);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow2); 
+//    append_ir2_opnd1(mips_label, &label_for_flow2);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_hi);           
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src_hi);
 //
-//    append_ir2_opnd1(mips_label, &label_over); 
+//    append_ir2_opnd1(mips_label, &label_over);
 //
-//    append_ir2_opnd3(mips_punpcklwd, &dest, &ftemp_src_lo, &ftemp_src_hi); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest, &ftemp_src_lo, &ftemp_src_hi);
 //
 //    ra_free_temp(&ftemp_src_lo);
 //    ra_free_temp(&ftemp_src_hi);
@@ -5946,9 +5946,9 @@ bool translate_cvtpd2ps(IR1_INST *pir1)
 //    IR2_OPND ftemp_src_lo = ra_alloc_ftemp();
 //    IR2_OPND ftemp_src_hi = ra_alloc_ftemp();
 //
-//    append_ir2_opnd2(mips_cvt_s_d, &ftemp_src_lo, &src_lo); 
-//    append_ir2_opnd2(mips_cvt_s_d, &ftemp_src_hi, &src_hi); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src_lo, &ftemp_src_hi); 
+//    append_ir2_opnd2(mips_cvt_s_d, &ftemp_src_lo, &src_lo);
+//    append_ir2_opnd2(mips_cvt_s_d, &ftemp_src_hi, &src_hi);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src_lo, &ftemp_src_hi);
 //
 //    store_ir2_to_ir1(&zero_ir2_opnd, opnd0, true);
 //
@@ -5998,15 +5998,15 @@ bool translate_cvtpi2ps(IR1_INST *pir1)
 //    IR2_OPND fcsr_opnd  = set_fpu_fcsr_rounding_field_by_x86();
 //    IR2_OPND ftemp_src1 = ra_alloc_ftemp();
 //
-//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src1, &src); 
+//    append_ir2_opnd2(mips_cvt_s_w, &ftemp_src1, &src);
 //
 //    /* dest_lo are used temporarily store high 32bit of src */
 //    append_ir2_opnd3(mips_fdsrl, &dest_lo, &src, &f32_ir2_opnd);
-//                                       
+//
 //    /* for we try to use regs as less as possible */
 //    append_ir2_opnd2(mips_cvt_s_w, &dest_lo, &dest_lo);
 //
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src1, &dest_lo); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src1, &dest_lo);
 //
 //    /* reload fscr */
 //    set_fpu_fcsr(&fcsr_opnd);
@@ -6056,9 +6056,9 @@ bool translate_cvtpi2pd(IR1_INST *pir1)
 //
 //    IR2_OPND ftemp_src1 = ra_alloc_ftemp();
 //
-//    append_ir2_opnd2(mips_cvt_d_w, &dest_lo, &src); 
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &src, &f32_ir2_opnd); 
-//    append_ir2_opnd2(mips_cvt_d_w, &dest_hi, &ftemp_src1); 
+//    append_ir2_opnd2(mips_cvt_d_w, &dest_lo, &src);
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &src, &f32_ir2_opnd);
+//    append_ir2_opnd2(mips_cvt_d_w, &dest_hi, &ftemp_src1);
 //
 //    ra_free_temp(&ftemp_src1);
     return true;
@@ -6114,73 +6114,73 @@ bool translate_cvtps2dq(IR1_INST *pir1)
 //
 //    /* double for 0x7fffffff.499999 */
 //    load_imm64_to_ir2(&temp_int, 0x41dfffffffdffffcULL);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow);
 //
 //    /* double for 0x80000000.499999 */
 //    load_imm64_to_ir2(&temp_int, 0xc1dfffffffdffffcULL);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow);
 //
 //    /* the first single scalar operand */
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src1 = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsll, &ftemp_src1, &src_lo, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &ftemp_src1, &f32_ir2_opnd); 
-//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src1, &ftemp_src1); 
+//    append_ir2_opnd3(mips_fdsll, &ftemp_src1, &src_lo, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &ftemp_src1, &f32_ir2_opnd);
+//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src1, &ftemp_src1);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &ftemp_src1, &ftemp_src1);                 
+//    append_ir2_opnd2(mips_c_un_d, &ftemp_src1, &ftemp_src1);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src1);                 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src1);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src1, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src1, &ftemp_under_flow);
 //
 //    /* is normal */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src1, &ftemp_src1);         
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src1, &ftemp_src1);
 //
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    append_ir2_opnd1(mips_b, &label_high);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow1); 
+//    append_ir2_opnd1(mips_label, &label_for_flow1);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src1);             
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src1);
 //
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //    /* the second single scalar operand */
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src2 = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src2, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src2, &src_lo, &f32_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src2, &ftemp_src2); 
+//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src2, &ftemp_src2);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &ftemp_src2, &ftemp_src2);                 
+//    append_ir2_opnd2(mips_c_un_d, &ftemp_src2, &ftemp_src2);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src2);                 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src2);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src2, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src2, &ftemp_under_flow);
 //
 //    /* is normal */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src2, &ftemp_src2);         
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src2, &ftemp_src2);
 //
-//    append_ir2_opnd1(mips_b, &label_over); 
+//    append_ir2_opnd1(mips_b, &label_over);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow2); 
+//    append_ir2_opnd1(mips_label, &label_for_flow2);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src2);             
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src2);
 //
-//    append_ir2_opnd1(mips_label, &label_over); 
+//    append_ir2_opnd1(mips_label, &label_over);
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src1, &ftemp_src2); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &ftemp_src1, &ftemp_src2);
 //
 //    IR2_OPND label_for_flow3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //    IR2_OPND label_for_flow4 = ir2_opnd_new_type(IR2_OPND_LABEL);
@@ -6189,63 +6189,63 @@ bool translate_cvtps2dq(IR1_INST *pir1)
 //
 //    /* the first single scalar operand */
 //    /* is unorder or overflow or under flow? */
-//    append_ir2_opnd3(mips_fdsll, &ftemp_src1, &src_hi, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &ftemp_src1, &f32_ir2_opnd); 
-//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src1, &ftemp_src1); 
+//    append_ir2_opnd3(mips_fdsll, &ftemp_src1, &src_hi, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &ftemp_src1, &f32_ir2_opnd);
+//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src1, &ftemp_src1);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &ftemp_src1, &ftemp_src1);                 
+//    append_ir2_opnd2(mips_c_un_d, &ftemp_src1, &ftemp_src1);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow3); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src1);                 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow3);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src1);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow3); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src1, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow3);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src1, &ftemp_under_flow);
 //
 //    /* is normal */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow3); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src1, &ftemp_src1);          
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow3);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src1, &ftemp_src1);
 //
-//    append_ir2_opnd1(mips_b, &label_high2); 
+//    append_ir2_opnd1(mips_b, &label_high2);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow3); 
+//    append_ir2_opnd1(mips_label, &label_for_flow3);
 //
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src1);              
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src1);
 //
-//    append_ir2_opnd1(mips_label, &label_high2); 
+//    append_ir2_opnd1(mips_label, &label_high2);
 //    /* the second single scalar operand */
 //    /* is unorder or overflow or under flow? */
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src2, &src_hi, &f32_ir2_opnd); 
-//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src2, &ftemp_src2); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src2, &src_hi, &f32_ir2_opnd);
+//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src2, &ftemp_src2);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &ftemp_src2, &ftemp_src2);                 
+//    append_ir2_opnd2(mips_c_un_d, &ftemp_src2, &ftemp_src2);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow4); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src2);                 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow4);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src2);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow4); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src2, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow4);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src2, &ftemp_under_flow);
 //
 //    /* is normal */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow4); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src2, &ftemp_src2);          
-//    append_ir2_opnd1(mips_b, &label_over2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow4);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src2, &ftemp_src2);
+//    append_ir2_opnd1(mips_b, &label_over2);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow4); 
+//    append_ir2_opnd1(mips_label, &label_for_flow4);
 //
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src2);              
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src2);
 //
-//    append_ir2_opnd1(mips_label, &label_over2); 
+//    append_ir2_opnd1(mips_label, &label_over2);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &ftemp_src1, &ftemp_src2); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &ftemp_src1, &ftemp_src2);
 //
 //    if (option_xmm128map) {
 //        append_ir2_opnd2ii(mips_vextrinsd, &real_dest, &dest_lo, 0, 0);
@@ -6273,7 +6273,7 @@ bool translate_cvtps2pi(IR1_INST *pir1)
 //    tr_x87_to_mmx();
 //
 //    IR2_OPND dest = load_freg_from_ir1_1(opnd0, false, true);
-//    IR2_OPND src_lo;                                         
+//    IR2_OPND src_lo;
 //
 //    if (option_xmm128map){
 //        src_lo = load_freg128_from_ir1(opnd1);
@@ -6293,74 +6293,74 @@ bool translate_cvtps2pi(IR1_INST *pir1)
 //    /* double for 0x7fffffff.499999 */
 //    load_imm64_to_ir2(&temp_int, 0x41dfffffffdffffcULL);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow);
 //
 //    /* double for 0x80000000.499999 */
 //    load_imm64_to_ir2(&temp_int, 0xc1dfffffffdffffcULL);
-//        
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow); 
+//
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow);
 //
 //    /* the first single scalar operand */
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src1 = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsll, &ftemp_src1, &src_lo, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &ftemp_src1, &f32_ir2_opnd); 
-//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src1, &ftemp_src1); 
+//    append_ir2_opnd3(mips_fdsll, &ftemp_src1, &src_lo, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src1, &ftemp_src1, &f32_ir2_opnd);
+//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src1, &ftemp_src1);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &ftemp_src1, &ftemp_src1);                 
+//    append_ir2_opnd2(mips_c_un_d, &ftemp_src1, &ftemp_src1);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src1);                 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src1);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src1, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src1, &ftemp_under_flow);
 //
 //    /* is normal */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow1); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src1, &ftemp_src1);         
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow1);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src1, &ftemp_src1);
 //
-//    append_ir2_opnd1(mips_b, &label_high); 
+//    append_ir2_opnd1(mips_b, &label_high);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow1); 
+//    append_ir2_opnd1(mips_label, &label_for_flow1);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src1);             
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src1);
 //
-//    append_ir2_opnd1(mips_label, &label_high); 
+//    append_ir2_opnd1(mips_label, &label_high);
 //    /* the second single scalar operand */
 //    /* is unorder or overflow or under flow? */
 //    IR2_OPND ftemp_src2 = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src2, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src2, &src_lo, &f32_ir2_opnd);
 //
-//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src2, &ftemp_src2); 
+//    append_ir2_opnd2(mips_cvt_d_s, &ftemp_src2, &ftemp_src2);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &ftemp_src2, &ftemp_src2);                 
+//    append_ir2_opnd2(mips_c_un_d, &ftemp_src2, &ftemp_src2);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src2);                 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &ftemp_src2);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src2, &ftemp_under_flow);           
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_src2, &ftemp_under_flow);
 //
 //    /* is normal */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow2); 
-//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src2, &ftemp_src2);         
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow2);
+//    append_ir2_opnd2(mips_cvt_w_d, &ftemp_src2, &ftemp_src2);
 //
-//    append_ir2_opnd1(mips_b, &label_over); 
+//    append_ir2_opnd1(mips_b, &label_over);
 //
-//    append_ir2_opnd1(mips_label, &label_for_flow2); 
+//    append_ir2_opnd1(mips_label, &label_for_flow2);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src2);             
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_src2);
 //
-//    append_ir2_opnd1(mips_label, &label_over); 
+//    append_ir2_opnd1(mips_label, &label_over);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest, &ftemp_src1, &ftemp_src2); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest, &ftemp_src1, &ftemp_src2);
 //
 //    ra_free_temp(&ftemp_src1);
 //    ra_free_temp(&ftemp_src2);
@@ -6380,7 +6380,7 @@ bool translate_cvtsd2si(IR1_INST *pir1)
 //    IR1_OPND *opnd0 = ir1_get_opnd(pir1, 0);
 //    IR1_OPND *opnd1 = ir1_get_opnd(pir1, 1);
 //
-//    IR2_OPND src_lo;                                         
+//    IR2_OPND src_lo;
 //    if (option_xmm128map){
 //        src_lo = load_freg128_from_ir1(opnd1);
 //    } else {
@@ -6393,50 +6393,50 @@ bool translate_cvtsd2si(IR1_INST *pir1)
 //    /* double for 0x7fffffff.499999 */
 //    load_imm64_to_ir2(&temp_int, 0x41dfffffffdffffcULL);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow);
 //
 //    IR2_OPND ftemp_under_flow = ra_alloc_ftemp();
 //
 //    /* double for 0x80000000.499999 */
 //    load_imm64_to_ir2(&temp_int, 0xc1dfffffffdffffcULL);
-//        
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow); 
+//
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow);
 //
 //    IR2_OPND label_for_flow = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_lo, &src_lo); 
+//    append_ir2_opnd2(mips_c_un_d, &src_lo, &src_lo);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow);   
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_lo);                    
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &src_lo);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
-//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &ftemp_under_flow);          
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
+//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &ftemp_under_flow);
 //
 //    /* is normal */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
 //    IR2_OPND fcsr_opnd = set_fpu_fcsr_rounding_field_by_x86();
 //
 //    if (ir1_opnd_size(opnd0) == 64) {
-//        append_ir2_opnd2(mips_cvt_l_d, &ftemp_over_flow, &src_lo); 
+//        append_ir2_opnd2(mips_cvt_l_d, &ftemp_over_flow, &src_lo);
 //    } else {
-//        append_ir2_opnd2(mips_cvt_w_d, &ftemp_over_flow, &src_lo); 
+//        append_ir2_opnd2(mips_cvt_w_d, &ftemp_over_flow, &src_lo);
 //    }
 //
 //    /* temp_int is used for saving temp_dest */
 //    append_ir2_opnd2(mips_dmfc1, &temp_int, &ftemp_over_flow);
-//                                       
+//
 //    /* reload fscr */
 //    set_fpu_fcsr(&fcsr_opnd);
 //
-//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);       
+//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);         
-//    append_ir2_opnd1(mips_label, &label_for_flow); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_for_flow);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
 //    ra_free_temp(&temp_int);
@@ -6477,11 +6477,11 @@ bool translate_cvtsd2ss(IR1_INST *pir1)
 //    IR2_OPND fcsr_opnd = set_fpu_fcsr_rounding_field_by_x86();
 //    IR2_OPND temp_src  = ra_alloc_ftemp();
 //
-//    append_ir2_opnd2(mips_cvt_s_d, &temp_src, &src); 
+//    append_ir2_opnd2(mips_cvt_s_d, &temp_src, &src);
 //    set_fpu_fcsr(&fcsr_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &temp_src, &dest_lo); 
+//    append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &temp_src, &dest_lo);
 //
 //    ra_free_temp(&temp_src);
     return true;
@@ -6504,7 +6504,7 @@ bool translate_cvtsi2sd(IR1_INST *pir1)
 //        IR2_OPND dest = load_freg128_from_ir1(opnd0);
 //        IR2_OPND src  = ra_alloc_itemp();
 //
-//        load_ir1_to_ir2(&src, opnd1, UNKNOWN_EXTENSION, false); 
+//        load_ir1_to_ir2(&src, opnd1, UNKNOWN_EXTENSION, false);
 //
 //        IR2_OPND temp_src = ra_alloc_ftemp();
 //        append_ir2_opnd2(mips_dmtc1, &src, &temp_src);
@@ -6528,11 +6528,11 @@ bool translate_cvtsi2sd(IR1_INST *pir1)
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
 //
-//    append_ir2_opnd2(mips_dmtc1, &src, &temp_src); 
+//    append_ir2_opnd2(mips_dmtc1, &src, &temp_src);
 //    if (ir1_opnd_size(opnd1) == 64) {
-//        append_ir2_opnd2(mips_cvt_d_l, &dest_lo, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_d_l, &dest_lo, &temp_src);
 //    } else {
-//        append_ir2_opnd2(mips_cvt_d_w, &dest_lo, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_d_w, &dest_lo, &temp_src);
 //    }
 //
 //    ra_free_temp(&temp_src);
@@ -6558,7 +6558,7 @@ bool translate_cvtsi2ss(IR1_INST *pir1)
 //        IR2_OPND dest = load_freg128_from_ir1(opnd0);
 //        IR2_OPND src = ra_alloc_itemp();
 //
-//        load_ir1_to_ir2(&src, opnd1, UNKNOWN_EXTENSION, false); 
+//        load_ir1_to_ir2(&src, opnd1, UNKNOWN_EXTENSION, false);
 //
 //        IR2_OPND temp_src = ra_alloc_ftemp();
 //
@@ -6582,19 +6582,19 @@ bool translate_cvtsi2ss(IR1_INST *pir1)
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
 //
-//    append_ir2_opnd2(mips_dmtc1, &src, &temp_src); 
+//    append_ir2_opnd2(mips_dmtc1, &src, &temp_src);
 //    IR2_OPND fcsr_opnd = set_fpu_fcsr_rounding_field_by_x86();
 //
 //    if (ir1_opnd_size(opnd1) == 64) {
-//        append_ir2_opnd2(mips_cvt_s_l, &temp_src, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_s_l, &temp_src, &temp_src);
 //    } else {
-//        append_ir2_opnd2(mips_cvt_s_w, &temp_src, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_s_w, &temp_src, &temp_src);
 //    }
 //
 //    set_fpu_fcsr(&fcsr_opnd);
-//    append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &dest_lo, &dest_lo, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &temp_src, &dest_lo); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &temp_src, &dest_lo);
 //
 //    ra_free_temp(&temp_src);
     return true;
@@ -6627,7 +6627,7 @@ bool translate_cvtss2sd(IR1_INST *pir1)
 //    IR2_OPND dest_lo     = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_low_32b = load_freg_from_ir1_1(opnd1, false, false);
 //
-//    append_ir2_opnd2(mips_cvt_d_s, &dest_lo, &src_low_32b); 
+//    append_ir2_opnd2(mips_cvt_d_s, &dest_lo, &src_low_32b);
 //
     return true;
 }
@@ -6642,7 +6642,7 @@ bool translate_cvtss2si(IR1_INST *pir1)
 //    IR1_OPND *opnd0 = ir1_get_opnd(pir1, 0);
 //    IR1_OPND *opnd1 = ir1_get_opnd(pir1, 1);
 //
-//    IR2_OPND src_lo;                                         
+//    IR2_OPND src_lo;
 //    if (option_xmm128map){
 //        src_lo = load_freg128_from_ir1(opnd1);
 //    } else {
@@ -6658,50 +6658,50 @@ bool translate_cvtss2si(IR1_INST *pir1)
 //
 //    /* double for 0x7fffffff */
 //    load_imm64_to_ir2(&temp_int, 0x41dfffffffe00000ULL);
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_over_flow);
 //
 //    IR2_OPND ftemp_under_flow = ra_alloc_ftemp();
 //
 //    /* double for 0x80000000 */
 //    load_imm64_to_ir2(&temp_int, 0xc1e0000000000000ULL);
 //
-//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_int, &ftemp_under_flow);
 //
 //    IR2_OPND label_for_flow = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &temp_src, &temp_src);                  
+//    append_ir2_opnd2(mips_c_un_d, &temp_src, &temp_src);
 //
 //    /* is overflow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
-//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &temp_src);                  
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
+//    append_ir2_opnd2(mips_c_lt_d, &ftemp_over_flow, &temp_src);
 //
 //    /* is under flow? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
-//    append_ir2_opnd2(mips_c_lt_d, &temp_src, &ftemp_under_flow);          
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
+//    append_ir2_opnd2(mips_c_lt_d, &temp_src, &ftemp_under_flow);
 //
 //    /* is normal ! */
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
 //
 //    IR2_OPND fcsr_opnd = set_fpu_fcsr_rounding_field_by_x86();
 //    if (ir1_opnd_size(opnd0) == 64) {
-//        append_ir2_opnd2(mips_cvt_l_d, &ftemp_over_flow, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_l_d, &ftemp_over_flow, &temp_src);
 //    } else {
-//        append_ir2_opnd2(mips_cvt_w_d, &ftemp_over_flow, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_w_d, &ftemp_over_flow, &temp_src);
 //    }
 //
 //    /* temp_int is used for saving temp_dest */
 //    append_ir2_opnd2(mips_dmfc1, &temp_int, &ftemp_over_flow);
-//                                       
+//
 //    /* reload fscr */
 //    set_fpu_fcsr(&fcsr_opnd);
 //
-//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);       
+//    IR2_OPND label_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_exit);         
-//    append_ir2_opnd1(mips_label, &label_for_flow); 
+//    append_ir2_opnd1(mips_b, &label_exit);
+//    append_ir2_opnd1(mips_label, &label_for_flow);
 //    load_imm32_to_ir2(&temp_int, 0x80000000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd1(mips_label, &label_exit); 
+//    append_ir2_opnd1(mips_label, &label_exit);
 //    store_ir2_to_ir1(&temp_int, opnd0, false);
 //
 //    ra_free_temp(&temp_int);
@@ -6721,7 +6721,7 @@ bool translate_cvttss2si(IR1_INST *pir1)
 //    IR1_OPND *opnd0 = ir1_get_opnd(pir1, 0);
 //    IR1_OPND *opnd1 = ir1_get_opnd(pir1, 1);
 //
-//    IR2_OPND src_lo;                                         
+//    IR2_OPND src_lo;
 //    if (option_xmm128map){
 //        src_lo = load_freg128_from_ir1(opnd1);
 //    } else {
@@ -6731,42 +6731,42 @@ bool translate_cvttss2si(IR1_INST *pir1)
 //    IR2_OPND temp_src = ra_alloc_ftemp();
 //    /* only use xmm low 32bit */
 //    append_ir2_opnd2(mips_cvt_d_s, &temp_src, &src_lo);
-//        
+//
 //    IR2_OPND temp_over_flow  = ra_alloc_itemp();
 //    IR2_OPND ftemp_over_flow = ra_alloc_ftemp();
 //
 //    append_ir2_opnd1i(mips_lui, &temp_over_flow, 0x41e0);
 //    append_ir2_opnd2i(mips_dsll32, &temp_over_flow, &temp_over_flow, 0);
-//    append_ir2_opnd2(mips_dmtc1, &temp_over_flow, &ftemp_over_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_over_flow, &ftemp_over_flow);
 //
 //    IR2_OPND temp_under_flow  = ra_alloc_itemp();
 //    IR2_OPND ftemp_under_flow = ra_alloc_ftemp();
 //
 //    append_ir2_opnd1i(mips_lui, &temp_under_flow, 0xc1e);
 //    append_ir2_opnd2i(mips_dsll32, &temp_under_flow, &temp_under_flow, 4);
-//    append_ir2_opnd2(mips_dmtc1, &temp_under_flow, &ftemp_under_flow); 
+//    append_ir2_opnd2(mips_dmtc1, &temp_under_flow, &ftemp_under_flow);
 //
 //    IR2_OPND label_for_flow = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd2(mips_c_un_d, &temp_src, &temp_src);                  
+//    append_ir2_opnd2(mips_c_un_d, &temp_src, &temp_src);
 //
 //    /*is unoder?*/
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
 //
-//    append_ir2_opnd2(mips_c_le_d, &ftemp_over_flow, &temp_src);                  
+//    append_ir2_opnd2(mips_c_le_d, &ftemp_over_flow, &temp_src);
 //
 //    /*is over flow or under flow*/
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
 //
-//    append_ir2_opnd2(mips_c_lt_d, &temp_src, &ftemp_under_flow);          
+//    append_ir2_opnd2(mips_c_lt_d, &temp_src, &ftemp_under_flow);
 //
 //    /*not over flow and under flow*/
-//    append_ir2_opnd1(mips_bc1t, &label_for_flow); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_flow);
 //
 //    IR2_OPND temp_fcsr = ra_alloc_itemp();
 //
 //    /*save fscr in temp_int for reload*/
-//    append_ir2_opnd2(mips_cfc1, &temp_fcsr, &fcsr_ir2_opnd); 
+//    append_ir2_opnd2(mips_cfc1, &temp_fcsr, &fcsr_ir2_opnd);
 //
 //    /* temp_under_flow save fcsr */
 //    append_ir2_opnd3(mips_or, &temp_under_flow, &temp_under_flow, &temp_fcsr);
@@ -6775,26 +6775,26 @@ bool translate_cvttss2si(IR1_INST *pir1)
 //    append_ir2_opnd2i(mips_dsrl, &temp_fcsr, &temp_fcsr, 0x2);
 //    append_ir2_opnd2i(mips_dsll, &temp_fcsr, &temp_fcsr, 0x2);
 //    append_ir2_opnd2i(mips_ori, &temp_fcsr, &temp_fcsr, 0x1);
-//    append_ir2_opnd2(mips_ctc1, &temp_fcsr, &fcsr_ir2_opnd); 
+//    append_ir2_opnd2(mips_ctc1, &temp_fcsr, &fcsr_ir2_opnd);
 //
 //    if (ir1_opnd_size(opnd0) == 64) {
-//        append_ir2_opnd2(mips_cvt_l_d, &ftemp_over_flow, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_l_d, &ftemp_over_flow, &temp_src);
 //    } else {
-//        append_ir2_opnd2(mips_cvt_w_d, &ftemp_over_flow, &temp_src); 
+//        append_ir2_opnd2(mips_cvt_w_d, &ftemp_over_flow, &temp_src);
 //    }
 //
 //    /* temp_fscr used as temp_dest */
 //    append_ir2_opnd2(mips_dmfc1, &temp_fcsr, &ftemp_over_flow);
 //
 //    /* reload fcsr */
-//    append_ir2_opnd2(mips_ctc1, &temp_under_flow, &fcsr_ir2_opnd); 
+//    append_ir2_opnd2(mips_ctc1, &temp_under_flow, &fcsr_ir2_opnd);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);       
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_b, &label_for_exit);     
-//    append_ir2_opnd1(mips_label, &label_for_flow); 
+//    append_ir2_opnd1(mips_b, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_flow);
 //    load_imm32_to_ir2(&temp_fcsr, 0x80000000, ZERO_EXTENSION);
-//    append_ir2_opnd1(mips_label, &label_for_exit); 
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //    store_ir2_to_ir1(&temp_fcsr, opnd0, false);
 //
 //    ra_free_temp(&temp_fcsr);
@@ -6831,8 +6831,8 @@ bool translate_divpd(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//    append_ir2_opnd3(mips_div_d, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_div_d, &dest_hi, &dest_hi, &src_hi); 
+//    append_ir2_opnd3(mips_div_d, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_div_d, &dest_hi, &dest_hi, &src_hi);
 //
     return true;
 }
@@ -6872,10 +6872,10 @@ bool translate_divps(IR1_INST *pir1)
 //
 //    /* the high 32bit of src_lo save in temp_src */
 //    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
-//                                    
-//    append_ir2_opnd3(mips_div_s, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_div_s, &temp_dest, &temp_dest, &temp_src); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//
+//    append_ir2_opnd3(mips_div_s, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_div_s, &temp_dest, &temp_dest, &temp_src);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* the high 64 bit of xmm/m128 */
 //
@@ -6884,9 +6884,9 @@ bool translate_divps(IR1_INST *pir1)
 //    /* the high 32bit of src_hi save in temp_src */
 //    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_div_s, &dest_hi, &dest_hi, &src_hi); 
-//    append_ir2_opnd3(mips_div_s, &temp_dest, &temp_dest, &temp_src); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd3(mips_div_s, &dest_hi, &dest_hi, &src_hi);
+//    append_ir2_opnd3(mips_div_s, &temp_dest, &temp_dest, &temp_src);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_dest);
 //    ra_free_temp(&temp_src);
@@ -6919,7 +6919,7 @@ bool translate_divsd(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_div_d, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_div_d, &dest_lo, &dest_lo, &src_lo);
 //
     return true;
 }
@@ -6952,8 +6952,8 @@ bool translate_divss(IR1_INST *pir1)
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
 //
 //    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
-//    append_ir2_opnd3(mips_div_s, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd3(mips_div_s, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_dest);
     return true;
@@ -6986,38 +6986,38 @@ bool translate_maxpd(IR1_INST *pir1)
 //
 //    /* low 64 bit */
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd1(mips_label, &label_for_exit);  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //
 //    /* high 64 bit */
-//    append_ir2_opnd2(mips_c_un_d, &src_hi, &dest_hi); 
+//    append_ir2_opnd2(mips_c_un_d, &src_hi, &dest_hi);
 //
-//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);      
+//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
 //    /* is unorder? */
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov2);
 //
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_d, &src_hi, &dest_hi); 
+//    append_ir2_opnd2(mips_c_lt_d, &src_hi, &dest_hi);
 //
-//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit2);  
-//    append_ir2_opnd1(mips_label, &label_for_mov2);  
-//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi); 
-//    append_ir2_opnd1(mips_label, &label_for_exit2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit2);
+//    append_ir2_opnd1(mips_label, &label_for_mov2);
+//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi);
+//    append_ir2_opnd1(mips_label, &label_for_exit2);
 //
     return true;
 }
@@ -7049,83 +7049,83 @@ bool translate_maxps(IR1_INST *pir1)
 //
 //    /* the first single scalar operand */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_lt_s, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd1(mips_label, &label_for_exit);  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //    /* the second single */
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest); 
+//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest);
 //
-//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);      
+//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov2);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &temp_src, &temp_dest); 
+//    append_ir2_opnd2(mips_c_lt_s, &temp_src, &temp_dest);
 //
-//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);       
+//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit2); 
-//    append_ir2_opnd1(mips_label, &label_for_mov2); 
-//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);                    
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit2);
+//    append_ir2_opnd1(mips_label, &label_for_mov2);
+//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_label, &label_for_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_for_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* the third single */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &src_hi, &dest_hi); 
+//    append_ir2_opnd2(mips_c_un_s, &src_hi, &dest_hi);
 //
-//    IR2_OPND label_for_mov3 = ir2_opnd_new_type(IR2_OPND_LABEL);      
+//    IR2_OPND label_for_mov3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov3); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov3);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &src_hi, &dest_hi); 
+//    append_ir2_opnd2(mips_c_lt_s, &src_hi, &dest_hi);
 //
-//    IR2_OPND label_for_exit3 = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit3);  
-//    append_ir2_opnd1(mips_label, &label_for_mov3);  
-//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi); 
-//    append_ir2_opnd1(mips_label, &label_for_exit3); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit3);
+//    append_ir2_opnd1(mips_label, &label_for_mov3);
+//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi);
+//    append_ir2_opnd1(mips_label, &label_for_exit3);
 //    /* the fourth single */
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest); 
+//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest);
 //
-//    IR2_OPND label_for_mov4 = ir2_opnd_new_type(IR2_OPND_LABEL);      
+//    IR2_OPND label_for_mov4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov4); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov4);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &temp_src, &temp_dest); 
+//    append_ir2_opnd2(mips_c_lt_s, &temp_src, &temp_dest);
 //
-//    IR2_OPND label_for_exit4 = ir2_opnd_new_type(IR2_OPND_LABEL);       
+//    IR2_OPND label_for_exit4 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit4); 
-//    append_ir2_opnd1(mips_label, &label_for_mov4); 
-//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);                    
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit4);
+//    append_ir2_opnd1(mips_label, &label_for_mov4);
+//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_label, &label_for_exit4); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_for_exit4);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_dest);
 //    ra_free_temp(&temp_src);
@@ -7159,19 +7159,19 @@ bool translate_maxsd(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_lt_d, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd1(mips_label, &label_for_exit);  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 
     return true;
 }
@@ -7204,25 +7204,25 @@ bool translate_maxss(IR1_INST *pir1)
 //
 //    /* the first single scalar operand */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_lt_s, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);                  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
-//    append_ir2_opnd1(mips_label, &label_for_exit); 
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //
 //    ra_free_temp(&temp_dest);
     return true;
@@ -7255,36 +7255,36 @@ bool translate_minpd(IR1_INST *pir1)
 //
 //    /* low 64 bit */
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is not less than dest */
-//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo); 
+//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd1(mips_label, &label_for_exit);  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //    /* high 64 bit */
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_hi, &dest_hi); 
+//    append_ir2_opnd2(mips_c_un_d, &src_hi, &dest_hi);
 //
-//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);      
+//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov2);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_d, &dest_hi, &src_hi); 
+//    append_ir2_opnd2(mips_c_lt_d, &dest_hi, &src_hi);
 //
-//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit2);  
-//    append_ir2_opnd1(mips_label, &label_for_mov2);  
-//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi); 
-//    append_ir2_opnd1(mips_label, &label_for_exit2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit2);
+//    append_ir2_opnd1(mips_label, &label_for_mov2);
+//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi);
+//    append_ir2_opnd1(mips_label, &label_for_exit2);
 
     return true;
 }
@@ -7316,81 +7316,81 @@ bool translate_minps(IR1_INST *pir1)
 //
 //    /* the first single scalar operand */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    IR2_OPND temp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo); 
+//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd1(mips_label, &label_for_exit);  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //    /* the second single */
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest); 
+//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest);
 //
-//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);      
+//    IR2_OPND label_for_mov2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov2); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov2);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src); 
+//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);
 //
-//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);       
+//    IR2_OPND label_for_exit2 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit2); 
-//    append_ir2_opnd1(mips_label, &label_for_mov2); 
-//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);                    
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit2);
+//    append_ir2_opnd1(mips_label, &label_for_mov2);
+//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_label, &label_for_exit2); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_for_exit2);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    /* the third single */
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_hi, &f32_ir2_opnd);
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &src_hi, &dest_hi); 
+//    append_ir2_opnd2(mips_c_un_s, &src_hi, &dest_hi);
 //
-//    IR2_OPND label_for_mov3 = ir2_opnd_new_type(IR2_OPND_LABEL);      
+//    IR2_OPND label_for_mov3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov3); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov3);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_hi, &src_hi); 
+//    append_ir2_opnd2(mips_c_lt_s, &dest_hi, &src_hi);
 //
-//    IR2_OPND label_for_exit3 = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit3 = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit3);  
-//    append_ir2_opnd1(mips_label, &label_for_mov3);  
-//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi); 
-//    append_ir2_opnd1(mips_label, &label_for_exit3); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit3);
+//    append_ir2_opnd1(mips_label, &label_for_mov3);
+//    append_ir2_opnd2(mips_mov_d, &dest_hi, &src_hi);
+//    append_ir2_opnd1(mips_label, &label_for_exit3);
 //    /* the fourth single */
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest); 
+//    append_ir2_opnd2(mips_c_un_s, &temp_src, &temp_dest);
 //
-//    IR2_OPND label_for_mov4 = ir2_opnd_new_type(IR2_OPND_LABEL);      
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov4); 
+//    IR2_OPND label_for_mov4 = ir2_opnd_new_type(IR2_OPND_LABEL);
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov4);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src); 
+//    append_ir2_opnd2(mips_c_lt_s, &temp_dest, &temp_src);
 //
-//    IR2_OPND label_for_exit4 = ir2_opnd_new_type(IR2_OPND_LABEL);       
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit4); 
-//    append_ir2_opnd1(mips_label, &label_for_mov4); 
-//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);                    
+//    IR2_OPND label_for_exit4 = ir2_opnd_new_type(IR2_OPND_LABEL);
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit4);
+//    append_ir2_opnd1(mips_label, &label_for_mov4);
+//    append_ir2_opnd2(mips_mov_d, &temp_dest, &temp_src);
 //
-//    append_ir2_opnd1(mips_label, &label_for_exit4); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest); 
+//    append_ir2_opnd1(mips_label, &label_for_exit4);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &temp_dest);
 //
 //    ra_free_temp(&temp_dest);
 //    ra_free_temp(&temp_src);
@@ -7425,20 +7425,20 @@ bool translate_minsd(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_d, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo); 
+//    append_ir2_opnd2(mips_c_lt_d, &dest_lo, &src_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd1(mips_label, &label_for_exit);  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //
     return true;
 }
@@ -7470,25 +7470,25 @@ bool translate_minss(IR1_INST *pir1)
 //
 //    /* the first single scalar operand */
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* is unorder? */
-//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo); 
+//    append_ir2_opnd2(mips_c_un_s, &src_lo, &dest_lo);
 //
-//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);     
+//    IR2_OPND label_for_mov = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_mov); 
+//    append_ir2_opnd1(mips_bc1t, &label_for_mov);
 //    /* src is less than dest */
-//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo); 
+//    append_ir2_opnd2(mips_c_lt_s, &dest_lo, &src_lo);
 //
-//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);        
+//    IR2_OPND label_for_exit = ir2_opnd_new_type(IR2_OPND_LABEL);
 //
-//    append_ir2_opnd1(mips_bc1t, &label_for_exit);   
-//    append_ir2_opnd1(mips_label, &label_for_mov);   
-//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);                  
+//    append_ir2_opnd1(mips_bc1t, &label_for_exit);
+//    append_ir2_opnd1(mips_label, &label_for_mov);
+//    append_ir2_opnd2(mips_mov_d, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
-//    append_ir2_opnd1(mips_label, &label_for_exit); 
+//    append_ir2_opnd1(mips_label, &label_for_exit);
 //
 //    ra_free_temp(&temp_dest);
     return true;
@@ -7564,7 +7564,7 @@ bool translate_movmskpd(IR1_INST *pir1)
 //
 //    ra_free_temp(&src_hi);
 //
-//    store_ir2_to_ir1(&src_lo, opnd0, false); 
+//    store_ir2_to_ir1(&src_lo, opnd0, false);
     return true;
 }
 
@@ -7812,8 +7812,8 @@ bool translate_mulpd(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//    append_ir2_opnd3(mips_mul_d, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_mul_d, &dest_hi, &dest_hi, &src_hi); 
+//    append_ir2_opnd3(mips_mul_d, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_mul_d, &dest_hi, &dest_hi, &src_hi);
 
     return true;
 }
@@ -7844,8 +7844,8 @@ bool translate_mulps(IR1_INST *pir1)
 //        IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_mul_ps, &dest_lo, &dest_lo, &src_lo); 
-//        append_ir2_opnd3(mips_mul_ps, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_mul_ps, &dest_lo, &dest_lo, &src_lo);
+//        append_ir2_opnd3(mips_mul_ps, &dest_hi, &dest_hi, &src_hi);
 //    }
 //    else {
 //        translate_xxxps_helper(pir1, false, mips_mul_s);
@@ -7880,7 +7880,7 @@ bool translate_mulsd(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_mul_d, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_mul_d, &dest_lo, &dest_lo, &src_lo);
 
     return true;
 }
@@ -7912,9 +7912,9 @@ bool translate_mulss(IR1_INST *pir1)
 //
 //    IR2_OPND temp_dest = ra_alloc_ftemp();
 //
-//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd); 
-//    append_ir2_opnd3(mips_mul_s, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest); 
+//    append_ir2_opnd3(mips_fdsrl, &temp_dest, &dest_lo, &f32_ir2_opnd);
+//    append_ir2_opnd3(mips_mul_s, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &temp_dest);
 //
 //    ra_free_temp(&temp_dest);
     return true;
@@ -7945,8 +7945,8 @@ bool translate_orpd(IR1_INST *pir1)
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//    append_ir2_opnd3(mips_for, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_for, &dest_hi, &dest_hi, &src_hi); 
+//    append_ir2_opnd3(mips_for, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_for, &dest_hi, &dest_hi, &src_hi);
 
     return true;
 }
@@ -7979,13 +7979,13 @@ bool translate_paddq(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_paddd, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_paddd, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_paddd, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_paddd, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -8014,13 +8014,13 @@ bool translate_pavgb(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pavgb, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pavgb, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_pavgb, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pavgb, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -8049,13 +8049,13 @@ bool translate_pavgw(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pavgh, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pavgh, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_pavgh, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pavgh, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -8161,7 +8161,7 @@ bool translate_pinsrw(IR1_INST *pir1)
 //
 //            IR2_OPND src = ra_alloc_itemp();
 //            load_ir1_to_ir2(&src, opnd1, UNKNOWN_EXTENSION, false);
-//                                              
+//
 //            IR2_OPND xmm_opnd = ra_alloc_xmm(ir1_opnd_base_reg_num(opnd0));
 //            append_ir2_opnd2i(mips_inserth, &xmm_opnd, &src, imm);
 //            return true;
@@ -8172,7 +8172,7 @@ bool translate_pinsrw(IR1_INST *pir1)
 //    IR2_OPND ftemp = ra_alloc_ftemp();
 //
 //    load_ir1_to_ir2(&src, opnd1, UNKNOWN_EXTENSION, false);
-//    append_ir2_opnd2(mips_dmtc1, &src, &ftemp); 
+//    append_ir2_opnd2(mips_dmtc1, &src, &ftemp);
 //
 //    uint8 imm8 = ir1_opnd_uimm(opnd2);
 //
@@ -8251,7 +8251,7 @@ bool translate_pmaxsw(IR1_INST *pir1)
 //    if (ir2_opnd_cmp(&dest_lo, &src_lo)) {
 //        return true;
 //    } else {
-//        append_ir2_opnd3(mips_pmaxsh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_pmaxsh, &dest_lo, &dest_lo, &src_lo);
 //    }
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
@@ -8261,7 +8261,7 @@ bool translate_pmaxsw(IR1_INST *pir1)
 //        if (ir2_opnd_cmp(&dest_hi, &src_hi)) {
 //            return true;
 //        } else {
-//            append_ir2_opnd3(mips_pmaxsh, &dest_hi, &dest_hi, &src_hi); 
+//            append_ir2_opnd3(mips_pmaxsh, &dest_hi, &dest_hi, &src_hi);
 //        }
 //    }
 //
@@ -8294,7 +8294,7 @@ bool translate_pmaxub(IR1_INST *pir1)
 //    if (ir2_opnd_cmp(&dest_lo, &src_lo)) {
 //        return true;
 //    } else {
-//        append_ir2_opnd3(mips_pmaxub, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_pmaxub, &dest_lo, &dest_lo, &src_lo);
 //    }
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
@@ -8304,7 +8304,7 @@ bool translate_pmaxub(IR1_INST *pir1)
 //        if (ir2_opnd_cmp(&dest_hi, &src_hi)) {
 //            return true;
 //        } else {
-//            append_ir2_opnd3(mips_pmaxub, &dest_hi, &dest_hi, &src_hi); 
+//            append_ir2_opnd3(mips_pmaxub, &dest_hi, &dest_hi, &src_hi);
 //        }
 //    }
 //
@@ -8337,7 +8337,7 @@ bool translate_pminsw(IR1_INST *pir1)
 //    if (ir2_opnd_cmp(&dest_lo, &src_lo)) {
 //        return true;
 //    } else {
-//        append_ir2_opnd3(mips_pminsh, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_pminsh, &dest_lo, &dest_lo, &src_lo);
 //    }
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
@@ -8347,7 +8347,7 @@ bool translate_pminsw(IR1_INST *pir1)
 //        if (ir2_opnd_cmp(&dest_hi, &src_hi)) {
 //            return true;
 //        } else {
-//            append_ir2_opnd3(mips_pminsh, &dest_hi, &dest_hi, &src_hi); 
+//            append_ir2_opnd3(mips_pminsh, &dest_hi, &dest_hi, &src_hi);
 //        }
 //    }
 
@@ -8380,7 +8380,7 @@ bool translate_pminub(IR1_INST *pir1)
 //    if (ir2_opnd_cmp(&dest_lo, &src_lo)) {
 //        return true;
 //    } else {
-//        append_ir2_opnd3(mips_pminub, &dest_lo, &dest_lo, &src_lo); 
+//        append_ir2_opnd3(mips_pminub, &dest_lo, &dest_lo, &src_lo);
 //    }
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
@@ -8390,7 +8390,7 @@ bool translate_pminub(IR1_INST *pir1)
 //        if (ir2_opnd_cmp(&dest_hi, &src_hi)) {
 //            return true;
 //        } else {
-//            append_ir2_opnd3(mips_pminub, &dest_hi, &dest_hi, &src_hi); 
+//            append_ir2_opnd3(mips_pminub, &dest_hi, &dest_hi, &src_hi);
 //        }
 //    }
 
@@ -8423,7 +8423,7 @@ bool translate_pmovmskb(IR1_INST *pir1)
 //    IR2_OPND ftemp  = ra_alloc_ftemp();
 //
 //    if (ir1_opnd_is_mmx(opnd1)) {
-//        append_ir2_opnd2(mips_pmovmskb, &ftemp, &src_lo); 
+//        append_ir2_opnd2(mips_pmovmskb, &ftemp, &src_lo);
 //    }
 //    else {
 //        lsassert(ir1_opnd_is_xmm(opnd1));
@@ -8431,9 +8431,9 @@ bool translate_pmovmskb(IR1_INST *pir1)
 //        IR2_OPND src_hi = load_freg_from_ir1_1(opnd1, true, true);
 //        IR2_OPND ftemp2 = ra_alloc_ftemp();
 //
-//        append_ir2_opnd2(mips_pmovmskb, &ftemp, &src_lo); 
-//        append_ir2_opnd2(mips_pmovmskb, &ftemp2, &src_hi); 
-//        append_ir2_opnd3(mips_punpcklbh, &ftemp, &ftemp, &ftemp2); 
+//        append_ir2_opnd2(mips_pmovmskb, &ftemp, &src_lo);
+//        append_ir2_opnd2(mips_pmovmskb, &ftemp2, &src_hi);
+//        append_ir2_opnd3(mips_punpcklbh, &ftemp, &ftemp, &ftemp2);
 //
 //        ra_free_temp(&ftemp2);
 //    }
@@ -8444,9 +8444,9 @@ bool translate_pmovmskb(IR1_INST *pir1)
 
     append_ir2_opnd2(LISA_VMSKLTZ_B, &ftemp, &src_opnd);
 
-    append_ir2_opnd2(LISA_MOVFR2GR_D, &itemp, &ftemp);   
+    append_ir2_opnd2(LISA_MOVFR2GR_D, &itemp, &ftemp);
     append_ir2_opnd2i(LISA_ANDI, &itemp, &itemp, 0xff);
-    store_ir2_to_ir1(&itemp, dest, false); 
+    store_ir2_to_ir1(&itemp, dest, false);
 
     ra_free_temp(&itemp);
     ra_free_temp(&ftemp);
@@ -8478,13 +8478,13 @@ bool translate_pmuludq(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pmuluw, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_pmuluw, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_pmuluw, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_pmuluw, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -8515,15 +8515,15 @@ bool translate_psadbw(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_pasubub, &dest_lo, &dest_lo, &src_lo); 
-//    append_ir2_opnd2(mips_biadd, &dest_lo, &dest_lo); 
+//    append_ir2_opnd3(mips_pasubub, &dest_lo, &dest_lo, &src_lo);
+//    append_ir2_opnd2(mips_biadd, &dest_lo, &dest_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_pasubub, &dest_hi, &dest_hi, &src_hi); 
-//        append_ir2_opnd2(mips_biadd, &dest_hi, &dest_hi); 
+//        append_ir2_opnd3(mips_pasubub, &dest_hi, &dest_hi, &src_hi);
+//        append_ir2_opnd2(mips_biadd, &dest_hi, &dest_hi);
 //    }
 
     return true;
@@ -8569,8 +8569,8 @@ bool translate_pshufw(IR1_INST *pir1)
 //
 //    load_ir1_to_ir2(&sel, opnd2, UNKNOWN_EXTENSION, false);
 //
-//    append_ir2_opnd2(mips_dmtc1, &sel, &ftemp_sel); 
-//    append_ir2_opnd3(mips_pshufh, &dest, &src, &ftemp_sel); 
+//    append_ir2_opnd2(mips_dmtc1, &sel, &ftemp_sel);
+//    append_ir2_opnd3(mips_pshufh, &dest, &src, &ftemp_sel);
 
     return true;
 }
@@ -8610,13 +8610,13 @@ bool translate_pshufhw(IR1_INST *pir1)
 //
 //    IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //    IR2_OPND src_hi = load_freg_from_ir1_1(opnd1, true, true);
-//                                           
+//
 //    IR2_OPND sel = ra_alloc_itemp();
 //    load_ir1_to_ir2(&sel, opnd2, UNKNOWN_EXTENSION, false);
-//                                      
+//
 //    IR2_OPND ftemp_sel = ra_alloc_ftemp();
-//    append_ir2_opnd2(mips_dmtc1, &sel, &ftemp_sel); 
-//    append_ir2_opnd3(mips_pshufh, &dest_hi, &src_hi, &ftemp_sel); 
+//    append_ir2_opnd2(mips_dmtc1, &sel, &ftemp_sel);
+//    append_ir2_opnd3(mips_pshufh, &dest_hi, &src_hi, &ftemp_sel);
 //
 //    ra_free_temp(&ftemp_sel);
     return true;
@@ -8660,10 +8660,10 @@ bool translate_pshuflw(IR1_INST *pir1)
 //
 //    IR2_OPND sel = ra_alloc_itemp();
 //    load_ir1_to_ir2(&sel, opnd2, UNKNOWN_EXTENSION, false);
-//                                      
+//
 //    IR2_OPND ftemp_sel = ra_alloc_ftemp();
-//    append_ir2_opnd2(mips_dmtc1, &sel, &ftemp_sel); 
-//    append_ir2_opnd3(mips_pshufh, &dest_lo, &src_lo, &ftemp_sel); 
+//    append_ir2_opnd2(mips_dmtc1, &sel, &ftemp_sel);
+//    append_ir2_opnd3(mips_pshufh, &dest_lo, &src_lo, &ftemp_sel);
 //
 //    ra_free_temp(&ftemp_sel);
     return true;
@@ -8755,7 +8755,7 @@ bool translate_pslldq(IR1_INST *pir1)
 //            append_ir2_opnd2i(mips_dsll32, &dest_lo, &dest_lo, imm8);
 //            append_ir2_opnd2i(mips_dsll32, &dest_hi, &dest_hi, imm8);
 //        }
-//        append_ir2_opnd3(mips_or, &dest_hi, &dest_hi, &itemp); 
+//        append_ir2_opnd3(mips_or, &dest_hi, &dest_hi, &itemp);
 //
 //        store_ir2_to_ir1(&dest_lo, opnd0, false);
 //        store_ir2_to_ir1(&dest_hi, opnd0, true);
@@ -8852,7 +8852,7 @@ bool translate_psrldq(IR1_INST *pir1)
 //            append_ir2_opnd2i(mips_dsrl32, &dest_lo, &dest_lo, 0);
 //        }
 //
-//        append_ir2_opnd3(mips_or, &dest_lo, &dest_lo, &itemp); 
+//        append_ir2_opnd3(mips_or, &dest_lo, &dest_lo, &itemp);
 //
 //        store_ir2_to_ir1(&dest_lo, opnd0, false);
 //        store_ir2_to_ir1(&dest_hi, opnd0, true);
@@ -8886,13 +8886,13 @@ bool translate_psubq(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd3(mips_psubd, &dest_lo, &dest_lo, &src_lo); 
+//    append_ir2_opnd3(mips_psubd, &dest_lo, &dest_lo, &src_lo);
 //
 //    if (ir1_opnd_is_xmm(opnd0)) {
 //        IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //        IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//        append_ir2_opnd3(mips_psubd, &dest_hi, &dest_hi, &src_hi); 
+//        append_ir2_opnd3(mips_psubd, &dest_hi, &dest_hi, &src_hi);
 //    }
 
     return true;
@@ -8953,16 +8953,16 @@ bool translate_rcpss(IR1_INST *pir1)
 //    IR2_OPND ftemp = ra_alloc_ftemp();
 //
 //    load_imm32_to_ir2(&itemp, 0x3f800000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND ftemp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* compute */
-//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &src_lo); 
+//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &src_lo);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_dest); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_dest);
 //
 //    ra_free_temp(&itemp);
 //    ra_free_temp(&ftemp);
@@ -8996,30 +8996,30 @@ bool translate_rcpps(IR1_INST *pir1)
 //    IR2_OPND ftemp = ra_alloc_ftemp();
 //
 //    load_imm32_to_ir2(&itemp, 0x3f800000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //    /* save high 32 bits of src_lo */
 //    IR2_OPND ftemp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* compute */
-//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &src_lo); 
-//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src); 
+//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &src_lo);
+//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_src); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_src);
 //
 //    IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
 //    /* save high 32 bits of src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* compute */
-//    append_ir2_opnd3(mips_div_s, &dest_hi, &ftemp, &src_hi); 
-//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src); 
+//    append_ir2_opnd3(mips_div_s, &dest_hi, &ftemp, &src_hi);
+//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &ftemp_src); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &ftemp_src);
 //
 //    ra_free_temp(&itemp);
 //    ra_free_temp(&ftemp);
@@ -9054,17 +9054,17 @@ bool translate_rsqrtss(IR1_INST *pir1)
 //    IR2_OPND itemp = ra_alloc_itemp();
 //    IR2_OPND ftemp = ra_alloc_ftemp();
 //    load_imm32_to_ir2(&itemp, 0x3f800000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //    /* save high 32 bits of dest_lo */
 //    IR2_OPND ftemp_dest = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_dest, &dest_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_dest, &dest_lo, &f32_ir2_opnd);
 //
 //    /* compute */
-//    append_ir2_opnd2(mips_sqrt_s, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &dest_lo); 
+//    append_ir2_opnd2(mips_sqrt_s, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &dest_lo);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_dest); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_dest);
 //
 //    ra_free_temp(&itemp);
 //    ra_free_temp(&ftemp);
@@ -9098,38 +9098,38 @@ bool translate_rsqrtps(IR1_INST *pir1)
 //    IR2_OPND ftemp = ra_alloc_ftemp();
 //
 //    load_imm32_to_ir2(&itemp, 0x3f800000, UNKNOWN_EXTENSION);
-//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp); 
+//    append_ir2_opnd2(mips_dmtc1, &itemp, &ftemp);
 //    /* save high 32 bits of src_lo */
 //    IR2_OPND ftemp_src = ra_alloc_ftemp();
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_lo, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_lo, &f32_ir2_opnd);
 //
 //    /* compute low 32 bits of src_lo */
-//    append_ir2_opnd2(mips_sqrt_s, &dest_lo, &src_lo); 
-//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &dest_lo); 
+//    append_ir2_opnd2(mips_sqrt_s, &dest_lo, &src_lo);
+//    append_ir2_opnd3(mips_div_s, &dest_lo, &ftemp, &dest_lo);
 //
 //    /* compute high 32 bits of src_lo */
-//    append_ir2_opnd2(mips_sqrt_s, &ftemp_src, &ftemp_src); 
-//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src); 
+//    append_ir2_opnd2(mips_sqrt_s, &ftemp_src, &ftemp_src);
+//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_src); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_lo, &dest_lo, &ftemp_src);
 //
 //    IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
 //    /* save high 32 bits of src_hi */
-//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_hi, &f32_ir2_opnd); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp_src, &src_hi, &f32_ir2_opnd);
 //
 //    /* compute low 32 bits of src_hi */
-//    append_ir2_opnd2(mips_sqrt_s, &dest_hi, &src_hi); 
-//    append_ir2_opnd3(mips_div_s, &dest_hi, &ftemp, &dest_hi); 
+//    append_ir2_opnd2(mips_sqrt_s, &dest_hi, &src_hi);
+//    append_ir2_opnd3(mips_div_s, &dest_hi, &ftemp, &dest_hi);
 //
 //    /* compute high 32 bits of src_lo */
-//    append_ir2_opnd2(mips_sqrt_s, &ftemp_src, &ftemp_src); 
-//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src); 
+//    append_ir2_opnd2(mips_sqrt_s, &ftemp_src, &ftemp_src);
+//    append_ir2_opnd3(mips_div_s, &ftemp_src, &ftemp, &ftemp_src);
 //
 //    /* merge */
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &ftemp_src); 
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &ftemp_src);
 //
 //    ra_free_temp(&itemp);
 //    ra_free_temp(&ftemp);
@@ -9159,12 +9159,12 @@ bool translate_sqrtpd(IR1_INST *pir1)
 //    IR2_OPND dest_lo = load_freg_from_ir1_1(opnd0, false, true);
 //    IR2_OPND src_lo  = load_freg_from_ir1_1(opnd1, false, true);
 //
-//    append_ir2_opnd2(mips_sqrt_d, &dest_lo, &src_lo); 
+//    append_ir2_opnd2(mips_sqrt_d, &dest_lo, &src_lo);
 //
 //    IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//    append_ir2_opnd2(mips_sqrt_d, &dest_hi, &src_hi); 
+//    append_ir2_opnd2(mips_sqrt_d, &dest_hi, &src_hi);
 
     return true;
 }
@@ -9201,10 +9201,10 @@ bool translate_sqrtps(IR1_INST *pir1)
 //    IR2_OPND dest_hi = load_freg_from_ir1_1(opnd0, true, true);
 //    IR2_OPND src_hi  = load_freg_from_ir1_1(opnd1, true, true);
 //
-//    append_ir2_opnd3(mips_fdsrl, &ftemp, &src_hi, &f32_ir2_opnd); 
-//    append_ir2_opnd2(mips_sqrt_s, &dest_hi, &src_hi);                    
-//    append_ir2_opnd2(mips_sqrt_s, &ftemp, &ftemp); 
-//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &ftemp); 
+//    append_ir2_opnd3(mips_fdsrl, &ftemp, &src_hi, &f32_ir2_opnd);
+//    append_ir2_opnd2(mips_sqrt_s, &dest_hi, &src_hi);
+//    append_ir2_opnd2(mips_sqrt_s, &ftemp, &ftemp);
+//    append_ir2_opnd3(mips_punpcklwd, &dest_hi, &dest_hi, &ftemp);
 //
 //    ra_free_temp(&ftemp);
     return true;
@@ -9239,21 +9239,21 @@ bool translate_ucomisd(IR1_INST *pir1)
 //        }
 //
 //        /*  case 1: are they unordered? */
-//        append_ir2_opnd2(mips_c_un_d, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1t, &label_nun);   
+//        append_ir2_opnd2(mips_c_un_d, &dest, &src);
+//        append_ir2_opnd1(mips_bc1t, &label_nun);
 //        /* at least one of the operands is NaN */
 //        // set zf,pf,cf = 111
 //        if (option_lbt) {
 //            append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //        } else {
-//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //        }
 //        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 2: not unordered. are they equal? */
-//        append_ir2_opnd1(mips_label, &label_nun);  
-//        append_ir2_opnd2(mips_c_eq_d, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1t, &label_neq);   
+//        append_ir2_opnd1(mips_label, &label_nun);
+//        append_ir2_opnd2(mips_c_eq_d, &dest, &src);
+//        append_ir2_opnd1(mips_bc1t, &label_neq);
 //        /* two operands are equal */
 //        // set zf,pf,cf = 100
 //        if (option_lbt) {
@@ -9267,9 +9267,9 @@ bool translate_ucomisd(IR1_INST *pir1)
 //        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 3: not unordered, not equal. less than? */
-//        append_ir2_opnd1(mips_label, &label_neq);  
-//        append_ir2_opnd2(mips_c_lt_d, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1t, &label_gt);    
+//        append_ir2_opnd1(mips_label, &label_neq);
+//        append_ir2_opnd2(mips_c_lt_d, &dest, &src);
+//        append_ir2_opnd1(mips_bc1t, &label_gt);
 //        /* less than */
 //        // set zf.pf.cf = 001
 //        if (option_lbt) {
@@ -9303,7 +9303,7 @@ bool translate_ucomisd(IR1_INST *pir1)
 //            tr_gen_eflags_clr_bit_00(&eflags_ir2_opnd, OF_BIT | SF_BIT | AF_BIT);
 //        }
 //
-//        return true;    
+//        return true;
 //    }
 //
 //    lsassert(ir1_opnd_num(pir1) == 2);
@@ -9324,21 +9324,21 @@ bool translate_ucomisd(IR1_INST *pir1)
 //    }
 //
 //    /*  case 1: are they unordered? */
-//    append_ir2_opnd2(mips_c_un_d, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1t, &label_nun);   
+//    append_ir2_opnd2(mips_c_un_d, &dest, &src);
+//    append_ir2_opnd1(mips_bc1t, &label_nun);
 //    /* at least one of the operands is NaN */
 //    // set zf,pf,cf = 111
 //    if (option_lbt) {
 //        append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //    } else {
-//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //    }
 //    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 2: not unordered. are they equal? */
-//    append_ir2_opnd1(mips_label, &label_nun);  
-//    append_ir2_opnd2(mips_c_eq_d, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1t, &label_neq);   
+//    append_ir2_opnd1(mips_label, &label_nun);
+//    append_ir2_opnd2(mips_c_eq_d, &dest, &src);
+//    append_ir2_opnd1(mips_bc1t, &label_neq);
 //    /* two operands are equal */
 //    // set zf,pf,cf = 100
 //    if (option_lbt) {
@@ -9352,9 +9352,9 @@ bool translate_ucomisd(IR1_INST *pir1)
 //    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 3: not unordered, not equal. less than? */
-//    append_ir2_opnd1(mips_label, &label_neq);  
-//    append_ir2_opnd2(mips_c_lt_d, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1t, &label_gt);    
+//    append_ir2_opnd1(mips_label, &label_neq);
+//    append_ir2_opnd2(mips_c_lt_d, &dest, &src);
+//    append_ir2_opnd1(mips_bc1t, &label_gt);
 //    /* less than */
 //    // set zf.pf.cf = 001
 //    if (option_lbt) {
@@ -9420,21 +9420,21 @@ bool translate_ucomiss(IR1_INST *pir1)
 //        }
 //
 //        /*  case 1: are they unordered? */
-//        append_ir2_opnd2(mips_c_un_s, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1t, &label_nun);   
+//        append_ir2_opnd2(mips_c_un_s, &dest, &src);
+//        append_ir2_opnd1(mips_bc1t, &label_nun);
 //        /* at least one of the operands is NaN */
 //        // set zf,pf,cf = 111
 //        if (option_lbt) {
 //            append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //        } else {
-//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//            append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //        }
 //        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 2: not unordered. are they equal? */
-//        append_ir2_opnd1(mips_label, &label_nun);  
-//        append_ir2_opnd2(mips_c_eq_s, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1t, &label_neq);   
+//        append_ir2_opnd1(mips_label, &label_nun);
+//        append_ir2_opnd2(mips_c_eq_s, &dest, &src);
+//        append_ir2_opnd1(mips_bc1t, &label_neq);
 //        /* two operands are equal */
 //        // set zf,pf,cf = 100
 //        if (option_lbt) {
@@ -9448,9 +9448,9 @@ bool translate_ucomiss(IR1_INST *pir1)
 //        append_ir2_opnd1(mips_b, &label_exit);
 //
 //        /* case 3: not unordered, not equal. less than? */
-//        append_ir2_opnd1(mips_label, &label_neq);  
-//        append_ir2_opnd2(mips_c_lt_s, &dest, &src); 
-//        append_ir2_opnd1(mips_bc1t, &label_gt);    
+//        append_ir2_opnd1(mips_label, &label_neq);
+//        append_ir2_opnd2(mips_c_lt_s, &dest, &src);
+//        append_ir2_opnd1(mips_bc1t, &label_gt);
 //        /* less than */
 //        // set zf.pf.cf = 001
 //        if (option_lbt) {
@@ -9484,7 +9484,7 @@ bool translate_ucomiss(IR1_INST *pir1)
 //            tr_gen_eflags_clr_bit_00(&eflags_ir2_opnd, OF_BIT | SF_BIT | AF_BIT);
 //        }
 //
-//        return true;   
+//        return true;
 //    }
 //
 //    lsassert(ir1_opnd_num(pir1) == 2);
@@ -9504,21 +9504,21 @@ bool translate_ucomiss(IR1_INST *pir1)
 //    }
 //
 //    /*  case 1: are they unordered? */
-//    append_ir2_opnd2(mips_c_un_s, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1t, &label_nun);   
+//    append_ir2_opnd2(mips_c_un_s, &dest, &src);
+//    append_ir2_opnd1(mips_bc1t, &label_nun);
 //    /* at least one of the operands is NaN */
 //    // set zf,pf,cf = 111
 //    if (option_lbt) {
 //        append_ir2_opnd1i(mips_mtflag, &temp, 0xb);
 //    } else {
-//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);           
+//        append_ir2_opnd2i(mips_ori, &eflags_ir2_opnd, &eflags_ir2_opnd, 0x0045);
 //    }
 //    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 2: not unordered. are they equal? */
-//    append_ir2_opnd1(mips_label, &label_nun);  
-//    append_ir2_opnd2(mips_c_eq_s, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1t, &label_neq);   
+//    append_ir2_opnd1(mips_label, &label_nun);
+//    append_ir2_opnd2(mips_c_eq_s, &dest, &src);
+//    append_ir2_opnd1(mips_bc1t, &label_neq);
 //    /* two operands are equal */
 //    // set zf,pf,cf = 100
 //    if (option_lbt) {
@@ -9532,9 +9532,9 @@ bool translate_ucomiss(IR1_INST *pir1)
 //    append_ir2_opnd1(mips_b, &label_exit);
 //
 //    /* case 3: not unordered, not equal. less than? */
-//    append_ir2_opnd1(mips_label, &label_neq);  
-//    append_ir2_opnd2(mips_c_lt_s, &dest, &src); 
-//    append_ir2_opnd1(mips_bc1t, &label_gt);    
+//    append_ir2_opnd1(mips_label, &label_neq);
+//    append_ir2_opnd2(mips_c_lt_s, &dest, &src);
+//    append_ir2_opnd1(mips_bc1t, &label_gt);
 //    /* less than */
 //    // set zf.pf.cf = 001
 //    if (option_lbt) {
@@ -9615,7 +9615,7 @@ bool translate_maskmovdqu(IR1_INST *pir1)
 //    load_ir1_to_ir2(&mask_hi, opnd1, UNKNOWN_EXTENSION, true);
 //
 //    IR2_OPND temp_src = ra_alloc_itemp();
-//    IR2_OPND base_opnd = ir2_opnd_new(IR2_OPND_IREG, 23); 
+//    IR2_OPND base_opnd = ir2_opnd_new(IR2_OPND_IREG, 23);
 //    /* current code cannot recover a mapped register from EM_MIPS_ADDRESS
 //       back into SIGN_EXTENSION. So we use a temp one
 //     */
@@ -9639,161 +9639,161 @@ bool translate_maskmovdqu(IR1_INST *pir1)
 //    IR2_OPND mask_lo = ra_alloc_itemp();
 //
 //    load_ir1_to_ir2(&mask_lo, opnd1, UNKNOWN_EXTENSION, false);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next);
 //
 //    append_ir2_opnd2i(mips_sb, &src_lo, &tmp_opnd, 0); /* replace by shell */
 //                                                      /* script */
-//    append_ir2_opnd1(mips_label, &label_next); 
+//    append_ir2_opnd1(mips_label, &label_next);
 //    load_imm64_to_ir2(&temp_int, 0x8000);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next1 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next1); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next1);
 //
 //    append_ir2_opnd2i(mips_dsrl, &temp_src, &src_lo, 8);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 1);                     
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 1);
 //
-//    append_ir2_opnd1(mips_label, &label_next1); 
+//    append_ir2_opnd1(mips_label, &label_next1);
 //    load_imm64_to_ir2(&temp_int, 0x800000);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next2 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next2); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next2);
 //
 //    append_ir2_opnd2i(mips_dsrl, &temp_src, &src_lo, 16);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 2);                     
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 2);
 //
-//    append_ir2_opnd1(mips_label, &label_next2); 
+//    append_ir2_opnd1(mips_label, &label_next2);
 //    load_imm64_to_ir2(&temp_int, 0x80000000);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next3 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next3); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next3);
 //
 //    append_ir2_opnd2i(mips_dsrl, &temp_src, &src_lo, 24);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 3);                     
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 3);
 //
-//    append_ir2_opnd1(mips_label, &label_next3); 
+//    append_ir2_opnd1(mips_label, &label_next3);
 //    load_imm64_to_ir2(&temp_int, 0x8000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next4 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next4); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next4);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_lo, 0);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 4);                     
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 4);
 //
-//    append_ir2_opnd1(mips_label, &label_next4); 
+//    append_ir2_opnd1(mips_label, &label_next4);
 //    load_imm64_to_ir2(&temp_int, 0x800000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next5 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next5); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next5);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_lo, 8);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 5);                     
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 5);
 //
-//    append_ir2_opnd1(mips_label, &label_next5); 
+//    append_ir2_opnd1(mips_label, &label_next5);
 //    load_imm64_to_ir2(&temp_int, 0x80000000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next6 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next6); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next6);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_lo, 16);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 6);                     
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 6);
 //
-//    append_ir2_opnd1(mips_label, &label_next6); 
+//    append_ir2_opnd1(mips_label, &label_next6);
 //    load_imm64_to_ir2(&temp_int, 0x8000000000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_lo, &temp_int);
 //
 //    IR2_OPND label_next7 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next7); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next7);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_lo, 24);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 7);                     
-//    append_ir2_opnd1(mips_label, &label_next7); 
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 7);
+//    append_ir2_opnd1(mips_label, &label_next7);
 //    load_imm64_to_ir2(&temp_int, 0x80);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
 //
 //    IR2_OPND src_hi = ra_alloc_itemp();
 //    load_ir1_to_ir2(&src_hi, opnd0, UNKNOWN_EXTENSION, true);
 //
 //    IR2_OPND label_next8 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next8); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next8);
 //
 //    append_ir2_opnd2i(mips_sb, &src_hi, &tmp_opnd, 8);
 //
-//    append_ir2_opnd1(mips_label, &label_next8); 
+//    append_ir2_opnd1(mips_label, &label_next8);
 //    load_imm64_to_ir2(&temp_int, 0x8000);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
 //
 //    IR2_OPND label_next9 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next9); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next9);
 //
 //    append_ir2_opnd2i(mips_dsrl, &temp_src, &src_hi, 8);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 9);                     
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 9);
 //
-//    append_ir2_opnd1(mips_label, &label_next9); 
+//    append_ir2_opnd1(mips_label, &label_next9);
 //    load_imm64_to_ir2(&temp_int, 0x800000);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
 //
 //    IR2_OPND label_next10 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next10); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next10);
 //
 //    append_ir2_opnd2i(mips_dsrl, &temp_src, &src_hi, 16);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 10);                     
-//    append_ir2_opnd1(mips_label, &label_next10); 
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 10);
+//    append_ir2_opnd1(mips_label, &label_next10);
 //    load_imm64_to_ir2(&temp_int, 0x80000000);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
 //
 //    IR2_OPND label_next11 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next11); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next11);
 //
 //    append_ir2_opnd2i(mips_dsrl, &temp_src, &src_hi, 24);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 11);                     
-//    append_ir2_opnd1(mips_label, &label_next11); 
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 11);
+//    append_ir2_opnd1(mips_label, &label_next11);
 //    load_imm64_to_ir2(&temp_int, 0x8000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
 //
 //    IR2_OPND label_next12 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next12); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next12);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_hi, 0);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 12);                     
-//    append_ir2_opnd1(mips_label, &label_next12); 
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 12);
+//    append_ir2_opnd1(mips_label, &label_next12);
 //    load_imm64_to_ir2(&temp_int, 0x800000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
 //
 //    IR2_OPND label_next13 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next13); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next13);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_hi, 8);
-//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 13);                     
-//    append_ir2_opnd1(mips_label, &label_next13); 
+//    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 13);
+//    append_ir2_opnd1(mips_label, &label_next13);
 //    load_imm64_to_ir2(&temp_int, 0x80000000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
 //
 //    IR2_OPND label_next14 = ir2_opnd_new_type(IR2_OPND_LABEL);
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next14); 
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next14);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_hi, 16);
 //    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 14);
-//                      
-//    append_ir2_opnd1(mips_label, &label_next14); 
-//    load_imm64_to_ir2(&temp_int, 0x8000000000000000LL);
-//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int); 
 //
-//    IR2_OPND label_next15 = ir2_opnd_new_type(IR2_OPND_LABEL); 
-//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next15); 
+//    append_ir2_opnd1(mips_label, &label_next14);
+//    load_imm64_to_ir2(&temp_int, 0x8000000000000000LL);
+//    append_ir2_opnd3(mips_and, &temp_mask, &mask_hi, &temp_int);
+//
+//    IR2_OPND label_next15 = ir2_opnd_new_type(IR2_OPND_LABEL);
+//    append_ir2_opnd3(mips_beq, &temp_mask, &zero_ir2_opnd, &label_next15);
 //
 //    append_ir2_opnd2i(mips_dsrl32, &temp_src, &src_hi, 24);
 //    append_ir2_opnd2i(mips_sb, &temp_src, &tmp_opnd, 15);
 //
-//    append_ir2_opnd1(mips_label, &label_next15); 
+//    append_ir2_opnd1(mips_label, &label_next15);
 
     return true;
 }

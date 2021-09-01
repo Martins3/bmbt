@@ -7,7 +7,7 @@
 
 ## [ ] TODO
 1. `#include <stdbool>` 之类的头文件真的需要清理掉吗 ?
-2. 如何让 acpi / kernel / tcg 使用同一个 header                                  
+2. 如何让 acpi / kernel / tcg 使用同一个 header
 3. qdist.h : 主要是 print_qht_statistics 中间使用的用于分析统计信息的，也许直接删除吧
 
 ## 一些记录
@@ -18,7 +18,7 @@
 1. cpu-ldst.h 开始移植的时候，使用了 v6.0 的代码
 2. cputlb.c 就是直接拷贝的 v4.2 的，没有做任何的修改
 3. 在 v6.0 中，cputlb.c 中是定义了 cpu_ldub_mmuidx_ra 的
-4. 还移植了 v6.0 的 seg_helper.h 
+4. 还移植了 v6.0 的 seg_helper.h
 
 ## 头文件功能描述
 | header       | desc                                                                       |
@@ -51,7 +51,7 @@
 
 
 # 如何保证 config-host.h 和 config-target.h 被所有的人 include
-在 `include/hw/core/cpu.h` 的函数 cpu_tb_jmp_cache_clear 的 CONFIG_X86toMIPS 
+在 `include/hw/core/cpu.h` 的函数 cpu_tb_jmp_cache_clear 的 CONFIG_X86toMIPS
 在是否依赖 qemu/config-host.h 产生差别，但是实际上，一直没有注意到
 
 QEMU 采取的做法是让很多位置全部去 include osdep.h, 然后 osdep include 两者

@@ -35,6 +35,6 @@
 
 - tb_lookup__cpu_state
   - *xtm_cpt_insert_tb*
-  
+
 - tb_jmp_cache_clear_page
   - *xtm_cpt_flush_page*

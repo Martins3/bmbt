@@ -118,7 +118,7 @@ IR2_OPND ra_alloc_itemp(void)
     int mask = td->itemp_mask;
     int i = 0;
     while ((mask >> i) & 0x1) i++;
-    
+
     if (i < itemp_status_num) {
         ir2_opnd.val = p[i].physical_id;
         td->itemp_mask = td->itemp_mask | (1 << i);

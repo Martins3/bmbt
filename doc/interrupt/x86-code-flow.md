@@ -5,7 +5,7 @@
 
 ## /proc/interrupts
 ```txt
-           CPU0       
+           CPU0
   0:         28   IO-APIC   2-edge      timer
   1:        224   IO-APIC   1-edge      i8042
   4:        323   IO-APIC   4-edge      ttyS0
@@ -41,7 +41,7 @@ NPI:          0   Nested posted-interrupt event
 PIW:          0   Posted-interrupt wakeup event
 ```
 
-## msi 
+## msi
 根据 https://habr.com/ru/post/501660/ 告诉如何关闭 pci 的 msi，默认情况下，nvme 就是使用 msi 的
 
 https://www.kernel.org/doc/html/latest/PCI/msi-howto.html : 最详细的文档了

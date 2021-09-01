@@ -20,4 +20,3 @@ kprobe:task_tick_fair
   @[kstack] = count();
   printf("task entity tick\n")
 }
-

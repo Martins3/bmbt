@@ -512,7 +512,7 @@ bool translate_fldenv(IR1_INST *pir1)
 //    append_ir2_opnd2i(mips_sh, &value, &env_ir2_opnd,
 //                      lsenv_offset_of_top(lsenv));
 //    IR2_OPND top = ra_alloc_itemp();
-//    tr_load_lstop_from_env(&top); 
+//    tr_load_lstop_from_env(&top);
 //    ra_free_temp(&top);
 //
 //    //tr_gen_call_to_helper1((ADDR)update_fp_status);

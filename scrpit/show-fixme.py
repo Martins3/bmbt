@@ -7,7 +7,7 @@ commits = list(repo.iter_commits("main"))
 
 fixme_array = [ ]
 for m in commits:
-    if "(FIXME " in m.message: 
+    if "(FIXME " in m.message:
         txt = m.message.replace(")", ' ')
         nums = [int(s) for s in txt.split() if s.isdigit()]
         try:

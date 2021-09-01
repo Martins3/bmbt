@@ -1,4 +1,4 @@
-# softmmu 和 memory model 的移植的设计 
+# softmmu 和 memory model 的移植的设计
 
 ## [ ] 到底那些地方可以简化
 - 因为描述的空间是固定的，所以我猜测可以简化设计，没有必要创建出来 MemoryRegion，但是可以保留出来 FlatRange

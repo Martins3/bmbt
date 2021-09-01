@@ -29,7 +29,7 @@ dirty_memory 划分为三种
 - migration
 - vga
 
-区分一下一些 dirty 
+区分一下一些 dirty
 1. guest os 的 kernel 的 dirty 表示，内存被修改没有被同步到文件系统中间了
 2. QEMU 的 dirty 表示，这个当前虚拟机的内存被修改没有同步到远程的虚拟机中
 
@@ -190,7 +190,7 @@ iotlb = memory_region_get_ram_addr(section->mr) + xlat;
     - tlb_mmu_resize_locked : 只有当在 TLB 发生 flush 的时候，才可以 TLB 大小的调整
     - tlb_mmu_flush_locked : flush 就是 table 清空，并且将统计数据重置
 
-- 为什么 flush TLB 这种事情有的情况必须让这个 cpu 做: 
+- 为什么 flush TLB 这种事情有的情况必须让这个 cpu 做:
   - TLB Update (update a CPUTLBEntry, via tlb_set_page_with_attrs) - This is a per-vCPU table - by definition can’t race - updated by its own thread when the slow-path is forced
 
 - 或者说，如果一个 CPU A 正在运行，另外一个 CPU B 如何修改 A 的 TLB 只有一种可能，那就是 remote TLB shoot
@@ -265,7 +265,7 @@ typedef struct CPUTLB {
 
 - CPUTLB
   - CPUTLBCommon : 统计数据
-  - CPUTLBDesc : 
+  - CPUTLBDesc :
     - victim tlb
     - large page
     - iotlb
@@ -316,7 +316,7 @@ typedef struct CPUTLBDescFast {
 ```
 - 分析 victim_tlb_hit 的实现, 在同时替换 CPUTLBEntry 和 CPUIOTLBEntry 中的 victim
 
-- tlb_index / tlb_entry 都是使用的 fast 
+- tlb_index / tlb_entry 都是使用的 fast
 - tlb_set_page_with_attrs 首先构建 CPUTLBEntry 然后使用 tlb_entry 获取地址，最后写入
 
 ### CPUTLBDesc
@@ -430,7 +430,7 @@ typedef struct CPUIOTLBEntry {
 - [ ] attrs 的作用是什么，为什么是放到 IOTLB 中，对于 RAM 有意义吗?
 
 - [ ] 什么叫做 physical section number ?
-  - 一共出现三次，第三次是 phys_section_add 
+  - 一共出现三次，第三次是 phys_section_add
 - [ ] PHYS_SECTION_NOTDIRTY
 - [ ] PHYS_SECTION_ROM
 
@@ -465,8 +465,8 @@ A: 指令的读取都是 tb 的事情
 下面是 tlb_fill 的几个调用者
 - get_page_addr_code : 从 guest 虚拟地址的 pc 获取 guest 物理地址的 pc
   - get_page_addr_code_hostp
-    - qemu_ram_addr_from_host_nofail : 通过 hva 获取 gpa 
-      - qemu_ram_addr_from_host 
+    - qemu_ram_addr_from_host_nofail : 通过 hva 获取 gpa
+      - qemu_ram_addr_from_host
         - qemu_ram_block_from_host
 
 ## MemTxAttrs
@@ -535,7 +535,7 @@ struct CPUState{
 
 在 tlb_set_page_with_attrs 中如果 cpu_watchpoint_address_matches, 那么该 TLB 将会插入 watchpoints，而
 
-在 store_helper 中间，检查 TLB_WATCHPOINT, 调用 cpu_check_watchpoint 
+在 store_helper 中间，检查 TLB_WATCHPOINT, 调用 cpu_check_watchpoint
 
 ```c
 /* Return flags for watchpoints that match addr + prot.  */
@@ -555,18 +555,18 @@ int cpu_watchpoint_address_matches(CPUState *cpu, vaddr addr, vaddr len)
 
 而 breakpoints 知道一定是发生在代码段上的，所以只是需要向代码段上加上标记就可以了。
 
-## tlb_set_page_with_attrs 
+## tlb_set_page_with_attrs
 - tlb_set_page_with_attrs 的功能就是添加一个 LTB entry 的
   - address_space_translate_for_iotlb : 因为没有 IOMMU 的支持，所以等价于调用 address_space_translate_internal
 
 其实不区分是不是 io 还是 ram 的，都会存储到 CPUTLBDesc::iotlb 和 CPUTLBDescFast::table 中间
 
-从 victim_tlb_hit 的实现看，也就是 victim / fast 的 tlb 的相同位置, 
+从 victim_tlb_hit 的实现看，也就是 victim / fast 的 tlb 的相同位置,
 总是同时有相同地址的 iotlb 和 tlb
 
 - [ ] 现在理解了其中的基本函数如何设置 CPUIOTLBEntry 和 CPUTLBEntry 的，但是中间还空出来了一大片内容的
 
-## x86_stl_phys_notdirty 
+## x86_stl_phys_notdirty
 在 target/i386/helper.c 中间的, 提供一系列的类似的 helper，但是这一个唯一一个要求 notdirty 的
 
 ```c
@@ -610,4 +610,4 @@ cpu_physical_memory_set_dirty_range 的处理:
 - tr_ir2_generate
   - tr_gen_tb_start
   - tr_gen_softmmu_slow_path : slow path 的代码在每一个 tb 哪里只会生成一次
-  - tr_gen_tb_end 
+  - tr_gen_tb_end

@@ -2,7 +2,7 @@
  * Intel ACPI Component Architecture
  * AML/ASL+ Disassembler version 20190509 (64-bit version)
  * Copyright (c) 2000 - 2019 Intel Corporation
- * 
+ *
  * Disassembling to symbolic ASL+ operators
  *
  * Disassembly of DSDT, Fri Jun  4 20:42:00 2021
@@ -56,489 +56,489 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Package (0x04)
                 {
-                    0x0003FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0003FFFF,
+                    Zero,
+                    Zero,
                     0x4C
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0003FFFF, 
-                    One, 
-                    Zero, 
+                    0x0003FFFF,
+                    One,
+                    Zero,
                     0x4E
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0004FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0004FFFF,
+                    Zero,
+                    Zero,
                     0x71
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0004FFFF, 
-                    One, 
-                    Zero, 
+                    0x0004FFFF,
+                    One,
+                    Zero,
                     0x70
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0005FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0005FFFF,
+                    Zero,
+                    Zero,
                     0x73
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0005FFFF, 
-                    One, 
-                    Zero, 
+                    0x0005FFFF,
+                    One,
+                    Zero,
                     0x72
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0006FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0006FFFF,
+                    Zero,
+                    Zero,
                     0x5D
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0006FFFF, 
-                    One, 
-                    Zero, 
+                    0x0006FFFF,
+                    One,
+                    Zero,
                     0x5C
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0007FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0007FFFF,
+                    Zero,
+                    Zero,
                     0x7A
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0008FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0008FFFF,
+                    Zero,
+                    Zero,
                     0x50
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0008FFFF, 
-                    One, 
-                    Zero, 
+                    0x0008FFFF,
+                    One,
+                    Zero,
                     0x51
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0008FFFF, 
-                    0x02, 
-                    Zero, 
+                    0x0008FFFF,
+                    0x02,
+                    Zero,
                     0x52
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0009FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0009FFFF,
+                    Zero,
+                    Zero,
                     0x60
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0009FFFF, 
-                    One, 
-                    Zero, 
+                    0x0009FFFF,
+                    One,
+                    Zero,
                     0x60
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0009FFFF, 
-                    0x02, 
-                    Zero, 
+                    0x0009FFFF,
+                    0x02,
+                    Zero,
                     0x60
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0009FFFF, 
-                    0x03, 
-                    Zero, 
+                    0x0009FFFF,
+                    0x03,
+                    Zero,
                     0x60
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000AFFFF, 
-                    Zero, 
-                    Zero, 
+                    0x000AFFFF,
+                    Zero,
+                    Zero,
                     0x61
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000AFFFF, 
-                    One, 
-                    Zero, 
+                    0x000AFFFF,
+                    One,
+                    Zero,
                     0x61
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000AFFFF, 
-                    0x02, 
-                    Zero, 
+                    0x000AFFFF,
+                    0x02,
+                    Zero,
                     0x61
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000AFFFF, 
-                    0x03, 
-                    Zero, 
+                    0x000AFFFF,
+                    0x03,
+                    Zero,
                     0x61
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000BFFFF, 
-                    Zero, 
-                    Zero, 
+                    0x000BFFFF,
+                    Zero,
+                    Zero,
                     0x62
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000BFFFF, 
-                    One, 
-                    Zero, 
+                    0x000BFFFF,
+                    One,
+                    Zero,
                     0x62
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000BFFFF, 
-                    0x02, 
-                    Zero, 
+                    0x000BFFFF,
+                    0x02,
+                    Zero,
                     0x62
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000BFFFF, 
-                    0x03, 
-                    Zero, 
+                    0x000BFFFF,
+                    0x03,
+                    Zero,
                     0x62
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000CFFFF, 
-                    Zero, 
-                    Zero, 
+                    0x000CFFFF,
+                    Zero,
+                    Zero,
                     0x63
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000CFFFF, 
-                    One, 
-                    Zero, 
+                    0x000CFFFF,
+                    One,
+                    Zero,
                     0x63
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000CFFFF, 
-                    0x02, 
-                    Zero, 
+                    0x000CFFFF,
+                    0x02,
+                    Zero,
                     0x63
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000CFFFF, 
-                    0x03, 
-                    Zero, 
+                    0x000CFFFF,
+                    0x03,
+                    Zero,
                     0x63
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000DFFFF, 
-                    Zero, 
-                    Zero, 
+                    0x000DFFFF,
+                    Zero,
+                    Zero,
                     0x64
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000DFFFF, 
-                    One, 
-                    Zero, 
+                    0x000DFFFF,
+                    One,
+                    Zero,
                     0x64
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000DFFFF, 
-                    0x02, 
-                    Zero, 
+                    0x000DFFFF,
+                    0x02,
+                    Zero,
                     0x64
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000DFFFF, 
-                    0x03, 
-                    Zero, 
+                    0x000DFFFF,
+                    0x03,
+                    Zero,
                     0x64
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000EFFFF, 
-                    Zero, 
-                    Zero, 
+                    0x000EFFFF,
+                    Zero,
+                    Zero,
                     0x65
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000EFFFF, 
-                    One, 
-                    Zero, 
+                    0x000EFFFF,
+                    One,
+                    Zero,
                     0x65
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000EFFFF, 
-                    0x02, 
-                    Zero, 
+                    0x000EFFFF,
+                    0x02,
+                    Zero,
                     0x65
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000EFFFF, 
-                    0x03, 
-                    Zero, 
+                    0x000EFFFF,
+                    0x03,
+                    Zero,
                     0x65
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000FFFFF, 
-                    Zero, 
-                    Zero, 
+                    0x000FFFFF,
+                    Zero,
+                    Zero,
                     0x68
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000FFFFF, 
-                    One, 
-                    Zero, 
+                    0x000FFFFF,
+                    One,
+                    Zero,
                     0x68
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000FFFFF, 
-                    0x02, 
-                    Zero, 
+                    0x000FFFFF,
+                    0x02,
+                    Zero,
                     0x68
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x000FFFFF, 
-                    0x03, 
-                    Zero, 
+                    0x000FFFFF,
+                    0x03,
+                    Zero,
                     0x68
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0010FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0010FFFF,
+                    Zero,
+                    Zero,
                     0x69
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0010FFFF, 
-                    One, 
-                    Zero, 
+                    0x0010FFFF,
+                    One,
+                    Zero,
                     0x69
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0010FFFF, 
-                    0x02, 
-                    Zero, 
+                    0x0010FFFF,
+                    0x02,
+                    Zero,
                     0x69
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0010FFFF, 
-                    0x03, 
-                    Zero, 
+                    0x0010FFFF,
+                    0x03,
+                    Zero,
                     0x69
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0011FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0011FFFF,
+                    Zero,
+                    Zero,
                     0x6A
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0011FFFF, 
-                    One, 
-                    Zero, 
+                    0x0011FFFF,
+                    One,
+                    Zero,
                     0x6A
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0011FFFF, 
-                    0x02, 
-                    Zero, 
+                    0x0011FFFF,
+                    0x02,
+                    Zero,
                     0x6A
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0011FFFF, 
-                    0x03, 
-                    Zero, 
+                    0x0011FFFF,
+                    0x03,
+                    Zero,
                     0x6A
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0012FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0012FFFF,
+                    Zero,
+                    Zero,
                     0x6B
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0012FFFF, 
-                    One, 
-                    Zero, 
+                    0x0012FFFF,
+                    One,
+                    Zero,
                     0x6B
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0012FFFF, 
-                    0x02, 
-                    Zero, 
+                    0x0012FFFF,
+                    0x02,
+                    Zero,
                     0x6B
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0012FFFF, 
-                    0x03, 
-                    Zero, 
+                    0x0012FFFF,
+                    0x03,
+                    Zero,
                     0x6B
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0013FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0013FFFF,
+                    Zero,
+                    Zero,
                     0x66
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0013FFFF, 
-                    One, 
-                    Zero, 
+                    0x0013FFFF,
+                    One,
+                    Zero,
                     0x66
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0013FFFF, 
-                    0x02, 
-                    Zero, 
+                    0x0013FFFF,
+                    0x02,
+                    Zero,
                     0x66
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0013FFFF, 
-                    0x03, 
-                    Zero, 
+                    0x0013FFFF,
+                    0x03,
+                    Zero,
                     0x66
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0014FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0014FFFF,
+                    Zero,
+                    Zero,
                     0x67
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0014FFFF, 
-                    One, 
-                    Zero, 
+                    0x0014FFFF,
+                    One,
+                    Zero,
                     0x67
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0014FFFF, 
-                    0x02, 
-                    Zero, 
+                    0x0014FFFF,
+                    0x02,
+                    Zero,
                     0x67
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0014FFFF, 
-                    0x03, 
-                    Zero, 
+                    0x0014FFFF,
+                    0x03,
+                    Zero,
                     0x67
-                }, 
+                },
 
                 Package (0x04)
                 {
-                    0x0017FFFF, 
-                    Zero, 
-                    Zero, 
+                    0x0017FFFF,
+                    Zero,
+                    Zero,
                     0x53
                 }
             })
@@ -598,9 +598,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB0.RHUB.PRT1._UPC.UPCP */
@@ -628,9 +628,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB0.RHUB.PRT2._UPC.UPCP */
@@ -658,9 +658,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB0.RHUB.PRT3._UPC.UPCP */
@@ -690,7 +690,7 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Return (Package (0x02)
                 {
-                    0x0A, 
+                    0x0A,
                     0x03
                 })
             }
@@ -709,9 +709,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB1.RHUB.PRT1._UPC.UPCP */
@@ -739,9 +739,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB1.RHUB.PRT2._UPC.UPCP */
@@ -769,9 +769,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB1.RHUB.PRT3._UPC.UPCP */
@@ -807,9 +807,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB2.RHUB.PRT1._UPC.UPCP */
@@ -837,9 +837,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB2.RHUB.PRT2._UPC.UPCP */
@@ -867,9 +867,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB2.RHUB.PRT3._UPC.UPCP */
@@ -899,7 +899,7 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Return (Package (0x02)
                 {
-                    0x0D, 
+                    0x0D,
                     0x03
                 })
             }
@@ -918,9 +918,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB3.RHUB.PRT1._UPC.UPCP */
@@ -948,9 +948,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB3.RHUB.PRT2._UPC.UPCP */
@@ -978,9 +978,9 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Name (UPCP, Package (0x04)
                         {
-                            0xFF, 
-                            Zero, 
-                            Zero, 
+                            0xFF,
+                            Zero,
+                            Zero,
                             Zero
                         })
                         Return (UPCP) /* \_SB_.PCI0.USB3.RHUB.PRT3._UPC.UPCP */
@@ -1014,7 +1014,7 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Return (Package (0x02)
                 {
-                    0x05, 
+                    0x05,
                     0x03
                 })
             }
@@ -1031,7 +1031,7 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Return (Package (0x02)
                 {
-                    0x06, 
+                    0x06,
                     0x03
                 })
             }
@@ -1162,16 +1162,16 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                 {
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
                             ,)
-                    }, 
+                    },
 
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
@@ -1189,161 +1189,161 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Package (0x06)
                 {
-                    0x07D0, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0103, 
+                    0x07D0,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0103,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0708, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x03, 
+                    0x0708,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x03,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x06D6, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0104, 
+                    0x06D6,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0104,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0627, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x04, 
+                    0x0627,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x04,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x05DC, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0105, 
+                    0x05DC,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0105,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0546, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x05, 
+                    0x0546,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x05,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x04E2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0106, 
+                    0x04E2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0106,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0465, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x06, 
+                    0x0465,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x06,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x03E8, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0107, 
+                    0x03E8,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0107,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0384, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x07, 
+                    0x0384,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x07,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02EE, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0108, 
+                    0x02EE,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0108,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02A3, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x08, 
+                    0x02A3,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x08,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01F4, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0109, 
+                    0x01F4,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0109,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01C2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x09, 
+                    0x01C2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x09,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xFA, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x010A, 
+                    0xFA,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x010A,
                     0x0A
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xE1, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0A, 
+                    0xE1,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0A,
                     0x0A
                 }
             })
@@ -1366,16 +1366,16 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                 {
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
                             ,)
-                    }, 
+                    },
 
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
@@ -1393,161 +1393,161 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Package (0x06)
                 {
-                    0x07D0, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0103, 
+                    0x07D0,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0103,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0708, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x03, 
+                    0x0708,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x03,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x06D6, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0104, 
+                    0x06D6,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0104,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0627, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x04, 
+                    0x0627,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x04,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x05DC, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0105, 
+                    0x05DC,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0105,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0546, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x05, 
+                    0x0546,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x05,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x04E2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0106, 
+                    0x04E2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0106,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0465, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x06, 
+                    0x0465,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x06,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x03E8, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0107, 
+                    0x03E8,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0107,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0384, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x07, 
+                    0x0384,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x07,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02EE, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0108, 
+                    0x02EE,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0108,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02A3, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x08, 
+                    0x02A3,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x08,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01F4, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0109, 
+                    0x01F4,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0109,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01C2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x09, 
+                    0x01C2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x09,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xFA, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x010A, 
+                    0xFA,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x010A,
                     0x0A
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xE1, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0A, 
+                    0xE1,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0A,
                     0x0A
                 }
             })
@@ -1570,16 +1570,16 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                 {
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
                             ,)
-                    }, 
+                    },
 
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
@@ -1597,161 +1597,161 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Package (0x06)
                 {
-                    0x07D0, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0103, 
+                    0x07D0,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0103,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0708, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x03, 
+                    0x0708,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x03,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x06D6, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0104, 
+                    0x06D6,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0104,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0627, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x04, 
+                    0x0627,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x04,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x05DC, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0105, 
+                    0x05DC,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0105,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0546, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x05, 
+                    0x0546,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x05,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x04E2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0106, 
+                    0x04E2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0106,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0465, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x06, 
+                    0x0465,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x06,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x03E8, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0107, 
+                    0x03E8,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0107,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0384, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x07, 
+                    0x0384,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x07,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02EE, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0108, 
+                    0x02EE,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0108,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02A3, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x08, 
+                    0x02A3,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x08,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01F4, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0109, 
+                    0x01F4,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0109,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01C2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x09, 
+                    0x01C2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x09,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xFA, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x010A, 
+                    0xFA,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x010A,
                     0x0A
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xE1, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0A, 
+                    0xE1,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0A,
                     0x0A
                 }
             })
@@ -1774,16 +1774,16 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                 {
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
                             ,)
-                    }, 
+                    },
 
                     ResourceTemplate ()
                     {
-                        Register (FFixedHW, 
+                        Register (FFixedHW,
                             0x00,               // Bit Width
                             0x00,               // Bit Offset
                             0x0000000000000000, // Address
@@ -1801,161 +1801,161 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             {
                 Package (0x06)
                 {
-                    0x07D0, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0103, 
+                    0x07D0,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0103,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0708, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x03, 
+                    0x0708,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x03,
                     0x03
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x06D6, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0104, 
+                    0x06D6,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0104,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0627, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x04, 
+                    0x0627,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x04,
                     0x04
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x05DC, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0105, 
+                    0x05DC,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0105,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0546, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x05, 
+                    0x0546,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x05,
                     0x05
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x04E2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0106, 
+                    0x04E2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0106,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0465, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x06, 
+                    0x0465,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x06,
                     0x06
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x03E8, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0107, 
+                    0x03E8,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0107,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x0384, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x07, 
+                    0x0384,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x07,
                     0x07
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02EE, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0108, 
+                    0x02EE,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0108,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x02A3, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x08, 
+                    0x02A3,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x08,
                     0x08
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01F4, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0109, 
+                    0x01F4,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0109,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0x01C2, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x09, 
+                    0x01C2,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x09,
                     0x09
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xFA, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x010A, 
+                    0xFA,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x010A,
                     0x0A
-                }, 
+                },
 
                 Package (0x06)
                 {
-                    0xE1, 
-                    0x3A98, 
-                    0x4E20, 
-                    0x4E20, 
-                    0x0A, 
+                    0xE1,
+                    0x3A98,
+                    0x4E20,
+                    0x4E20,
+                    0x0A,
                     0x0A
                 }
             })
@@ -1985,36 +1985,36 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             })
             Name (_DSD, Package (0x02)  // _DSD: Device-Specific Data
             {
-                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */, 
+                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */,
                 Package (0x05)
                 {
                     Package (0x02)
                     {
-                        "conf_offset", 
+                        "conf_offset",
                         0x0800
-                    }, 
+                    },
 
                     Package (0x02)
                     {
-                        "out_offset", 
+                        "out_offset",
                         0x0900
-                    }, 
+                    },
 
                     Package (0x02)
                     {
-                        "in_offset", 
+                        "in_offset",
                         0x0A00
-                    }, 
+                    },
 
                     Package (0x02)
                     {
-                        "gpio_base", 
+                        "gpio_base",
                         0x10
-                    }, 
+                    },
 
                     Package (0x02)
                     {
-                        "ngpios", 
+                        "ngpios",
                         0x39
                     }
                 }
@@ -2042,12 +2042,12 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             })
             Name (_DSD, Package (0x02)  // _DSD: Device-Specific Data
             {
-                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */, 
+                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */,
                 Package (0x01)
                 {
                     Package (0x02)
                     {
-                        "clock-frequency", 
+                        "clock-frequency",
                         0x05F5E100
                     }
                 }
@@ -2075,12 +2075,12 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             })
             Name (_DSD, Package (0x02)  // _DSD: Device-Specific Data
             {
-                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */, 
+                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */,
                 Package (0x01)
                 {
                     Package (0x02)
                     {
-                        "clock-frequency", 
+                        "clock-frequency",
                         0x02FAF080
                     }
                 }
@@ -2108,12 +2108,12 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             })
             Name (_DSD, Package (0x02)  // _DSD: Device-Specific Data
             {
-                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */, 
+                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */,
                 Package (0x01)
                 {
                     Package (0x02)
                     {
-                        "clock-frequency", 
+                        "clock-frequency",
                         0x02FAF080
                     }
                 }
@@ -2141,12 +2141,12 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             })
             Name (_DSD, Package (0x02)  // _DSD: Device-Specific Data
             {
-                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */, 
+                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */,
                 Package (0x01)
                 {
                     Package (0x02)
                     {
-                        "clock-frequency", 
+                        "clock-frequency",
                         0x02FAF080
                     }
                 }
@@ -2174,12 +2174,12 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
             })
             Name (_DSD, Package (0x02)  // _DSD: Device-Specific Data
             {
-                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */, 
+                ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301") /* Device Properties for _DSD */,
                 Package (0x01)
                 {
                     Package (0x02)
                     {
-                        "clock-frequency", 
+                        "clock-frequency",
                         0x02FAF080
                     }
                 }
@@ -2461,10 +2461,10 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
                     {
                         Return (Package (0x05)
                         {
-                            0xC350, 
-                            Ones, 
-                            Ones, 
-                            0xC350, 
+                            0xC350,
+                            Ones,
+                            Ones,
+                            0xC350,
                             Ones
                         })
                     }
@@ -2480,30 +2480,30 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
 
     Name (_S0, Package (0x04)  // _S0_: S0 System State
     {
-        Zero, 
-        Zero, 
-        Zero, 
+        Zero,
+        Zero,
+        Zero,
         Zero
     })
     Name (_S3, Package (0x04)  // _S3_: S3 System State
     {
-        0x05, 
-        0x05, 
-        Zero, 
+        0x05,
+        0x05,
+        Zero,
         Zero
     })
     Name (_S4, Package (0x04)  // _S4_: S4 System State
     {
-        0x06, 
-        0x06, 
-        Zero, 
+        0x06,
+        0x06,
+        Zero,
         Zero
     })
     Name (_S5, Package (0x04)  // _S5_: S5 System State
     {
-        0x07, 
-        0x07, 
-        Zero, 
+        0x07,
+        0x07,
+        Zero,
         Zero
     })
     Name (SADR, 0x800000001C062494)
@@ -2511,4 +2511,3 @@ DefinitionBlock ("", "DSDT", 2, "LGSON ", "TP-R00  ", 0x00000476)
     {
     }
 }
-

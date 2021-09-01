@@ -34,7 +34,7 @@
         3. qemu_spin_lock
         4. 在 include/qemu 下存在 thread.h thread-posix.h 等
         6. lockable
-    2. 那些数据结构需要 RCU 来保护 
+    2. 那些数据结构需要 RCU 来保护
     4. 统计一下 `__thread` 出现的次数
     1. atomic 机制谁在使用啊
     2. qemu_mutex 机制的出现位置
@@ -77,4 +77,3 @@
   - [ ] g_assert
   - error_report
 9. pit 和 hpet 需要模拟?
-

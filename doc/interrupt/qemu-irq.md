@@ -224,7 +224,7 @@ static const TypeInfo kvm_apic_info = {
 };
 ```
 
-## select IOAPIC 
+## select IOAPIC
 - hw/intc/ioapic_common.c
 - hw/intc/ioapic.c
 - hw/i386/kvm/ioapic.c
@@ -294,7 +294,7 @@ kvm_irqchip_create => kvm_arch_irqchip_create 中初始化了 kvm_split_irqchip 
 - apic_local_deliver : 在 apic 中存在大量的模拟
   - cpu_interrupt
     - generic_handle_interrupt
-      - `cpu->interrupt_request |= mask;` 
+      - `cpu->interrupt_request |= mask;`
 
 在 cpu_handle_interrupt 中，会处理几种特殊情况，默认是 `cc->cpu_exec_interrupt(cpu, interrupt_request)`
 也就是 x86_cpu_exec_interrupt, 在这里根据 idt 之类的中断处理需要的地址, 然后跳转过去执行的
@@ -375,10 +375,10 @@ struct IRQState {
 1. pc_gsi_create : 创建了 qemu_irq，分配了 GSIState , 但是 GSIState 没有被初始化
 
 - pc_gsi_create
-  - kvm_pc_setup_irq_routing : 
+  - kvm_pc_setup_irq_routing :
     - kvm_irqchip_add_irq_route(s, i, KVM_IRQCHIP_PIC_MASTER, i); i = [0,8)
     - kvm_irqchip_add_irq_route(s, i, KVM_IRQCHIP_PIC_SLAVE, i - 8); i = [8, 16)
-    - kvm_irqchip_add_irq_route(s, i, KVM_IRQCHIP_IOAPIC, i); i = [0, 24) i == 2 被特殊处理了 
+    - kvm_irqchip_add_irq_route(s, i, KVM_IRQCHIP_IOAPIC, i); i = [0, 24) i == 2 被特殊处理了
     - kvm_irqchip_commit_routes
         - `kvm_vm_ioctl(s, KVM_SET_GSI_ROUTING, s->irq_routes);`
   - qemu_allocate_irqs : 创建一组 IRQState 其 handler 是 gsi_handler, 其 opaque 是 GSIState, 这些 gsi 通过 X86MachineState::gsi 来索引的
@@ -488,7 +488,7 @@ static void kbd_update_irq_lines(KBDState *s)
 - i8042_realizefn
   - `isa_init_irq(isadev, &s->irq_kbd, 1);`
   - `isa_init_irq(isadev, &s->irq_mouse, 12);`
-    - isa_get_irq 
+    - isa_get_irq
 
 ```c
 qemu_irq isa_get_irq(ISADevice *dev, unsigned isairq)
@@ -1052,7 +1052,7 @@ DECLARE_IDTENTRY_IRQ(X86_TRAP_OTHER,	spurious_interrupt);
   - 如果不是来自于 pic 的中断，那就清理掉这个中断
 
 #### EOI
-- [ ] apic_eoi : 和 10.8.5 中描述的一致，当 apic 接受到一个 EOIUpon receiving an EOI, the APIC clears the highest priority bit in the ISR and dispatches the next highest priority 
+- [ ] apic_eoi : 和 10.8.5 中描述的一致，当 apic 接受到一个 EOIUpon receiving an EOI, the APIC clears the highest priority bit in the ISR and dispatches the next highest priority
 interrupt to the processor.
   - [ ] 10.8.5 : 手册中间分析的 ioapic 的 broadcast 是什么意思
   - [x] apic_sync_vapic : 这个是处理 kvm 的，暂时不分析
@@ -1062,16 +1062,16 @@ end-of-interrupt message to all I/O APICs.* (**无法理解为什么 level-trigg
 
 System software may prefer to direct EOIs to specific I/O APICs rather than having the local APIC send end-of-interrupt messages to all I/O APICs.
 
-Software can inhibit the broadcast of EOI message by setting bit 12 of the *Spurious Interrupt Vector Register* (see 
+Software can inhibit the broadcast of EOI message by setting bit 12 of the *Spurious Interrupt Vector Register* (see
 Section 10.9). If this bit is set, a broadcast EOI is not generated on an EOI cycle even if the associated *TMR* bit indicates that the current interrupt was level-triggered.
 The default value for the bit is 0, indicating that EOI broadcasts are performed.
 
-Bit 12 of the Spurious Interrupt Vector Register is reserved to 0 if the processor does not support suppression of 
-EOI broadcasts. Support for EOI-broadcast suppression is reported in bit 24 in the Local APIC Version Register (see 
-Section 10.4.8); the feature is supported if that bit is set to 1. When supported, the feature is available in both 
+Bit 12 of the Spurious Interrupt Vector Register is reserved to 0 if the processor does not support suppression of
+EOI broadcasts. Support for EOI-broadcast suppression is reported in bit 24 in the Local APIC Version Register (see
+Section 10.4.8); the feature is supported if that bit is set to 1. When supported, the feature is available in both
 xAPIC mode and x2APIC mode.
 
-System software desiring to perform directed EOIs for level-triggered interrupts should set bit 12 of the *Spurious Interrupt Vector Register* and follow each the EOI to the local xAPIC for a level triggered interrupt with a directed 
+System software desiring to perform directed EOIs for level-triggered interrupts should set bit 12 of the *Spurious Interrupt Vector Register* and follow each the EOI to the local xAPIC for a level triggered interrupt with a directed
 EOI to the I/O APIC generating the interrupt (this is done by writing to the I/O APIC’s EOI register).
 System software performing directed EOIs must retain a mapping associating level-triggered interrupts with the I/O APICs in the system. (**并没有看懂这个英语，是如何实现 dedicated 的 EOI 的**)
 
@@ -1220,7 +1220,7 @@ Line 33 of "./include/asm-generic/fixmap.h" starts at address 0xffffffff810c14d0
 进而可以找到 在 setup_local_APIC 中存在 Set up LVT0, LVT1 相关的代码, 这个会进行屏蔽
 
 使用 tcg 的时候(否则是 kvm 模拟了)，在 QEMU 初始化会调用一次 apic_mem_write
-在内核启动之前会调用一次, 之后 seabios 会调用数次 
+在内核启动之前会调用一次, 之后 seabios 会调用数次
 ```txt
 (qemu) huxueshi:apic_mem_write addr=0 // qemu 初始化 hpet 的时候代码自动触发的
 huxueshi:apic_mem_write addr=f0 // 都是 kernel 启动之前搞定的

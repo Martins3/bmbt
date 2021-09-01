@@ -1,5 +1,5 @@
 # acpi
-感觉 ramooflax 的处理是相当的简单，其实他甚至可以在 acpi 解析之前就可以来初始化 e1000 
+感觉 ramooflax 的处理是相当的简单，其实他甚至可以在 acpi 解析之前就可以来初始化 e1000
 
 ramooflax 不需要模拟 acpi 设备空间，因为设备本身就是相同的
 
@@ -7,7 +7,7 @@ ramooflax 不需要模拟 acpi 设备空间，因为设备本身就是相同的
 - [ ] 探测，到底指的是什么
 ```c
 /*
-[    0.000000] efi:  ACPI 2.0=0xfd2f4000  SMBIOS=0x900000000fffe000  SMBIOS 3.0=0x90000000fd132000 
+[    0.000000] efi:  ACPI 2.0=0xfd2f4000  SMBIOS=0x900000000fffe000  SMBIOS 3.0=0x90000000fd132000
 [    0.000000] ACPI: Early table checksum verification disabled
 [    0.000000] ACPI: RSDP 0x00000000FD2F4000 000024 (v02 LOONGS)
 [    0.000000] ACPI: XSDT 0x00000000FD2F3000 000044 (v01 LOONGS TP-R00   00000004      01000013)

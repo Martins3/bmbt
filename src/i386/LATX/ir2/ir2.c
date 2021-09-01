@@ -630,7 +630,7 @@ IR2_INST *append_ir2_opnd2i(
 
     IR2_INST *pir2 = ir2_allocate();
 
-    IR2_OPND imm_opnd = ir2_opnd_new(IR2_OPND_IMMH, imm); 
+    IR2_OPND imm_opnd = ir2_opnd_new(IR2_OPND_IMMH, imm);
     ir2_build3(pir2, opcode, opnd0, opnd1, &imm_opnd);
 
     lsassertm(ir2_op_check(pir2),
