@@ -1,5 +1,6 @@
 # MTTG && Locks
 
+- http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html
 ## 问题
 - [ ] 第一实际上，mttcg 上运行 x86 指令的时候，mttcg 是默认支持的, 那么李欣宇到底在干什么
 - [ ] 之前的华为的形式化验证是不是就是处理内存序列的 ?
