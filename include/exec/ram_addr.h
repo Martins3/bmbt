@@ -12,12 +12,13 @@
 typedef struct RAMBlock {
   uint8_t *host;
   ram_addr_t offset;      // is zero
-  ram_addr_t used_length; // size of ram
+  ram_addr_t length; // size of ram
 
 } RAMBlock;
 
 typedef struct RAMList {
   DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+  RAMBlock * mru_block; // [interface 10]
 } RAMList;
 extern RAMList ram_list;
 
@@ -151,7 +152,7 @@ static inline bool cpu_physical_memory_is_clean(ram_addr_t addr) {
 }
 
 static inline bool offset_in_ramblock(RAMBlock *b, ram_addr_t offset) {
-  return (b && b->host && offset < b->used_length) ? true : false;
+  return (b && b->host && offset < b->length) ? true : false;
 }
 
 static inline void *ramblock_ptr(RAMBlock *block, ram_addr_t offset) {

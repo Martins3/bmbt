@@ -284,7 +284,7 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
     ramblock = qemu_get_ram_block(start);
     /* Range sanity check on the ramblock */
     assert(start >= ramblock->offset &&
-           start + length <= ramblock->offset + ramblock->used_length);
+           start + length <= ramblock->offset + ramblock->length);
 
     while (page < end) {
       unsigned long idx = page / DIRTY_MEMORY_BLOCK_SIZE;
@@ -306,5 +306,55 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
   }
 
   return dirty;
+}
+
+/*
+ * Translates a host ptr back to a RAMBlock, a ram_addr and an offset
+ * in that RAMBlock.
+ *
+ * ptr: Host pointer to look up
+ * round_offset: If true round the result offset down to a page boundary
+ * *ram_addr: set to result ram_addr
+ * *offset: set to result offset within the RAMBlock
+ *
+ * Returns: RAMBlock (or NULL if not found)
+ *
+ * By the time this function returns, the returned pointer is not protected
+ * by RCU anymore.  If the caller is not within an RCU critical section and
+ * does not hold the iothread lock, it must have other means of protecting the
+ * pointer, such as a reference to the region that includes the incoming
+ * ram_addr_t.
+ */
+RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
+                                   ram_addr_t *offset)
+{
+    RAMBlock *block;
+    uint8_t *host = ptr;
+
+    RCU_READ_LOCK_GUARD();
+    block = atomic_rcu_read(&ram_list.mru_block);
+    if (block && block->host && host - block->host < block->length) {
+        goto found;
+    }
+
+    g_assert_not_reached();
+found:
+    *offset = (host - block->host);
+    if (round_offset) {
+        *offset &= TARGET_PAGE_MASK;
+    }
+    return block;
+}
+
+ram_addr_t qemu_ram_addr_from_host(void *ptr) {
+  RAMBlock *block;
+  ram_addr_t offset;
+
+  block = qemu_ram_block_from_host(ptr, false, &offset);
+  if (!block) {
+    return RAM_ADDR_INVALID;
+  }
+
+  return block->offset + offset;
 }
 
