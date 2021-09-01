@@ -10,3 +10,11 @@ repos:
     -   id: check-added-large-files
     -   id: check-merge-conflict
     -   id: no-commit-to-branch
+
+-   repo: local
+    hooks:
+    -   id: format-code
+        name: format code
+        description: check whether modified code is formatted or not
+        entry: scrpit/hook/format-code.sh
+        language: script
