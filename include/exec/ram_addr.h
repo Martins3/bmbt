@@ -11,9 +11,8 @@
 
 typedef struct RAMBlock {
   uint8_t *host;
-  ram_addr_t offset;      // is zero
+  ram_addr_t offset;          // is zero
   ram_addr_t length; // size of ram
-
 } RAMBlock;
 
 typedef struct RAMList {

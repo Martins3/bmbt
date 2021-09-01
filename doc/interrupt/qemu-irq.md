@@ -4,7 +4,7 @@
     1. 因为 timer 线程是单独的线程，所以 CPU_INTERRUPT_POLL 来处理, 显然 BMBT 没有那么多的线程
 
 ## 问题
-1. exception_index 和负数的关系是什么 ?
+1. exception_index 和负数的关系是什么?
     - 从 cpu_loop_exit_noexc 的注释来说，似乎是离开的原因没有什么的时候的，就赋值为 -1
 
 2. 如果 cpu_handle_exception 失败之后，这会导致 cpu_exec 函数退出，之后如何处理 ?
