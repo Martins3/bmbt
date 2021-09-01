@@ -1,6 +1,7 @@
 # BMBT
 ![compile](https://github.com/martins3/BMBT/actions/workflows/compiler-check.yml/badge.svg?branch=dev)
 ![doc](https://github.com/martins3/BMBT/actions/workflows/lint-md.yml/badge.svg?branch=dev)
+[![CodeFactor](https://www.codefactor.io/repository/github/martins3/bmbt/badge?s=9d9536e6f84b669f60d01a3561675ed4040eab79)](https://www.codefactor.io/repository/github/martins3/bmbt)
 
 ```txt
  ______________________________________
@@ -57,7 +58,7 @@ host 的软件栈无法移除掉。还有一个就是 QEMU 实际上为了处理
 2. 为什么可以设备直通？
     - 因为很多设备和架构是无关的，这就是为什么设备驱动在 Linux 内核 arch 文件夹中几乎没有设备驱动
 3. 为什么不适用 unikernel + QEMU 的方法?
-    - 现在 unikernel 的解决方案都是试图将 unikernel 放到虚拟机的 guest 态中运行，无法避免 host 的软件栈 
+    - 现在 unikernel 的解决方案都是试图将 unikernel 放到虚拟机的 guest 态中运行，无法避免 host 的软件栈
       - 那为什么不采用的 A Linux in unikernel clothing [^2] 的方式 ?
           - 这种方法无法实现设备直通, 而且这种方案依赖于 KLM[^3] 的支持
 4. 为什么不基于 captive 开发?
