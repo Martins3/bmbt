@@ -8,6 +8,22 @@
 
 - 虽然短期之类不会支持 host 多核，但是支持 guest 多核还是有必要的
 
+## QEMU 中的那些地方需要 lock
+
+emmm 其实就是收集一下那些函数的调用位置而已。
+
+1. tcg_region : 一个 region 只会分配给一个 cpu, 所以防止同时分配给多个 cpu 了
+
+
+## 如何移植 cpus.c 啊
+
+- [ ] tb_flush 中，通过 cpu_in_exclusive_context 来运行
+  - [ ] 另一个 cpu 正在运行，此时进行 tb_flush, 如果保证运行的 cpu 没有读取错误的 TLB
+- [ ] async_safe_run_on_cpu 的实现原理
+  - [ ] 如果哪一个 cpu 正好在运行，和 cpu 没有运行，处理的情况有没有区别 ?
+
+- 一些初始化的代码需要重新分析 : qemu_tcg_init_vcpu
+
 ## mmap_lock
 
 ```c
