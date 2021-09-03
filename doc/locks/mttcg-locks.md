@@ -1,12 +1,106 @@
 # MTTG && Locks
 
-- http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html
 ## 问题
-- [ ] 第一实际上，mttcg 上运行 x86 指令的时候，mttcg 是默认支持的, 那么李欣宇到底在干什么
-- [ ] 之前的华为的形式化验证是不是就是处理内存序列的 ?
-- [ ] 算了还是首先支持单核的 x86 cpu 吧
+- [ ] io_uring 是如何融合进去的?
 
-- 虽然短期之类不会支持 host 多核，但是支持 guest 多核还是有必要的
+## Stefan Hajnoczi
+http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html
+
+The most important event sources in QEMU are:
+- File descriptors such as sockets and character devices.
+- Event notifiers (implemented as eventfds on Linux).
+- Timers for delayed function execution.
+- *Bottom-halves (BHs) for invoking a function in another thread or deferring a function call to avoid reentrancy.*
+
+- 前面说两个情况是 IO 多路复用的考虑
+- [ ] 什么叫做在另一个线程中 invoke a function
+  - 将工作放到另一个线程中进行，所以, BH 实际上是将工作挂载到一个队列中的。
+- [ ] deferring a function call to avoid reentrancy
+
+QEMU has several different types of threads:
+- vCPU threads that execute guest code and perform device emulation synchronously with respect to the vCPU.
+- The main loop that runs the event loops (yes, there is more than one!) used by many QEMU components.
+- IOThreads that run event loops for device emulation concurrently with vCPUs and "out-of-band" QMP monitor commands.
+
+- [ ] 无法理解的东西: main loop 的 event 既然监控了很多东西，为什么还需要特地创建出来 IOThreads
+
+忽然想到，ioeventfd 这个东西就是给 aio 使用的啊!
+
+> Some devices perform the guest device register access in the main loop thread or an IOThread thanks to ioeventfd.
+
+- [ ] 所以，eventfd 会导致其使用 ioeventfd 吗?
+
+The key point is that vCPU threads do not run an event loop. The main loop thread and IOThreads run event loops. vCPU threads can add event sources to the main loop or IOThread event loops. Callbacks run in the main loop thread or IOThreads.
+
+解释的太好了
+The main loop and IOThreads share some code but are fundamentally different.
+The common code is called AioContext and is QEMU's native event loop API.
+Commonly-used functions include aio_set_fd_handler(), aio_set_event_handler(), aio_timer_init(), and aio_bh_new().
+
+- [ ] 重点关注一下这几个函数，检查从 main event loop 和 io handler 到 AioContext 流程
+
+The main loop actually has a glib GMainContext and two AioContext event loops.
+QEMU components can use any of these event loop APIs and the main loop combines them all into a single event loop function `os_host_main_loop_wait()` that calls `qemu_poll_ns()` to wait for event sources.
+This makes it possible to combine glib-based code with code using the native QEMU AioContext APIs.
+
+- [ ] 检测一下 main loop 如何同时检测 glib 和 两个 AioContext 的?
+
+The reason why the main loop has two AioContexts is because one, called `iohandler_ctx`,
+is used to implement older `qemu_set_fd_handler()` APIs whose handlers should not run when the other AioContext, called `qemu_aio_context`, is run using `aio_poll()`.
+The QEMU block layer and newer code uses `qemu_aio_context` while older code uses `iohandler_ctx`. Over time it may be possible to unify the two by converting `iohandler_ctx` handlers to safely execute in `qemu_aio_context`.
+
+- iohandler_ctx : 使用 qemu_set_fd_handler 运行
+- qemu_aio_context : 使用 aio_poll 运行
+- iohandler_ctx 的 handler 在 qemu_aio_context 运行的时候不可以运行
+- iohandler_ctx 之后不会替换掉的。
+
+- [ ] 为什么 main loop 为什么需要持有这么多的 context
+    - 但是，这是真的，就是放到 main-loop.c 中间的
+    - 具体内容看 qemu_init_main_loop 的初始化
+    - [ ] 跟踪一下 qemu_set_fd_handler 这个东西，既然他是原因
+
+IOThreads have an AioContext and a glib GMainContext.
+The AioContext is run using the `aio_poll()` API, which enables the advanced features of the event loop.
+If a glib event loop is needed then the `GMainContext` can be run using `g_main_loop_run()` and the `AioContext` event sources will be included.
+
+IOThread 也是拥有 AioContext 和 glib GMainContext 的
+
+The key difference between the main loop and IOThreads is that the main loop uses a traditional event loop that calls qemu_poll_ns() while IOThreads AioContext aio_poll() has advanced features that result in better performance.
+
+AioContext has the following event loop features that traditional event loops do not have:
+
+- AioContext 比 GMainContext 是很多好处的
+  - AioContext 使用 aio_poll()
+  - GMainContext 使用 qemu_poll_ns()
+
+## docs/devel/multiple-iothreads.txt
+
+The default event loop is called the main loop (see main-loop.c).  It is
+possible to create additional event loop threads using -object
+iothread,id=my-iothread.
+
+- [ ] 原来 iothread 可以用于替换 main_loop 的啊
+- [ ] 那么 worker 线程 和 iothread 是一个东西吗
+
+
+The main loop is also deeply associated with the QEMU global mutex, which is a
+scalability bottleneck in itself.  vCPU threads and the main loop use the QEMU
+global mutex to serialize execution of QEMU code.  This mutex is necessary
+because a lot of QEMU's code historically was not thread-safe.
+
+The AioContext can be obtained from the IOThread using
+iothread_get_aio_context() or for the main loop using qemu_get_aio_context().
+
+## related files
+- util/async.c
+  - aio_context_new
+  - aio_bh_poll
+- main-loop.c
+  - qemu_set_fd_handler
+  - event_notifier_set_handler
+- iothread.c
+
+main-loop.c 和 iothread.c 中分别部署的就是两个代码，
 
 ## QEMU 中的那些地方需要 lock
 
@@ -23,6 +117,279 @@ emmm 其实就是收集一下那些函数的调用位置而已。
   - [ ] 如果哪一个 cpu 正好在运行，和 cpu 没有运行，处理的情况有没有区别 ?
 
 - 一些初始化的代码需要重新分析 : qemu_tcg_init_vcpu
+
+## aio context
+很多内容都是定义在 include/block/aio.h 中的
+
+- AioContext
+  - ThreadPool
+
+- aio_set_fd_handler : 一个 AioContext 可以注册多个 IOHandler
+
+- AioContext 通过 new 来创建，是一个单例，注意这些函数都没有加锁
+
+- 向线程池添加任务的函数为 thread_pool_submit_aio
+
+- [ ] 都是谁需要异步的操作。
+
+- [io_uring in QEMU: high-performance disk IO for Linux](https://archive.fosdem.org/2020/schedule/event/vai_io_uring_in_qemu/attachments/slides/4145/export/events/attachments/vai_io_uring_in_qemu/slides/4145/io_uring_fosdem.pdf)
+
+Qemu event loop is based on AIO context
+
+- [Improving the QEMU Event Loop](http://events17.linuxfoundation.org/sites/events/files/slides/Improving%20the%20QEMU%20Event%20Loop%20-%203.pdf)
+
+- [ ] iothread 到底是哪一个线程
+
+The "original" iothread
+* Dispatches fd events
+  – aio: block I/O, ioeventfd
+  – iohandler: net, nbd, audio, ui, vfio, ...
+  – slirp: -net user – chardev: -chardev XXX
+* Non-fd services
+  – timers
+  – bottom halves
+
+这是几个关键的接口:
+- [ ] aio_set_fd_handler
+- [ ] aio_set_event_handler
+- [ ] aio_timer_init
+- [ ] aio_bh_new
+
+```c
+/*
+#0  aio_context_new (errp=0x555556617188 <error_abort>) at ../util/async.c:516
+#1  0x0000555555e82510 in iohandler_init () at ../util/main-loop.c:562
+#2  0x0000555555e82811 in iohandler_init () at ../util/main-loop.c:568
+#3  iohandler_get_aio_context () at ../util/main-loop.c:568
+#4  0x0000555555ddb44c in monitor_init_globals_core () at ../monitor/monitor.c:690
+#5  0x0000555555cd8aca in monitor_init_globals () at ../monitor/misc.c:1977
+#6  0x0000555555c09997 in qemu_init_subsystems () at ../softmmu/runstate.c:768
+#7  0x0000555555cfb38f in qemu_init (argc=33, argv=0x7fffffffd618, envp=<optimized out>) at ../softmmu/vl.c:2766
+#8  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+```c
+/*
+ * Functions to operate on the I/O handler AioContext.
+ * This context runs on top of main loop. We can't reuse qemu_aio_context
+ * because iohandlers mustn't be polled by aio_poll(qemu_aio_context).
+ */
+static AioContext *iohandler_ctx;
+```
+- [ ] 这个注释我看不懂啊!
+
+这么说，一共就是两个 AioContext:
+- iohandler_ctx
+- qemu_aio_context
+
+## IOThread
+
+```c
+struct IOThread {
+    AioContext *ctx;
+    GMainContext *worker_context;
+    GMainLoop *main_loop;
+
+    QemuThread thread;
+    QemuMutex init_done_lock;
+    QemuCond init_done_cond;    /* is thread initialization done? */
+    bool stopping;
+};
+```
+- [ ] GMainLoop 是干啥的?
+- [ ] GMainContext 是干啥的
+
+## 找到所有的 thread 创建的位置
+
+在 qemu_thread_create 中, 其实 QEMU 还会通过 fork 创建 thread/process 之类的，但是常规流程不是这么使用的:
+```plain
+huxueshi:qemu_thread_create call_rcu
+huxueshi:qemu_thread_create worker
+huxueshi:qemu_thread_create worker
+
+huxueshi:qemu_thread_create CPU 0/KVM
+huxueshi:qemu_thread_create CPU 1/KVM
+```
+
+
+使用 gdb[^8][^9] 分析一下:
+`info thread`
+```plain
+  Id   Target Id                                             Frame
+* 1    Thread 0x7fffeb1d2300 (LWP 1186979) "qemu-system-x86" 0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7ffffff fd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv/linux/ppoll.c:44
+  2    Thread 0x7fffeb071700 (LWP 1186983) "qemu-system-x86" syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+  3    Thread 0x7fffea5f9700 (LWP 1186988) "gmain"           0x00007ffff61a6aff in __GI___poll (fds=0x5555569bf770, nfds=1, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+  4    Thread 0x7fffe9df8700 (LWP 1186989) "gdbus"           0x00007ffff61a6aff in __GI___poll (fds=0x5555569cbfb0, nfds=2, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+  5    Thread 0x7fffe92f3700 (LWP 1186990) "qemu-system-x86" 0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7fffe92ef220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-internal.h:320
+  6    Thread 0x7fffe8910700 (LWP 1186993) "qemu-system-x86" 0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
+  7    Thread 0x7fffd9ffd700 (LWP 1186994) "qemu-system-x86" 0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
+  8    Thread 0x7ffe51629700 (LWP 1186997) "threaded-ml"     0x00007ffff61a6aff in __GI___poll (fds=0x7ffe3c007170, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/po ll.c:29
+  9    Thread 0x7ffe26767700 (LWP 1187003) "qemu-system-x86" 0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7ffe26763220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-internal.h:320
+```
+现在一一 backtrace 一下:
+
+#### main loop
+```c
+/*
+>>> thread 1
+[Switching to thread 1 (Thread 0x7fffeb1d2300 (LWP 1186979))]
+#0  0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7fffffffd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv
+/linux/ppoll.c:44
+44      ../sysdeps/unix/sysv/linux/ppoll.c: No such file or directory.
+>>> bt
+#0  0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7fffffffd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv
+/linux/ppoll.c:44
+#1  0x0000555555e72675 in ppoll (__ss=0x0, __timeout=0x7fffffffd450, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
+#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=4804734) at ../util/qemu-timer.c:348
+#3  0x0000555555e82705 in os_host_main_loop_wait (timeout=4804734) at ../util/main-loop.c:250
+#4  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#5  0x0000555555c09651 in qemu_main_loop () at ../softmmu/runstate.c:726
+#6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+
+#### call_rcu
+```c
+/*
+>>> thread 2
+[Switching to thread 2 (Thread 0x7fffeb071700 (LWP 1186983))]
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+38      ../sysdeps/unix/sysv/linux/x86_64/syscall.S: No such file or directory.
+>>> bt
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+#1  0x0000555555e7f5b2 in qemu_futex_wait (val=<optimized out>, f=<optimized out>) at /home/maritns3/core/kvmqemu/include/qemu/futex.h:29
+#2  qemu_event_wait (ev=ev@entry=0x5555566185c8 <rcu_call_ready_event>) at ../util/qemu-thread-posix.c:480
+#3  0x0000555555e84c02 in call_rcu_thread (opaque=opaque@entry=0x0) at ../util/rcu.c:258
+#4  0x0000555555e7e5d3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+#### gmain
+```c
+/*
+>>> thread 3
+[Switching to thread 3 (Thread 0x7fffea5f9700 (LWP 1186988))]
+#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569bf770, nfds=1, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+29      ../sysdeps/unix/sysv/linux/poll.c: No such file or directory.
+>>> bt
+#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569bf770, nfds=1, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+#1  0x00007ffff6ff236e in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#2  0x00007ffff6ff24a3 in g_main_context_iteration () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#3  0x00007ffff6ff24f1 in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#4  0x00007ffff701bad1 in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+#### gdbus
+```c
+/*
+>>> thread 4
+[Switching to thread 4 (Thread 0x7fffe9df8700 (LWP 1186989))]
+#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569cbfb0, nfds=2, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+29      in ../sysdeps/unix/sysv/linux/poll.c
+>>> bt
+#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569cbfb0, nfds=2, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+#1  0x00007ffff6ff236e in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#2  0x00007ffff6ff26f3 in g_main_loop_run () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#3  0x00007ffff7249f8a in  () at /lib/x86_64-linux-gnu/libgio-2.0.so.0
+#4  0x00007ffff701bad1 in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+#### worker
+thread 9 也是如此的。
+
+KVM forum : [Towards Multi-threaded Device Emulation in QEMU](https://www.linux-kvm.org/images/a/a7/02x04-MultithreadedDevices.pdf)
+似懂非懂的样子。
+
+```c
+/*
+>>> thread 5
+[Switching to thread 5 (Thread 0x7fffe92f3700 (LWP 1186990))]
+#0  0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7fffe92ef220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-
+internal.h:320
+320     ../sysdeps/nptl/futex-internal.h: No such file or directory.
+>>> bt
+#0  0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7fffe92ef220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-
+internal.h:320
+#1  do_futex_wait (sem=sem@entry=0x555556701788, abstime=abstime@entry=0x7fffe92ef220, clockid=0) at sem_waitcommon.c:112
+#2  0x00007ffff6296743 in __new_sem_wait_slow (sem=sem@entry=0x555556701788, abstime=abstime@entry=0x7fffe92ef220, clockid=0) at sem_waitcommon.c:184
+#3  0x00007ffff62967ea in sem_timedwait (sem=sem@entry=0x555556701788, abstime=abstime@entry=0x7fffe92ef220) at sem_timedwait.c:40
+#4  0x0000555555e7f36f in qemu_sem_timedwait (sem=sem@entry=0x555556701788, ms=ms@entry=10000) at ../util/qemu-thread-posix.c:327
+#5  0x0000555555e7da75 in worker_thread (opaque=opaque@entry=0x555556701710) at ../util/thread-pool.c:91
+#6  0x0000555555e7e5d3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#7  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#8  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+```c
+/*
+#0  huxueshi () at ../util/qemu-thread-posix.c:547
+#1  0x0000555555e7f765 in qemu_thread_create (thread=thread@entry=0x7fffffffcdd0, name=<optimized out>, name@entry=0x555555e992d0 "worker", start_routine=start_routine@
+entry=0x555555e7d980 <worker_thread>, arg=arg@entry=0x555556701710, mode=mode@entry=1) at ../util/qemu-thread-posix.c:560
+#2  0x0000555555e7d90d in do_spawn_thread (pool=pool@entry=0x555556701710) at ../util/thread-pool.c:134
+#3  0x0000555555e7d965 in spawn_thread_bh_fn (opaque=0x555556701710) at ../util/thread-pool.c:142
+#4  0x0000555555e63938 in aio_bh_poll (ctx=ctx@entry=0x55555670ab70) at ../util/async.c:169
+#5  0x0000555555e7ad56 in aio_poll (ctx=ctx@entry=0x55555670ab70, blocking=blocking@entry=true) at ../util/aio-posix.c:659
+#6  0x0000555555d9b715 in qcow2_open (bs=<optimized out>, options=<optimized out>, flags=<optimized out>, errp=<optimized out>) at ../block/qcow2.c:1909
+#7  0x0000555555d7f455 in bdrv_open_driver (bs=bs@entry=0x555556af6400, drv=drv@entry=0x5555565c8560 <bdrv_qcow2>, node_name=<optimized out>, options=options@entry=0x555556b11aa0, open_flags=139266, errp=errp@entry=0x7fffffffd030) at ../block.c:1552
+#8  0x0000555555d82524 in bdrv_open_common (errp=0x7fffffffd030, options=0x555556b11aa0, file=0x555556a20ad0, bs=0x555556af6400) at ../block.c:1827
+#9  bdrv_open_inherit (filename=<optimized out>, filename@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,options=0x555556b11aa0, options@entry=0x555556ac3a90, flags=<optimized out>, flags@entry=0, parent=parent@entry=0x0, child_class=child_class@entry=0x0, child_role=0, errp=0x555556617180 <error_fatal>) at ../block.c:3747
+#10 0x0000555555d83607 in bdrv_open (filename=filename@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, options=options@entry=0x555556ac3a90, flags=flags@entry=0, errp=errp@entry=0x555556617180 <error_fatal>) at ../block.c:3840
+#11 0x0000555555dc80bf in blk_new_open (filename=filename@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, options=options@entry=0x555556ac3a90, flags=0, errp=errp@entry=0x555556617180 <error_fatal>) at ../block/block-backend.c:435
+#12 0x0000555555d37178 in blockdev_init (file=file@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", bs_opts=bs_opts@entry=0x555556ac3a90, errp=errp@entry=0x555556617180 <error_fatal>) at ../blockdev.c:608
+#13 0x0000555555d3811d in drive_new (all_opts=<optimized out>, block_default_type=<optimized out>, errp=0x555556617180 <error_fatal>) at ../blockdev.c:992
+#14 0x0000555555cf8ee6 in drive_init_func (opaque=<optimized out>, opts=<optimized out>, errp=<optimized out>) at ../softmmu/vl.c:617
+#15 0x0000555555e6c6e2 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555cf8ed0 <drive_init_func>, opaque=opaque@entry=0x55555681d1b0, errp=errp@entry=0x555556617180 <error_fatal>) at ../util/qemu-option.c:1135
+#16 0x0000555555cfd8da in configure_blockdev (bdo_queue=0x5555565641d0 <bdo_queue>, snapshot=0, machine_class=0x55555681d100) at ../softmmu/vl.c:676
+#17 qemu_create_early_backends () at ../softmmu/vl.c:1939
+#18 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
+#19 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+
+#### kvm thread
+thread 7 也是
+```c
+/*
+>>> thread 6
+[Switching to thread 6 (Thread 0x7fffe8910700 (LWP 1186993))]
+#0  0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
+78      ../sysdeps/unix/syscall-template.S: No such file or directory.
+>>> bt
+#0  0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
+#1  0x0000555555c38eae in kvm_vcpu_ioctl (cpu=cpu@entry=0x555556b06ca0, type=type@entry=44672) at ../accel/kvm/kvm-all.c:3017
+#2  0x0000555555c38ff9 in kvm_cpu_exec (cpu=cpu@entry=0x555556b06ca0) at ../accel/kvm/kvm-all.c:2843
+#3  0x0000555555c47265 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556b06ca0) at ../accel/kvm/kvm-accel-ops.c:49
+#4  0x0000555555e7e5d3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+
+#### threaded-ml
+```c
+/*
+>>> thread 8
+[Switching to thread 8 (Thread 0x7ffe51629700 (LWP 1186997))]
+#0  0x00007ffff61a6aff in __GI___poll (fds=0x7ffe3c007170, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+29      ../sysdeps/unix/sysv/linux/poll.c: No such file or directory.
+>>> bt
+#0  0x00007ffff61a6aff in __GI___poll (fds=0x7ffe3c007170, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+#1  0x00007ffff6df31d6 in  () at /lib/x86_64-linux-gnu/libpulse.so.0
+#2  0x00007ffff6de4841 in pa_mainloop_poll () at /lib/x86_64-linux-gnu/libpulse.so.0
+#3  0x00007ffff6de4ec3 in pa_mainloop_iterate () at /lib/x86_64-linux-gnu/libpulse.so.0
+#4  0x00007ffff6de4f70 in pa_mainloop_run () at /lib/x86_64-linux-gnu/libpulse.so.0
+#5  0x00007ffff6df311d in  () at /lib/x86_64-linux-gnu/libpulse.so.0
+#6  0x00007ffff56f272c in  () at /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
+#7  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#8  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+
+
 
 ## mmap_lock
 
@@ -399,8 +766,44 @@ rrp@entry=0x5555564ece00 <error_fatal>) at ../qom/qom-qobject.c:28
 #35 0x0000555555829a7d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 
-[^6]: https://lwn.net/Articles/517475/
-[^7]: https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
+## hmp
+使用 hmp 作为例子。
+
+- [ ] 到底是如何注册上去的，然后最后就被 glib_pollfds_poll 监听了
+
+```c
+/*
+#0  handle_hmp_command (mon=0x555556a5d190, cmdline=0x555556c03f30 "") at ../monitor/hmp.c:1080
+#1  0x000055555598e841 in monitor_command_cb (opaque=0x555556a5d190, cmdline=0x555556c03f30 "", readline_opaque=<optimized out>) at ../monitor/hmp.c:48
+#2  0x0000555555e88bc2 in readline_handle_byte (rs=0x555556c03f30, ch=<optimized out>) at ../util/readline.c:411
+#3  0x000055555598e893 in monitor_read (opaque=0x555556a5d190, buf=<optimized out>, size=<optimized out>) at ../monitor/hmp.c:1351
+#4  0x0000555555ddc7cd in fd_chr_read (chan=0x555556abe860, cond=<optimized out>, opaque=<optimized out>) at ../chardev/char-fd.c:73
+#5  0x00007ffff6ff204e in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#6  0x0000555555e82788 in glib_pollfds_poll () at ../util/main-loop.c:232
+#7  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#8  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#9  0x0000555555c09651 in qemu_main_loop () at ../softmmu/runstate.c:726
+#10 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+哇，很复杂啊!
+
+- [ ] 我发理解为什么会触发这一个, **关键入口**
+(qemu) huxueshi:aio_bh_schedule_oneshot_full
+
+## os_host_main_loop_wait
+仔细分析一些执行流程:
+- g_main_context_acquire
+- qemu_mutex_unlock_iothread
+- qemu_poll_ns
+- qemu_mutex_lock_iothread
+- glib_pollfds_poll
+- g_main_context_release
+
+os_host_main_loop_wait 调用 qemu_poll_ns 来 poll，而使用 glib_pollfds_poll 来收割。
+- [ ] 如果这样，iohandler_ctx 和 qemu_aio_context 有啥用啊
+
+- [ ] 这个执行流程摧毁了我对于 qemu_mutex_lock_iothread 的理解
+- [ ] 重新理解一下，iothread 的含义，这个是让只有一个 vcpu 才可以进行 IO 操作，现在，让 io 操作都放到 io thread 中间，vcpu 的执行流程就不应该存在 qemu_mutex_lock_iothread 了吧
 
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
@@ -408,3 +811,7 @@ rrp@entry=0x5555564ece00 <error_fatal>) at ../qom/qom-qobject.c:28
 [^3]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
 [^4]: https://blog.csdn.net/memblaze_2011/article/details/48808147
 [^5]: https://lwn.net/Articles/697265/
+[^6]: https://lwn.net/Articles/517475/
+[^7]: https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
+[^8]: https://stackoverflow.com/questions/21926549/get-thread-name-in-gdb
+[^9]: https://stackoverflow.com/questions/8944236/gdb-how-to-get-thread-name-displayed
