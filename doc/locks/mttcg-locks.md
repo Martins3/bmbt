@@ -1,7 +1,11 @@
 # MTTG && Locks
 
 ## 问题
-- [ ] io_uring 是如何融合进去的?
+- [ ] iothread_run 中会调用 g_main_loop_run 和 aio_poll
+- [ ] 无法理解 g_main_loop_run 只是别 iothread 调用
+- [ ] io_thread 似乎是默认没有启用的，如何打开并且测试一下
+  - [ ] 如果使用上 iothread 是不是就不会 main_loop 就不会有了
+  - [ ] main_loop 的三个 context 都是做啥的
 
 ## Stefan Hajnoczi
 http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html
@@ -118,7 +122,8 @@ emmm 其实就是收集一下那些函数的调用位置而已。
 
 - 一些初始化的代码需要重新分析 : qemu_tcg_init_vcpu
 
-## aio context
+
+## AioContext
 很多内容都是定义在 include/block/aio.h 中的
 
 - AioContext
@@ -182,6 +187,17 @@ static AioContext *iohandler_ctx;
 - iohandler_ctx
 - qemu_aio_context
 
+#### AioContext::bh_slice_list
+在 aio_bh_poll 有一个局部变量 `BHListSlice slice;`,
+也就是 aio_bh_poll 向下调用的时候，还会存在继续调用到 aio_bh_poll 上。
+
+
+#### aio_poll
+- aio_poll
+    - aio_bh_poll
+      - aio_bh_dequeue
+      - aio_bh_call
+
 ## IOThread
 
 ```c
@@ -229,6 +245,7 @@ huxueshi:qemu_thread_create CPU 1/KVM
 现在一一 backtrace 一下:
 
 #### main loop
+main-loop.c 中:
 ```c
 /*
 >>> thread 1
@@ -246,6 +263,14 @@ huxueshi:qemu_thread_create CPU 1/KVM
 #5  0x0000555555c09651 in qemu_main_loop () at ../softmmu/runstate.c:726
 #6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
+其实，这是很短的一个文件，主要的函数为:
+- qemu_init_main_loop
+- glib_pollfds_fill
+- glib_pollfds_poll
+- os_host_main_loop_wait : 这个位置是关键的主循环的
+- main_loop_wait : 似乎是一些辅助工具编译的时候会选择这个位置
+
+获取 GMainContext 都是通过调用 g_main_context_default 的，也就是那些默认注册，最后都是放到这里的。
 
 
 #### call_rcu
@@ -298,6 +323,8 @@ huxueshi:qemu_thread_create CPU 1/KVM
 #6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
 
+- [ ] https://github.com/chiehmin/gdbus_test
+
 #### worker
 thread 9 也是如此的。
 
@@ -349,6 +376,18 @@ entry=0x555555e7d980 <worker_thread>, arg=arg@entry=0x555556701710, mode=mode@en
 #19 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 
+- [ ] AIO_WAIT_WHILE : 一个有趣的位置，这个会去调用 aio_poll 的
+    - [ ] 但是我的龟龟啊，你知不知道，这意味着这个调用 poll 的会一直等待到这个位置上。
+      - 但是调用 AIO_WAIT_WHILE 的位置不要太多啊
+
+- [ ] 表示并没有办法理解 worker thread 的作用
+  - spawn_thread_bh_fn 产生的
+  - 就是在 worker_thread 这个循环中间吧
+
+如果想要提交任务 : 在 thread_pool_submit_aio 中 qemu_sem_post  ThreadPool::sem 这会让 worker_thread 从这个 lock 上醒过来
+然后会从 ThreadPool::request_list 中获取需要执行的函数，最后使用 `qemu_bh_schedule(pool->completion_bh)` 通知这个任务结束了
+
+其实整个 thread-pool.c 也就是只有 300 行
 
 #### kvm thread
 thread 7 也是
@@ -790,6 +829,38 @@ rrp@entry=0x5555564ece00 <error_fatal>) at ../qom/qom-qobject.c:28
 - [ ] 我发理解为什么会触发这一个, **关键入口**
 (qemu) huxueshi:aio_bh_schedule_oneshot_full
 
+```c
+/*
+#0  aio_bh_schedule_oneshot_full (ctx=ctx@entry=0x55555670ab70, cb=cb@entry=0x555555dd9e90 <monitor_accept_input>, opaque=opaque@entry=0x555556a2b170, name=name@entry=0x555556008a4a "monitor_accept_input") at ../util/async.c:113
+#1  0x0000555555ddaf47 in monitor_resume (mon=0x555556a2b170) at ../monitor/monitor.c:550
+#2  0x0000555555e88be2 in readline_handle_byte (rs=0x555556b26800, ch=<optimized out>) at ../util/readline.c:411
+#3  0x000055555598e893 in monitor_read (opaque=0x555556a2b170, buf=<optimized out>, size=<optimized out>) at ../monitor/hmp.c:1351
+#4  0x0000555555ddc7dd in fd_chr_read (chan=0x555556a07000, cond=<optimized out>, opaque=<optimized out>) at ../chardev/char-fd.c:73
+#5  0x00007ffff6ff204e in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#6  0x0000555555e827a8 in glib_pollfds_poll () at ../util/main-loop.c:232
+#7  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#8  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#9  0x0000555555c09661 in qemu_main_loop () at ../softmmu/runstate.c:726
+#10 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+实际上，难道不这就是 aio 的动作过程吗?
+```c
+/*
+#0  monitor_accept_input (opaque=0x555556a2b170) at ../monitor/monitor.c:523
+#1  0x0000555555e63988 in aio_bh_poll (ctx=ctx@entry=0x55555670ab70) at ../util/async.c:170
+#2  0x0000555555e7ac62 in aio_dispatch (ctx=0x55555670ab70) at ../util/aio-posix.c:381
+#3  0x0000555555e63842 in aio_ctx_dispatch (source=<optimized out>, callback=<optimized out>, user_data=<optimized out>) at ../util/async.c:312
+#4  0x00007ffff6ff217d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#5  0x0000555555e827a8 in glib_pollfds_poll () at ../util/main-loop.c:232
+#6  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#7  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#8  0x0000555555c09661 in qemu_main_loop () at ../softmmu/runstate.c:726
+#9  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+*/
+```
+- [ ] aio_ctx_dispatch 的动作居然是 g_main_context_dispatch 来触发的
+
 ## os_host_main_loop_wait
 仔细分析一些执行流程:
 - g_main_context_acquire
@@ -804,6 +875,23 @@ os_host_main_loop_wait 调用 qemu_poll_ns 来 poll，而使用 glib_pollfds_pol
 
 - [ ] 这个执行流程摧毁了我对于 qemu_mutex_lock_iothread 的理解
 - [ ] 重新理解一下，iothread 的含义，这个是让只有一个 vcpu 才可以进行 IO 操作，现在，让 io 操作都放到 io thread 中间，vcpu 的执行流程就不应该存在 qemu_mutex_lock_iothread 了吧
+
+## io uring
+分析一下 io uring 是如何和 aio 整个框架联系在一起的。
+
+猜测，当然是，io uring 提交，利用 aio 机制，将这个事情获取出来的。
+
+```c
+/*
+#0  raw_co_preadv (bs=0x555556c98ad0, offset=196608, bytes=16384, qiov=0x7fffe93f6e30, flags=0) at ../block/file-posix.c:2083
+#1  0x0000555555d3d7f4 in bdrv_driver_preadv (bs=bs@entry=0x555556c98ad0, offset=offset@entry=196608, bytes=bytes@entry=16384, qiov=qiov@entry=0x7fffe93f6e30, qiov_offset=qiov_offset@entry=0, flags=flags@entry=0) at ../block/io.c:1190
+#2  0x0000555555d422ce in bdrv_aligned_preadv (child=child@entry=0x555556a893f0, req=req@entry=0x7fffe93f6cb0, offset=196608, bytes=16384, align=<optimized out>, qiov=0x7fffe93f6e30, qiov_offset=0, flags=0) at ../block/io.c:1577
+#3  0x0000555555d42a04 in bdrv_co_preadv_part (child=child@entry=0x555556a893f0, offset=<optimized out>, offset@entry=196608, bytes=<optimized out>, bytes@entry=16384, qiov=<optimized out>, qiov@entry=0x7fffe93f6e30, qiov_offset=<optimized out>, qiov_offset@entry=0, flags=flags@entry=0) at ../block/io.c:1848
+#4  0x0000555555d42b1f in bdrv_co_preadv (child=child@entry=0x555556a893f0, offset=offset@entry=196608, bytes=bytes@entry=16384, qiov=qiov@entry=0x7fffe93f6e30, flags=flags@entry=0) at ../block/io.c:1798
+#5  0x0000555555d288aa in bdrv_preadv (child=0x555556a893f0, offset=196608, bytes=bytes@entry=16384, qiov=qiov@entry=0x7fffe93f6e30, flags=flags@entry=0) at block/block-gen.c:347
+#6  0x0000555555d3ffd1 in bdrv_pread (child=<optimized out>, offset=<optimized out>, buf=<optimized out>, bytes=16384) at ../block/io.c:1097
+```
+在进一步向下，就是到达了 raw_co_prw 这里，在这里根据配置选择是否采用 io uring 的, 如果采用，那么就调用 luring_co_submit
 
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
