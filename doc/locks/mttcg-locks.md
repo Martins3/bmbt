@@ -5,7 +5,7 @@
 - [ ] 无法理解 g_main_loop_run 只是别 iothread 调用
 - [ ] io_thread 似乎是默认没有启用的，如何打开并且测试一下
   - [ ] 如果使用上 iothread 是不是就不会 main_loop 就不会有了
-  - [ ] main_loop 的三个 context 都是做啥的
+  - [ ] main_loop 的三个 context 都是做啥的，到底如何使用啊!
 
 ## Stefan Hajnoczi
 http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html
@@ -58,14 +58,11 @@ The QEMU block layer and newer code uses `qemu_aio_context` while older code use
 - iohandler_ctx 的 handler 在 qemu_aio_context 运行的时候不可以运行
 - iohandler_ctx 之后不会替换掉的。
 
-- [ ] 为什么 main loop 为什么需要持有这么多的 context
-    - 但是，这是真的，就是放到 main-loop.c 中间的
-    - 具体内容看 qemu_init_main_loop 的初始化
-    - [ ] 跟踪一下 qemu_set_fd_handler 这个东西，既然他是原因
-
 IOThreads have an AioContext and a glib GMainContext.
 The AioContext is run using the `aio_poll()` API, which enables the advanced features of the event loop.
 If a glib event loop is needed then the `GMainContext` can be run using `g_main_loop_run()` and the `AioContext` event sources will be included.
+
+实际上，运行总是依靠 g_main_loop_run 的，而且将 `AioContext` 的 GSource 会放到这个 Context 上的
 
 IOThread 也是拥有 AioContext 和 glib GMainContext 的
 
@@ -183,20 +180,50 @@ static AioContext *iohandler_ctx;
 ```
 - [ ] 这个注释我看不懂啊!
 
-这么说，一共就是两个 AioContext:
-- iohandler_ctx
-- qemu_aio_context
-
-#### AioContext::bh_slice_list
-在 aio_bh_poll 有一个局部变量 `BHListSlice slice;`,
-也就是 aio_bh_poll 向下调用的时候，还会存在继续调用到 aio_bh_poll 上。
-
 
 #### aio_poll
+我们知道 AioContext 的 GSource 都是放到 GMainContext 上的，而且 g_main_loop_run 等会代替来执行 poll 的操作，
+那么 aio_poll 为什么如何被执行啊?
+
 - aio_poll
     - aio_bh_poll
       - aio_bh_dequeue
       - aio_bh_call
+
+```c
+/*
+#0  aio_poll (ctx=ctx@entry=0x55555670a280, blocking=blocking@entry=true) at ../util/aio-posix.c:550
+#1  0x0000555555a75265 in handle_hmp_command (mon=mon@entry=0x555556a65530, cmdline=<optimized out>, cmdline@entry=0x555556b25b30 "screendump a") at ../monitor/hmp.c:1124
+#2  0x0000555555a753e1 in monitor_command_cb (opaque=0x555556a65530, cmdline=0x555556b25b30 "screendump a", readline_opaque=<optimized out>) at ../monitor/hmp.c:48
+#3  0x0000555555e65bf2 in readline_handle_byte (rs=0x555556b25b30, ch=<optimized out>) at ../util/readline.c:411
+#4  0x0000555555a75433 in monitor_read (opaque=0x555556a65530, buf=<optimized out>, size=<optimized out>) at ../monitor/hmp.c:1350
+#5  0x0000555555ddec2d in fd_chr_read (chan=0x5555569a2c20, cond=<optimized out>, opaque=<optimized out>) at ../chardev/char-fd.c:73
+#6  0x00007ffff787a04e in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#7  0x0000555555e74ba8 in glib_pollfds_poll () at ../util/main-loop.c:232
+#8  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#9  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#10 0x0000555555cfb8f1 in qemu_main_loop () at ../softmmu/runstate.c:726
+#11 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+
+```c
+    /* If polling is allowed, non-blocking aio_poll does not need the
+     * system call---a single round of run_poll_handlers_once suffices.
+     */
+```
+这个注释的真正含义: 如果是 nonblocking 的，那么直接使用 run_poll_handlers_once 检查，其只是检查一下一个数值，这样就可以不用调用这个 syscall 了。
+
+- aio_poll
+  - try_poll_mode : 这个玩意儿的真正作用是啥不清楚啊!
+    - run_poll_handlers
+      - run_poll_handlers_once
+        - 调用 AioHandler::io_poll : 其赋值位置为 aio_set_fd_handler 注册的居然是 aio_context_notifier_poll
+  - `ctx->fdmon_ops->wait(ctx, &ready_list, timeout)`
+
+#### AioContext::bh_slice_list
+在 aio_bh_poll 有一个局部变量 `BHListSlice slice;`,
+也就是 aio_bh_poll 向下调用的时候，还会存在继续调用到 aio_bh_poll 上。
 
 ## IOThread
 
@@ -327,6 +354,9 @@ main-loop.c 中:
 
 #### worker
 thread 9 也是如此的。
+
+- [ ] 等待系统完全启动之后，这两个线程会消失的。
+    - [ ] 更加窒息的地方在于，aio_poll 也是，之后就再也没有人调用了
 
 KVM forum : [Towards Multi-threaded Device Emulation in QEMU](https://www.linux-kvm.org/images/a/a7/02x04-MultithreadedDevices.pdf)
 似懂非懂的样子。
@@ -892,6 +922,147 @@ os_host_main_loop_wait 调用 qemu_poll_ns 来 poll，而使用 glib_pollfds_pol
 #6  0x0000555555d3ffd1 in bdrv_pread (child=<optimized out>, offset=<optimized out>, buf=<optimized out>, bytes=16384) at ../block/io.c:1097
 ```
 在进一步向下，就是到达了 raw_co_prw 这里，在这里根据配置选择是否采用 io uring 的, 如果采用，那么就调用 luring_co_submit
+
+
+## GMainLoop 中的 context
+除了 GMainContext 之外，还有两个 AioContext:
+- iohandler_ctx
+- qemu_aio_context
+
+- [ ] 为什么 main loop 为什么需要持有这么多的 context
+    - 但是，这是真的，就是放到 main-loop.c 中间的
+    - 具体内容看 qemu_init_main_loop 的初始化
+    - [ ] 跟踪一下 qemu_set_fd_handler 这个东西，既然他是原因
+
+#### iohandler_ctx
+这个几乎没有调用者，是 legacy 代码
+
+- monitor_init_globals_core 注册了给 qmp 的
+  - `aio_co_schedule(iohandler_get_aio_context(), qmp_dispatcher_co);`
+- 分析 qmp_dispatcher_co 的内容，其调用到 qemu_coroutine_yield，然后就然后切换走了。 虽然不知道 aio_co_schedule 的 bt，不过建立来自于 aio_co_schedule 的理解，我们还是知道其
+- 如果想要从其中会来，需要等待 handle_qmp_command 调用 aio_co_wake
+
+仔细想一想，其实可以设计出来 coroutine 和 bh 的区别，其实一个有上下文，一个没有。
+
+#### qemu_aio_context
+- [ ] 找到 qemu_get_aio_context 的调用位置
+
+分析 qemu_init_main_loop 中的代码，发现为
+- aio_get_g_source : 从 AioContext 中间获取了一个 GSource
+- iohandler_get_g_source : 同上
+- 然后调用两次 g_source_attach 将这个 GSource 联系到 default Context 上
+
+g_source_add_poll : Adds a file descriptor to the set of file descriptors polled for this source. This is usually combined with g_source_new() to add an event source. The event source's check function will typically test the revents field in the GPollFD struct and return TRUE if events need to be processed.
+
+> 将需要监听的 fd 添加搞 GSource 上的
+
+
+## IOThread 中的两个 Context 是做啥的
+
+
+## FDMonOps
+```diff
+History:        #0
+Commit:         1f050a4690f62a1e7dabc4f44141e9f762c3769f
+Author:         Stefan Hajnoczi <stefanha@redhat.com>
+Author Date:    Fri 06 Mar 2020 01:08:02 AM CST
+Committer Date: Tue 10 Mar 2020 12:41:31 AM CST
+
+aio-posix: extract ppoll(2) and epoll(7) fd monitoring
+
+The ppoll(2) and epoll(7) file descriptor monitoring implementations are
+mixed with the core util/aio-posix.c code.  Before adding another
+implementation for Linux io_uring, extract out the existing
+ones so there is a clear interface and the core code is simpler.
+
+The new interface is AioContext->fdmon_ops, a pointer to a FDMonOps
+struct.  See the patch for details.
+
+Semantic changes:
+1. ppoll(2) now reflects events from pollfds[] back into AioHandlers
+   while we're still on the clock for adaptive polling.  This was
+   already happening for epoll(7), so if it's really an issue then we'll
+   need to fix both in the future.
+2. epoll(7)'s fallback to ppoll(2) while external events are disabled
+   was broken when the number of fds exceeded the epoll(7) upgrade
+   threshold.  I guess this code path simply wasn't tested and no one
+   noticed the bug.  I didn't go out of my way to fix it but the correct
+   code is simpler than preserving the bug.
+
+I also took some liberties in removing the unnecessary
+AioContext->epoll_available (just check AioContext->epollfd != -1
+instead) and AioContext->epoll_enabled (it's implicit if our
+AioContext->fdmon_ops callbacks are being invoked) fields.
+
+Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
+Link: https://lore.kernel.org/r/20200305170806.1313245-4-stefanha@redhat.com
+Message-Id: <20200305170806.1313245-4-stefanha@redhat.com>
+```
+
+```c
+/* Callbacks for file descriptor monitoring implementations */
+typedef struct {
+    /*
+     * update:
+     * @ctx: the AioContext
+     * @old_node: the existing handler or NULL if this file descriptor is being
+     *            monitored for the first time
+     * @new_node: the new handler or NULL if this file descriptor is being
+     *            removed
+     *
+     * Add/remove/modify a monitored file descriptor.
+     *
+     * Called with ctx->list_lock acquired.
+     */
+    void (*update)(AioContext *ctx, AioHandler *old_node, AioHandler *new_node);
+
+    /*
+     * wait:
+     * @ctx: the AioContext
+     * @ready_list: list for handlers that become ready
+     * @timeout: maximum duration to wait, in nanoseconds
+     *
+     * Wait for file descriptors to become ready and place them on ready_list.
+     *
+     * Called with ctx->list_lock incremented but not locked.
+     *
+     * Returns: number of ready file descriptors.
+     */
+    int (*wait)(AioContext *ctx, AioHandlerList *ready_list, int64_t timeout);
+
+    /*
+     * need_wait:
+     * @ctx: the AioContext
+     *
+     * Tell aio_poll() when to stop userspace polling early because ->wait()
+     * has fds ready.
+     *
+     * File descriptor monitoring implementations that cannot poll fd readiness
+     * from userspace should use aio_poll_disabled() here.  This ensures that
+     * file descriptors are not starved by handlers that frequently make
+     * progress via userspace polling.
+     *
+     * Returns: true if ->wait() should be called, false otherwise.
+     */
+    bool (*need_wait)(AioContext *ctx);
+} FDMonOps;
+```
+
+似乎从速度来说，最好的是 io_uring 的，其次是 poll 的，也就是 AioContext 默认总是会使用 io uring 来进行 poll 的。
+```c
+void aio_context_setup(AioContext *ctx)
+{
+    ctx->fdmon_ops = &fdmon_poll_ops;
+    ctx->epollfd = -1;
+
+    /* Use the fastest fd monitoring implementation if available */
+    if (fdmon_io_uring_setup(ctx)) {
+        return;
+    }
+
+    fdmon_epoll_setup(ctx);
+}
+```
 
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
