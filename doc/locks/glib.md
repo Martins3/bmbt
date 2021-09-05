@@ -118,6 +118,11 @@ enum {
     - 通过 aio_poll 可以让挂载到 list 上的行为被执行
 - qemu_coroutine_yield : coroutine 放弃执行
 
+- aio_co_enter 写的似乎很有道理:
+  - 如果 aio_co_enter 加入的 AioContext 不是当前线程的，那么加入到该 AioContext
+  - 如果是递归的 aio_co_enter，那么挂载到 list 上
+  - 否则可以直接执行了
+
 ## tests/unit/test-aio-multithread.c
 
 #### test_lifecycle
