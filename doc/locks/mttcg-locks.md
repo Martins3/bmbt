@@ -7,7 +7,6 @@
   - [ ] 如果使用上 iothread 是不是就不会 main_loop 就不会有了
   - [ ] main_loop 的三个 context 都是做啥的，到底如何使用啊!
 
-- [ ] https://blog.csdn.net/woai110120130/article/details/100049614 : 线程池分析
 - [ ] qio 是什么? 就是出现在 ./io 的那个目录中间的
 - [ ] GMainContext 为什么可以关联多个 GSource 的
     - 可能原因是不同的 GSource 的属性不同，例如 idle timer 和普通的 fd
@@ -667,19 +666,22 @@ typedef struct NvmeRequest {
 } NvmeRequest;
 ```
 
+才意识到为了处理 /home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2, 不仅仅需要
+block/qcow2.c 而且需要 block/file-posix.c 来进行文件的 IO
 
 - [ ] AIO_WAIT_WHILE : 一个有趣的位置，这个会去调用 aio_poll 的
     - [ ] 但是我的龟龟啊，你知不知道，这意味着这个调用 poll 的会一直等待到这个位置上。
       - 但是调用 AIO_WAIT_WHILE 的位置不要太多啊
 
-- [ ] 表示并没有办法理解 worker thread 的作用
-  - spawn_thread_bh_fn 产生的
-  - 就是在 worker_thread 这个循环中间吧
-
 如果想要提交任务 : 在 thread_pool_submit_aio 中 qemu_sem_post  ThreadPool::sem 这会让 worker_thread 从这个 lock 上醒过来
 然后会从 ThreadPool::request_list 中获取需要执行的函数，最后使用 `qemu_bh_schedule(pool->completion_bh)` 通知这个任务结束了
 
 其实整个 thread-pool.c 也就是只有 300 行
+
+- worker 如何结束的，在 worker_thread 中，qemu_sem_timedwait 最多等待 10s 如果没有任务过来，那么这个 thread 结束。
+
+
+https://blog.csdn.net/woai110120130/article/details/100049614 : 这个分析中规中矩
 
 #### kvm thread
 thread 7 也是

@@ -21,6 +21,8 @@ aio=aio
   aio is "threads", or "native" and selects between pthread based disk I/O and native Linux AIO.
 ```
 
-## block/null.c
-- [ ] 如何使用?
-bdrv_driver_preadv
+## 源码分析
+- block/block-backend.c 是一个中间层次，从 virtual device 经过此处，最后调用到具体的 BlockDriver 上，
+
+调用 BlockDriver:: bdrv_co_preadv_part / bdrv_co_preadv / bdrv_aio_preadv / bdrv_co_readv
+在 bdrv_driver_preadv 中，这个是有优先级的。
