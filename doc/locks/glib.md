@@ -139,4 +139,76 @@ enum {
 - qemu_coroutine_create : 不考虑 coroutine pool 的话，这个就是初始化一下结构体中间的字段而已
 - aio_co_schedule : 调用一下 qemu_bh_schedule
 
+## tests/unit/test-thread-pool.c
+
+#### test_submit
+- thread_pool_submit 来进行提交, 提交完成之后，使用 aio_poll 来等待 worker thread 搞完
+    - [ ] aio_poll 具体是等待在什么位置上的
+
+将 worker_cb 添加添加一个死循环:
+```c
+/*
+#0  0x00007ffff730bbf6 in __ppoll (fds=0x5555557df6d0, nfds=1, timeout=<optimized out>, timeout@entry=0x0, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv/linux/ppol
+l.c:44
+#1  0x00005555556a9a39 in ppoll (__ss=0x0, __timeout=0x0, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
+#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=-1) at ../util/qemu-timer.c:336
+#3  0x0000555555697fa5 in fdmon_poll_wait (ctx=0x5555557dc6f0, ready_list=0x7fffffffd538, timeout=-1) at ../util/fdmon-poll.c:80
+#4  0x00005555556971e3 in aio_poll (ctx=<optimized out>, blocking=<optimized out>) at ../util/aio-posix.c:612
+#5  0x00005555555b5e59 in test_submit () at ../tests/unit/test-thread-pool.c:54
+#6  0x00007ffff7dcf58e in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#7  0x00007ffff7dcf334 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#8  0x00007ffff7dcfa7a in g_test_run_suite () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#9  0x00007ffff7dcfa95 in g_test_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#10 0x00005555555b450f in main (argc=<optimized out>, argv=<optimized out>) at ../tests/unit/test-thread-pool.c:250
+```
+可以知道:
+- 使用 FDMonOps 来 poll 的
+- 看看分别各家的实现:
+    - fdmon_epoll_wait : 使用 AioContext::epollfd
+    - fdmon_poll_wait : 使用全局变量 pollfds, 这个东西是在 fdmon_poll_wait 从 AioContext::aio_handlers 初始化得到的
+    - fdmon_io_uring_wait : 使用 AioContext::fdmon_io_uring
+
+首先不考虑 io_uring 的事情，epollfd 是如何添加进去的。
+
+- aio_set_fd_handler 会调用 FDMonOps::update 来需要监听的 fd 更新到 epollfd 中。
+- 而 poll 不需要做任何事情，正如其注释所说，都是放到
+
+```c
+static void fdmon_poll_update(AioContext *ctx,
+                              AioHandler *old_node,
+                              AioHandler *new_node)
+{
+    /* Do nothing, AioHandler already contains the state we'll need */
+}
+```
+
+#### test_submit_aio
+- thread_pool_submit_aio 在 thread_pool_submit 的基础上多出来了配置 BlockCompletionFunc 的操作
+    - BlockCompletionFunc 这个 hook 的调用位置就是在靠 thread_pool_completion_bh 执行的
+
+```c
+/*
+#0  thread_pool_completion_bh (opaque=0x5555557cd3e0) at ../util/thread-pool.c:163
+#1  0x0000555555687e28 in aio_bh_poll (ctx=ctx@entry=0x5555557dc6f0) at ../util/async.c:169
+#2  0x0000555555696da0 in aio_poll (ctx=<optimized out>, blocking=<optimized out>) at ../util/aio-posix.c:665
+#3  0x00005555555b5e59 in test_submit () at ../tests/unit/test-thread-pool.c:53
+#4  0x00007ffff7dcf58e in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#5  0x00007ffff7dcf334 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#6  0x00007ffff7dcfa7a in g_test_run_suite () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#7  0x00007ffff7dcfa95 in g_test_run () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#8  0x00005555555b450f in main (argc=<optimized out>, argv=<optimized out>) at ../tests/unit/test-thread-pool.c:249
+```
+
+#### test_submit_co
+- thread_pool_submit_co : 调用 thread_pool_submit_aio 之外，还是需要调用 qemu_coroutine_yield 的
+- qemu_coroutine_enter 可以开始执行一个 coroutine, 如果 coroutine 执行了 qemu_coroutine_yield 之后，那么 qemu_coroutine_enter 就可以返回了，使用 aio_poll 可以让 coroutine 继续执行
+
+- [ ] 将 coroutine 提交给另一个 thread 的意义是什么?
+
+coroutine 是可以在另一个 thread 上执行的，但是不能在另一个 ctx 上执行
+
+#### test_cancel
+- [ ] 以后再看了
+
+
 [^1]: https://stackoverflow.com/questions/42395844/glib-gmaincontext-in-a-thread

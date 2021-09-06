@@ -2,10 +2,27 @@
 
 ## 问题
 - [ ] iothread_run 中会调用 g_main_loop_run 和 aio_poll
-- [ ] 无法理解 g_main_loop_run 只是别 iothread 调用
+- [ ] 无法理解 g_main_loop_run 只是别 iothread 调用, 因为 main_loop 自己手动的 ppoll 了
 - [ ] io_thread 似乎是默认没有启用的，如何打开并且测试一下
   - [ ] 如果使用上 iothread 是不是就不会 main_loop 就不会有了
   - [ ] main_loop 的三个 context 都是做啥的，到底如何使用啊!
+
+- [ ] https://blog.csdn.net/woai110120130/article/details/100049614 : 线程池分析
+- [ ] qio 是什么? 就是出现在 ./io 的那个目录中间的
+- [ ] GMainContext 为什么可以关联多个 GSource 的
+    - 可能原因是不同的 GSource 的属性不同，例如 idle timer 和普通的 fd
+- [ ] 既然在 os_host_main_loop_wait 中调用了 ppoll，那么其 handler 还是需要调用 aio_poll 的
+- [ ] 据说之所以采用 IOThread 的原因是，main_loop 有一些几个问题:
+    - 需要使用 BQL
+    - 监听所有的 fd 在一个循环中间
+
+- [ ] aio_dispatch_handlers 函数会遍历 aio_handlers，遍历监听的 fd 上的事件是否发生了。
+    - [ ] 使用 ppoll 难道无法直接获取是那些 fd 触发了吗?
+
+- [ ] 既然 aio 使用 FDMonOps 进行了 wait，为什么在 os_host_main_loop_wait 中也是有 poll 的
+
+## Li Qiang
+qemu_aio_context 和 iohandler_ctx 是两个比较特殊的自定义类型为 AioContext 的事件源。
 
 ## Stefan Hajnoczi
 http://blog.vmsplice.net/2020/08/qemu-internals-event-loops.html
@@ -93,15 +110,50 @@ The AioContext can be obtained from the IOThread using
 iothread_get_aio_context() or for the main loop using qemu_get_aio_context().
 
 ## related files
-- util/async.c
-  - aio_context_new
-  - aio_bh_poll
+- util/async.c : 各种 aio 函数了
+- util/aio-posix.c : 处理一些 aio_dispatch_handler 和 aio_poll 之类的
 - main-loop.c
-  - qemu_set_fd_handler
-  - event_notifier_set_handler
 - iothread.c
 
-main-loop.c 和 iothread.c 中分别部署的就是两个代码，
+- fdmon-epoll.c
+- fdmon-io_uring.c
+- fdmon-poll.c
+
+- util/thread-pool.c
+
+## Thread Pool
+在 util/thread-pool.c 中间，这个代码很少。
+
+```c
+static void thread_pool_init_one(ThreadPool *pool, AioContext *ctx)
+{
+    if (!ctx) {
+        ctx = qemu_get_aio_context();
+    }
+
+    memset(pool, 0, sizeof(*pool));
+    pool->ctx = ctx;
+    pool->completion_bh = aio_bh_new(ctx, thread_pool_completion_bh, pool);
+    qemu_mutex_init(&pool->lock);
+    qemu_cond_init(&pool->worker_stopped);
+    qemu_sem_init(&pool->sem, 0);
+    pool->max_threads = 64;
+    pool->new_thread_bh = aio_bh_new(ctx, spawn_thread_bh_fn, pool);
+
+    QLIST_INIT(&pool->head);
+    QTAILQ_INIT(&pool->request_list);
+}
+```
+这里创建出来了两个 QEMUBH
+
+- ThreadPool::completion_bh
+- ThreadPool::new_thread_bh
+
+一个 QEMUBH 就是一个需要执行的任务，这两个相当于是经常需要被调用的任务，所以直接创建出来，执行其中的 hook
+
+- pawn_thread_bh_fn : 最后会创建出来 worker_thread 来, worker_thread 会从 ThreadPool::request_list 上取出 ThreadPoolElement 来进行调用
+- thread_pool_completion_bh : 非常的类似，但是调用的是 ThreadPoolElement::BlockAIOCB::BlockCompletionFunc
+
 
 ## QEMU 中的那些地方需要 lock
 
@@ -121,7 +173,8 @@ emmm 其实就是收集一下那些函数的调用位置而已。
 
 
 ## AioContext
-很多内容都是定义在 include/block/aio.h 中的
+AioContext 扩展了 glib 中 GSource 的功能，不但支持 fd 的事件处理，
+还模拟内核中的 BH 机制。
 
 - AioContext
   - ThreadPool
@@ -224,6 +277,151 @@ static AioContext *iohandler_ctx;
 #### AioContext::bh_slice_list
 在 aio_bh_poll 有一个局部变量 `BHListSlice slice;`,
 也就是 aio_bh_poll 向下调用的时候，还会存在继续调用到 aio_bh_poll 上。
+
+#### AioHandler
+这里是没一个 fd 最后对应的
+
+
+这个里面注册了 aio_ctx_dispatch 的时候最后会调用的 hook
+```c
+static GSourceFuncs aio_source_funcs = {
+    aio_ctx_prepare,
+    aio_ctx_check,
+    aio_ctx_dispatch,
+    aio_ctx_finalize
+};
+```
+[g_source_new](https://people.gnome.org/~ryanl/glib-docs/glib-The-Main-Event-Loop.html#g-source-new)
+才知道，原来还是存在好几种的 GSource 的。
+
+- [ ] aio_poll 也是会调用 aio_dispatch_ready_handlers 的
+
+- [ ] AioHandler 的定位是什么? 和 GSource 的关系是什么?
+
+- aio_ctx_dispatch : 被频率非常高的调用
+
+```c
+/*
+#0  aio_ctx_dispatch (source=0x55555670a280, callback=0x0, user_data=0x0) at ../util/async.c:307
+#1  0x00007ffff787a17d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#2  0x0000555555e74b68 in glib_pollfds_poll () at ../util/main-loop.c:232
+#3  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#4  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#5  0x0000555555cfb8f1 in qemu_main_loop () at ../softmmu/runstate.c:726
+#6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+当 glib_pollfds_fill 调用之后 g_main_context_dispatch 之后，其会自动调用对应的 hook 函数的
+
+#### AioContext::notify_me 和 AioContext::notified
+和 aio_notify 有关, 主要用于块设备的 IO 同步时处理 QEMU BH
+
+```c
+    /* Used to avoid unnecessary event_notifier_set calls in aio_notify;
+     * only written from the AioContext home thread, or under the BQL in
+     * the case of the main AioContext.  However, it is read from any
+     * thread so it is still accessed with atomic primitives.
+     *
+     * If this field is 0, everything (file descriptors, bottom halves,
+     * timers) will be re-evaluated before the next blocking poll() or
+     * io_uring wait; therefore, the event_notifier_set call can be
+     * skipped.  If it is non-zero, you may need to wake up a concurrent
+     * aio_poll or the glib main event loop, making event_notifier_set
+     * necessary.
+     *
+     * Bit 0 is reserved for GSource usage of the AioContext, and is 1
+     * between a call to aio_ctx_prepare and the next call to aio_ctx_check.
+     * Bits 1-31 simply count the number of active calls to aio_poll
+     * that are in the prepare or poll phase.
+     *
+     * The GSource and aio_poll must use a different mechanism because
+     * there is no certainty that a call to GSource's prepare callback
+     * (via g_main_context_prepare) is indeed followed by check and
+     * dispatch.  It's not clear whether this would be a bug, but let's
+     * play safe and allow it---it will just cause extra calls to
+     * event_notifier_set until the next call to dispatch.
+     *
+     * Instead, the aio_poll calls include both the prepare and the
+     * dispatch phase, hence a simple counter is enough for them.
+     */
+    uint32_t notify_me;
+
+    /* Used by aio_notify.
+     *
+     * "notified" is used to avoid expensive event_notifier_test_and_clear
+     * calls.  When it is clear, the EventNotifier is clear, or one thread
+     * is going to clear "notified" before processing more events.  False
+     * positives are possible, i.e. "notified" could be set even though the
+     * EventNotifier is clear.
+     *
+     * Note that event_notifier_set *cannot* be optimized the same way.  For
+     * more information on the problem that would result, see "#ifdef BUG2"
+     * in the docs/aio_notify_accept.promela formal model.
+     */
+    bool notified;
+```
+
+notify_me 的使用者:
+- aio_ctx_check
+- aio_notify
+- aio_poll
+- aio_ctx_prepare
+
+来看看 aio 的代码，核心功能就是去 write AioContext::notifer 而已了
+
+```c
+void aio_notify(AioContext *ctx)
+{
+    /*
+     * Write e.g. bh->flags before writing ctx->notified.  Pairs with smp_mb in
+     * aio_notify_accept.
+     */
+    smp_wmb();
+    qatomic_set(&ctx->notified, true);
+
+    /*
+     * Write ctx->notified before reading ctx->notify_me.  Pairs
+     * with smp_mb in aio_ctx_prepare or aio_poll.
+     */
+    smp_mb();
+    if (qatomic_read(&ctx->notify_me)) {
+        event_notifier_set(&ctx->notifier);
+    }
+}
+
+int event_notifier_set(EventNotifier *e)
+{
+    static const uint64_t value = 1;
+    ssize_t ret;
+
+    if (!e->initialized) {
+        return -1;
+    }
+
+    do {
+        ret = write(e->wfd, &value, sizeof(value));
+    } while (ret < 0 && errno == EINTR);
+
+    /* EAGAIN is fine, a read must be pending.  */
+    if (ret < 0 && errno != EAGAIN) {
+        return -errno;
+    }
+    return 0;
+}
+```
+
+忽然意识到这些东西都是配合在一起的，都是为了处理 BH 的
+猜测实际上使用的是 EventNotifier 来进行 notify 的。
+- 如果想要等待 BH, 那么就提供一个 eventfd 来监控
+- 当然也是使用 ppoll 来监控的
+
+aio_context_new 中:
+```c
+aio_set_event_notifier(ctx, &ctx->notifier, false,
+                       aio_context_notifier_cb,
+                       aio_context_notifier_poll);
+```
+实际上，这个就是将 AioContext::notifier 作为一个普通的 fd 来监控了。
+而且 aio_set_event_notifier 之后会调用的 g_source_add_poll 的。
 
 ## IOThread
 
@@ -905,7 +1103,6 @@ os_host_main_loop_wait 调用 qemu_poll_ns 来 poll，而使用 glib_pollfds_pol
 
 - [ ] 这个执行流程摧毁了我对于 qemu_mutex_lock_iothread 的理解
 - [ ] 重新理解一下，iothread 的含义，这个是让只有一个 vcpu 才可以进行 IO 操作，现在，让 io 操作都放到 io thread 中间，vcpu 的执行流程就不应该存在 qemu_mutex_lock_iothread 了吧
-
 ## io uring
 分析一下 io uring 是如何和 aio 整个框架联系在一起的。
 
@@ -933,6 +1130,9 @@ os_host_main_loop_wait 调用 qemu_poll_ns 来 poll，而使用 glib_pollfds_pol
     - 但是，这是真的，就是放到 main-loop.c 中间的
     - 具体内容看 qemu_init_main_loop 的初始化
     - [ ] 跟踪一下 qemu_set_fd_handler 这个东西，既然他是原因
+
+通过 g_main_context_query 可以将全部需要监听的 fds 全部收集起来，存放到全局变量 gpollfds 中间来
+，然后调用 ppoll 来监听
 
 #### iohandler_ctx
 这个几乎没有调用者，是 legacy 代码
@@ -1064,6 +1264,11 @@ void aio_context_setup(AioContext *ctx)
 }
 ```
 
+## [ ] QEMUBH
+
+## aio_set_fd_handler
+- g_source_add_poll : 将 fd 添加到 GSource 中间
+- `ctx->fdmon_ops->update(ctx, node, new_node);` : 将 fd 放到 epollfd 的监控之中
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
