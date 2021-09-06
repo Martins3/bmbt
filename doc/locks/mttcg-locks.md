@@ -21,6 +21,9 @@
 
 - [ ] 既然 aio 使用 FDMonOps 进行了 wait，为什么在 os_host_main_loop_wait 中也是有 poll 的
 
+- [ ] 两个 worker 线程为什么之后就会消失掉，那么之后的对于 disk 的 io 在哪里?
+    - raw_co_prw 在被急速调用，但是之后不会 aio submit 了
+
 ## Li Qiang
 qemu_aio_context 和 iohandler_ctx 是两个比较特殊的自定义类型为 AioContext 的事件源。
 
@@ -603,6 +606,67 @@ entry=0x555555e7d980 <worker_thread>, arg=arg@entry=0x555556701710, mode=mode@en
 #18 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
 #19 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
+这个执行流程实际上很有意思的:
+- aio_poll 会导致 coroutine 被执行，所以这个 backtrace 是断掉的感觉
+- 两次 spwan 的操作分析在下面的位置，由于
+```c
+/*
+#0  spawn_thread (pool=0x555556739710) at ../util/thread-pool.c:261
+#1  thread_pool_submit_aio (pool=0x555556739710, func=<optimized out>, arg=0x7fffe93f6a70, cb=<optimized out>, opaque=<optimized out>) at ../util/thread-pool.c:261
+#2  0x0000555555e66a88 in thread_pool_submit_co (pool=0x555556739710, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7fffe93f6a70) at ../util/thread-
+pool.c:287
+#3  0x0000555555dacc4f in raw_thread_pool_submit (bs=bs@entry=0x555556c79df0, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7fffe93f6a70) at ../bloc
+k/file-posix.c:2030
+#4  0x0000555555dad633 in raw_co_prw (bs=0x555556c79df0, offset=0, bytes=112, qiov=0x7fffe93f6e30, type=1) at ../block/file-posix.c:2077
+
+_offset@entry=0, flags=flags@entry=0) at ../block/io.c:1190
+#6  0x0000555555d422ce in bdrv_aligned_preadv (child=child@entry=0x555556bf2270, req=req@entry=0x7fffe93f6cb0, offset=0, bytes=112, align=<optimized out>, qiov=0x7fffe93f6e30, qiov_offset=0, flags=0) at ../block/io.c:1577
+#7  0x0000555555d42a04 in bdrv_co_preadv_part (child=child@entry=0x555556bf2270, offset=<optimized out>, offset@entry=0, bytes=<optimized out>, bytes@entry=112, qiov=<optimized out>, qiov@entry=0x7fffe93f6e30, qiov_offset=<optimized out>, qiov_offset@entry=0, flags=flags@entry=0) at ../block/io.c:1848
+#8  0x0000555555d42b1f in bdrv_co_preadv (child=child@entry=0x555556bf2270, offset=offset@entry=0, bytes=bytes@entry=112, qiov=qiov@entry=0x7fffe93f6e30, flags=flags@entry=0) at ../block/io.c:1798
+#9  0x0000555555d288aa in bdrv_preadv (child=0x555556bf2270, offset=offset@entry=0, bytes=bytes@entry=112, qiov=qiov@entry=0x7fffe93f6e30, flags=flags@entry=0) at block/block-gen.c:347
+#10 0x0000555555d3ffd1 in bdrv_pread (child=<optimized out>, offset=offset@entry=0, buf=buf@entry=0x7fffe93f6ee0, bytes=bytes@entry=112) at ../block/io.c:1097
+#11 0x0000555555da6335 in qcow2_do_open (bs=0x555556c75a00, options=0x555556b10a90, flags=139266, errp=0x7fffffffceb0) at ../block/qcow2.c:1309
+#12 0x0000555555da7546 in qcow2_open_entry (opaque=0x7fffffffce50) at ../block/qcow2.c:1878
+#13 0x0000555555e653a3 in coroutine_trampoline (i0=<optimized out>, i1=<optimized out>) at ../util/coroutine-ucontext.c:173
+#14 0x00007ffff60ef660 in __start_context () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91
+
+
+#0  spawn_thread (pool=0x555556739710) at ../util/thread-pool.c:261
+#1  thread_pool_submit_aio (pool=0x555556739710, func=<optimized out>, arg=0x7ffe2e9e9bc0, cb=<optimized out>, opaque=<optimized out>) at ../util/thread-pool.c:261
+#2  0x0000555555e66a88 in thread_pool_submit_co (pool=0x555556739710, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7ffe2e9e9bc0) at ../util/thread-
+pool.c:287
+#3  0x0000555555dacc4f in raw_thread_pool_submit (bs=bs@entry=0x555556c79df0, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7ffe2e9e9bc0) at ../bloc
+k/file-posix.c:2030
+#4  0x0000555555dad633 in raw_co_prw (bs=0x555556c79df0, offset=1301217280, bytes=12288, qiov=0x7ffe2e9e9c60, type=1) at ../block/file-posix.c:2077
+#5  0x0000555555d3d7f4 in bdrv_driver_preadv (bs=bs@entry=0x555556c79df0, offset=offset@entry=1301217280, bytes=bytes@entry=12288, qiov=0x7ffe2e9e9c60, qiov@entry=0x7ff
+e4c321820, qiov_offset=qiov_offset@entry=20480, flags=flags@entry=0) at ../block/io.c:1190
+#6  0x0000555555d422ce in bdrv_aligned_preadv (child=child@entry=0x555556bf2270, req=req@entry=0x7ffe2e9e9e00, offset=1301217280, bytes=12288, align=<optimized out>, qiov=0x7ffe4c321820, qiov_offset=20480, flags=0) at ../block/io.c:1577
+#7  0x0000555555d42a04 in bdrv_co_preadv_part (child=0x555556bf2270, offset=<optimized out>, offset@entry=1301217280, bytes=<optimized out>, bytes@entry=12288, qiov=<optimized out>, qiov@entry=0x7ffe4c321820, qiov_offset=<optimized out>, qiov_offset@entry=20480, flags=flags@entry=0) at ../block/io.c:1848
+#8  0x0000555555da264b in qcow2_co_preadv_task (qiov_offset=20480, qiov=0x7ffe4c321820, bytes=12288, offset=4313513984, host_offset=1301217280, subc_type=<optimized out>, bs=0x555556c75a00) at ../block/qcow2.c:2291
+#9  qcow2_co_preadv_task_entry (task=<optimized out>) at ../block/qcow2.c:2307
+#10 0x0000555555d79fb1 in aio_task_co (opaque=0x7ffe4c103da0) at ../block/aio_task.c:45
+#11 0x0000555555e653a3 in coroutine_trampoline (i0=<optimized out>, i1=<optimized out>) at ../util/coroutine-ucontext.c:173
+#12 0x00007ffff60ef660 in __start_context () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91
+```
+
+- bdrv_driver_pwritev : block/io.c 中
+  * blk_aio_pwritev : 在 block-backend.c 中，这就是给 block driver 注册使用的, 例如注册到 NvmeRequest 中间去的。
+
+```c
+typedef struct NvmeRequest {
+    struct NvmeSQueue       *sq;
+    struct NvmeNamespace    *ns;
+    BlockAIOCB              *aiocb;
+    uint16_t                status;
+    void                    *opaque;
+    NvmeCqe                 cqe;
+    NvmeCmd                 cmd;
+    BlockAcctCookie         acct;
+    NvmeSg                  sg;
+    QTAILQ_ENTRY(NvmeRequest)entry;
+} NvmeRequest;
+```
+
 
 - [ ] AIO_WAIT_WHILE : 一个有趣的位置，这个会去调用 aio_poll 的
     - [ ] 但是我的龟龟啊，你知不知道，这意味着这个调用 poll 的会一直等待到这个位置上。

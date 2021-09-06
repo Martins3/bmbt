@@ -210,5 +210,20 @@ coroutine 是可以在另一个 thread 上执行的，但是不能在另一个 c
 #### test_cancel
 - [ ] 以后再看了
 
+## tests/unit/test-block-backend
+
+#### test_drain_aio_error
+
+[14/24] Linking target tests/unit/test-coroutine
+[15/24] Linking target tests/unit/test-blockjob-txn
+[16/24] Linking target tests/unit/test-blockjob
+[17/24] Linking target tests/unit/test-replication
+[18/24] Linking target tests/unit/test-write-threshold
+[19/24] Linking target
+[20/24] Linking target tests/unit/test-io-task
+[21/24] Linking target tests/unit/test-bdrv-graph-mod
+[22/24] Linking target tests/unit/test-block-iothread
+[23/24] Linking target tests/unit/test-image-locking
+
 
 [^1]: https://stackoverflow.com/questions/42395844/glib-gmaincontext-in-a-thread
