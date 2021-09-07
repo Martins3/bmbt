@@ -1,31 +1,63 @@
 # MTTG && Locks
 
+<!-- vim-markdown-toc GitLab -->
+
+- [问题 && TODO](#问题-todo)
+- [总结](#总结)
+- [ready_handler](#ready_handler)
+- [BQL](#bql)
+- [Li Qiang](#li-qiang)
+- [Stefan Hajnoczi](#stefan-hajnoczi)
+- [docs/devel/multiple-iothreads.txt](#docsdevelmultiple-iothreadstxt)
+- [related files](#related-files)
+- [Thread Pool](#thread-pool)
+- [QEMU 中的那些地方需要 lock](#qemu-中的那些地方需要-lock)
+- [如何移植 cpus.c 啊](#如何移植-cpusc-啊)
+- [AioContext](#aiocontext)
+    - [aio_poll](#aio_poll)
+    - [AioContext::bh_slice_list](#aiocontextbh_slice_list)
+    - [AioHandler](#aiohandler)
+    - [AioHandler::io_poll 是做什么用途的](#aiohandlerio_poll-是做什么用途的)
+    - [AioContext::notify_me 和 AioContext::notified](#aiocontextnotify_me-和-aiocontextnotified)
+- [IOThread](#iothread)
+- [找到所有的 thread 创建的位置](#找到所有的-thread-创建的位置)
+    - [main loop](#main-loop)
+    - [call_rcu](#call_rcu)
+    - [gmain](#gmain)
+    - [gdbus](#gdbus)
+    - [worker](#worker)
+    - [kvm thread](#kvm-thread)
+    - [threaded-ml](#threaded-ml)
+- [mmap_lock](#mmap_lock)
+- [mttcg](#mttcg)
+- [iothread 的 lock 应该只有很少的位置才对啊](#iothread-的-lock-应该只有很少的位置才对啊)
+- [如果 mttcg 之外，iothread 之外，还有什么 thread 的挑战](#如果-mttcg-之外iothread-之外还有什么-thread-的挑战)
+- [[^3]](#3)
+- [[^5]](#5)
+- [global_locking](#global_locking)
+- [反手看一下 kvm 的 thread 是如何实现的](#反手看一下-kvm-的-thread-是如何实现的)
+- [为什么 kvm 中的 pio 和 mmio 不需要使用 BQL 保护](#为什么-kvm-中的-pio-和-mmio-不需要使用-bql-保护)
+- [current_cpu](#current_cpu)
+- [do_run_on_cpu](#do_run_on_cpu)
+- [first_cpu / CPU_NEXT / CPU_FOREACH 的移植](#first_cpu-cpu_next-cpu_foreach-的移植)
+- [run_on_cpu](#run_on_cpu)
+- [CPUState::created](#cpustatecreated)
+- [hmp](#hmp)
+- [os_host_main_loop_wait](#os_host_main_loop_wait)
+- [io uring](#io-uring)
+- [GMainLoop 中的 context](#gmainloop-中的-context)
+    - [iohandler_ctx](#iohandler_ctx)
+    - [qemu_aio_context](#qemu_aio_context)
+- [IOThread 中的两个 Context 是做啥的](#iothread-中的两个-context-是做啥的)
+- [FDMonOps](#fdmonops)
+- [[ ] QEMUBH](#-qemubh)
+- [aio_set_fd_handler](#aio_set_fd_handler)
+- [qio](#qio)
+- [qemu_set_fd_handler](#qemu_set_fd_handler)
+
+<!-- vim-markdown-toc -->
+
 ## 问题 && TODO
-- [ ] GMainContext 的两个 Context 的作用分别是啥?
-
-
-- 既然 kvm eventfd 的这一个 fd 是如何被监听的 : 走一个统一的 aio_set_event_notifier 的路线啊
-
-- GMainContext 为什么可以关联多个 GSource 的
-    - 可能原因是不同的 GSource 的属性不同，例如 idle timer 和普通的 fd
-
-- 既然在 os_host_main_loop_wait 中调用了 ppoll，那么其 handler 还是需要调用 aio_poll 的, 那些并不会真正的监听才对
-- 既然 aio 使用 FDMonOps 进行了 wait，为什么在 os_host_main_loop_wait 中也是有 poll 的
-    - [ ] 如何保证此时 aio_poll 一定不会阻塞掉
-
-- aio_dispatch_handlers 函数会遍历 aio_handlers，遍历监听的 fd 上的事件是否发生了。但是使用 ppoll 难道无法直接获取是那些 fd 触发了吗?
-    - 猜测真正的原因是，一共也就是那几个，遍历一下
-    - [ ] 问题是，遍历的时候怎么知道那些是 ready 的，那些没有
-
-其实，整个 AioContext 中间是划分为三个路线的
-- fd 的监控
-- BH
-  - 通过 AioContext::notifier 来构建，在 aio_context_new 中初始化该 fd 的 poll 函数
-  - [ ] 奇怪啊，为什么每一个 AioHandler 都是需要注册一个 io_poll 类似的函数
-- coroutine
-这三条线在 AioContext 的处理中有自己的路径:
-
-
 - [ ] 什么叫做 external event source 啊
 ```c
 /**
@@ -45,6 +77,29 @@ static inline bool aio_node_check(AioContext *ctx, bool is_external)
 - [ ] 找到从 vCPU 和 io thread / main loop 之间的交互吧
 - [ ] 使用了 IOThread 之后，这个设备怎么知道将会将自己的认为都提交给该 thread 啊
 
+## 总结
+- 既然 kvm eventfd 的这一个 fd 是如何被监听的 : 走一个统一的 aio_set_event_notifier 的路线啊
+
+- GMainContext 为什么可以关联多个 GSource 的
+    - 可能原因是不同的 GSource 的属性不同，例如 idle timer 和普通的 fd
+
+- aio_dispatch_handlers 函数会遍历 aio_handlers，遍历监听的 fd 上的事件是否发生了。但是使用 ppoll 难道无法直接获取是那些 fd 触发了吗?
+    - 猜测真正的原因是，一共也就是那几个，遍历一下
+    - 这个确实可以进行一些优化
+
+其实，整个 AioContext 中间是划分为三个路线的
+- fd 的监控
+- BH
+  - 通过 AioContext::notifier 来构建，在 aio_context_new 中初始化该 fd 的 poll 函数
+  - 每一个 AioHandler 都是需要注册一个 io_poll 类似的函数, 这个是用于用户态 poll ，实际上是可以使用 FDMonOps 在 aio_poll 的
+- coroutine
+这三条线在 AioContext 的处理中有自己的路径:
+
+## ready_handler
+通过 aio_add_ready_handler 来添加的，其调用者为 FDMonOps ，因为类似 epoll 之类的可以清楚的知道到底是谁出现了问题的。
+
+
+- [ ] 遍历 aio_handlers, 遍历监听 fd 上的事件是否发生了。fd 发生的事件存在 node->pfd.revents 中
 
 ## BQL
 - main_loop 是如何使用 BQL 的。
@@ -284,6 +339,7 @@ static AioContext *iohandler_ctx;
 #10 0x0000555555cfb8f1 in qemu_main_loop () at ../softmmu/runstate.c:726
 #11 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
+注意，如果这不是走的标准 AioContext 的路径，因为直接就到了 fd_chr_read 中间了
 
 
 ```c
@@ -299,6 +355,98 @@ static AioContext *iohandler_ctx;
       - run_poll_handlers_once
         - 调用 AioHandler::io_poll : 其赋值位置为 aio_set_fd_handler 注册的居然是 aio_context_notifier_poll
   - `ctx->fdmon_ops->wait(ctx, &ready_list, timeout)`
+
+其实，更多的是，一个代码已经执行好了:
+```c
+/*
+#0  aio_poll (ctx=ctx@entry=0x55555670a6c0, blocking=blocking@entry=true) at ../util/aio-posix.c:558
+#1  0x0000555555d57285 in qcow2_open (bs=<optimized out>, options=<optimized out>, flags=<optimized out>, errp=<optimized out>) at ../block/qcow2.c:1909
+#2  0x0000555555d8f565 in bdrv_open_driver (bs=bs@entry=0x555556c7e1b0, drv=drv@entry=0x5555565c4b40 <bdrv_qcow2>, node_name=<optimized out>, options=options@entry=0x55
+5556e7e800, open_flags=139266, errp=errp@entry=0x7fffffffcd50) at ../block.c:1552
+#3  0x0000555555d92634 in bdrv_open_common (errp=0x7fffffffcd50, options=0x555556e7e800, file=0x555556aea600, bs=0x555556c7e1b0) at ../block.c:1827
+#4  bdrv_open_inherit (filename=<optimized out>, filename@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,
+ options=0x555556e7e800, options@entry=0x555556a25660, flags=<optimized out>, flags@entry=0, parent=parent@entry=0x0, child_class=child_class@entry=0x0, child_role=0, e
+rrp=0x5555566170c0 <error_fatal>) at ../block.c:3747
+#5  0x0000555555d93717 in bdrv_open (filename=filename@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, op
+tions=options@entry=0x555556a25660, flags=flags@entry=0, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block.c:3840
+#6  0x0000555555d2c63f in blk_new_open (filename=filename@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,
+ options=options@entry=0x555556a25660, flags=0, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block/block-backend.c:435
+#7  0x0000555555d22ed8 in blockdev_init (file=file@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", bs_opts=bs_opts@entry=0x555556a25660,
+ errp=errp@entry=0x5555566170c0 <error_fatal>) at ../blockdev.c:608
+#8  0x0000555555d23e7d in drive_new (all_opts=<optimized out>, block_default_type=<optimized out>, errp=0x5555566170c0 <error_fatal>) at ../blockdev.c:992
+#9  0x0000555555c85376 in drive_init_func (opaque=<optimized out>, opts=<optimized out>, errp=<optimized out>) at ../softmmu/vl.c:617
+#10 0x0000555555e69212 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555c85360 <drive_init_func>, opaque=opaque@entry=0x55555681dfb0, errp=errp@entry
+=0x5555566170c0 <error_fatal>) at ../util/qemu-option.c:1135
+#11 0x0000555555c89d6a in configure_blockdev (bdo_queue=0x55555655c930 <bdo_queue>, snapshot=0, machine_class=0x55555681df00) at ../softmmu/vl.c:676
+#12 qemu_create_early_backends () at ../softmmu/vl.c:1939
+#13 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
+#14 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+
+
+#0  aio_poll (ctx=ctx@entry=0x55555670a6c0, blocking=blocking@entry=true) at ../util/aio-posix.c:558
+#1  0x0000555555d2a4fd in blk_prw (blk=blk@entry=0x555556a24af0, offset=offset@entry=0, buf=buf@entry=0x7fffffffc990 " \b", bytes=bytes@entry=512, co_entry=co_entry@ent
+ry=0x555555d2ad00 <blk_read_entry>, flags=flags@entry=0) at ../block/block-backend.c:1349
+#2  0x0000555555d2a62b in blk_pread (blk=blk@entry=0x555556a24af0, offset=offset@entry=0, buf=buf@entry=0x7fffffffc990, count=count@entry=512) at ../block/block-backend
+.c:1505
+#3  0x0000555555972111 in guess_disk_lchs (blk=blk@entry=0x555556a24af0, pcylinders=pcylinders@entry=0x7fffffffcbf8, pheads=pheads@entry=0x7fffffffcbfc, psectors=psecto
+rs@entry=0x7fffffffcc00) at ../hw/block/hd-geometry.c:66
+#4  0x0000555555972377 in hd_geometry_guess (blk=0x555556a24af0, pcyls=pcyls@entry=0x555556954f94, pheads=pheads@entry=0x555556954f98, psecs=psecs@entry=0x555556954f9c,
+ ptrans=ptrans@entry=0x555556954fc0) at ../hw/block/hd-geometry.c:131
+#5  0x0000555555a24e5f in blkconf_geometry (conf=conf@entry=0x555556954f70, ptrans=ptrans@entry=0x555556954fc0, cyls_max=cyls_max@entry=65535, heads_max=heads_max@entry
+=16, secs_max=secs_max@entry=255, errp=errp@entry=0x7fffffffcd00) at ../hw/block/block.c:217
+#6  0x000055555594ef86 in ide_dev_initfn (dev=0x555556954ee0, kind=IDE_HD, errp=0x7fffffffcd00) at ../hw/ide/qdev.c:201
+#7  0x0000555555de3d97 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcd80) at ../hw/core/qdev.c:761
+#8  0x0000555555dc571a in property_set_bool (obj=0x555556954ee0, v=<optimized out>, name=<optimized out>, opaque=0x55555670be30, errp=0x7fffffffcd80) at ../qom/object.c
+:2258
+#9  0x0000555555dc7c4c in object_property_set (obj=obj@entry=0x555556954ee0, name=name@entry=0x555556009576 "realized", v=v@entry=0x555556b5bed0, errp=errp@entry=0x5555
+566170c0 <error_fatal>) at ../qom/object.c:1403
+#10 0x0000555555dcadb4 in object_property_set_qobject (obj=obj@entry=0x555556954ee0, name=name@entry=0x555556009576 "realized", value=value@entry=0x555556d362b0, errp=e
+rrp@entry=0x5555566170c0 <error_fatal>) at ../qom/qom-qobject.c:28
+#11 0x0000555555dc7eb9 in object_property_set_bool (obj=0x555556954ee0, name=0x555556009576 "realized", value=<optimized out>, errp=0x5555566170c0 <error_fatal>) at ../
+qom/object.c:1473
+#12 0x0000555555de2c63 in qdev_realize_and_unref (dev=dev@entry=0x555556954ee0, bus=bus@entry=0x5555579bb400, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../hw/cor
+e/qdev.c:396
+#13 0x000055555594f34b in ide_create_drive (bus=bus@entry=0x5555579bb400, unit=unit@entry=0, drive=0x555556d5c140) at ../hw/ide/qdev.c:135
+#14 0x0000555555b3a22a in pci_ide_create_devs (dev=dev@entry=0x5555579baaa0) at ../hw/ide/pci.c:491
+#15 0x0000555555ba9280 in pc_init1 (machine=0x555556891000, pci_type=0x555555f74d01 "i440FX", host_type=0x555555f77c40 "i440FX-pcihost") at ../hw/i386/pc_piix.c:248
+#16 0x00005555559a0534 in machine_run_board_init (machine=0x555556891000) at ../hw/core/machine.c:1273
+#17 0x0000555555c87274 in qemu_init_board () at ../softmmu/vl.c:2615
+#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#20 0x0000555555c8aa18 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#21 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+在 vCPU 中间调用 aio_poll
+
+```c
+/*
+#0  aio_poll (ctx=0x55555670a6c0, blocking=blocking@entry=true) at ../util/aio-posix.c:558
+#1  0x0000555555e4abd2 in aio_wait_bh_oneshot (ctx=0x555556aaac90, cb=cb@entry=0x555555d05fc0 <virtio_blk_data_plane_stop_bh>, opaque=opaque@entry=0x555556ce9720) at ../util/aio-wait.c:71
+#2  0x0000555555d06a0c in virtio_blk_data_plane_stop (vdev=<optimized out>) at ../hw/block/dataplane/virtio-blk.c:333
+#3  0x0000555555b3d9fa in virtio_bus_stop_ioeventfd (bus=0x555557d13af8) at ../hw/virtio/virtio-bus.c:250
+#4  virtio_bus_stop_ioeventfd (bus=bus@entry=0x555557d13af8) at ../hw/virtio/virtio-bus.c:237
+#5  0x000055555595ba98 in virtio_pci_stop_ioeventfd (proxy=0x555557d0b900) at ../hw/virtio/virtio-pci.c:1276
+#6  virtio_pci_common_write (opaque=0x555557d0b900, addr=<optimized out>, val=<optimized out>, size=<optimized out>) at ../hw/virtio/virtio-pci.c:1276
+#7  0x0000555555c9cd61 in memory_region_write_accessor (mr=mr@entry=0x555557d0c360, addr=20, value=value@entry=0x7ffe51dfb0a8, size=size@entry=1, shift=<optimized out>,mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:492
+#8  0x0000555555c991ee in access_with_adjusted_size (addr=addr@entry=20, value=value@entry=0x7ffe51dfb0a8, size=size@entry=1, access_size_min=<optimized out>, access_si
+ze_max=<optimized out>, access_fn=access_fn@entry=0x555555c9ccd0 <memory_region_write_accessor>, mr=0x555557d0c360, attrs=...) at ../softmmu/memory.c:554
+#9  0x0000555555c9c297 in memory_region_dispatch_write (mr=mr@entry=0x555557d0c360, addr=20, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softmmu/memory.c:1504
+#10 0x0000555555c303c0 in flatview_write_continue (fv=fv@entry=0x7ffe4c37d280, addr=addr@entry=4261412884, attrs=..., ptr=ptr@entry=0x7fffeb17e028, len=len@entry=1, add
+r1=<optimized out>, l=<optimized out>, mr=0x555557d0c360) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
+#11 0x0000555555c305d6 in flatview_write (fv=0x7ffe4c37d280, addr=addr@entry=4261412884, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb17e028, len=len@entry=1) at ../softmmu/physmem.c:2820
+#12 0x0000555555c332a6 in address_space_write (as=0x5555565f9360 <address_space_memory>, addr=4261412884, attrs=..., buf=buf@entry=0x7fffeb17e028, len=1) at ../softmmu/physmem.c:2912
+#13 0x0000555555c3333e in address_space_rw (as=<optimized out>, addr=<optimized out>, attrs=..., attrs@entry=..., buf=buf@entry=0x7fffeb17e028, len=<optimized out>, is_
+write=<optimized out>) at ../softmmu/physmem.c:2922
+#14 0x0000555555c2bf86 in kvm_cpu_exec (cpu=cpu@entry=0x555556be7b90) at ../accel/kvm/kvm-all.c:2893
+#15 0x0000555555cedc55 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556be7b90) at ../accel/kvm/kvm-accel-ops.c:49
+#16 0x0000555555e5e543 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#17 0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#18 0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+如果不使用 IOThread 的话，初始化之后就没有调用 aio_poll 的情况了
+
+总结，aio_poll 承受了太多不该承受的内容:
 
 #### AioContext::bh_slice_list
 在 aio_bh_poll 有一个局部变量 `BHListSlice slice;`,
@@ -1391,6 +1539,8 @@ os_host_main_loop_wait 调用 qemu_poll_ns 来 poll，而使用 glib_pollfds_pol
 - [ ] 这个执行流程摧毁了我对于 qemu_mutex_lock_iothread 的理解
 - [ ] 重新理解一下，iothread 的含义，这个是让只有一个 vcpu 才可以进行 IO 操作，现在，让 io 操作都放到 io thread 中间，vcpu 的执行流程就不应该存在 qemu_mutex_lock_iothread 了吧
 ## io uring
+总体来说，chi 的这个还不错啊: https://www.skyzh.dev/posts/articles/2021-06-14-deep-dive-io-uring/
+
 分析一下 io uring 是如何和 aio 整个框架联系在一起的。
 
 猜测，当然是，io uring 提交，利用 aio 机制，将这个事情获取出来的。
@@ -1406,6 +1556,58 @@ os_host_main_loop_wait 调用 qemu_poll_ns 来 poll，而使用 glib_pollfds_pol
 #6  0x0000555555d3ffd1 in bdrv_pread (child=<optimized out>, offset=<optimized out>, buf=<optimized out>, bytes=16384) at ../block/io.c:1097
 ```
 在进一步向下，就是到达了 raw_co_prw 这里，在这里根据配置选择是否采用 io uring 的, 如果采用，那么就调用 luring_co_submit
+
+其调用路径就是标准的路径了:
+```c
+/*
+#0  qemu_luring_completion_cb (opaque=0x555556a053e0) at ../block/io_uring.c:286
+#1  0x0000555555e5689c in aio_dispatch_handler (ctx=ctx@entry=0x55555670a610, node=0x555556a63330) at ../util/aio-posix.c:337
+#2  0x0000555555e57202 in aio_dispatch_handlers (ctx=0x55555670a610) at ../util/aio-posix.c:380
+#3  aio_dispatch (ctx=0x55555670a610) at ../util/aio-posix.c:390
+#4  0x0000555555e6f932 in aio_ctx_dispatch (source=<optimized out>, callback=<optimized out>, user_data=<optimized out>) at ../util/async.c:311
+#5  0x00007ffff787a17d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#6  0x0000555555e6e148 in glib_pollfds_poll () at ../util/main-loop.c:232
+#7  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#8  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#9  0x0000555555c19f51 in qemu_main_loop () at ../softmmu/runstate.c:726
+#10 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+注册的过程
+```c
+/*
+#0  luring_attach_aio_context (s=0x5555569ffaf0, new_context=new_context@entry=0x55555670a610) at ../block/io_uring.c:414
+#1  0x0000555555e6fd3f in aio_setup_linux_io_uring (ctx=0x55555670a610, errp=errp@entry=0x7fffffffcb40) at ../util/async.c:427
+#2  0x0000555555d639f3 in raw_open_common (bs=0x555556c79310, options=<optimized out>, bdrv_flags=417794, open_flags=<optimized out>, device=<optimized out>, errp=0x7ff
+fffffcb40) at ../block/file-posix.c:706
+#3  0x0000555555d8f5b5 in bdrv_open_driver (bs=bs@entry=0x555556c79310, drv=drv@entry=0x5555565c6540 <bdrv_file>, node_name=<optimized out>, options=options@entry=0x555
+556ba1d20, open_flags=417794, errp=errp@entry=0x7fffffffcbf0) at ../block.c:1552
+#4  0x0000555555d92684 in bdrv_open_common (errp=0x7fffffffcbf0, options=0x555556ba1d20, file=0x0, bs=0x555556c79310) at ../block.c:1827
+#5  bdrv_open_inherit (filename=<optimized out>, filename@entry=0x555556bf3360 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=<optimized out>, opt
+ions=0x555556ba1d20, flags=<optimized out>, flags@entry=0, parent=parent@entry=0x555556c7d870, child_class=child_class@entry=0x5555564f3a60 <child_of_bds>, child_role=1
+9, errp=0x7fffffffcd50) at ../block.c:3747
+#6  0x0000555555d9348d in bdrv_open_child_bs (filename=filename@entry=0x555556bf3360 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", options=options@entry=0x
+555556a24e30, bdref_key=bdref_key@entry=0x555556253e38 "file", parent=parent@entry=0x555556c7d870, child_class=child_class@entry=0x5555564f3a60 <child_of_bds>, child_ro
+le=child_role@entry=19, allow_none=true, errp=0x7fffffffcd50) at ../block.c:3387
+#7  0x0000555555d92c9b in bdrv_open_inherit (filename=filename@entry=0x555556bf3360 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry
+=0x0, options=0x555556a24e30, options@entry=0x555556b13340, flags=<optimized out>, flags@entry=262144, parent=parent@entry=0x0, child_class=child_class@entry=0x0, child
+_role=0, errp=0x5555566170c0 <error_fatal>) at ../block.c:3694
+#8  0x0000555555d93767 in bdrv_open (filename=filename@entry=0x555556bf3360 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, op
+tions=options@entry=0x555556b13340, flags=flags@entry=262144, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block.c:3840
+#9  0x0000555555d2c63f in blk_new_open (filename=filename@entry=0x555556bf3360 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,
+ options=options@entry=0x555556b13340, flags=262144, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block/block-backend.c:435
+#10 0x0000555555d22ed8 in blockdev_init (file=file@entry=0x555556bf3360 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", bs_opts=bs_opts@entry=0x555556b13340,
+ errp=errp@entry=0x5555566170c0 <error_fatal>) at ../blockdev.c:608
+#11 0x0000555555d23e7d in drive_new (all_opts=<optimized out>, block_default_type=<optimized out>, errp=0x5555566170c0 <error_fatal>) at ../blockdev.c:992
+#12 0x0000555555c85376 in drive_init_func (opaque=<optimized out>, opts=<optimized out>, errp=<optimized out>) at ../softmmu/vl.c:617
+#13 0x0000555555e69302 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555c85360 <drive_init_func>, opaque=opaque@entry=0x55555681d570, errp=errp@entry
+=0x5555566170c0 <error_fatal>) at ../util/qemu-option.c:1135
+#14 0x0000555555c89d6a in configure_blockdev (bdo_queue=0x55555655c930 <bdo_queue>, snapshot=0, machine_class=0x55555681d4c0) at ../softmmu/vl.c:676
+#15 qemu_create_early_backends () at ../softmmu/vl.c:1939
+#16 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
+#17 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+其使用 AioContext 也许是通过 bdrv_attach_aio_context 设置的，也许是直接通过 qemu_get_aio_context 获取的。
 
 
 ## GMainLoop 中的 context
@@ -1559,6 +1761,72 @@ void aio_context_setup(AioContext *ctx)
 
 ## qio
 不知道干啥的。
+
+## qemu_set_fd_handler
+> The reason why the main loop has two AioContexts is because one, called iohandler_ctx, is used to implement older `qemu_set_fd_handler()` APIs whose handlers should not run when the other AioContext, called qemu_aio_context, is run using aio_poll().
+
+既然如此，那么就来分析一下 qemu_set_fd_handler
+```c
+/*
+#0  qemu_set_fd_handler (fd=5, fd_read=0x555555e6dc90 <sigfd_handler>, fd_write=0x0, opaque=0x5) at ../util/main-loop.c:582
+#1  0x0000555555e6e23a in qemu_signal_init (errp=0x5555566170c0 <error_fatal>) at ../util/main-loop.c:119
+#2  qemu_init_main_loop (errp=errp@entry=0x5555566170c0 <error_fatal>) at ../util/main-loop.c:164
+#3  0x0000555555c87cff in qemu_init (argc=<optimized out>, argv=0x7fffffffd4f8, envp=<optimized out>) at ../softmmu/vl.c:3631
+#4  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+正如李强所说的，可以向 qemu 进程发送一个 SIGALARM
+```c
+/*
+#0  sigfd_handler (opaque=0x5) at ../util/main-loop.c:58
+#1  0x0000555555e5684c in aio_dispatch_handler (ctx=ctx@entry=0x555556700e60, node=0x55555670a620) at ../util/aio-posix.c:337
+#2  0x0000555555e571b2 in aio_dispatch_handlers (ctx=0x555556700e60) at ../util/aio-posix.c:380
+#3  aio_dispatch (ctx=0x555556700e60) at ../util/aio-posix.c:390
+#4  0x0000555555e6f842 in aio_ctx_dispatch (source=<optimized out>, callback=<optimized out>, user_data=<optimized out>) at ../util/async.c:311
+#5  0x00007ffff787a17d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#6  0x0000555555e6e058 in glib_pollfds_poll () at ../util/main-loop.c:232
+#7  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#8  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#9  0x0000555555c19f51 in qemu_main_loop () at ../softmmu/runstate.c:726
+#10 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+其实，iohandler_ctx 几乎没有从注册上没有任何区别啊
+
+```c
+/* Register a file descriptor and associated callbacks.  Behaves very similarly
+ * to qemu_set_fd_handler.  Unlike qemu_set_fd_handler, these callbacks will
+ * be invoked when using aio_poll().
+ *
+ * Code that invokes AIO completion functions should rely on this function
+ * instead of qemu_set_fd_handler[2].
+ */
+void aio_set_fd_handler(AioContext *ctx,
+                        int fd,
+                        bool is_external,
+                        IOHandler *io_read,
+                        IOHandler *io_write,
+                        AioPollFn *io_poll,
+                        void *opaque);
+```
+其实这个解释有的点问题，应该是这个使用 qemu_set_fd_handler 的时候, 这些 callback 可以通过 aio_poll 来执行
+
+aio_poll 通过调用 aio_dispatch_ready_handlers 来实现对于 AioHandler 的 hook 来调用的:
+
+基本的执行流程: aio_ctx_dispatch => aio_dispatch => aio_dispatch_handlers => aio_dispatch_handler
+
+- 注意，GSource 构建出来了标准流程 aio_ctx_dispatch, 那些添加了 GSource 中的 fd 在上面的 dispatch 过程中找到该 fd 的 handler
+
+```c
+/*
+ * If we have a list of ready handlers then this is more efficient than
+ * scanning all handlers with aio_dispatch_handlers().
+ */
+static bool aio_dispatch_ready_handlers(AioContext *ctx,
+                                        AioHandlerList *ready_list)
+```
+- [x] 区别的根本位置在于 io_poll，也即是这个接口是否支持用户态 poll ?
+    - 并不是，qemu_set_fd_handler 的时候，将其 AioContext, 必须是 iohandler_ctx 已经设置好了，然后就是走 aio_ctx_dispatch 的路径
+    - 而 aio_set_fd_handler 没有 ctx 的限制，其可以在 qemu_aio_context 或者 IOThread 中的 context 上。
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
