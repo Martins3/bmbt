@@ -1,27 +1,54 @@
 # MTTG && Locks
 
-## 问题
-- [ ] iothread_run 中会调用 g_main_loop_run 和 aio_poll
-- [ ] 无法理解 g_main_loop_run 只是别 iothread 调用, 因为 main_loop 自己手动的 ppoll 了
-- [ ] io_thread 似乎是默认没有启用的，如何打开并且测试一下
-  - [ ] 如果使用上 iothread 是不是就不会 main_loop 就不会有了
-  - [ ] main_loop 的三个 context 都是做啥的，到底如何使用啊!
+## 问题 && TODO
+- [ ] GMainContext 的两个 Context 的作用分别是啥?
 
-- [ ] qio 是什么? 就是出现在 ./io 的那个目录中间的
-- [ ] GMainContext 为什么可以关联多个 GSource 的
+
+- 既然 kvm eventfd 的这一个 fd 是如何被监听的 : 走一个统一的 aio_set_event_notifier 的路线啊
+
+- GMainContext 为什么可以关联多个 GSource 的
     - 可能原因是不同的 GSource 的属性不同，例如 idle timer 和普通的 fd
-- [ ] 既然在 os_host_main_loop_wait 中调用了 ppoll，那么其 handler 还是需要调用 aio_poll 的
-- [ ] 据说之所以采用 IOThread 的原因是，main_loop 有一些几个问题:
-    - 需要使用 BQL
-    - 监听所有的 fd 在一个循环中间
 
-- [ ] aio_dispatch_handlers 函数会遍历 aio_handlers，遍历监听的 fd 上的事件是否发生了。
-    - [ ] 使用 ppoll 难道无法直接获取是那些 fd 触发了吗?
+- 既然在 os_host_main_loop_wait 中调用了 ppoll，那么其 handler 还是需要调用 aio_poll 的, 那些并不会真正的监听才对
+- 既然 aio 使用 FDMonOps 进行了 wait，为什么在 os_host_main_loop_wait 中也是有 poll 的
+    - [ ] 如何保证此时 aio_poll 一定不会阻塞掉
 
-- [ ] 既然 aio 使用 FDMonOps 进行了 wait，为什么在 os_host_main_loop_wait 中也是有 poll 的
+- aio_dispatch_handlers 函数会遍历 aio_handlers，遍历监听的 fd 上的事件是否发生了。但是使用 ppoll 难道无法直接获取是那些 fd 触发了吗?
+    - 猜测真正的原因是，一共也就是那几个，遍历一下
+    - [ ] 问题是，遍历的时候怎么知道那些是 ready 的，那些没有
 
-- [ ] 两个 worker 线程为什么之后就会消失掉，那么之后的对于 disk 的 io 在哪里?
-    - raw_co_prw 在被急速调用，但是之后不会 aio submit 了
+其实，整个 AioContext 中间是划分为三个路线的
+- fd 的监控
+- BH
+  - 通过 AioContext::notifier 来构建，在 aio_context_new 中初始化该 fd 的 poll 函数
+  - [ ] 奇怪啊，为什么每一个 AioHandler 都是需要注册一个 io_poll 类似的函数
+- coroutine
+这三条线在 AioContext 的处理中有自己的路径:
+
+
+- [ ] 什么叫做 external event source 啊
+```c
+/**
+ * aio_node_check:
+ * @ctx: the aio context
+ * @is_external: Whether or not the checked node is an external event source.
+ *
+ * Check if the node's is_external flag is okay to be polled by the ctx at this
+ * moment. True means green light.
+ */
+static inline bool aio_node_check(AioContext *ctx, bool is_external)
+{
+    return !is_external || !qatomic_read(&ctx->external_disable_cnt);
+}
+```
+
+- [ ] 找到从 vCPU 和 io thread / main loop 之间的交互吧
+- [ ] 使用了 IOThread 之后，这个设备怎么知道将会将自己的认为都提交给该 thread 啊
+
+
+## BQL
+- main_loop 是如何使用 BQL 的。
+
 
 ## Li Qiang
 qemu_aio_context 和 iohandler_ctx 是两个比较特殊的自定义类型为 AioContext 的事件源。
@@ -36,16 +63,13 @@ The most important event sources in QEMU are:
 - *Bottom-halves (BHs) for invoking a function in another thread or deferring a function call to avoid reentrancy.*
 
 - 前面说两个情况是 IO 多路复用的考虑
-- [ ] 什么叫做在另一个线程中 invoke a function
-  - 将工作放到另一个线程中进行，所以, BH 实际上是将工作挂载到一个队列中的。
+- BH : 将工作放到另一个线程中进行，所以, BH 实际上是将工作挂载到一个队列中的。
 - [ ] deferring a function call to avoid reentrancy
 
 QEMU has several different types of threads:
 - vCPU threads that execute guest code and perform device emulation synchronously with respect to the vCPU.
 - The main loop that runs the event loops (yes, there is more than one!) used by many QEMU components.
 - IOThreads that run event loops for device emulation concurrently with vCPUs and "out-of-band" QMP monitor commands.
-
-- [ ] 无法理解的东西: main loop 的 event 既然监控了很多东西，为什么还需要特地创建出来 IOThreads
 
 忽然想到，ioeventfd 这个东西就是给 aio 使用的啊!
 
@@ -281,10 +305,11 @@ static AioContext *iohandler_ctx;
 也就是 aio_bh_poll 向下调用的时候，还会存在继续调用到 aio_bh_poll 上。
 
 #### AioHandler
-这里是没一个 fd 最后对应的
-
-
 这个里面注册了 aio_ctx_dispatch 的时候最后会调用的 hook
+
+- AioHandler 的定位是什么? GSource 的关系是什么?
+  - GSource 关联多个 fd，每一个 fd 都会对应一个 AioHandler 的
+
 ```c
 static GSourceFuncs aio_source_funcs = {
     aio_ctx_prepare,
@@ -296,11 +321,9 @@ static GSourceFuncs aio_source_funcs = {
 [g_source_new](https://people.gnome.org/~ryanl/glib-docs/glib-The-Main-Event-Loop.html#g-source-new)
 才知道，原来还是存在好几种的 GSource 的。
 
-- [ ] aio_poll 也是会调用 aio_dispatch_ready_handlers 的
 
-- [ ] AioHandler 的定位是什么? 和 GSource 的关系是什么?
-
-- aio_ctx_dispatch : 被频率非常高的调用
+- [x] 是不是，实际上，根本没有 fd 是放到 GMainContext 上的?
+  - 那是一个默认的，类似的 g_timeout_source_new_seconds 之类就是放到默认 GMainContext 上的
 
 ```c
 /*
@@ -313,6 +336,136 @@ static GSourceFuncs aio_source_funcs = {
 #6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
 当 glib_pollfds_fill 调用之后 g_main_context_dispatch 之后，其会自动调用对应的 hook 函数的
+- AioContext 因为关联的 aio_source_funcs，所以最后调用的是 aio_ctx_dispatch
+- 而 g_timeout_source_new_seconds 之类的使用 g_source_set_callback 来设置 callback 的
+- 因为 GSource 上可能添加多个 fd, 所以只要其中的任何一个 fd 存在事件，都会进入到 aio_ctx_dispatch 中
+    - 每一个 fd 关联的 AioHandler 中可以注册其对应的 hook 的
+
+```c
+struct AioHandler {
+    GPollFD pfd;
+    IOHandler *io_read;
+    IOHandler *io_write;
+    AioPollFn *io_poll;
+    IOHandler *io_poll_begin;
+    IOHandler *io_poll_end;
+    void *opaque;
+    QLIST_ENTRY(AioHandler) node;
+    QLIST_ENTRY(AioHandler) node_ready; /* only used during aio_poll() */
+    QLIST_ENTRY(AioHandler) node_deleted;
+    QLIST_ENTRY(AioHandler) node_poll;
+#ifdef CONFIG_LINUX_IO_URING
+    QSLIST_ENTRY(AioHandler) node_submitted;
+    unsigned flags; /* see fdmon-io_uring.c */
+#endif
+    int64_t poll_idle_timeout; /* when to stop userspace polling */
+    bool is_external;
+};
+```
+
+- [ ] aio_poll 也是会调用 aio_dispatch_ready_handlers 的
+#### AioHandler::io_poll 是做什么用途的
+
+从注册的函数和 AioContext 里面的的注释，实际上，这个就是用户态 poll 的实现
+```c
+struct AioContext {
+    /*
+     * List of handlers participating in userspace polling.  Protected by
+     * ctx->list_lock.  Iterated and modified mostly by the event loop thread
+     * from aio_poll() with ctx->list_lock incremented.  aio_set_fd_handler()
+     * only touches the list to delete nodes if ctx->list_lock's count is zero.
+     */
+    AioHandlerList poll_aio_handlers;
+```
+
+从 aio_poll 的代码分析
+```c
+    progress = try_poll_mode(ctx, &timeout);
+    assert(!(timeout && progress));  // 调用完成用户态 poll，那么就不要设置这个了
+
+    // ....
+
+    /* If polling is allowed, non-blocking aio_poll does not need the
+     * system call---a single round of run_poll_handlers_once suffices.
+     */
+    if (timeout || ctx->fdmon_ops->need_wait(ctx)) { // need_wait 的 hook 分析 epoll 的注册内容，最后发现实际上这个就是看这个 fd 有没有对应的用户态 poll 函数
+        ret = ctx->fdmon_ops->wait(ctx, &ready_list, timeout);
+    }
+```
+
+下面是注册的三个函数:
+- aio_context_notifier_poll
+- qemu_luring_poll_cb : Returns how many unconsumed entries are ready in the CQ ring
+- virtio_queue_host_notifier_aio_poll
+```c
+/*
+#0  aio_set_fd_handler (ctx=0x55555670a6c0, fd=18, is_external=<optimized out>, io_read=0x555555d2e590 <qemu_luring_completion_cb>, io_write=0x0, io_poll=0x555555d2e550
+ <qemu_luring_poll_cb>, opaque=0x555556a05dc0) at ../util/aio-posix.c:114
+#1  0x0000555555d2ed61 in luring_attach_aio_context (s=0x555556a05dc0, new_context=new_context@entry=0x55555670a6c0) at ../block/io_uring.c:415
+#2  0x0000555555e6fc0b in aio_setup_linux_io_uring (ctx=0x55555670a6c0, errp=errp@entry=0x7fffffffcd00) at ../util/async.c:426
+#3  0x0000555555d639a3 in raw_open_common (bs=0x555556b5ea30, options=<optimized out>, bdrv_flags=417794, open_flags=<optimized out>, device=<optimized out>, errp=0x7ff
+fffffcd00) at ../block/file-posix.c:706
+#4  0x0000555555d8f565 in bdrv_open_driver (bs=bs@entry=0x555556b5ea30, drv=drv@entry=0x5555565c6540 <bdrv_file>, node_name=<optimized out>, options=options@entry=0x555
+556eea200, open_flags=417794, errp=errp@entry=0x7fffffffcdb0) at ../block.c:1552
+#5  0x0000555555d92634 in bdrv_open_common (errp=0x7fffffffcdb0, options=0x555556eea200, file=0x0, bs=0x555556b5ea30) at ../block.c:1827
+#6  bdrv_open_inherit (filename=<optimized out>, filename@entry=0x555556aad220 "/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4", reference=<optimized out>, option
+s=0x555556eea200, flags=<optimized out>, flags@entry=0, parent=parent@entry=0x555556c4b620, child_class=child_class@entry=0x5555564f3a60 <child_of_bds>, child_role=19,
+errp=0x7fffffffcf10) at ../block.c:3747
+#7  0x0000555555d9343d in bdrv_open_child_bs (filename=filename@entry=0x555556aad220 "/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4", options=options@entry=0x555
+556ef7000, bdref_key=bdref_key@entry=0x555556253db8 "file", parent=parent@entry=0x555556c4b620, child_class=child_class@entry=0x5555564f3a60 <child_of_bds>, child_role=
+child_role@entry=19, allow_none=true, errp=0x7fffffffcf10) at ../block.c:3387
+#8  0x0000555555d92c4b in bdrv_open_inherit (filename=filename@entry=0x555556aad220 "/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4", reference=reference@entry=0x
+0, options=0x555556ef7000, options@entry=0x555556bf2320, flags=<optimized out>, flags@entry=262144, parent=parent@entry=0x0, child_class=child_class@entry=0x0, child_ro
+le=0, errp=0x5555566170c0 <error_fatal>) at ../block.c:3694
+#9  0x0000555555d93717 in bdrv_open (filename=filename@entry=0x555556aad220 "/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4", reference=reference@entry=0x0, optio
+ns=options@entry=0x555556bf2320, flags=flags@entry=262144, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block.c:3840
+#10 0x0000555555d2c63f in blk_new_open (filename=filename@entry=0x555556aad220 "/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4", reference=reference@entry=0x0, op
+tions=options@entry=0x555556bf2320, flags=262144, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block/block-backend.c:435
+#11 0x0000555555d22ed8 in blockdev_init (file=file@entry=0x555556aad220 "/home/maritns3/core/vn/hack/qemu/x64-e1000/img1.ext4", bs_opts=bs_opts@entry=0x555556bf2320, er
+rp=errp@entry=0x5555566170c0 <error_fatal>) at ../blockdev.c:608
+#12 0x0000555555d23e7d in drive_new (all_opts=<optimized out>, block_default_type=<optimized out>, errp=0x5555566170c0 <error_fatal>) at ../blockdev.c:992
+#13 0x0000555555c85376 in drive_init_func (opaque=<optimized out>, opts=<optimized out>, errp=<optimized out>) at ../softmmu/vl.c:617
+#14 0x0000555555e69212 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555c85360 <drive_init_func>, opaque=opaque@entry=0x55555681dfb0, errp=errp@entry
+=0x5555566170c0 <error_fatal>) at ../util/qemu-option.c:1135
+#15 0x0000555555c89d6a in configure_blockdev (bdo_queue=0x55555655c930 <bdo_queue>, snapshot=0, machine_class=0x55555681df00) at ../softmmu/vl.c:676
+#16 qemu_create_early_backends () at ../softmmu/vl.c:1939
+#17 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
+#18 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+```c
+/*
+#0  aio_set_fd_handler (ctx=0x555556a3ef10, fd=33, is_external=<optimized out>, io_read=0x555555cd5cc0 <virtio_queue_host_notifier_aio_read>, io_write=0x0, io_poll=0x55
+5555cd6c80 <virtio_queue_host_notifier_aio_poll>, opaque=0x555557d1a9ec) at ../util/aio-posix.c:114
+#1  0x0000555555e5703d in aio_set_event_notifier (ctx=ctx@entry=0x555556a3ef10, notifier=notifier@entry=0x555557d1a9ec, is_external=is_external@entry=true, io_read=io_r
+ead@entry=0x555555cd5cc0 <virtio_queue_host_notifier_aio_read>, io_poll=io_poll@entry=0x555555cd6c80 <virtio_queue_host_notifier_aio_poll>) at ../util/aio-posix.c:195
+#2  0x0000555555cd96b9 in virtio_queue_aio_set_host_notifier_handler (vq=0x555557d1a970, ctx=0x555556a3ef10, handle_output=<optimized out>) at ../hw/virtio/virtio.c:356
+8
+#3  0x0000555555d0674a in virtio_blk_data_plane_start (vdev=<optimized out>) at ../hw/block/dataplane/virtio-blk.c:261
+#4  0x0000555555b3d91a in virtio_bus_start_ioeventfd (bus=bus@entry=0x555557d155f8) at ../hw/virtio/virtio-bus.c:227
+#5  0x000055555595b949 in virtio_pci_start_ioeventfd (proxy=0x555557d0d400) at ../hw/virtio/virtio-pci.c:1282
+#6  virtio_pci_common_write (opaque=0x555557d0d400, addr=<optimized out>, val=<optimized out>, size=<optimized out>) at ../hw/virtio/virtio-pci.c:1282
+#7  0x0000555555c9cd61 in memory_region_write_accessor (mr=mr@entry=0x555557d0de60, addr=20, value=value@entry=0x7fffe8af00a8, size=size@entry=1, shift=<optimized out>,
+ mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:492
+#8  0x0000555555c991ee in access_with_adjusted_size (addr=addr@entry=20, value=value@entry=0x7fffe8af00a8, size=size@entry=1, access_size_min=<optimized out>, access_si
+ze_max=<optimized out>, access_fn=access_fn@entry=0x555555c9ccd0 <memory_region_write_accessor>, mr=0x555557d0de60, attrs=...) at ../softmmu/memory.c:554
+#9  0x0000555555c9c297 in memory_region_dispatch_write (mr=mr@entry=0x555557d0de60, addr=20, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../soft
+mmu/memory.c:1504
+#10 0x0000555555c303c0 in flatview_write_continue (fv=fv@entry=0x7fffd810abc0, addr=addr@entry=4261412884, attrs=..., ptr=ptr@entry=0x7fffeb17e028, len=len@entry=1, add
+r1=<optimized out>, l=<optimized out>, mr=0x555557d0de60) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
+#11 0x0000555555c305d6 in flatview_write (fv=0x7fffd810abc0, addr=addr@entry=4261412884, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb17e028, len=len@entry=1) at ../sof
+tmmu/physmem.c:2820
+#12 0x0000555555c332a6 in address_space_write (as=0x5555565f9360 <address_space_memory>, addr=4261412884, attrs=..., buf=buf@entry=0x7fffeb17e028, len=1) at ../softmmu/
+physmem.c:2912
+#13 0x0000555555c3333e in address_space_rw (as=<optimized out>, addr=<optimized out>, attrs=..., attrs@entry=..., buf=buf@entry=0x7fffeb17e028, len=<optimized out>, is_
+write=<optimized out>) at ../softmmu/physmem.c:2922
+#14 0x0000555555c2bf86 in kvm_cpu_exec (cpu=cpu@entry=0x555556be77e0) at ../accel/kvm/kvm-all.c:2893
+#15 0x0000555555cedc55 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556be77e0) at ../accel/kvm/kvm-accel-ops.c:49
+#16 0x0000555555e5e543 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#17 0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#18 0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
 
 #### AioContext::notify_me 和 AioContext::notified
 和 aio_notify 有关, 主要用于块设备的 IO 同步时处理 QEMU BH
@@ -426,6 +579,11 @@ aio_set_event_notifier(ctx, &ctx->notifier, false,
 而且 aio_set_event_notifier 之后会调用的 g_source_add_poll 的。
 
 ## IOThread
+从这里知道如何配置 iothread : https://www.heiko-sieger.info/tuning-vm-disk-performance/
+
+- 据说之所以采用 IOThread 的原因是，main_loop 有一些几个问题:
+    - [ ] 需要使用 BQL, 那么 main_loop 是如何使用 BQL 的
+    - 监听所有的 fd 在一个循环中间
 
 ```c
 struct IOThread {
@@ -441,6 +599,69 @@ struct IOThread {
 ```
 - [ ] GMainLoop 是干啥的?
 - [ ] GMainContext 是干啥的
+
+下面的两个 backtrace 分析了整个执行流程:
+```c
+/*
+#0  iothread_complete (obj=0x5555569dcc40, errp=0x7fffffffd170) at ../iothread.c:174
+#1  0x0000555555dca1d7 in user_creatable_complete (uc=0x5555569dcc40, errp=errp@entry=0x7fffffffd1a8) at ../qom/object_interfaces.c:27
+#2  0x0000555555dca462 in user_creatable_add_type (type=<optimized out>, id=id@entry=0x555556709950 "io0", qdict=qdict@entry=0x555556bef3a0, v=v@entry=0x555556abd7d0, e
+rrp=0x7fffffffd1b0, errp@entry=0x5555566170c0 <error_fatal>) at ../qom/object_interfaces.c:131
+#3  0x0000555555dca6ba in user_creatable_add_qapi (options=<optimized out>, errp=0x5555566170c0 <error_fatal>) at ../qom/object_interfaces.c:163
+#4  0x0000555555c852f4 in object_option_foreach_add (type_opt_predicate=type_opt_predicate@entry=0x555555c859a0 <object_create_early>) at ../softmmu/vl.c:1733
+#5  0x0000555555c89c66 in qemu_create_early_backends () at ../softmmu/vl.c:1920
+#6  qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
+#7  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+```c
+/*
+>>> bt
+#0  0x00007ffff61a6bf6 in __ppoll (fds=0x7fffd4002420, nfds=3, timeout=<optimized out>, timeout@entry=0x0, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv/linux/ppol
+l.c:44
+#1  0x0000555555e474c9 in ppoll (__ss=0x0, __timeout=0x0, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
+#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=-1) at ../util/qemu-timer.c:336
+#3  0x0000555555e7def5 in fdmon_poll_wait (ctx=0x555556a3ba00, ready_list=0x7fffe93f2228, timeout=-1) at ../util/fdmon-poll.c:80
+#4  0x0000555555e57703 in aio_poll (ctx=<optimized out>, blocking=blocking@entry=true) at ../util/aio-posix.c:607
+#5  0x0000555555d16be4 in iothread_run (opaque=opaque@entry=0x5555569e6f50) at ../iothread.c:66
+#6  0x0000555555e5e563 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#7  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#8  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+iothread_run 的注释:
+```c
+/*
+ * Note: from functional-wise the g_main_loop_run() below can
+ * already cover the aio_poll() events, but we can't run the
+ * main loop unconditionally because explicit aio_poll() here
+ * is faster than g_main_loop_run() when we do not need the
+ * gcontext at all (e.g., pure block layer iothreads).  In
+ * other words, when we want to run the gcontext with the
+ * iothread we need to pay some performance for functionality.
+ */
+```
+会首先使用 aio_poll 然后 g_main_loop_run 来监听的方法。
+
+
+```c
+static void iothread_init_gcontext(IOThread *iothread)
+{
+    GSource *source;
+
+    iothread->worker_context = g_main_context_new();
+    source = aio_get_g_source(iothread_get_aio_context(iothread)); // 就是 AioContext 里面的 GSource
+    g_source_attach(source, iothread->worker_context); // 将 GSource 关联到 GMainContext 上
+    g_source_unref(source);
+    iothread->main_loop = g_main_loop_new(iothread->worker_context, TRUE); // GMainLoop 和这个创建的 GSource 来放到一起的
+}
+```
+注意，aio_set_fd_handler 的参数是 AioContext 的，一个 IOThread 关联一个 AioContext, 其 GSource 关联 worker_context。
+所以 iothread_run 中 aio_poll 和 g_main_loop_run 实际上就是监听同一组的
+
+- 但是，为什么 aio_set_fd_handler 中，似乎根本没有区分啊, GSource 还是 AioContext 中的:
+    - 如果不是 pure block layer iothreads 的时候，这是如何处理的?
+    - iothread_run 中运行 g_main_loop_run 之前会检测 IOThread::run_gcontext , 稍微分析了一下，这个需要调用 iothread_get_g_main_context，也就是通过只有 GSource 之后，来间接的持有
 
 ## 找到所有的 thread 创建的位置
 
@@ -1335,6 +1556,9 @@ void aio_context_setup(AioContext *ctx)
 ## aio_set_fd_handler
 - g_source_add_poll : 将 fd 添加到 GSource 中间
 - `ctx->fdmon_ops->update(ctx, node, new_node);` : 将 fd 放到 epollfd 的监控之中
+
+## qio
+不知道干啥的。
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql

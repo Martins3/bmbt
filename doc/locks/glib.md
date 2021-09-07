@@ -225,5 +225,7 @@ coroutine 是可以在另一个 thread 上执行的，但是不能在另一个 c
 [22/24] Linking target tests/unit/test-block-iothread
 [23/24] Linking target tests/unit/test-image-locking
 
+## tests/unit/iothread
+- [ ] 在使用 iothread 之前, 这个函数的运行方式 ?
 
 [^1]: https://stackoverflow.com/questions/42395844/glib-gmaincontext-in-a-thread
