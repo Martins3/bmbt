@@ -48,34 +48,22 @@
 - [GMainLoop 中的 context](#gmainloop-中的-context)
     - [iohandler_ctx](#iohandler_ctx)
     - [qemu_aio_context](#qemu_aio_context)
-- [IOThread 中的两个 Context 是做啥的](#iothread-中的两个-context-是做啥的)
 - [FDMonOps](#fdmonops)
 - [[ ] QEMUBH](#-qemubh)
 - [aio_set_fd_handler](#aio_set_fd_handler)
 - [qio](#qio)
 - [qemu_set_fd_handler](#qemu_set_fd_handler)
+- [external](#external)
+- [io thread 和 vCPU 线程交互](#io-thread-和-vcpu-线程交互)
 
 <!-- vim-markdown-toc -->
 
 ## 问题 && TODO
-- [ ] 什么叫做 external event source 啊
-```c
-/**
- * aio_node_check:
- * @ctx: the aio context
- * @is_external: Whether or not the checked node is an external event source.
- *
- * Check if the node's is_external flag is okay to be polled by the ctx at this
- * moment. True means green light.
- */
-static inline bool aio_node_check(AioContext *ctx, bool is_external)
-{
-    return !is_external || !qatomic_read(&ctx->external_disable_cnt);
-}
-```
-
+- [ ] thread-ml 以及 glib 的线程是做什么的
 - [ ] 找到从 vCPU 和 io thread / main loop 之间的交互吧
-- [ ] 使用了 IOThread 之后，这个设备怎么知道将会将自己的认为都提交给该 thread 啊
+    - [ ] 从 block 设备找，vCPU 线程将任务发送给 io 线程的，那么 iothread 需要进行监听的
+    - [ ] block 搞完之后，是如何通知 vCPU 线程的
+- [ ] call_rcu 线程在搞什么?
 
 ## 总结
 - 既然 kvm eventfd 的这一个 fd 是如何被监听的 : 走一个统一的 aio_set_event_notifier 的路线啊
@@ -810,6 +798,16 @@ static void iothread_init_gcontext(IOThread *iothread)
 - 但是，为什么 aio_set_fd_handler 中，似乎根本没有区分啊, GSource 还是 AioContext 中的:
     - 如果不是 pure block layer iothreads 的时候，这是如何处理的?
     - iothread_run 中运行 g_main_loop_run 之前会检测 IOThread::run_gcontext , 稍微分析了一下，这个需要调用 iothread_get_g_main_context，也就是通过只有 GSource 之后，来间接的持有
+
+```sh
+arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_img2},format=raw,if=none,id=nvme2"
+```
+现在 nvme2 如何知道将其 event 监听交付给 IOThread 上的。
+
+- [x] 使用了 IOThread 之后，这个设备怎么知道将会将自己的认为都提交给该 thread 啊
+  - [x] 我猜测其接口的实现是，只是在其使用的 ctx 发生改变就可以了
+    - 在 virtio_blk_data_plane_create 中调用 `iothread_get_aio_context(s->iothread)` 进行选择
+    - 而 aio_set_fd_handler 只是需要一个 ctx 就可以关联其对应的 fd 了
 
 ## 找到所有的 thread 创建的位置
 
@@ -1645,10 +1643,6 @@ g_source_add_poll : Adds a file descriptor to the set of file descriptors polled
 
 > 将需要监听的 fd 添加搞 GSource 上的
 
-
-## IOThread 中的两个 Context 是做啥的
-
-
 ## FDMonOps
 ```diff
 History:        #0
@@ -1827,6 +1821,67 @@ static bool aio_dispatch_ready_handlers(AioContext *ctx,
 - [x] 区别的根本位置在于 io_poll，也即是这个接口是否支持用户态 poll ?
     - 并不是，qemu_set_fd_handler 的时候，将其 AioContext, 必须是 iohandler_ctx 已经设置好了，然后就是走 aio_ctx_dispatch 的路径
     - 而 aio_set_fd_handler 没有 ctx 的限制，其可以在 qemu_aio_context 或者 IOThread 中的 context 上。
+
+## external
+从 test_aio_external_client 看，如果调用了 aio_disable_external 之后，
+然后再次这个 node 是 external 的，那么 aio_node_check 失败，所以默认情况下，
+其数值为 0 的。
+
+```c
+/**
+ * aio_node_check:
+ * @ctx: the aio context
+ * @is_external: Whether or not the checked node is an external event source.
+ *
+ * Check if the node's is_external flag is okay to be polled by the ctx at this
+ * moment. True means green light.
+ */
+static inline bool aio_node_check(AioContext *ctx, bool is_external)
+{
+    return !is_external || !qatomic_read(&ctx->external_disable_cnt);
+}
+
+/**
+ * aio_disable_external:
+ * @ctx: the aio context
+ *
+ * Disable the further processing of external clients.
+ */
+static inline void aio_disable_external(AioContext *ctx)
+{
+    qatomic_inc(&ctx->external_disable_cnt);
+}
+```
+所以 external 的作用就是屏蔽特定来源的 source 了
+
+## io thread 和 vCPU 线程交互
+和设想的没有错误，当 io thread 线程将事情办好了之后，就会将中断注入到 guest 机中，
+相关的 backtrace 可以参考 qemu-irq.md 中的 [tcg-msi](#tcg-msi)
+
+vCPU 线程需要不停的去执行，然后不可能使用 aio_poll 的方法来处理。
+
+- 这个就是 tcg 的标准模式，插入一个 flag，然后 qemu_cpu_kick
+```c
+/* mask must never be zero, except for A20 change call */
+void tcg_handle_interrupt(CPUState *cpu, int mask)
+{
+    g_assert(qemu_mutex_iothread_locked());
+
+    cpu->interrupt_request |= mask;
+
+    /*
+     * If called from iothread context, wake the target cpu in
+     * case its halted.
+     */
+    if (!qemu_cpu_is_self(cpu)) {
+        qemu_cpu_kick(cpu);
+    } else {
+        qatomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);
+    }
+}
+```
+
+- 而 kvm 的更加容易，在 io thread 线程中间直接调用 kvm_vm_ioctl 就可以了，其他的细节让 kvm 来处理就可以了。
 
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
