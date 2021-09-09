@@ -20,14 +20,6 @@
     - [AioHandler::io_poll 是做什么用途的](#aiohandlerio_poll-是做什么用途的)
     - [AioContext::notify_me 和 AioContext::notified](#aiocontextnotify_me-和-aiocontextnotified)
 - [IOThread](#iothread)
-- [找到所有的 thread 创建的位置](#找到所有的-thread-创建的位置)
-    - [main loop](#main-loop)
-    - [call_rcu](#call_rcu)
-    - [gmain](#gmain)
-    - [gdbus](#gdbus)
-    - [worker](#worker)
-    - [kvm thread](#kvm-thread)
-    - [threaded-ml](#threaded-ml)
 - [mmap_lock](#mmap_lock)
 - [mttcg](#mttcg)
 - [iothread 的 lock 应该只有很少的位置才对啊](#iothread-的-lock-应该只有很少的位置才对啊)
@@ -55,15 +47,15 @@
 - [qemu_set_fd_handler](#qemu_set_fd_handler)
 - [external](#external)
 - [io thread 和 vCPU 线程交互](#io-thread-和-vcpu-线程交互)
+- [br clone 来看看](#br-clone-来看看)
+    - [main loop bt](#main-loop-bt)
+    - [call_rcu bt](#call_rcu-bt)
 
 <!-- vim-markdown-toc -->
 
 ## 问题 && TODO
-- [ ] thread-ml 以及 glib 的线程是做什么的
-- [ ] 找到从 vCPU 和 io thread / main loop 之间的交互吧
-    - [ ] 从 block 设备找，vCPU 线程将任务发送给 io 线程的，那么 iothread 需要进行监听的
-    - [ ] block 搞完之后，是如何通知 vCPU 线程的
 - [ ] call_rcu 线程在搞什么?
+- [ ] io thread 一样需要走 memory model 的，所以，当 vCPU 进行修改的时候，需要和其他的所有的 vCPU 和 io thread 不同，是如何上锁的
 
 ## 总结
 - 既然 kvm eventfd 的这一个 fd 是如何被监听的 : 走一个统一的 aio_set_event_notifier 的路线啊
@@ -83,6 +75,8 @@
 - coroutine
 这三条线在 AioContext 的处理中有自己的路径:
 
+
+gdbus 之类的操作暂时看不懂了，也许是可以使用 https://github.com/chiehmin/gdbus_test/issues/1 作为参考了
 ## ready_handler
 通过 aio_add_ready_handler 来添加的，其调用者为 FDMonOps ，因为类似 epoll 之类的可以清楚的知道到底是谁出现了问题的。
 
@@ -240,6 +234,7 @@ emmm 其实就是收集一下那些函数的调用位置而已。
 
 - 一些初始化的代码需要重新分析 : qemu_tcg_init_vcpu
 
+- [ ] 这个函数是如何实现的?
 
 ## AioContext
 AioContext 扩展了 glib 中 GSource 的功能，不但支持 fd 的事件处理，
@@ -808,287 +803,6 @@ arg_nvme2="-device virtio-blk-pci,drive=nvme2,iothread=io0 -drive file=${ext4_im
   - [x] 我猜测其接口的实现是，只是在其使用的 ctx 发生改变就可以了
     - 在 virtio_blk_data_plane_create 中调用 `iothread_get_aio_context(s->iothread)` 进行选择
     - 而 aio_set_fd_handler 只是需要一个 ctx 就可以关联其对应的 fd 了
-
-## 找到所有的 thread 创建的位置
-
-在 qemu_thread_create 中, 其实 QEMU 还会通过 fork 创建 thread/process 之类的，但是常规流程不是这么使用的:
-```plain
-huxueshi:qemu_thread_create call_rcu
-huxueshi:qemu_thread_create worker
-huxueshi:qemu_thread_create worker
-
-huxueshi:qemu_thread_create CPU 0/KVM
-huxueshi:qemu_thread_create CPU 1/KVM
-```
-
-
-使用 gdb[^8][^9] 分析一下:
-`info thread`
-```plain
-  Id   Target Id                                             Frame
-* 1    Thread 0x7fffeb1d2300 (LWP 1186979) "qemu-system-x86" 0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7ffffff fd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv/linux/ppoll.c:44
-  2    Thread 0x7fffeb071700 (LWP 1186983) "qemu-system-x86" syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
-  3    Thread 0x7fffea5f9700 (LWP 1186988) "gmain"           0x00007ffff61a6aff in __GI___poll (fds=0x5555569bf770, nfds=1, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-  4    Thread 0x7fffe9df8700 (LWP 1186989) "gdbus"           0x00007ffff61a6aff in __GI___poll (fds=0x5555569cbfb0, nfds=2, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-  5    Thread 0x7fffe92f3700 (LWP 1186990) "qemu-system-x86" 0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7fffe92ef220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-internal.h:320
-  6    Thread 0x7fffe8910700 (LWP 1186993) "qemu-system-x86" 0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
-  7    Thread 0x7fffd9ffd700 (LWP 1186994) "qemu-system-x86" 0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
-  8    Thread 0x7ffe51629700 (LWP 1186997) "threaded-ml"     0x00007ffff61a6aff in __GI___poll (fds=0x7ffe3c007170, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/po ll.c:29
-  9    Thread 0x7ffe26767700 (LWP 1187003) "qemu-system-x86" 0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7ffe26763220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-internal.h:320
-```
-现在一一 backtrace 一下:
-
-#### main loop
-main-loop.c 中:
-```c
-/*
->>> thread 1
-[Switching to thread 1 (Thread 0x7fffeb1d2300 (LWP 1186979))]
-#0  0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7fffffffd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv
-/linux/ppoll.c:44
-44      ../sysdeps/unix/sysv/linux/ppoll.c: No such file or directory.
->>> bt
-#0  0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7fffffffd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv
-/linux/ppoll.c:44
-#1  0x0000555555e72675 in ppoll (__ss=0x0, __timeout=0x7fffffffd450, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
-#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=4804734) at ../util/qemu-timer.c:348
-#3  0x0000555555e82705 in os_host_main_loop_wait (timeout=4804734) at ../util/main-loop.c:250
-#4  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
-#5  0x0000555555c09651 in qemu_main_loop () at ../softmmu/runstate.c:726
-#6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
-```
-其实，这是很短的一个文件，主要的函数为:
-- qemu_init_main_loop
-- glib_pollfds_fill
-- glib_pollfds_poll
-- os_host_main_loop_wait : 这个位置是关键的主循环的
-- main_loop_wait : 似乎是一些辅助工具编译的时候会选择这个位置
-
-获取 GMainContext 都是通过调用 g_main_context_default 的，也就是那些默认注册，最后都是放到这里的。
-
-
-#### call_rcu
-```c
-/*
->>> thread 2
-[Switching to thread 2 (Thread 0x7fffeb071700 (LWP 1186983))]
-#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
-38      ../sysdeps/unix/sysv/linux/x86_64/syscall.S: No such file or directory.
->>> bt
-#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
-#1  0x0000555555e7f5b2 in qemu_futex_wait (val=<optimized out>, f=<optimized out>) at /home/maritns3/core/kvmqemu/include/qemu/futex.h:29
-#2  qemu_event_wait (ev=ev@entry=0x5555566185c8 <rcu_call_ready_event>) at ../util/qemu-thread-posix.c:480
-#3  0x0000555555e84c02 in call_rcu_thread (opaque=opaque@entry=0x0) at ../util/rcu.c:258
-#4  0x0000555555e7e5d3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
-#### gmain
-```c
-/*
->>> thread 3
-[Switching to thread 3 (Thread 0x7fffea5f9700 (LWP 1186988))]
-#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569bf770, nfds=1, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-29      ../sysdeps/unix/sysv/linux/poll.c: No such file or directory.
->>> bt
-#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569bf770, nfds=1, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-#1  0x00007ffff6ff236e in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#2  0x00007ffff6ff24a3 in g_main_context_iteration () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#3  0x00007ffff6ff24f1 in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#4  0x00007ffff701bad1 in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-#### gdbus
-```c
-/*
->>> thread 4
-[Switching to thread 4 (Thread 0x7fffe9df8700 (LWP 1186989))]
-#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569cbfb0, nfds=2, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-29      in ../sysdeps/unix/sysv/linux/poll.c
->>> bt
-#0  0x00007ffff61a6aff in __GI___poll (fds=0x5555569cbfb0, nfds=2, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-#1  0x00007ffff6ff236e in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#2  0x00007ffff6ff26f3 in g_main_loop_run () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#3  0x00007ffff7249f8a in  () at /lib/x86_64-linux-gnu/libgio-2.0.so.0
-#4  0x00007ffff701bad1 in  () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
-- [ ] https://github.com/chiehmin/gdbus_test
-
-#### worker
-thread 9 也是如此的。
-
-- [ ] 等待系统完全启动之后，这两个线程会消失的。
-    - [ ] 更加窒息的地方在于，aio_poll 也是，之后就再也没有人调用了
-
-KVM forum : [Towards Multi-threaded Device Emulation in QEMU](https://www.linux-kvm.org/images/a/a7/02x04-MultithreadedDevices.pdf)
-似懂非懂的样子。
-
-```c
-/*
->>> thread 5
-[Switching to thread 5 (Thread 0x7fffe92f3700 (LWP 1186990))]
-#0  0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7fffe92ef220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-
-internal.h:320
-320     ../sysdeps/nptl/futex-internal.h: No such file or directory.
->>> bt
-#0  0x00007ffff6296618 in futex_abstimed_wait_cancelable (private=0, abstime=0x7fffe92ef220, clockid=0, expected=0, futex_word=0x555556701788) at ../sysdeps/nptl/futex-
-internal.h:320
-#1  do_futex_wait (sem=sem@entry=0x555556701788, abstime=abstime@entry=0x7fffe92ef220, clockid=0) at sem_waitcommon.c:112
-#2  0x00007ffff6296743 in __new_sem_wait_slow (sem=sem@entry=0x555556701788, abstime=abstime@entry=0x7fffe92ef220, clockid=0) at sem_waitcommon.c:184
-#3  0x00007ffff62967ea in sem_timedwait (sem=sem@entry=0x555556701788, abstime=abstime@entry=0x7fffe92ef220) at sem_timedwait.c:40
-#4  0x0000555555e7f36f in qemu_sem_timedwait (sem=sem@entry=0x555556701788, ms=ms@entry=10000) at ../util/qemu-thread-posix.c:327
-#5  0x0000555555e7da75 in worker_thread (opaque=opaque@entry=0x555556701710) at ../util/thread-pool.c:91
-#6  0x0000555555e7e5d3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#7  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#8  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
-```c
-/*
-#0  huxueshi () at ../util/qemu-thread-posix.c:547
-#1  0x0000555555e7f765 in qemu_thread_create (thread=thread@entry=0x7fffffffcdd0, name=<optimized out>, name@entry=0x555555e992d0 "worker", start_routine=start_routine@
-entry=0x555555e7d980 <worker_thread>, arg=arg@entry=0x555556701710, mode=mode@entry=1) at ../util/qemu-thread-posix.c:560
-#2  0x0000555555e7d90d in do_spawn_thread (pool=pool@entry=0x555556701710) at ../util/thread-pool.c:134
-#3  0x0000555555e7d965 in spawn_thread_bh_fn (opaque=0x555556701710) at ../util/thread-pool.c:142
-#4  0x0000555555e63938 in aio_bh_poll (ctx=ctx@entry=0x55555670ab70) at ../util/async.c:169
-#5  0x0000555555e7ad56 in aio_poll (ctx=ctx@entry=0x55555670ab70, blocking=blocking@entry=true) at ../util/aio-posix.c:659
-#6  0x0000555555d9b715 in qcow2_open (bs=<optimized out>, options=<optimized out>, flags=<optimized out>, errp=<optimized out>) at ../block/qcow2.c:1909
-#7  0x0000555555d7f455 in bdrv_open_driver (bs=bs@entry=0x555556af6400, drv=drv@entry=0x5555565c8560 <bdrv_qcow2>, node_name=<optimized out>, options=options@entry=0x555556b11aa0, open_flags=139266, errp=errp@entry=0x7fffffffd030) at ../block.c:1552
-#8  0x0000555555d82524 in bdrv_open_common (errp=0x7fffffffd030, options=0x555556b11aa0, file=0x555556a20ad0, bs=0x555556af6400) at ../block.c:1827
-#9  bdrv_open_inherit (filename=<optimized out>, filename@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,options=0x555556b11aa0, options@entry=0x555556ac3a90, flags=<optimized out>, flags@entry=0, parent=parent@entry=0x0, child_class=child_class@entry=0x0, child_role=0, errp=0x555556617180 <error_fatal>) at ../block.c:3747
-#10 0x0000555555d83607 in bdrv_open (filename=filename@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, options=options@entry=0x555556ac3a90, flags=flags@entry=0, errp=errp@entry=0x555556617180 <error_fatal>) at ../block.c:3840
-#11 0x0000555555dc80bf in blk_new_open (filename=filename@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, options=options@entry=0x555556ac3a90, flags=0, errp=errp@entry=0x555556617180 <error_fatal>) at ../block/block-backend.c:435
-#12 0x0000555555d37178 in blockdev_init (file=file@entry=0x555556954a70 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", bs_opts=bs_opts@entry=0x555556ac3a90, errp=errp@entry=0x555556617180 <error_fatal>) at ../blockdev.c:608
-#13 0x0000555555d3811d in drive_new (all_opts=<optimized out>, block_default_type=<optimized out>, errp=0x555556617180 <error_fatal>) at ../blockdev.c:992
-#14 0x0000555555cf8ee6 in drive_init_func (opaque=<optimized out>, opts=<optimized out>, errp=<optimized out>) at ../softmmu/vl.c:617
-#15 0x0000555555e6c6e2 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555cf8ed0 <drive_init_func>, opaque=opaque@entry=0x55555681d1b0, errp=errp@entry=0x555556617180 <error_fatal>) at ../util/qemu-option.c:1135
-#16 0x0000555555cfd8da in configure_blockdev (bdo_queue=0x5555565641d0 <bdo_queue>, snapshot=0, machine_class=0x55555681d100) at ../softmmu/vl.c:676
-#17 qemu_create_early_backends () at ../softmmu/vl.c:1939
-#18 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
-#19 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
-```
-这个执行流程实际上很有意思的:
-- aio_poll 会导致 coroutine 被执行，所以这个 backtrace 是断掉的感觉
-- 两次 spwan 的操作分析在下面的位置，由于
-```c
-/*
-#0  spawn_thread (pool=0x555556739710) at ../util/thread-pool.c:261
-#1  thread_pool_submit_aio (pool=0x555556739710, func=<optimized out>, arg=0x7fffe93f6a70, cb=<optimized out>, opaque=<optimized out>) at ../util/thread-pool.c:261
-#2  0x0000555555e66a88 in thread_pool_submit_co (pool=0x555556739710, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7fffe93f6a70) at ../util/thread-
-pool.c:287
-#3  0x0000555555dacc4f in raw_thread_pool_submit (bs=bs@entry=0x555556c79df0, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7fffe93f6a70) at ../bloc
-k/file-posix.c:2030
-#4  0x0000555555dad633 in raw_co_prw (bs=0x555556c79df0, offset=0, bytes=112, qiov=0x7fffe93f6e30, type=1) at ../block/file-posix.c:2077
-
-_offset@entry=0, flags=flags@entry=0) at ../block/io.c:1190
-#6  0x0000555555d422ce in bdrv_aligned_preadv (child=child@entry=0x555556bf2270, req=req@entry=0x7fffe93f6cb0, offset=0, bytes=112, align=<optimized out>, qiov=0x7fffe93f6e30, qiov_offset=0, flags=0) at ../block/io.c:1577
-#7  0x0000555555d42a04 in bdrv_co_preadv_part (child=child@entry=0x555556bf2270, offset=<optimized out>, offset@entry=0, bytes=<optimized out>, bytes@entry=112, qiov=<optimized out>, qiov@entry=0x7fffe93f6e30, qiov_offset=<optimized out>, qiov_offset@entry=0, flags=flags@entry=0) at ../block/io.c:1848
-#8  0x0000555555d42b1f in bdrv_co_preadv (child=child@entry=0x555556bf2270, offset=offset@entry=0, bytes=bytes@entry=112, qiov=qiov@entry=0x7fffe93f6e30, flags=flags@entry=0) at ../block/io.c:1798
-#9  0x0000555555d288aa in bdrv_preadv (child=0x555556bf2270, offset=offset@entry=0, bytes=bytes@entry=112, qiov=qiov@entry=0x7fffe93f6e30, flags=flags@entry=0) at block/block-gen.c:347
-#10 0x0000555555d3ffd1 in bdrv_pread (child=<optimized out>, offset=offset@entry=0, buf=buf@entry=0x7fffe93f6ee0, bytes=bytes@entry=112) at ../block/io.c:1097
-#11 0x0000555555da6335 in qcow2_do_open (bs=0x555556c75a00, options=0x555556b10a90, flags=139266, errp=0x7fffffffceb0) at ../block/qcow2.c:1309
-#12 0x0000555555da7546 in qcow2_open_entry (opaque=0x7fffffffce50) at ../block/qcow2.c:1878
-#13 0x0000555555e653a3 in coroutine_trampoline (i0=<optimized out>, i1=<optimized out>) at ../util/coroutine-ucontext.c:173
-#14 0x00007ffff60ef660 in __start_context () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91
-
-
-#0  spawn_thread (pool=0x555556739710) at ../util/thread-pool.c:261
-#1  thread_pool_submit_aio (pool=0x555556739710, func=<optimized out>, arg=0x7ffe2e9e9bc0, cb=<optimized out>, opaque=<optimized out>) at ../util/thread-pool.c:261
-#2  0x0000555555e66a88 in thread_pool_submit_co (pool=0x555556739710, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7ffe2e9e9bc0) at ../util/thread-
-pool.c:287
-#3  0x0000555555dacc4f in raw_thread_pool_submit (bs=bs@entry=0x555556c79df0, func=func@entry=0x555555dad780 <handle_aiocb_rw>, arg=arg@entry=0x7ffe2e9e9bc0) at ../bloc
-k/file-posix.c:2030
-#4  0x0000555555dad633 in raw_co_prw (bs=0x555556c79df0, offset=1301217280, bytes=12288, qiov=0x7ffe2e9e9c60, type=1) at ../block/file-posix.c:2077
-#5  0x0000555555d3d7f4 in bdrv_driver_preadv (bs=bs@entry=0x555556c79df0, offset=offset@entry=1301217280, bytes=bytes@entry=12288, qiov=0x7ffe2e9e9c60, qiov@entry=0x7ff
-e4c321820, qiov_offset=qiov_offset@entry=20480, flags=flags@entry=0) at ../block/io.c:1190
-#6  0x0000555555d422ce in bdrv_aligned_preadv (child=child@entry=0x555556bf2270, req=req@entry=0x7ffe2e9e9e00, offset=1301217280, bytes=12288, align=<optimized out>, qiov=0x7ffe4c321820, qiov_offset=20480, flags=0) at ../block/io.c:1577
-#7  0x0000555555d42a04 in bdrv_co_preadv_part (child=0x555556bf2270, offset=<optimized out>, offset@entry=1301217280, bytes=<optimized out>, bytes@entry=12288, qiov=<optimized out>, qiov@entry=0x7ffe4c321820, qiov_offset=<optimized out>, qiov_offset@entry=20480, flags=flags@entry=0) at ../block/io.c:1848
-#8  0x0000555555da264b in qcow2_co_preadv_task (qiov_offset=20480, qiov=0x7ffe4c321820, bytes=12288, offset=4313513984, host_offset=1301217280, subc_type=<optimized out>, bs=0x555556c75a00) at ../block/qcow2.c:2291
-#9  qcow2_co_preadv_task_entry (task=<optimized out>) at ../block/qcow2.c:2307
-#10 0x0000555555d79fb1 in aio_task_co (opaque=0x7ffe4c103da0) at ../block/aio_task.c:45
-#11 0x0000555555e653a3 in coroutine_trampoline (i0=<optimized out>, i1=<optimized out>) at ../util/coroutine-ucontext.c:173
-#12 0x00007ffff60ef660 in __start_context () at ../sysdeps/unix/sysv/linux/x86_64/__start_context.S:91
-```
-
-- bdrv_driver_pwritev : block/io.c 中
-  * blk_aio_pwritev : 在 block-backend.c 中，这就是给 block driver 注册使用的, 例如注册到 NvmeRequest 中间去的。
-
-```c
-typedef struct NvmeRequest {
-    struct NvmeSQueue       *sq;
-    struct NvmeNamespace    *ns;
-    BlockAIOCB              *aiocb;
-    uint16_t                status;
-    void                    *opaque;
-    NvmeCqe                 cqe;
-    NvmeCmd                 cmd;
-    BlockAcctCookie         acct;
-    NvmeSg                  sg;
-    QTAILQ_ENTRY(NvmeRequest)entry;
-} NvmeRequest;
-```
-
-才意识到为了处理 /home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2, 不仅仅需要
-block/qcow2.c 而且需要 block/file-posix.c 来进行文件的 IO
-
-- [ ] AIO_WAIT_WHILE : 一个有趣的位置，这个会去调用 aio_poll 的
-    - [ ] 但是我的龟龟啊，你知不知道，这意味着这个调用 poll 的会一直等待到这个位置上。
-      - 但是调用 AIO_WAIT_WHILE 的位置不要太多啊
-
-如果想要提交任务 : 在 thread_pool_submit_aio 中 qemu_sem_post  ThreadPool::sem 这会让 worker_thread 从这个 lock 上醒过来
-然后会从 ThreadPool::request_list 中获取需要执行的函数，最后使用 `qemu_bh_schedule(pool->completion_bh)` 通知这个任务结束了
-
-其实整个 thread-pool.c 也就是只有 300 行
-
-- worker 如何结束的，在 worker_thread 中，qemu_sem_timedwait 最多等待 10s 如果没有任务过来，那么这个 thread 结束。
-
-
-https://blog.csdn.net/woai110120130/article/details/100049614 : 这个分析中规中矩
-
-#### kvm thread
-thread 7 也是
-```c
-/*
->>> thread 6
-[Switching to thread 6 (Thread 0x7fffe8910700 (LWP 1186993))]
-#0  0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
-78      ../sysdeps/unix/syscall-template.S: No such file or directory.
->>> bt
-#0  0x00007ffff61a850b in ioctl () at ../sysdeps/unix/syscall-template.S:78
-#1  0x0000555555c38eae in kvm_vcpu_ioctl (cpu=cpu@entry=0x555556b06ca0, type=type@entry=44672) at ../accel/kvm/kvm-all.c:3017
-#2  0x0000555555c38ff9 in kvm_cpu_exec (cpu=cpu@entry=0x555556b06ca0) at ../accel/kvm/kvm-all.c:2843
-#3  0x0000555555c47265 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556b06ca0) at ../accel/kvm/kvm-accel-ops.c:49
-#4  0x0000555555e7e5d3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
-
-#### threaded-ml
-```c
-/*
->>> thread 8
-[Switching to thread 8 (Thread 0x7ffe51629700 (LWP 1186997))]
-#0  0x00007ffff61a6aff in __GI___poll (fds=0x7ffe3c007170, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-29      ../sysdeps/unix/sysv/linux/poll.c: No such file or directory.
->>> bt
-#0  0x00007ffff61a6aff in __GI___poll (fds=0x7ffe3c007170, nfds=3, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
-#1  0x00007ffff6df31d6 in  () at /lib/x86_64-linux-gnu/libpulse.so.0
-#2  0x00007ffff6de4841 in pa_mainloop_poll () at /lib/x86_64-linux-gnu/libpulse.so.0
-#3  0x00007ffff6de4ec3 in pa_mainloop_iterate () at /lib/x86_64-linux-gnu/libpulse.so.0
-#4  0x00007ffff6de4f70 in pa_mainloop_run () at /lib/x86_64-linux-gnu/libpulse.so.0
-#5  0x00007ffff6df311d in  () at /lib/x86_64-linux-gnu/libpulse.so.0
-#6  0x00007ffff56f272c in  () at /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-13.99.so
-#7  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#8  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
-```
-
-
 
 
 ## mmap_lock
@@ -1883,6 +1597,251 @@ void tcg_handle_interrupt(CPUState *cpu, int mask)
 
 - 而 kvm 的更加容易，在 io thread 线程中间直接调用 kvm_vm_ioctl 就可以了，其他的细节让 kvm 来处理就可以了。
 
+## br clone 来看看
+
+1. rcu
+```c
+/*
+#0  clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:50
+#1  0x00007ffff628b2ec in create_thread (pd=pd@entry=0x7fffeb073700, attr=attr@entry=0x7fffffffd1b0, stopped_start=stopped_start@entry=0x7fffffffd11e, stackaddr=stackad
+dr@entry=0x7fffeb06f400, thread_ran=thread_ran@entry=0x7fffffffd11f) at ../sysdeps/unix/sysv/linux/createthread.c:101
+#2  0x00007ffff628ce10 in __pthread_create_2_1 (newthread=newthread@entry=0x7fffffffd340, attr=attr@entry=0x7fffffffd1b0, start_routine=start_routine@entry=0x555555e5d6
+00 <qemu_thread_start>, arg=arg@entry=0x55555667fb40) at pthread_create.c:817
+#3  0x0000555555e5e7cf in qemu_thread_create (thread=thread@entry=0x7fffffffd340, name=name@entry=0x55555625b249 "call_rcu", start_routine=start_routine@entry=0x555555e
+636b0 <call_rcu_thread>, arg=arg@entry=0x0, mode=mode@entry=1) at ../util/qemu-thread-posix.c:578
+#4  0x0000555555e63659 in rcu_init_complete () at ../util/rcu.c:379
+#5  0x0000555555e9520d in __libc_csu_init ()
+#6  0x00007ffff60b8040 in __libc_start_main (main=0x555555940aa0 <main>, argc=27, argv=0x7fffffffd488, init=0x555555e951c0 <__libc_csu_init>, fini=<optimized out>, rtld
+_fini=<optimized out>, stack_end=0x7fffffffd478) at ../csu/libc-start.c:264
+#7  0x00005555559450ae in _start ()
+```
+
+2. gmain 和 gdbus 之类的
+
+3. io thread
+```c
+/*
+>>> bt
+#0  clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:50
+#1  0x00007ffff628b2ec in create_thread (pd=pd@entry=0x7fffe93f6700, attr=attr@entry=0x7fffffffcf30, stopped_start=stopped_start@entry=0x7fffffffce9e, stackaddr=stackad
+dr@entry=0x7fffe93f2400, thread_ran=thread_ran@entry=0x7fffffffce9f) at ../sysdeps/unix/sysv/linux/createthread.c:101
+#2  0x00007ffff628ce10 in __pthread_create_2_1 (newthread=newthread@entry=0x5555569e5c28, attr=attr@entry=0x7fffffffcf30, start_routine=start_routine@entry=0x555555e5d6
+00 <qemu_thread_start>, arg=arg@entry=0x555556a099c0) at pthread_create.c:817
+#3  0x0000555555e5e7cf in qemu_thread_create (thread=thread@entry=0x5555569e5c28, name=name@entry=0x555556934d90 "IO io0", start_routine=start_routine@entry=0x555555d15
+d20 <iothread_run>, arg=arg@entry=0x5555569e5c00, mode=mode@entry=0) at ../util/qemu-thread-posix.c:578
+#4  0x0000555555d164dd in iothread_complete (obj=0x5555569e5c00, errp=<optimized out>) at ../iothread.c:205
+#5  0x0000555555dc9307 in user_creatable_complete (uc=0x5555569e5c00, errp=errp@entry=0x7fffffffd138) at ../qom/object_interfaces.c:27
+#6  0x0000555555dc9592 in user_creatable_add_type (type=<optimized out>, id=id@entry=0x555556708050 "io0", qdict=qdict@entry=0x555556b573e0, v=v@entry=0x555556a2b940, e
+rrp=0x7fffffffd140, errp@entry=0x5555566160c0 <error_fatal>) at ../qom/object_interfaces.c:131
+#7  0x0000555555dc97ea in user_creatable_add_qapi (options=<optimized out>, errp=0x5555566160c0 <error_fatal>) at ../qom/object_interfaces.c:163
+#8  0x0000555555c84474 in object_option_foreach_add (type_opt_predicate=type_opt_predicate@entry=0x555555c84b20 <object_create_early>) at ../softmmu/vl.c:1733
+#9  0x0000555555c88de6 in qemu_create_early_backends () at ../softmmu/vl.c:1920
+#10 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
+#11 0x0000555555940aad in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+4. worker thread
+```c
+/*
+#0  clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:50
+#1  0x00007ffff628b2ec in create_thread (pd=pd@entry=0x7fffe8af4700, attr=attr@entry=0x7fffffffcab0, stopped_start=stopped_start@entry=0x7fffffffca1e, stackaddr=stackad
+dr@entry=0x7fffe8af0400, thread_ran=thread_ran@entry=0x7fffffffca1f) at ../sysdeps/unix/sysv/linux/createthread.c:101
+#2  0x00007ffff628ce10 in __pthread_create_2_1 (newthread=newthread@entry=0x7fffffffcc40, attr=attr@entry=0x7fffffffcab0, start_routine=start_routine@entry=0x555555e5d6
+00 <qemu_thread_start>, arg=arg@entry=0x555556aa92c0) at pthread_create.c:817
+#3  0x0000555555e5e7cf in qemu_thread_create (thread=thread@entry=0x7fffffffcc40, name=name@entry=0x555555f82f50 "worker", start_routine=start_routine@entry=0x555555e53
+a20 <worker_thread>, arg=arg@entry=0x555556730c00, mode=mode@entry=1) at ../util/qemu-thread-posix.c:578
+#4  0x0000555555e539ad in do_spawn_thread (pool=pool@entry=0x555556730c00) at ../util/thread-pool.c:134
+#5  0x0000555555e53a05 in spawn_thread_bh_fn (opaque=0x555556730c00) at ../util/thread-pool.c:142
+#6  0x0000555555e6eab8 in aio_bh_poll (ctx=ctx@entry=0x555556708e90) at ../util/async.c:169
+#7  0x0000555555e56436 in aio_poll (ctx=ctx@entry=0x555556708e90, blocking=blocking@entry=true) at ../util/aio-posix.c:659
+#8  0x0000555555d56405 in qcow2_open (bs=<optimized out>, options=<optimized out>, flags=<optimized out>, errp=<optimized out>) at ../block/qcow2.c:1909
+#9  0x0000555555d8e6e5 in bdrv_open_driver (bs=bs@entry=0x555556b959e0, drv=drv@entry=0x5555565c3b40 <bdrv_qcow2>, node_name=<optimized out>, options=options@entry=0x55
+5556ec3a00, open_flags=139266, errp=errp@entry=0x7fffffffcea0) at ../block.c:1552
+#10 0x0000555555d917b4 in bdrv_open_common (errp=0x7fffffffcea0, options=0x555556ec3a00, file=0x555556a94070, bs=0x555556b959e0) at ../block.c:1827
+#11 bdrv_open_inherit (filename=<optimized out>, filename@entry=0x555556951bb0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,
+ options=0x555556ec3a00, options@entry=0x555556b573e0, flags=<optimized out>, flags@entry=0, parent=parent@entry=0x0, child_class=child_class@entry=0x0, child_role=0, e
+rrp=0x5555566160c0 <error_fatal>) at ../block.c:3747
+#12 0x0000555555d92897 in bdrv_open (filename=filename@entry=0x555556951bb0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, op
+tions=options@entry=0x555556b573e0, flags=flags@entry=0, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../block.c:3840
+#13 0x0000555555d2b7bf in blk_new_open (filename=filename@entry=0x555556951bb0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,
+ options=options@entry=0x555556b573e0, flags=0, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../block/block-backend.c:435
+#14 0x0000555555d22058 in blockdev_init (file=file@entry=0x555556951bb0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", bs_opts=bs_opts@entry=0x555556b573e0,
+ errp=errp@entry=0x5555566160c0 <error_fatal>) at ../blockdev.c:608
+#15 0x0000555555d22ffd in drive_new (all_opts=<optimized out>, block_default_type=<optimized out>, errp=0x5555566160c0 <error_fatal>) at ../blockdev.c:992
+#16 0x0000555555c844f6 in drive_init_func (opaque=<optimized out>, opts=<optimized out>, errp=<optimized out>) at ../softmmu/vl.c:617
+#17 0x0000555555e68362 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555c844e0 <drive_init_func>, opaque=opaque@entry=0x55555681b3b0, errp=errp@entry
+=0x5555566160c0 <error_fatal>) at ../util/qemu-option.c:1135
+#18 0x0000555555c88eea in configure_blockdev (bdo_queue=0x55555655b930 <bdo_queue>, snapshot=0, machine_class=0x55555681b300) at ../softmmu/vl.c:676
+#19 qemu_create_early_backends () at ../softmmu/vl.c:1939
+#20 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
+#21 0x0000555555940aad in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+5. kvm thread
+```c
+/*
+#0  clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:50
+#1  0x00007ffff628b2ec in create_thread (pd=pd@entry=0x7ffe51dff700, attr=attr@entry=0x7fffffffcc60, stopped_start=stopped_start@entry=0x7fffffffcbce, stackaddr=stackad
+dr@entry=0x7ffe51dfb400, thread_ran=thread_ran@entry=0x7fffffffcbcf) at ../sysdeps/unix/sysv/linux/createthread.c:101
+#2  0x00007ffff628ce10 in __pthread_create_2_1 (newthread=newthread@entry=0x555556a17e80, attr=attr@entry=0x7fffffffcc60, start_routine=start_routine@entry=0x555555e5d6
+00 <qemu_thread_start>, arg=arg@entry=0x555556a11a40) at pthread_create.c:817
+#3  0x0000555555e5e7cf in qemu_thread_create (thread=0x555556a17e80, name=name@entry=0x7fffffffcdf0 "CPU 0/KVM", start_routine=start_routine@entry=0x555555cecd30 <kvm_vcpu_thread_fn>, arg=arg@entry=0x555556b07450, mode=mode@entry=0) at ../util/qemu-thread-posix.c:578
+#4  0x0000555555ceceb2 in kvm_start_vcpu_thread (cpu=0x555556b07450) at ../accel/kvm/kvm-accel-ops.c:73
+#5  0x0000555555ccfef5 in qemu_init_vcpu (cpu=cpu@entry=0x555556b07450) at ../softmmu/cpus.c:630
+#6  0x0000555555c02a88 in x86_cpu_realizefn (dev=0x555556b07450, errp=0x7fffffffceb0) at ../target/i386/cpu.c:6276
+#7  0x0000555555de2f17 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcf30) at ../hw/core/qdev.c:761
+#8  0x0000555555dc489a in property_set_bool (obj=0x555556b07450, v=<optimized out>, name=<optimized out>, opaque=0x55555670a600, errp=0x7fffffffcf30) at ../qom/object.c:2258
+#9  0x0000555555dc6dcc in object_property_set (obj=obj@entry=0x555556b07450, name=name@entry=0x5555560083b6 "realized", v=v@entry=0x555556a17310, errp=errp@entry=0x5555
+566160c0 <error_fatal>) at ../qom/object.c:1403
+#10 0x0000555555dc9f34 in object_property_set_qobject (obj=obj@entry=0x555556b07450, name=name@entry=0x5555560083b6 "realized", value=value@entry=0x555556a4f8c0, errp=e
+rrp@entry=0x5555566160c0 <error_fatal>) at ../qom/qom-qobject.c:28
+#11 0x0000555555dc7039 in object_property_set_bool (obj=0x555556b07450, name=name@entry=0x5555560083b6 "realized", value=value@entry=true, errp=errp@entry=0x5555566160c
+0 <error_fatal>) at ../qom/object.c:1473
+#12 0x0000555555de1d42 in qdev_realize (dev=<optimized out>, bus=bus@entry=0x0, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../hw/core/qdev.c:389
+#13 0x0000555555b95a45 in x86_cpu_new (x86ms=x86ms@entry=0x5555568e6de0, apic_id=0, errp=errp@entry=0x5555566160c0 <error_fatal>) at /home/maritns3/core/kvmqemu/include
+/hw/qdev-core.h:17
+#14 0x0000555555b95b2e in x86_cpus_init (x86ms=x86ms@entry=0x5555568e6de0, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:138
+#15 0x0000555555ba8223 in pc_init1 (machine=0x5555568e6de0, pci_type=0x555555f73d01 "i440FX", host_type=0x555555f76a80 "i440FX-pcihost") at ../hw/i386/pc_piix.c:156
+#16 0x00005555559a0354 in machine_run_board_init (machine=0x5555568e6de0) at ../hw/core/machine.c:1273
+#17 0x0000555555c863f4 in qemu_init_board () at ../softmmu/vl.c:2615
+#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#20 0x0000555555c89b98 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#21 0x0000555555940aad in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+6. kvm thread
+```c
+/*
+>>> bt
+#0  clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:50
+#1  0x00007ffff628b2ec in create_thread (pd=pd@entry=0x7fffe8af4700, attr=attr@entry=0x7fffffffcc60, stopped_start=stopped_start@entry=0x7fffffffcbce, stackaddr=stackad
+dr@entry=0x7fffe8af0400, thread_ran=thread_ran@entry=0x7fffffffcbcf) at ../sysdeps/unix/sysv/linux/createthread.c:101
+#2  0x00007ffff628ce10 in __pthread_create_2_1 (newthread=newthread@entry=0x5555569fcd80, attr=attr@entry=0x7fffffffcc60, start_routine=start_routine@entry=0x555555e5d6
+00 <qemu_thread_start>, arg=arg@entry=0x555556a4f430) at pthread_create.c:817
+#3  0x0000555555e5e7cf in qemu_thread_create (thread=0x5555569fcd80, name=name@entry=0x7fffffffcdf0 "CPU 1/KVM", start_routine=start_routine@entry=0x555555cecd30 <kvm_vcpu_thread_fn>, arg=arg@entry=0x555556bda800, mode=mode@entry=0) at ../util/qemu-thread-posix.c:578
+#4  0x0000555555ceceb2 in kvm_start_vcpu_thread (cpu=0x555556bda800) at ../accel/kvm/kvm-accel-ops.c:73
+#5  0x0000555555ccfef5 in qemu_init_vcpu (cpu=cpu@entry=0x555556bda800) at ../softmmu/cpus.c:630
+#6  0x0000555555c02a88 in x86_cpu_realizefn (dev=0x555556bda800, errp=0x7fffffffceb0) at ../target/i386/cpu.c:6276
+#7  0x0000555555de2f17 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcf30) at ../hw/core/qdev.c:761
+#8  0x0000555555dc489a in property_set_bool (obj=0x555556bda800, v=<optimized out>, name=<optimized out>, opaque=0x55555670a600, errp=0x7fffffffcf30) at ../qom/object.c:2258
+#9  0x0000555555dc6dcc in object_property_set (obj=obj@entry=0x555556bda800, name=name@entry=0x5555560083b6 "realized", v=v@entry=0x555556b45500, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../qom/object.c:1403
+#10 0x0000555555dc9f34 in object_property_set_qobject (obj=obj@entry=0x555556bda800, name=name@entry=0x5555560083b6 "realized", value=value@entry=0x55555698e050, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../qom/qom-qobject.c:28
+#11 0x0000555555dc7039 in object_property_set_bool (obj=0x555556bda800, name=name@entry=0x5555560083b6 "realized", value=value@entry=true, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../qom/object.c:1473
+#12 0x0000555555de1d42 in qdev_realize (dev=<optimized out>, bus=bus@entry=0x0, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../hw/core/qdev.c:389
+#13 0x0000555555b95a45 in x86_cpu_new (x86ms=x86ms@entry=0x5555568e6de0, apic_id=1, errp=errp@entry=0x5555566160c0 <error_fatal>) at /home/maritns3/core/kvmqemu/include/hw/qdev-core.h:17
+#14 0x0000555555b95b2e in x86_cpus_init (x86ms=x86ms@entry=0x5555568e6de0, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:138
+#15 0x0000555555ba8223 in pc_init1 (machine=0x5555568e6de0, pci_type=0x555555f73d01 "i440FX", host_type=0x555555f76a80 "i440FX-pcihost") at ../hw/i386/pc_piix.c:156
+#16 0x00005555559a0354 in machine_run_board_init (machine=0x5555568e6de0) at ../hw/core/machine.c:1273
+#17 0x0000555555c863f4 in qemu_init_board () at ../softmmu/vl.c:2615
+#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#20 0x0000555555c89b98 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#21 0x0000555555940aad in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+
+7. worker
+```c
+/*
+#0  clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:50
+#1  0x00007ffff628b2ec in create_thread (pd=pd@entry=0x7ffe4adff700, attr=attr@entry=0x7fffffffc740, stopped_start=stopped_start@entry=0x7fffffffc6ae, stackaddr=stackad
+dr@entry=0x7ffe4adfb400, thread_ran=thread_ran@entry=0x7fffffffc6af) at ../sysdeps/unix/sysv/linux/createthread.c:101
+#2  0x00007ffff628ce10 in __pthread_create_2_1 (newthread=newthread@entry=0x7fffffffc8d0, attr=attr@entry=0x7fffffffc740, start_routine=start_routine@entry=0x555555e5d600 <qemu_thread_start>, arg=arg@entry=0x555556a527f0) at pthread_create.c:817
+#3  0x0000555555e5e7cf in qemu_thread_create (thread=thread@entry=0x7fffffffc8d0, name=name@entry=0x555555f82f50 "worker", start_routine=start_routine@entry=0x555555e53a20 <worker_thread>, arg=arg@entry=0x555556730c00, mode=mode@entry=1) at ../util/qemu-thread-posix.c:578
+#4  0x0000555555e539ad in do_spawn_thread (pool=pool@entry=0x555556730c00) at ../util/thread-pool.c:134
+#5  0x0000555555e53a05 in spawn_thread_bh_fn (opaque=0x555556730c00) at ../util/thread-pool.c:142
+#6  0x0000555555e6eab8 in aio_bh_poll (ctx=ctx@entry=0x555556708e90) at ../util/async.c:169
+#7  0x0000555555e56436 in aio_poll (ctx=ctx@entry=0x555556708e90, blocking=blocking@entry=true) at ../util/aio-posix.c:659
+#8  0x0000555555d2967d in blk_prw (blk=blk@entry=0x555556a4d1c0, offset=offset@entry=0, buf=buf@entry=0x7fffffffcae0 "\001", bytes=bytes@entry=512, co_entry=co_entry@entry=0x555555d29e80 <blk_read_entry>, flags=flags@entry=0) at ../block/block-backend.c:1349
+#9  0x0000555555d297ab in blk_pread (blk=blk@entry=0x555556a4d1c0, offset=offset@entry=0, buf=buf@entry=0x7fffffffcae0, count=count@entry=512) at ../block/block-backend.c:1505
+#10 0x0000555555971f31 in guess_disk_lchs (blk=blk@entry=0x555556a4d1c0, pcylinders=pcylinders@entry=0x7fffffffcd48, pheads=pheads@entry=0x7fffffffcd4c, psectors=psecto
+rs@entry=0x7fffffffcd50) at ../hw/block/hd-geometry.c:66
+#11 0x0000555555972197 in hd_geometry_guess (blk=0x555556a4d1c0, pcyls=pcyls@entry=0x55555697ff94, pheads=pheads@entry=0x55555697ff98, psecs=psecs@entry=0x55555697ff9c,
+ ptrans=ptrans@entry=0x55555697ffc0) at ../hw/block/hd-geometry.c:131
+#12 0x0000555555a24c7f in blkconf_geometry (conf=conf@entry=0x55555697ff70, ptrans=ptrans@entry=0x55555697ffc0, cyls_max=cyls_max@entry=65535, heads_max=heads_max@entry
+=16, secs_max=secs_max@entry=255, errp=errp@entry=0x7fffffffce50) at ../hw/block/block.c:217
+#13 0x000055555594eda6 in ide_dev_initfn (dev=0x55555697fee0, kind=IDE_HD, errp=0x7fffffffce50) at ../hw/ide/qdev.c:201
+#14 0x0000555555de2f17 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffced0) at ../hw/core/qdev.c:761
+#15 0x0000555555dc489a in property_set_bool (obj=0x55555697fee0, v=<optimized out>, name=<optimized out>, opaque=0x55555670a600, errp=0x7fffffffced0) at ../qom/object.c:2258
+#16 0x0000555555dc6dcc in object_property_set (obj=obj@entry=0x55555697fee0, name=name@entry=0x5555560083b6 "realized", v=v@entry=0x555556a524e0, errp=errp@entry=0x5555
+566160c0 <error_fatal>) at ../qom/object.c:1403
+#17 0x0000555555dc9f34 in object_property_set_qobject (obj=obj@entry=0x55555697fee0, name=name@entry=0x5555560083b6 "realized", value=value@entry=0x555556c58390, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../qom/qom-qobject.c:28
+#18 0x0000555555dc7039 in object_property_set_bool (obj=0x55555697fee0, name=0x5555560083b6 "realized", value=<optimized out>, errp=0x5555566160c0 <error_fatal>) at ../qom/object.c:1473
+#19 0x0000555555de1de3 in qdev_realize_and_unref (dev=dev@entry=0x55555697fee0, bus=bus@entry=0x555556bd0890, errp=errp@entry=0x5555566160c0 <error_fatal>) at ../hw/core/qdev.c:396
+#20 0x000055555594f16b in ide_create_drive (bus=bus@entry=0x555556bd0890, unit=unit@entry=0, drive=0x555556aa4600) at ../hw/ide/qdev.c:135
+#21 0x0000555555b393aa in pci_ide_create_devs (dev=dev@entry=0x555556bcff30) at ../hw/ide/pci.c:491
+#22 0x0000555555ba8400 in pc_init1 (machine=0x5555568e6de0, pci_type=0x555555f73d01 "i440FX", host_type=0x555555f76a80 "i440FX-pcihost") at ../hw/i386/pc_piix.c:248
+#23 0x00005555559a0354 in machine_run_board_init (machine=0x5555568e6de0) at ../hw/core/machine.c:1273
+#24 0x0000555555c863f4 in qemu_init_board () at ../softmmu/vl.c:2615
+#25 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#26 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#27 0x0000555555c89b98 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#28 0x0000555555940aad in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+
+2. worker
+```c
+/*
+#0  clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:50
+#1  0x00007ffff628b2ec in create_thread (pd=pd@entry=0x7ffe4adff700, attr=attr@entry=0x7fffffffd010, stopped_start=stopped_start@entry=0x7fffffffcf7e, stackaddr=stackad
+dr@entry=0x7ffe4adfb400, thread_ran=thread_ran@entry=0x7fffffffcf7f) at ../sysdeps/unix/sysv/linux/createthread.c:101
+#2  0x00007ffff628ce10 in __pthread_create_2_1 (newthread=newthread@entry=0x7fffffffd1a0, attr=attr@entry=0x7fffffffd010, start_routine=start_routine@entry=0x555555e5d6
+00 <qemu_thread_start>, arg=arg@entry=0x555556a91410) at pthread_create.c:817
+#3  0x0000555555e5e7cf in qemu_thread_create (thread=thread@entry=0x7fffffffd1a0, name=name@entry=0x555555f82f50 "worker", start_routine=start_routine@entry=0x555555e53
+a20 <worker_thread>, arg=arg@entry=0x555556730c00, mode=mode@entry=1) at ../util/qemu-thread-posix.c:578
+#4  0x0000555555e539ad in do_spawn_thread (pool=pool@entry=0x555556730c00) at ../util/thread-pool.c:134
+#5  0x0000555555e53a05 in spawn_thread_bh_fn (opaque=0x555556730c00) at ../util/thread-pool.c:142
+#6  0x0000555555e6eab8 in aio_bh_poll (ctx=ctx@entry=0x555556708e90) at ../util/async.c:169
+#7  0x0000555555e562e2 in aio_dispatch (ctx=0x555556708e90) at ../util/aio-posix.c:381
+#8  0x0000555555e6e972 in aio_ctx_dispatch (source=<optimized out>, callback=<optimized out>, user_data=<optimized out>) at ../util/async.c:311
+#9  0x00007ffff787a17d in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#10 0x0000555555e6d1a8 in glib_pollfds_poll () at ../util/main-loop.c:232
+#11 os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
+#12 main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#13 0x0000555555c190d1 in qemu_main_loop () at ../softmmu/runstate.c:726
+#14 0x0000555555940ab2 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+#### main loop bt
+main-loop.c 中:
+```c
+/*
+>>> thread 1
+[Switching to thread 1 (Thread 0x7fffeb1d2300 (LWP 1186979))]
+#0  0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7fffffffd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv
+/linux/ppoll.c:44
+44      ../sysdeps/unix/sysv/linux/ppoll.c: No such file or directory.
+>>> bt
+#0  0x00007ffff61a6bf6 in __ppoll (fds=0x555556ba96a0, nfds=8, timeout=<optimized out>, timeout@entry=0x7fffffffd450, sigmask=sigmask@entry=0x0) at ../sysdeps/unix/sysv
+/linux/ppoll.c:44
+#1  0x0000555555e72675 in ppoll (__ss=0x0, __timeout=0x7fffffffd450, __nfds=<optimized out>, __fds=<optimized out>) at /usr/include/x86_64-linux-gnu/bits/poll2.h:77
+#2  qemu_poll_ns (fds=<optimized out>, nfds=<optimized out>, timeout=timeout@entry=4804734) at ../util/qemu-timer.c:348
+#3  0x0000555555e82705 in os_host_main_loop_wait (timeout=4804734) at ../util/main-loop.c:250
+#4  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
+#5  0x0000555555c09651 in qemu_main_loop () at ../softmmu/runstate.c:726
+#6  0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
+```
+
+#### call_rcu bt
+```c
+/*
+>>> thread 2
+[Switching to thread 2 (Thread 0x7fffeb071700 (LWP 1186983))]
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+38      ../sysdeps/unix/sysv/linux/x86_64/syscall.S: No such file or directory.
+>>> bt
+#0  syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+#1  0x0000555555e7f5b2 in qemu_futex_wait (val=<optimized out>, f=<optimized out>) at /home/maritns3/core/kvmqemu/include/qemu/futex.h:29
+#2  qemu_event_wait (ev=ev@entry=0x5555566185c8 <rcu_call_ready_event>) at ../util/qemu-thread-posix.c:480
+#3  0x0000555555e84c02 in call_rcu_thread (opaque=opaque@entry=0x0) at ../util/rcu.c:258
+#4  0x0000555555e7e5d3 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#5  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#6  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+
 [^1]: https://wiki.qemu.org/Features/tcg-multithread
 [^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
 [^3]: https://www.linux-kvm.org/images/1/17/Kvm-forum-2013-Effective-multithreading-in-QEMU.pdf
@@ -1890,5 +1849,3 @@ void tcg_handle_interrupt(CPUState *cpu, int mask)
 [^5]: https://lwn.net/Articles/697265/
 [^6]: https://lwn.net/Articles/517475/
 [^7]: https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
-[^8]: https://stackoverflow.com/questions/21926549/get-thread-name-in-gdb
-[^9]: https://stackoverflow.com/questions/8944236/gdb-how-to-get-thread-name-displayed
