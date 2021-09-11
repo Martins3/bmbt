@@ -1,29 +1,5 @@
 # MTTG && Locks
 
-<!-- vim-markdown-toc GitLab -->
-
-- [问题 && TODO](#问题-todo)
-- [总结](#总结)
-- [QEMU 中的那些地方需要 lock](#qemu-中的那些地方需要-lock)
-- [如何移植 cpus.c 啊](#如何移植-cpusc-啊)
-    - [aio_poll](#aio_poll)
-- [mmap_lock](#mmap_lock)
-- [mttcg](#mttcg)
-- [iothread 的 lock 应该只有很少的位置才对啊](#iothread-的-lock-应该只有很少的位置才对啊)
-- [如果 mttcg 之外，iothread 之外，还有什么 thread 的挑战](#如果-mttcg-之外iothread-之外还有什么-thread-的挑战)
-- [mttcg](#mttcg-1)
-- [global_locking](#global_locking)
-- [反手看一下 kvm 的 thread 是如何实现的](#反手看一下-kvm-的-thread-是如何实现的)
-- [为什么 kvm 中的 pio 和 mmio 不需要使用 BQL 保护](#为什么-kvm-中的-pio-和-mmio-不需要使用-bql-保护)
-- [current_cpu](#current_cpu)
-- [do_run_on_cpu](#do_run_on_cpu)
-- [first_cpu / CPU_NEXT / CPU_FOREACH 的移植](#first_cpu-cpu_next-cpu_foreach-的移植)
-- [run_on_cpu](#run_on_cpu)
-- [CPUState::created](#cpustatecreated)
-- [io thread 和 vCPU 线程交互](#io-thread-和-vcpu-线程交互)
-
-<!-- vim-markdown-toc -->
-
 ## 问题 && TODO
 - [ ] io thread 一样需要走 memory model 的，所以，当 vCPU 进行修改的时候，需要和其他的所有的 vCPU 和 io thread 不同，是如何上锁的
 - [ ] 分析一下 os_host_main_loop_wait 中的 BQL
@@ -51,162 +27,109 @@ emmm 其实就是收集一下那些函数的调用位置而已。
 
 - 一些初始化的代码需要重新分析 : qemu_tcg_init_vcpu
 
-#### aio_poll
-我们知道 AioContext 的 GSource 都是放到 GMainContext 上的，而且 g_main_loop_run 等会代替来执行 poll 的操作，
-那么 aio_poll 为什么如何被执行啊?
-
-- aio_poll
-    - aio_bh_poll
-      - aio_bh_dequeue
-      - aio_bh_call
-
+- [ ] 这几个玩意儿都是做什么的?
 ```c
-/*
-#0  aio_poll (ctx=ctx@entry=0x55555670a280, blocking=blocking@entry=true) at ../util/aio-posix.c:550
-#1  0x0000555555a75265 in handle_hmp_command (mon=mon@entry=0x555556a65530, cmdline=<optimized out>, cmdline@entry=0x555556b25b30 "screendump a") at ../monitor/hmp.c:1124
-#2  0x0000555555a753e1 in monitor_command_cb (opaque=0x555556a65530, cmdline=0x555556b25b30 "screendump a", readline_opaque=<optimized out>) at ../monitor/hmp.c:48
-#3  0x0000555555e65bf2 in readline_handle_byte (rs=0x555556b25b30, ch=<optimized out>) at ../util/readline.c:411
-#4  0x0000555555a75433 in monitor_read (opaque=0x555556a65530, buf=<optimized out>, size=<optimized out>) at ../monitor/hmp.c:1350
-#5  0x0000555555ddec2d in fd_chr_read (chan=0x5555569a2c20, cond=<optimized out>, opaque=<optimized out>) at ../chardev/char-fd.c:73
-#6  0x00007ffff787a04e in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#7  0x0000555555e74ba8 in glib_pollfds_poll () at ../util/main-loop.c:232
-#8  os_host_main_loop_wait (timeout=<optimized out>) at ../util/main-loop.c:255
-#9  main_loop_wait (nonblocking=nonblocking@entry=0) at ../util/main-loop.c:531
-#10 0x0000555555cfb8f1 in qemu_main_loop () at ../softmmu/runstate.c:726
-#11 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
-```
-注意，如果这不是走的标准 AioContext 的路径，因为直接就到了 fd_chr_read 中间了
-
-
-```c
-    /* If polling is allowed, non-blocking aio_poll does not need the
-     * system call---a single round of run_poll_handlers_once suffices.
-     */
-```
-这个注释的真正含义: 如果是 nonblocking 的，那么直接使用 run_poll_handlers_once 检查，其只是检查一下一个数值，这样就可以不用调用这个 syscall 了。
-
-- aio_poll
-  - try_poll_mode : 这个玩意儿的真正作用是啥不清楚啊!
-    - run_poll_handlers
-      - run_poll_handlers_once
-        - 调用 AioHandler::io_poll : 其赋值位置为 aio_set_fd_handler 注册的居然是 aio_context_notifier_poll
-  - `ctx->fdmon_ops->wait(ctx, &ready_list, timeout)`
-
-其实，更多的是，一个代码已经执行好了:
-```c
-/*
-#0  aio_poll (ctx=ctx@entry=0x55555670a6c0, blocking=blocking@entry=true) at ../util/aio-posix.c:558
-#1  0x0000555555d57285 in qcow2_open (bs=<optimized out>, options=<optimized out>, flags=<optimized out>, errp=<optimized out>) at ../block/qcow2.c:1909
-#2  0x0000555555d8f565 in bdrv_open_driver (bs=bs@entry=0x555556c7e1b0, drv=drv@entry=0x5555565c4b40 <bdrv_qcow2>, node_name=<optimized out>, options=options@entry=0x55
-5556e7e800, open_flags=139266, errp=errp@entry=0x7fffffffcd50) at ../block.c:1552
-#3  0x0000555555d92634 in bdrv_open_common (errp=0x7fffffffcd50, options=0x555556e7e800, file=0x555556aea600, bs=0x555556c7e1b0) at ../block.c:1827
-#4  bdrv_open_inherit (filename=<optimized out>, filename@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,
- options=0x555556e7e800, options@entry=0x555556a25660, flags=<optimized out>, flags@entry=0, parent=parent@entry=0x0, child_class=child_class@entry=0x0, child_role=0, e
-rrp=0x5555566170c0 <error_fatal>) at ../block.c:3747
-#5  0x0000555555d93717 in bdrv_open (filename=filename@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0, op
-tions=options@entry=0x555556a25660, flags=flags@entry=0, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block.c:3840
-#6  0x0000555555d2c63f in blk_new_open (filename=filename@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", reference=reference@entry=0x0,
- options=options@entry=0x555556a25660, flags=0, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../block/block-backend.c:435
-#7  0x0000555555d22ed8 in blockdev_init (file=file@entry=0x555556ae19b0 "/home/maritns3/core/vn/hack/qemu/x64-e1000/alpine.qcow2", bs_opts=bs_opts@entry=0x555556a25660,
- errp=errp@entry=0x5555566170c0 <error_fatal>) at ../blockdev.c:608
-#8  0x0000555555d23e7d in drive_new (all_opts=<optimized out>, block_default_type=<optimized out>, errp=0x5555566170c0 <error_fatal>) at ../blockdev.c:992
-#9  0x0000555555c85376 in drive_init_func (opaque=<optimized out>, opts=<optimized out>, errp=<optimized out>) at ../softmmu/vl.c:617
-#10 0x0000555555e69212 in qemu_opts_foreach (list=<optimized out>, func=func@entry=0x555555c85360 <drive_init_func>, opaque=opaque@entry=0x55555681dfb0, errp=errp@entry
-=0x5555566170c0 <error_fatal>) at ../util/qemu-option.c:1135
-#11 0x0000555555c89d6a in configure_blockdev (bdo_queue=0x55555655c930 <bdo_queue>, snapshot=0, machine_class=0x55555681df00) at ../softmmu/vl.c:676
-#12 qemu_create_early_backends () at ../softmmu/vl.c:1939
-#13 qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3645
-#14 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
-
-
-#0  aio_poll (ctx=ctx@entry=0x55555670a6c0, blocking=blocking@entry=true) at ../util/aio-posix.c:558
-#1  0x0000555555d2a4fd in blk_prw (blk=blk@entry=0x555556a24af0, offset=offset@entry=0, buf=buf@entry=0x7fffffffc990 " \b", bytes=bytes@entry=512, co_entry=co_entry@ent
-ry=0x555555d2ad00 <blk_read_entry>, flags=flags@entry=0) at ../block/block-backend.c:1349
-#2  0x0000555555d2a62b in blk_pread (blk=blk@entry=0x555556a24af0, offset=offset@entry=0, buf=buf@entry=0x7fffffffc990, count=count@entry=512) at ../block/block-backend
-.c:1505
-#3  0x0000555555972111 in guess_disk_lchs (blk=blk@entry=0x555556a24af0, pcylinders=pcylinders@entry=0x7fffffffcbf8, pheads=pheads@entry=0x7fffffffcbfc, psectors=psecto
-rs@entry=0x7fffffffcc00) at ../hw/block/hd-geometry.c:66
-#4  0x0000555555972377 in hd_geometry_guess (blk=0x555556a24af0, pcyls=pcyls@entry=0x555556954f94, pheads=pheads@entry=0x555556954f98, psecs=psecs@entry=0x555556954f9c,
- ptrans=ptrans@entry=0x555556954fc0) at ../hw/block/hd-geometry.c:131
-#5  0x0000555555a24e5f in blkconf_geometry (conf=conf@entry=0x555556954f70, ptrans=ptrans@entry=0x555556954fc0, cyls_max=cyls_max@entry=65535, heads_max=heads_max@entry
-=16, secs_max=secs_max@entry=255, errp=errp@entry=0x7fffffffcd00) at ../hw/block/block.c:217
-#6  0x000055555594ef86 in ide_dev_initfn (dev=0x555556954ee0, kind=IDE_HD, errp=0x7fffffffcd00) at ../hw/ide/qdev.c:201
-#7  0x0000555555de3d97 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcd80) at ../hw/core/qdev.c:761
-#8  0x0000555555dc571a in property_set_bool (obj=0x555556954ee0, v=<optimized out>, name=<optimized out>, opaque=0x55555670be30, errp=0x7fffffffcd80) at ../qom/object.c
-:2258
-#9  0x0000555555dc7c4c in object_property_set (obj=obj@entry=0x555556954ee0, name=name@entry=0x555556009576 "realized", v=v@entry=0x555556b5bed0, errp=errp@entry=0x5555
-566170c0 <error_fatal>) at ../qom/object.c:1403
-#10 0x0000555555dcadb4 in object_property_set_qobject (obj=obj@entry=0x555556954ee0, name=name@entry=0x555556009576 "realized", value=value@entry=0x555556d362b0, errp=e
-rrp@entry=0x5555566170c0 <error_fatal>) at ../qom/qom-qobject.c:28
-#11 0x0000555555dc7eb9 in object_property_set_bool (obj=0x555556954ee0, name=0x555556009576 "realized", value=<optimized out>, errp=0x5555566170c0 <error_fatal>) at ../
-qom/object.c:1473
-#12 0x0000555555de2c63 in qdev_realize_and_unref (dev=dev@entry=0x555556954ee0, bus=bus@entry=0x5555579bb400, errp=errp@entry=0x5555566170c0 <error_fatal>) at ../hw/cor
-e/qdev.c:396
-#13 0x000055555594f34b in ide_create_drive (bus=bus@entry=0x5555579bb400, unit=unit@entry=0, drive=0x555556d5c140) at ../hw/ide/qdev.c:135
-#14 0x0000555555b3a22a in pci_ide_create_devs (dev=dev@entry=0x5555579baaa0) at ../hw/ide/pci.c:491
-#15 0x0000555555ba9280 in pc_init1 (machine=0x555556891000, pci_type=0x555555f74d01 "i440FX", host_type=0x555555f77c40 "i440FX-pcihost") at ../hw/i386/pc_piix.c:248
-#16 0x00005555559a0534 in machine_run_board_init (machine=0x555556891000) at ../hw/core/machine.c:1273
-#17 0x0000555555c87274 in qemu_init_board () at ../softmmu/vl.c:2615
-#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
-#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
-#20 0x0000555555c8aa18 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
-#21 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+static QemuMutex qemu_cpu_list_lock;
+static QemuCond exclusive_cond;
+static QemuCond exclusive_resume;
+static QemuCond qemu_work_cond;
 ```
 
-在 vCPU 中间调用 aio_poll
-
 ```c
-/*
-#0  aio_poll (ctx=0x55555670a6c0, blocking=blocking@entry=true) at ../util/aio-posix.c:558
-#1  0x0000555555e4abd2 in aio_wait_bh_oneshot (ctx=0x555556aaac90, cb=cb@entry=0x555555d05fc0 <virtio_blk_data_plane_stop_bh>, opaque=opaque@entry=0x555556ce9720) at ../util/aio-wait.c:71
-#2  0x0000555555d06a0c in virtio_blk_data_plane_stop (vdev=<optimized out>) at ../hw/block/dataplane/virtio-blk.c:333
-#3  0x0000555555b3d9fa in virtio_bus_stop_ioeventfd (bus=0x555557d13af8) at ../hw/virtio/virtio-bus.c:250
-#4  virtio_bus_stop_ioeventfd (bus=bus@entry=0x555557d13af8) at ../hw/virtio/virtio-bus.c:237
-#5  0x000055555595ba98 in virtio_pci_stop_ioeventfd (proxy=0x555557d0b900) at ../hw/virtio/virtio-pci.c:1276
-#6  virtio_pci_common_write (opaque=0x555557d0b900, addr=<optimized out>, val=<optimized out>, size=<optimized out>) at ../hw/virtio/virtio-pci.c:1276
-#7  0x0000555555c9cd61 in memory_region_write_accessor (mr=mr@entry=0x555557d0c360, addr=20, value=value@entry=0x7ffe51dfb0a8, size=size@entry=1, shift=<optimized out>,mask=mask@entry=255, attrs=...) at ../softmmu/memory.c:492
-#8  0x0000555555c991ee in access_with_adjusted_size (addr=addr@entry=20, value=value@entry=0x7ffe51dfb0a8, size=size@entry=1, access_size_min=<optimized out>, access_si
-ze_max=<optimized out>, access_fn=access_fn@entry=0x555555c9ccd0 <memory_region_write_accessor>, mr=0x555557d0c360, attrs=...) at ../softmmu/memory.c:554
-#9  0x0000555555c9c297 in memory_region_dispatch_write (mr=mr@entry=0x555557d0c360, addr=20, data=<optimized out>, op=<optimized out>, attrs=attrs@entry=...) at ../softmmu/memory.c:1504
-#10 0x0000555555c303c0 in flatview_write_continue (fv=fv@entry=0x7ffe4c37d280, addr=addr@entry=4261412884, attrs=..., ptr=ptr@entry=0x7fffeb17e028, len=len@entry=1, add
-r1=<optimized out>, l=<optimized out>, mr=0x555557d0c360) at /home/maritns3/core/kvmqemu/include/qemu/host-utils.h:165
-#11 0x0000555555c305d6 in flatview_write (fv=0x7ffe4c37d280, addr=addr@entry=4261412884, attrs=attrs@entry=..., buf=buf@entry=0x7fffeb17e028, len=len@entry=1) at ../softmmu/physmem.c:2820
-#12 0x0000555555c332a6 in address_space_write (as=0x5555565f9360 <address_space_memory>, addr=4261412884, attrs=..., buf=buf@entry=0x7fffeb17e028, len=1) at ../softmmu/physmem.c:2912
-#13 0x0000555555c3333e in address_space_rw (as=<optimized out>, addr=<optimized out>, attrs=..., attrs@entry=..., buf=buf@entry=0x7fffeb17e028, len=<optimized out>, is_
-write=<optimized out>) at ../softmmu/physmem.c:2922
-#14 0x0000555555c2bf86 in kvm_cpu_exec (cpu=cpu@entry=0x555556be7b90) at ../accel/kvm/kvm-all.c:2893
-#15 0x0000555555cedc55 in kvm_vcpu_thread_fn (arg=arg@entry=0x555556be7b90) at ../accel/kvm/kvm-accel-ops.c:49
-#16 0x0000555555e5e543 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
-#17 0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#18 0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+struct qemu_work_item {
+    QSIMPLEQ_ENTRY(qemu_work_item) node;
+    run_on_cpu_func func;
+    run_on_cpu_data data;
+    bool free, exclusive, done;
+};
 ```
-如果不使用 IOThread 的话，初始化之后就没有调用 aio_poll 的情况了
+- [ ] 考虑一个问题，如果一个 CPU 进行 remote tlb flush 了，需要等待的其他的 cpu 吗?
 
-总结，aio_poll 承受了太多不该承受的内容:
+- run_on_cpu / async_run_on_cpu / async_safe_run_on_cpu 之间的区别是什么?
+  - run_on_cpu 需要另个 cpu 将这个工作完成才可以
+  - run_on_cpu 如果当前 qemu_cpu_is_self 这个函数可以直接调用
+    - [ ] async_safe_run_on_cpu 如果将工作实际上放到自己的上面会如何处理的？
+  - async_run_on_cpu 主要的使用位置为 tlbflush
 
-## mmap_lock
-
+- [ ] rr_kick_vcpu_thread 和 mttcg_kick_vcpu_thread 为什么会产生这种区别?
+  - cpu_exit 让 icount_decr_ptr 操作，从 tb 中 exit 出来之后就可以保证退出到来处理这些任务的位置?
 ```c
-static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
-static __thread int mmap_lock_count;
-
-void mmap_lock(void)
+void mttcg_kick_vcpu_thread(CPUState *cpu)
 {
-    if (mmap_lock_count++ == 0) {
-        pthread_mutex_lock(&mmap_mutex);
-    }
+    cpu_exit(cpu);
 }
 ```
-利用 mmap_lock_count 一个 thread 可以反复上锁，但是可以防止其他 thread 并发访问。
+和
+```c
+/* Kick all RR vCPUs */
+void rr_kick_vcpu_thread(CPUState *unused)
+{
+    CPUState *cpu;
 
-那么只有用户态才需要啊 ?
+    CPU_FOREACH(cpu) {
+        cpu_exit(cpu);
+    };
+}
+```
+的区别是?
 
-参考两个资料:
-1. https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
-2. tcg_region_init 上面的注释
 
-用户态的线程数量可能很大，所以创建多个 region 是不合适的，所以只创建一个，
-而且用户进程的代码大多数都是相同，所以 tb 相关串行也问题不大。
+
+- 为什么可以从 cpu_handle_exception 中间退出来，去处理这些蛇皮工作 ?
+  - [ ] 始终无法理解 cpu_handle_exception return true 和 return false; 的情况分别是什么
+
+- cpu_exec_enter 和 cpu_exec_exit 调用 arch 相关的 hook
+
+- [x] cpu_exec_start 和 cpu_exec_end 是做啥的?
+ - 实际上，用于和 start_exclusive 合作使用的
+```c
+    cpu_exec_start(cpu);
+    ret = cpu_exec(cpu);
+    cpu_exec_end(cpu);
+```
+
+start_exclusive 的使用位置:
+- cpu_exec_step_atomic : 用于支持 atomic 指令的，让只有当前的 cpu 运行的
+- process_queued_cpu_work : 因为 async_safe_run_on_cpu
+  - tb_flush : 如果已经在 exclusive 的状态，然后仍然调用 async_safe_run_on_cpu 之后，会导致死锁吗?
+  - 还存在的调用位置都是 tlb_flush_by_mmuidx_all_cpus_synced 的位置，这是 ARM 需要的
+  - 通过 process_queued_cpu_work 可以保证只有一个 cpu 在运行，相当于是持有了 BIG vCPU Lock 的
+  - 这就是表现出来这个 lock 的最佳形式了
+  - [ ] 为什么需要通过 async_safe_run_on_cpu 的方法实现 exclusive 啊! 直接类似 cpu_exec_step_atomic 调用 start_exclusive 不好吗?
+- 取消 exclusive 的位置和 start_exclusive 是对称的
+- exclusive_idle 作用 : 如果已经存在一个 thread 进入到 exclusive 的状态，那么其他的 thread 将在调用 start_exclusive 的时候永远卡在这里
+
+- [ ] first_cpu 之类的还是需要移植的吧，那是 guest 的 CPU 的状态啊
+
+## 分析一下 rr_cpu_thread_fn 和 mttcg_cpu_thread_fn 的差异
+rr_cpu_thread_fn
+
+```c
+while (1) {
+  while (cpu && cpu_work_list_empty(cpu) && !cpu->exit_request) {
+    // tcg_cpus_exec started
+    cpu_exec_start(cpu);
+    cpu_exec_enter(cpu);
+    while (!cpu_handle_exception(cpu, &ret)) {
+        while (!cpu_handle_interrupt(cpu, &last_tb)) {
+    }
+    cpu_exec_exit(cpu);
+    cpu_exec_end(cpu);
+    // tcg_cpus_exec end
+  }
+}
+```
+而
+
+```c
+while (!cpu->unplug || cpu_can_run(cpu)){
+
+}
+```
+
+
+- [ ] rr_cpu_thread_fn 中的 cpu 为什么可以出现两个
+
 ## mttcg
 [^1] 指出
 1. 如果需要支持 icount 机制将会消失
@@ -269,28 +192,6 @@ void memory_region_clear_global_locking(MemoryRegion *mr);
 - [ ] 用于进一步简化 memory_ldst
 
 ## 反手看一下 kvm 的 thread 是如何实现的
-kvm_vcpu_thread_fn
-
-- [x] 是哪一个线程来进行处理进行 monitor 的
-```c
-/*
-#0  help_cmd (mon=0x555555f4ce40 <trace_qemu_mutex_unlock+41>, name=0x7fffffffc1e0 "\222\315\rVUU") at ../monitor/hmp.c:277
-#1  0x0000555555d23d87 in do_help_cmd (mon=0x555556baf1e0, qdict=0x555557d60000) at ../monitor/misc.c:170
-#2  0x0000555555b1ba37 in handle_hmp_command (mon=0x555556baf1e0, cmdline=0x555556c808b4 "") at ../monitor/hmp.c:1105
-#3  0x0000555555b19135 in monitor_command_cb (opaque=0x555556baf1e0, cmdline=0x555556c808b0 "help", readline_opaque=0x0) at ../monitor/hmp.c:48
-#4  0x0000555555f31fe2 in readline_handle_byte (rs=0x555556c808b0, ch=13) at ../util/readline.c:411
-#5  0x0000555555b1c58c in monitor_read (opaque=0x555556baf1e0, buf=0x7fffffffc4a0 "\r", size=1) at ../monitor/hmp.c:1343
-#6  0x0000555555e8c5fd in qemu_chr_be_write_impl (s=0x555556c60a80, buf=0x7fffffffc4a0 "\r", len=1) at ../chardev/char.c:201
-#7  0x0000555555e8c668 in qemu_chr_be_write (s=0x555556c60a80, buf=0x7fffffffc4a0 "\r", len=1) at ../chardev/char.c:213
-#8  0x0000555555e90981 in fd_chr_read (chan=0x555556b8c7f0, cond=G_IO_IN, opaque=0x555556c60a80) at ../chardev/char-fd.c:68
-#9  0x0000555555d83ae0 in qio_channel_fd_source_dispatch (source=0x555556b2fa90, callback=0x555555e9084a <fd_chr_read>, user_data=0x555556c60a80) at ../io/channel-watch.c:84
-#10 0x00007ffff79d404e in g_main_context_dispatch () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#11 0x0000555555f4eee9 in glib_pollfds_poll () at ../util/main-loop.c:231
-#12 0x0000555555f4ef67 in os_host_main_loop_wait (timeout=0) at ../util/main-loop.c:254
-#13 0x0000555555f4f07b in main_loop_wait (nonblocking=0) at ../util/main-loop.c:530
-#14 0x0000555555c5c769 in qemu_main_loop () at ../softmmu/runstate.c:731
-#15 0x000055555582e57a in main (argc=30, argv=0x7fffffffd748, envp=0x7fffffffd840) at ../softmmu/main.c:50
-```
 
 process_queued_cpu_work 用于处理 run_cpu 之类挂载的函数
 
@@ -393,8 +294,6 @@ extern CPUState *current_cpu;
 
 ## do_run_on_cpu
 
-问题 1: 真的需要 do_run_on_cpu，我的意思是，使用目标 cpu 作为参数调用一下函数，
-  - [ ] 猜测，最好不要让一个线程来访问另一个线程的 cpu
 ```c
 /*
 #0  do_run_on_cpu (cpu=0x55555609ef9a, func=0x2155b8da1e, data=..., mutex=0x55555679d7e0 <qemu_global_mutex>) at ../cpus-common.c:136
@@ -417,30 +316,6 @@ extern CPUState *current_cpu;
 #17 0x0000555555c67bbf in qmp_x_exit_preconfig (errp=0x5555567a2128 <error_fatal>) at ../softmmu/vl.c:2602
 #18 0x0000555555c6a28d in qemu_init (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/vl.c:3635
 #19 0x000055555582c575 in main (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/main.c:49
-```
-
-```c
-/*
-#0  do_run_on_cpu (cpu=0x55555609ef9a, func=0x2100000012, data=..., mutex=0x7fffe888f8e0) at ../cpus-common.c:136
-#1  0x0000555555c79501 in run_on_cpu (cpu=0x555556d05800, func=0x555555b8da1e <vapic_do_enable_tpr_reporting>, data=...) at ../softmmu/cpus.c:385
-#2  0x0000555555b8dae1 in vapic_enable_tpr_reporting (enable=true) at ../hw/i386/kvmvapic.c:511
-#3  0x0000555555b8df25 in vapic_prepare (s=0x555556b40ca0) at ../hw/i386/kvmvapic.c:633
-#4  0x0000555555b8e028 in vapic_write (opaque=0x555556b40ca0, addr=0, data=32, size=2) at ../hw/i386/kvmvapic.c:673
-#5  0x0000555555d43441 in memory_region_write_accessor (mr=0x555556b40fc0, addr=0, value=0x7fffe888fb08, size=2, shift=0, mask=65535, attrs=...) at ../softmmu/memory.c:489
-#6  0x0000555555d43678 in access_with_adjusted_size (addr=0, value=0x7fffe888fb08, size=2, access_size_min=1, access_size_max=4, access_fn=0x555555d43354 <memory_region_write_accessor>, mr=0x555556b40fc0, attrs=...) at ../softmmu/memory.c:550
-#7  0x0000555555d46727 in memory_region_dispatch_write (mr=0x555556b40fc0, addr=0, data=32, op=MO_16, attrs=...) at ../softmmu/memory.c:1500
-#8  0x0000555555c844a0 in address_space_stw_internal (as=0x55555679d940 <address_space_io>, addr=126, val=32, attrs=..., result=0x0, endian=DEVICE_NATIVE_ENDIAN) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:415
-#9  0x0000555555c845a5 in address_space_stw (as=0x55555679d940 <address_space_io>, addr=126, val=32, attrs=..., result=0x0) at /home/maritns3/core/kvmqemu/memory_ldst.c.inc:446
-#10 0x0000555555b51b70 in helper_outw (env=0x555556d0e080, port=126, data=32) at ../target/i386/tcg/sysemu/misc_helper.c:42
-#11 0x00007fff54190c8c in code_gen_buffer ()
-#12 0x0000555555c5fdd0 in cpu_tb_exec (cpu=0x555556d05800, itb=0x7fff94190b40, tb_exit=0x7fffe88901a0) at ../accel/tcg/cpu-exec.c:190
-#13 0x0000555555c60d54 in cpu_loop_exec_tb (cpu=0x555556d05800, tb=0x7fff94190b40, last_tb=0x7fffe88901a8, tb_exit=0x7fffe88901a0) at ../accel/tcg/cpu-exec.c:673
-#14 0x0000555555c61045 in cpu_exec (cpu=0x555556d05800) at ../accel/tcg/cpu-exec.c:798
-#15 0x0000555555c11160 in tcg_cpus_exec (cpu=0x555556d05800) at ../accel/tcg/tcg-accel-ops.c:67
-#16 0x0000555555d31aa9 in rr_cpu_thread_fn (arg=0x555556d05800) at ../accel/tcg/tcg-accel-ops-rr.c:216
-#17 0x0000555555f4c216 in qemu_thread_start (args=0x555556ab3f60) at ../util/qemu-thread-posix.c:521
-#18 0x00007ffff6298609 in start_thread (arg=<optimized out>) at pthread_create.c:477
-#19 0x00007ffff61bd293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
 
 ## first_cpu / CPU_NEXT / CPU_FOREACH 的移植
