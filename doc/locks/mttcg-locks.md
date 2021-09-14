@@ -1,198 +1,24 @@
 # MTTG && Locks
 
 ## 问题 && TODO
-- [ ] io thread 一样需要走 memory model 的，所以，当 vCPU 进行修改的时候，需要和其他的所有的 vCPU 和 io thread 不同，是如何上锁的
-- [ ] 分析一下 os_host_main_loop_wait 中的 BQL
-
-## 总结
-- 既然 kvm eventfd 的这一个 fd 是如何被监听的 : 走一个统一的 aio_set_event_notifier 的路线啊
-
-- GMainContext 为什么可以关联多个 GSource 的
-    - 可能原因是不同的 GSource 的属性不同，例如 idle timer 和普通的 fd
-
-gdbus 之类的操作暂时看不懂了，也许是可以使用 https://github.com/chiehmin/gdbus_test/issues/1 作为参考了
-
-## QEMU 中的那些地方需要 lock
-
-emmm 其实就是收集一下那些函数的调用位置而已。
-
-1. tcg_region : 一个 region 只会分配给一个 cpu, 所以防止同时分配给多个 cpu 了
-
-## 如何移植 cpus.c 啊
-
-- [ ] tb_flush 中，通过 cpu_in_exclusive_context 来运行
-  - [ ] 另一个 cpu 正在运行，此时进行 tb_flush, 如果保证运行的 cpu 没有读取错误的 TLB
-- [ ] async_safe_run_on_cpu 的实现原理
-  - [ ] 如果哪一个 cpu 正好在运行，和 cpu 没有运行，处理的情况有没有区别 ?
-
-- 一些初始化的代码需要重新分析 : qemu_tcg_init_vcpu
-
-- [ ] 这几个玩意儿都是做什么的?
-```c
-static QemuMutex qemu_cpu_list_lock;
-static QemuCond exclusive_cond;
-static QemuCond exclusive_resume;
-static QemuCond qemu_work_cond;
-```
-
-```c
-struct qemu_work_item {
-    QSIMPLEQ_ENTRY(qemu_work_item) node;
-    run_on_cpu_func func;
-    run_on_cpu_data data;
-    bool free, exclusive, done;
-};
-```
-- [ ] 考虑一个问题，如果一个 CPU 进行 remote tlb flush 了，需要等待的其他的 cpu 吗?
-
-- run_on_cpu / async_run_on_cpu / async_safe_run_on_cpu 之间的区别是什么?
-  - run_on_cpu 需要另个 cpu 将这个工作完成才可以
-  - run_on_cpu 如果当前 qemu_cpu_is_self 这个函数可以直接调用
-    - [ ] async_safe_run_on_cpu 如果将工作实际上放到自己的上面会如何处理的？
-  - async_run_on_cpu 主要的使用位置为 tlbflush
-
-- [ ] rr_kick_vcpu_thread 和 mttcg_kick_vcpu_thread 为什么会产生这种区别?
-  - cpu_exit 让 icount_decr_ptr 操作，从 tb 中 exit 出来之后就可以保证退出到来处理这些任务的位置?
-```c
-void mttcg_kick_vcpu_thread(CPUState *cpu)
-{
-    cpu_exit(cpu);
-}
-```
-和
-```c
-/* Kick all RR vCPUs */
-void rr_kick_vcpu_thread(CPUState *unused)
-{
-    CPUState *cpu;
-
-    CPU_FOREACH(cpu) {
-        cpu_exit(cpu);
-    };
-}
-```
-的区别是?
-
-
+- [ ] kick 之后可以通过 rr_wait_io_event 进行捕获，kick 如何保证从里面的 while 循环中退出的, 从 interrupt 和 exception 中检查出来的
+  - 现在还是 uint16_t IcountDecr::(anonymous struct)::high 中的说明，是可以的
+  - [ ] cpu_handle_interrupt 最后的位置是处理了 exit_request 的
 
 - 为什么可以从 cpu_handle_exception 中间退出来，去处理这些蛇皮工作 ?
   - [ ] 始终无法理解 cpu_handle_exception return true 和 return false; 的情况分别是什么
 
+## conditional variable
+- 调用 run_on_cpu 的时候需要持有 BQL 的，甚至 cpu_x86_inject_mce 上都是的
+
+## 如何移植 cpus.c 啊
+可以留出来接口，但是目前就是只支持单个 vCPU 的。
+
+- 一些初始化的代码需要重新分析 : qemu_tcg_init_vcpu
+
 - cpu_exec_enter 和 cpu_exec_exit 调用 arch 相关的 hook
 
-- [x] cpu_exec_start 和 cpu_exec_end 是做啥的?
- - 实际上，用于和 start_exclusive 合作使用的
-```c
-    cpu_exec_start(cpu);
-    ret = cpu_exec(cpu);
-    cpu_exec_end(cpu);
-```
-
-start_exclusive 的使用位置:
-- cpu_exec_step_atomic : 用于支持 atomic 指令的，让只有当前的 cpu 运行的
-- process_queued_cpu_work : 因为 async_safe_run_on_cpu
-  - tb_flush : 如果已经在 exclusive 的状态，然后仍然调用 async_safe_run_on_cpu 之后，会导致死锁吗?
-  - 还存在的调用位置都是 tlb_flush_by_mmuidx_all_cpus_synced 的位置，这是 ARM 需要的
-  - 通过 process_queued_cpu_work 可以保证只有一个 cpu 在运行，相当于是持有了 BIG vCPU Lock 的
-  - 这就是表现出来这个 lock 的最佳形式了
-  - [ ] 为什么需要通过 async_safe_run_on_cpu 的方法实现 exclusive 啊! 直接类似 cpu_exec_step_atomic 调用 start_exclusive 不好吗?
-- 取消 exclusive 的位置和 start_exclusive 是对称的
-- exclusive_idle 作用 : 如果已经存在一个 thread 进入到 exclusive 的状态，那么其他的 thread 将在调用 start_exclusive 的时候永远卡在这里
-
-- [ ] first_cpu 之类的还是需要移植的吧，那是 guest 的 CPU 的状态啊
-
-## 分析一下 rr_cpu_thread_fn 和 mttcg_cpu_thread_fn 的差异
-rr_cpu_thread_fn
-
-```c
-while (1) {
-  while (cpu && cpu_work_list_empty(cpu) && !cpu->exit_request) {
-    // tcg_cpus_exec started
-    cpu_exec_start(cpu);
-    cpu_exec_enter(cpu);
-    while (!cpu_handle_exception(cpu, &ret)) {
-        while (!cpu_handle_interrupt(cpu, &last_tb)) {
-    }
-    cpu_exec_exit(cpu);
-    cpu_exec_end(cpu);
-    // tcg_cpus_exec end
-  }
-}
-```
-而
-
-```c
-while (!cpu->unplug || cpu_can_run(cpu)){
-
-}
-```
-
-
-- [ ] rr_cpu_thread_fn 中的 cpu 为什么可以出现两个
-
-## mttcg
-[^1] 指出
-1. 如果需要支持 icount 机制将会消失
-2. 想要让一个 guest 架构支持 mttcg 需要完成的工作
-3. Enabling strong-on-weak memory consistency (e.g. emulate x86 on an ARM host)
-
-## iothread 的 lock 应该只有很少的位置才对啊
-- 线程模型通常使用 QEMU 大锁进行同步，获取锁的函数为 qemu_mutex_lock_iothread
-
-主要使用 qemu_mutex_unlock_iothread 的主要在
-/home/maritns3/core/ld/DuckBuBi/src/tcg/cpu-exec.c
-和
-/home/maritns3/core/ld/DuckBuBi/src/qemu/memory_ldst.c.inc
-
-但是 qemu_mutex_lock_iothread 主要只是出现在
-/home/maritns3/core/ld/DuckBuBi/src/tcg/cpu-exec.c 中
-而且是为了保护 cpu_handle_interrupt
-
-在 io_readx 和 io_writex 当 `mr->global_locking` 时候需要进行
-
-- 主要是在处理中断的时候
-
-在 /home/maritns3/core/ld/DuckBuBi/src/qemu/memory_ldst.c.inc 中间还有一堆 RCU_READ_LOCK
-
-## 如果 mttcg 之外，iothread 之外，还有什么 thread 的挑战
-- [ ] 在 translate-all.c 的 page_lock
-
-## mttcg
-https://lwn.net/Articles/697265/
-
-在 A TCG primer 很好的总结了 TCG 的工作模式以及退出的原因。
-
-在 Atomics,
-Save load value/address and check on store,
-Load-link/store-conditional instruction support via SoftMMU,
-Link helpers and instrumented stores,
-中应该是分析了在 TCG 需要增加的工作
-
-在 Memory coherency 分析的东西，暂时有点迷茫，不知道想要表达什么东西。 // TODO
-
-## global_locking
-```c
-/**
- * memory_region_clear_global_locking: Declares that access processing does
- *                                     not depend on the QEMU global lock.
- *
- * By clearing this property, accesses to the memory region will be processed
- * outside of QEMU's global lock (unless the lock is held on when issuing the
- * access request). In this case, the device model implementing the access
- * handlers is responsible for synchronization of concurrency.
- *
- * @mr: the memory region to be updated.
- */
-void memory_region_clear_global_locking(MemoryRegion *mr);
-```
-- 从上下文知道，这里的 QEMU's global lock 就是 QEMU big lock
-- 而且 QEMU big lock 就是用于处理 memory region 的
-- memory_region_clear_global_locking 从来都不会被调用
-
-- [ ] 用于进一步简化 memory_ldst
-
 ## 反手看一下 kvm 的 thread 是如何实现的
-
 process_queued_cpu_work 用于处理 run_cpu 之类挂载的函数
 
 qemu_wait_io_event 中最后会卡到: `qemu_cond_wait(cpu->halt_cond, &qemu_global_mutex);`
@@ -229,68 +55,6 @@ cpu_thread_is_idle
 #5  0x0000555555c6c202 in qemu_init (argc=30, argv=0x7fffffffd748, envp=0x7fffffffd840) at ../softmmu/vl.c:3635
 #6  0x000055555582e575 in main (argc=30, argv=0x7fffffffd748, envp=0x7fffffffd840) at ../softmmu/main.c:49
 ```
-
-## 为什么 kvm 中的 pio 和 mmio 不需要使用 BQL 保护
-
-去 trace 这个代码的时候，最后发现
-flatview_write_continue 中和 memory_ldst.c 的函数都会调用
-prepare_mmio_access, 这个就是处理 mmio 的啊。
-
-```diff
-History:        #0
-Commit:         de7ea885c5394c1fba7443cbf33bd2745d32e6c2
-Author:         Paolo Bonzini <pbonzini@redhat.com>
-Author Date:    Fri 19 Jun 2015 12:47:26 AM CST
-Committer Date: Wed 01 Jul 2015 09:45:51 PM CST
-
-kvm: Switch to unlocked MMIO
-
-Do not take the BQL before dispatching MMIO requests of KVM VCPUs.
-Instead, address_space_rw will do it if necessary. This enables completely
-BQL-free MMIO handling in KVM mode for upcoming devices with fine-grained
-locking.
-
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-Message-Id: <1434646046-27150-10-git-send-email-pbonzini@redhat.com>
-
-diff --git a/kvm-all.c b/kvm-all.c
-index ad5ac5e3df..df57da0bf2 100644
---- a/kvm-all.c
-+++ b/kvm-all.c
-@@ -1814,13 +1814,12 @@ int kvm_cpu_exec(CPUState *cpu)
-             break;
-         case KVM_EXIT_MMIO:
-             DPRINTF("handle_mmio\n");
--            qemu_mutex_lock_iothread();
-+            /* Called outside BQL */
-             address_space_rw(&address_space_memory,
-                              run->mmio.phys_addr, attrs,
-                              run->mmio.data,
-                              run->mmio.len,
-                              run->mmio.is_write);
--            qemu_mutex_unlock_iothread();
-             ret = 0;
-             break;
-         case KVM_EXIT_IRQ_WINDOW_OPEN:
-```
-
-## current_cpu
-从一般的想法来说，current_cpu 和当前 thread 始终是绑定的，实际上，并不是，
-至少没有启动 mttcg 的时候，是一个线程模拟多个 cpu 的，那么 current_cpu 就是在每次切换模拟的核都是需要修改 current_cpu 的
-注释也说的很有道理，current_cpu 需要在 cpu_exec 中进行正确赋值的
-
-```c
-/* current CPU in the current thread. It is only valid inside
-   cpu_exec() */
-extern CPUState *current_cpu;
-```
-
-观察:
-1. current_cpu 永远不会被赋值为 NULL
-2. current_cpu 被赋值为空的情况可以用于判断当前 thread 是否为 VCPU thread
-3. rr_start_vcpu_thread : 只有会为 CPUState 创建线程，接下来的 CPUState 都是共享这个线程的
-4. -accel tcg,thread=single 通过 rr_wait_io_event 来唤醒
-5 在 rr_cpu_thread_fn 中如何实现切换不同的 CPU 的
 
 ## do_run_on_cpu
 
@@ -335,6 +99,7 @@ apic_state 要么在每一个 cpu 都有，要都没有，所以随便选一个�
   - [ ] 其实可以找到最开始的 run_on_cpu 的例子的
   - [ ] 如何移除掉整个 run_on_cpu 的机制
     - [ ] 现在的系统到底是如何使用的
+  - [ ] 猜测，其中的原因是很多 CPU 资源都是 thread private 的
 
 - [x] 思考一个问题，run_on_cpu 如果是单核的，是如何处理?
    - 没有本质区别，将任务挂载该线程上，然后让他启动
@@ -451,8 +216,115 @@ void tcg_handle_interrupt(CPUState *cpu, int mask)
 
 - 而 kvm 的更加容易，在 io thread 线程中间直接调用 kvm_vm_ioctl 就可以了，其他的细节让 kvm 来处理就可以了。
 
+## do_run_on_cpu
+```c
+void do_run_on_cpu(CPUState *cpu, run_on_cpu_func func, run_on_cpu_data data,
+                   QemuMutex *mutex)
+{
+    struct qemu_work_item wi;
 
-[^1]: https://wiki.qemu.org/Features/tcg-multithread
-[^2]: https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=bql
-[^6]: https://lwn.net/Articles/517475/
-[^7]: https://qemu.readthedocs.io/en/latest/devel/multi-thread-tcg.html
+    if (qemu_cpu_is_self(cpu)) {
+        func(cpu, data);
+        return;
+    }
+
+    wi.func = func;
+    wi.data = data;
+    wi.done = false;
+    wi.free = false;
+    wi.exclusive = false;
+
+    queue_work_on_cpu(cpu, &wi);
+    while (!qatomic_mb_read(&wi.done)) {
+        CPUState *self_cpu = current_cpu;
+
+        qemu_cond_wait(&qemu_work_cond, mutex);
+        current_cpu = self_cpu;
+    }
+}
+```
+
+- [ ] 如果是多线程的，那么 current_cpu 在什么时候发生改变
+  - 除非一个 thread 同时指向多个 cpu 的
+
+```c
+/*
+#0  process_queued_cpu_work (cpu=0x555556afdf30) at ../cpus-common.c:320
+#1  0x0000555555cb2e32 in rr_cpu_thread_fn (arg=arg@entry=0x555556afdf30) at ../accel/tcg/tcg-accel-ops-rr.c:169
+#2  0x0000555555e76603 in qemu_thread_start (args=<optimized out>) at ../util/qemu-thread-posix.c:541
+#3  0x00007ffff628c609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#4  0x00007ffff61b3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+```
+
+- [ ] 如何去处理启动的 thread 的这种 do_run_on_cpu 的操作啊!
+```c
+/*
+#0  do_run_on_cpu (cpu=cpu@entry=0x555556b09690, func=func@entry=0x555555bb06c0 <vapic_do_enable_tpr_reporting>, data=..., mutex=mutex@entry=0x555556611600 <qemu_global
+_mutex>) at ../cpus-common.c:136
+#1  0x0000555555c4eda0 in run_on_cpu (cpu=cpu@entry=0x555556b09690, func=func@entry=0x555555bb06c0 <vapic_do_enable_tpr_reporting>, data=..., data@entry=...) at ../soft
+mmu/cpus.c:387
+#2  0x0000555555bb064b in vapic_enable_tpr_reporting (enable=<optimized out>) at ../hw/i386/kvmvapic.c:511
+#3  0x0000555555d3e879 in resettable_phase_hold (obj=0x555556a11200, opaque=<optimized out>, type=<optimized out>) at ../hw/core/resettable.c:182
+#4  0x0000555555d3a194 in bus_reset_child_foreach (obj=<optimized out>, cb=0x555555d3e790 <resettable_phase_hold>, opaque=0x0, type=RESET_TYPE_COLD) at ../hw/core/bus.c
+:97
+#5  0x0000555555d3e834 in resettable_child_foreach (rc=0x55555687e4f0, type=RESET_TYPE_COLD, opaque=0x0, cb=0x555555d3e790 <resettable_phase_hold>, obj=0x55555692a260)
+at ../hw/core/resettable.c:96
+#6  resettable_phase_hold (obj=obj@entry=0x55555692a260, opaque=opaque@entry=0x0, type=type@entry=RESET_TYPE_COLD) at ../hw/core/resettable.c:173
+#7  0x0000555555d3f019 in resettable_assert_reset (obj=0x55555692a260, type=<optimized out>) at ../hw/core/resettable.c:60
+#8  0x0000555555d3f3ad in resettable_reset (obj=0x55555692a260, type=RESET_TYPE_COLD) at ../hw/core/resettable.c:45
+#9  0x0000555555d3e375 in qemu_devices_reset () at ../hw/core/reset.c:69
+#10 0x0000555555b9b82f in pc_machine_reset (machine=<optimized out>) at ../hw/i386/pc.c:1653
+#11 0x0000555555c1e990 in qemu_system_reset (reason=reason@entry=SHUTDOWN_CAUSE_NONE) at ../softmmu/runstate.c:443
+#12 0x0000555555a6c84a in qdev_machine_creation_done () at ../hw/core/machine.c:1333
+#13 0x0000555555c64ed0 in qemu_machine_creation_done () at ../softmmu/vl.c:2668
+#14 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2691
+#15 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#16 0x0000555555c68598 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#17 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+- [ ] 这种启动放到本身很奇怪。
+
+
+## rr_wait_io_event
+
+- 区分 rr_wait_io_event 和 qemu_wait_io_event 的差异
+  - 因为 qemu_wait_io_event 是一个线程的，所以不需要进行对于所有 CPU 的等待的。
+
+```c
+static void rr_wait_io_event(void)
+{
+    CPUState *cpu;
+
+    // 完全无法理解这个逻辑啊?
+    // 当没有事情可以做的时候，然后等待到 halt_cond 上
+    while (all_cpu_threads_idle()) {
+        rr_stop_kick_timer();
+        // 这个是在 qemu_cpu_kick 的位置上来让其苏醒过来
+        //
+        qemu_cond_wait_iothread(first_cpu->halt_cond);
+    }
+
+    rr_start_kick_timer();
+
+    CPU_FOREACH(cpu) {
+        qemu_wait_io_event_common(cpu);
+    }
+}
+```
+将信将疑的分析了一下，实际上，rr_wait_io_event 中等待 cpu_thread_is_idle 主要是因为
+stopped 的原因。也就是当 thread 被 stop 之后，就没有必要继续执行下去了。
+
+## qemu_mutex_iothread_locked
+- [ ] process_queued_cpu_work : 因为 start_exclusive 的原因，但是需要更加统一的分析，而且 mttcg rr 的 thread fn 都是进一步添加 lock 的
+
+- cputlb.c 中 io_readx 和 io_writex 中会检测，当没有 locked 时候，然后一定上锁
+  - [x] io_readx 和 io_writex 只是被 load_helper 和 store_helper 调用的，但是，实际上，应该总是没有持有 lock 的才对啊，我检测过，没有人调用过，可能是 arm 架构相关的，和 NiuGene 核实一下
+
+- 在 memory_region_transaction_commit 中，需要一定保证 qemu_mutex_iothread_locked 的
+  - reasonable : 要么是在 main loop 初始化过程中，要么是因为在 mmio hook 中
+- pause_all_vcpus : pause_all_vcpus <= vapic_write, 也就是调用 MemoryRegionOps 的时候，就是上锁的
+- 在 softmmu/cpu-throttle.c 中，cpu_throttle_thread 作为 async_run_on_cpu 的 hook 函数，当其需要睡眠的时候，需要释放 lock
+  - 也就是说，在 async_run_on_cpu 执行的时候，实际上持有 BQL 的
+  - 是的，从 mttcg_cpu_thread_fn 中看，tcg_cpus_exec 的两侧都是被 BQL 包围的
+
+- [ ] 其实被忽视的一个问题是 : cpu_exec_step_atomic, 在 rr 和 mttcg 中都是需要特殊处理的

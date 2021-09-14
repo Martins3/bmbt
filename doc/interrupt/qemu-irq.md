@@ -12,6 +12,8 @@
 
 - [ ] make a table explaining every field of APIC and IOAPIC struct in QEMU
 
+- [ ] CPU_INTERRUPT_POLL 是做啥的? 为啥会出现在 cpu_handle_halt 中间。
+
 ## 备忘
 - tcg_handle_interrupt /  x86_cpu_exec_interrupt 的功能区别:
   - 前者: 让执行线程退出，去检查 interrupt

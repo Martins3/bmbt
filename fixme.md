@@ -21,6 +21,8 @@
         - 虽然主要是处理 interrupt 的，也是很麻烦的啊
     7. /home/maritns3/core/ld/DuckBuBi/src/i386/excp_helper.c 中为什么有那么多的处理 exception 的函数
     8. qemu_irq_raise
+    9. 在 /home/maritns3/core/vn/docs/qemu/lock.md 的 interrupt_request 的那个 section 并没有理清楚到底如何注入 interrupt 和处理的
+    10. ipi 是如何模拟的?
 3. locks
     1. include/sysemu/cpus.h : 定义的为空函数啊
     1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
