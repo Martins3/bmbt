@@ -2,10 +2,10 @@
 #define MEMORY_H_E0UHP2JS
 
 #include "../../src/tcg/glib_stub.h"
+#include "cpu-common.h"
 #include "hwaddr.h"
 #include "memattrs.h"
 #include "memop.h"
-#include "cpu-common.h"
 
 // #include "ram_addr.h"
 
@@ -19,6 +19,7 @@ typedef struct MemoryRegion {
   bool ram;
 
   struct RAMBlock *ram_block;
+  // TODO remove it as 4174495408afdf27b6bfb32701c3fd9775e6bca3 suggested
   bool global_locking;
 
   hwaddr offset_in_ram_block;
