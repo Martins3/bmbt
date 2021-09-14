@@ -3,20 +3,10 @@
 ![doc](https://github.com/martins3/BMBT/actions/workflows/lint-md.yml/badge.svg?branch=dev)
 [![CodeFactor](https://www.codefactor.io/repository/github/martins3/bmbt/badge?s=9d9536e6f84b669f60d01a3561675ed4040eab79)](https://www.codefactor.io/repository/github/martins3/bmbt)
 
-```txt
- ______________________________________
-< BMBT is Bare Metal Binary Translator >
- --------------------------------------
-   \
-    \
-        .--.
-       |o_o |
-       |:_/ |
-      //   \ \
-     (|     | )
-    /'\_   _/`\
-    \___)=(___/
-```
+<p align="center">
+  <img src="./front.jpeg"/>
+</p>
+
 ## 报告
 - [裸金属二进制翻译器](https://martins3.github.io/ppt/repo/2021-8-24/index.html)
 

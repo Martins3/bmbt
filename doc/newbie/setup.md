@@ -64,3 +64,5 @@ $1 = 0xe92d6
 ```txt
 disass 0xe92d6
 ```
+## 配置 5000 的机器
+https://github.com/garywill/linux-router
