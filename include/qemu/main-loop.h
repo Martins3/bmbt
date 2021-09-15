@@ -45,4 +45,6 @@ void qemu_mutex_unlock_iothread();
  */
 bool qemu_mutex_iothread_locked(void);
 
+void *qemu_tcg_rr_cpu_thread_fn(void *arg);
+
 #endif /* end of include guard: MAIN_LOOP_H_BMOIUZGQ */
