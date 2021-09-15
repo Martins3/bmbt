@@ -19,8 +19,6 @@
 
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/osdep.h"
-// #include "../sysemu/cpus.h"
-// #include "sysemu/tcg.h"
 #include "../../include/exec/exec-all.h"
 
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)

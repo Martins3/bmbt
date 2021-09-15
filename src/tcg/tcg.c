@@ -8,7 +8,7 @@
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/thread.h"
-#include "../../include/sysemu/cpus.h"
+#include "../../include/qemu/main-loop.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 #include "../i386/LATX/x86tomips-config.h"
