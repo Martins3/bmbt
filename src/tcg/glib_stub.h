@@ -47,6 +47,7 @@ gpointer g_try_malloc0(int n_bytes);
 #define g_try_new(type, num) (type *)NULL
 #define g_free(type)                                                           \
   {}
+// @todo implement it
 #define g_assert(expr)                                                         \
   {}
 #define g_assert_not_reached()                                                 \

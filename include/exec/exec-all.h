@@ -4,7 +4,7 @@
 #include "../../src/i386/cpu.h"
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
-#include "../sysemu/cpus.h"
+#include "../qemu/main-loop.h"
 #include "../types.h"
 #include "cpu-defs.h"
 #include "memop.h"

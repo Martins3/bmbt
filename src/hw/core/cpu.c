@@ -1,5 +1,5 @@
 #include "../../../include/hw/core/cpu.h"
-#include "../../../include/sysemu/cpus.h"
+#include "../../../include/qemu/main-loop.h"
 
 /* Resetting the IRQ comes from across the code base so we take the
  * BQL here if we need to.  cpu_interrupt assumes it is held.*/

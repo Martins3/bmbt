@@ -12,7 +12,7 @@
 #include "../../include/qemu/plugin.h"
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
-#include "../../include/sysemu/cpus.h"
+#include "../../include/qemu/main-loop.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 #include "../i386/LATX/x86tomips-config.h"
