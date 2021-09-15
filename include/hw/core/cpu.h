@@ -7,6 +7,7 @@
 #include "../../qemu/atomic.h"
 #include "../../qemu/bitmap.h"
 #include "../../qemu/queue.h"
+#include "../../qemu/thread.h"
 #include "../../types.h"
 #include <inttypes.h> // for VADDR_PRIx
 #include <setjmp.h>
@@ -47,6 +48,10 @@ typedef enum MMUAccessType {
 #define TB_JMP_CACHE_BITS 12
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
 #define CPU_TRACE_DSTATE_MAX_EVENTS 32
+
+typedef struct CPUAddressSpace {
+  AddressSpace *as;
+} CPUAddressSpace;
 
 // FIXME maybe we have copy too many comments here, remove them later
 /**
@@ -105,11 +110,6 @@ typedef enum MMUAccessType {
  *
  * State of one CPU core or thread.
  */
-
-typedef struct CPUAddressSpace {
-  AddressSpace *as;
-} CPUAddressSpace;
-
 typedef struct CPUState {
   struct CPUClass *cc;
   int nr_cores;
@@ -137,6 +137,8 @@ typedef struct CPUState {
   QTAILQ_HEAD(, CPUWatchpoint) watchpoints;
   CPUWatchpoint *watchpoint_hit;
 
+  struct qemu_work_item *queued_work_first, *queued_work_last;
+
   QTAILQ_ENTRY(CPUState) node;
 
   uint32_t interrupt_request;
@@ -161,6 +163,10 @@ typedef struct CPUState {
 
   struct CPUAddressSpace *cpu_ases;
   int num_ases;
+  QemuThread *thread;
+  int thread_id;
+
+  QemuMutex work_mutex;
 } CPUState;
 
 // FIXME clear the comments
@@ -576,6 +582,61 @@ static inline hwaddr cpu_get_phys_page_attrs_debug(CPUState *cpu, vaddr addr,
   return cc->get_phys_page_debug(cpu, addr);
 }
 
-bool qemu_cpu_is_self(CPUState *cpu) { return true; }
+bool qemu_cpu_is_self(CPUState *cpu) {
+  // @todo always return true ?
+  return true;
+}
+
+/**
+ * cpu_exec_start:
+ * @cpu: The CPU for the current thread.
+ *
+ * Record that a CPU has started execution and can be interrupted with
+ * cpu_exit.
+ */
+static inline void cpu_exec_start(CPUState *cpu) {
+  // [interface 15]
+}
+
+/**
+ * cpu_exec_end:
+ * @cpu: The CPU for the current thread.
+ *
+ * Record that a CPU has stopped execution and exclusive sections
+ * can be executed without interrupting it.
+ */
+static inline void cpu_exec_end(CPUState *cpu) {
+  // [interface 15]
+}
+
+/**
+ * process_queued_cpu_work() - process all items on CPU work queue
+ * @cpu: The CPU which work queue to process.
+ */
+void process_queued_cpu_work(CPUState *cpu);
+
+
+/**
+ * start_exclusive:
+ *
+ * Wait for a concurrent exclusive section to end, and then start
+ * a section of work that is run while other CPUs are not running
+ * between cpu_exec_start and cpu_exec_end.  CPUs that are running
+ * cpu_exec are exited immediately.  CPUs that call cpu_exec_start
+ * during the exclusive section go to sleep until this CPU calls
+ * end_exclusive.
+ */
+static inline void start_exclusive(void) {
+  // [interface 15]
+}
+
+/**
+ * end_exclusive:
+ *
+ * Concludes an exclusive execution section started by start_exclusive.
+ */
+static inline void end_exclusive(void) {
+  // [interface 15]
+}
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
