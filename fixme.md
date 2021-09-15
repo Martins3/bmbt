@@ -23,35 +23,6 @@
     8. qemu_irq_raise
     9. 在 /home/maritns3/core/vn/docs/qemu/lock.md 的 interrupt_request 的那个 section 并没有理清楚到底如何注入 interrupt 和处理的
     10. ipi 是如何模拟的?
-3. locks
-    1. include/sysemu/cpus.h : 定义的为空函数啊
-    1. qemu_mutex_lock : 在 qemu_mutex_lock 只会出现在 tcg.c 这是 QEMU 的失误吗 ?
-      - 关注一下，为什么单独这里是需要处理 lock 的
-    2. helper_atomic_cmpxchgq_le_mmu : 这个最后会导入一个很烦人的 lock 中间去
-    3. big qemu lock
-    4. include/qemu/atomic.h : 这里定义了一堆空函数
-    1. 感觉 Qemu 关于多核的接口不是很统一啊
-        1. QemuSpin
-        2. QemuMutex
-        3. qemu_spin_lock
-        4. 在 include/qemu 下存在 thread.h thread-posix.h 等
-        6. lockable
-    2. 那些数据结构需要 RCU 来保护
-    4. 统计一下 `__thread` 出现的次数
-    1. atomic 机制谁在使用啊
-    2. qemu_mutex 机制的出现位置
-    4. 多核机制分析其实不仅仅在于此
-      - cpus.h
-      - CPUState 中的 cpu_index, cluster_index 等
-    1. thread.h 中间的接口需要补齐
-    2. cpus.h 中间接口
-    3. first_cpu / CPU_NEXT / CPU_NEXT
-    1. TCG region : 比如 tcg_tb_lookup
-    1. TB hash table : hash table RCU 机制
-    1. iothread
-    1. async_run_on_cpu
-    2. memory_ldst 中的 prepare_mmio_access 的操作
-    3. MemoryRegion::global_locking
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
