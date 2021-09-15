@@ -9,10 +9,10 @@
 #include "../../include/hw/i386/apic.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/log.h"
+#include "../../include/qemu/main-loop.h"
 #include "../../include/qemu/plugin.h"
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
-#include "../../include/qemu/main-loop.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 #include "../i386/LATX/x86tomips-config.h"
@@ -547,8 +547,56 @@ int cpu_exec(CPUState *cpu) {
   rcu_read_unlock();
 
   return ret;
+}
 
-  return 0;
+void cpu_exec_step_atomic(CPUState *cpu) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+  TranslationBlock *tb;
+  target_ulong cs_base, pc;
+  uint32_t flags;
+  uint32_t cflags = 1;
+  uint32_t cf_mask = cflags & CF_HASH_MASK;
+
+  if (sigsetjmp(cpu->jmp_env, 0) == 0) {
+    tb = tb_lookup__cpu_state(cpu, &pc, &cs_base, &flags, cf_mask);
+    if (tb == NULL) {
+      mmap_lock();
+      tb = tb_gen_code(cpu, pc, cs_base, flags, cflags);
+      mmap_unlock();
+    }
+
+    start_exclusive();
+
+    /* Since we got here, we know that parallel_cpus must be true.  */
+    parallel_cpus = false;
+    cc->cpu_exec_enter(cpu);
+    /* execute the generated code */
+    // fuck_trace_exec_tb(tb, pc);
+    cpu_tb_exec(cpu, tb);
+    cc->cpu_exec_exit(cpu);
+  } else {
+    /*
+     * The mmap_lock is dropped by tb_gen_code if it runs out of
+     * memory.
+     */
+#ifndef CONFIG_SOFTMMU
+    tcg_debug_assert(!have_mmap_lock());
+#endif
+    if (qemu_mutex_iothread_locked()) {
+      qemu_mutex_unlock_iothread();
+    }
+    assert_no_pages_locked();
+    qemu_plugin_disable_mem_helpers(cpu);
+  }
+
+  if (cpu_in_exclusive_context(cpu)) {
+    /* We might longjump out of either the codegen or the
+     * execution, so must make sure we only end the exclusive
+     * region if we started it.
+     */
+    parallel_cpus = true;
+    end_exclusive();
+  }
 }
 
 struct tb_desc {

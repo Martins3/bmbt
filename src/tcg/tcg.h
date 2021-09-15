@@ -394,4 +394,6 @@ void tcg_tb_foreach(GTraverseFunc func, gpointer user_data);
 
 size_t tcg_code_size(void);
 
+void tcg_register_thread(void);
+
 #endif /* end of include guard: TCG_H_FXBBEZAS */

@@ -195,6 +195,9 @@ static inline CPUNegativeOffsetState *cpu_neg(CPUState *cpu) {
   return &arch_cpu->neg;
 }
 
+int cpu_exec(CPUState *cpu);
+void cpu_exec_step_atomic(CPUState *cpu);
+
 /* The set of all bits that should be masked when single-stepping.  */
 #define CPU_INTERRUPT_SSTEP_MASK                                               \
   (CPU_INTERRUPT_HARD | CPU_INTERRUPT_TGT_EXT_0 | CPU_INTERRUPT_TGT_EXT_1 |    \
