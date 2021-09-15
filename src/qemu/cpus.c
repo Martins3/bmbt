@@ -108,7 +108,7 @@ static int tcg_cpu_exec(CPUState *cpu) {
  * elsewhere.
  */
 
-static void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
+void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
   CPUState *cpu = arg;
 
   assert(tcg_enabled());

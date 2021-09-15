@@ -52,24 +52,20 @@ static inline void qemu_thread_get_self(QemuThread *thread) {
   thread->thread = 0x1234;
 }
 
-static inline int qemu_get_thread_id(void){
-    // return syscall(SYS_gettid);
-    return 0x4567;
+static inline int qemu_get_thread_id(void) {
+  // return syscall(SYS_gettid);
+  return 0x4567;
 }
 
 typedef struct {
-} QemuCond ;
+} QemuCond;
 
 /*
  * IMPORTANT: The implementation does not guarantee that pthread_cond_signal
  * and pthread_cond_broadcast can be called except while the same mutex is
  * held as in the corresponding pthread_cond_wait calls!
  */
-static inline void qemu_cond_signal(QemuCond *cond){
-
-}
-static inline void qemu_cond_broadcast(QemuCond *cond){
-
-}
+static inline void qemu_cond_signal(QemuCond *cond) {}
+static inline void qemu_cond_broadcast(QemuCond *cond) {}
 
 #endif /* end of include guard: THREAD_H_P9X05SBE */
