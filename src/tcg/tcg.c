@@ -16,9 +16,6 @@
 #include <stddef.h>
 #include <string.h>
 
-#define qemu_mutex_lock(m) ({})
-#define qemu_mutex_unlock(m) ({})
-
 #define TCG_HIGHWATER 1024
 
 #define CPU_TEMP_BUF_NLONGS 128

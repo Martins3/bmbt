@@ -1,5 +1,6 @@
 #include "../../include/qemu/main-loop.h"
 
+// [interface 11]
 static bool iothread_locked = false;
 
 bool qemu_mutex_iothread_locked(void) { return iothread_locked; }
