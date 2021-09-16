@@ -14,3 +14,7 @@
 | 10       | RAMList::mru_block                                                                                                     | 暂时保留 RAMList 的概念，但是因为 RAMList 现在只有一个 RAM, 所以 mru_block 就是那个一，不存在对应的 list 了          |
 | 11       | BQl                                                                                                                    | 因为暂时只有一个 thread，所以 BQL 无需上锁了，现在只有逻辑功能的模拟                                                 |
 | 12       | QemuSpin 和 QemuMutex                                                                                                  | 采取和 BQL 类似的做法                                                                                                |
+| 13       | start_tcg_kick_timer                                                                                                   | 暂时只是支持一个 guest vCPU 的，所以无需 timer 来 kick 实现 vCPU 的轮转                                              |
+| 14       | cpu_can_run, CPUState::stop, CPUState::stopped                                                                         | stop 适用于 migration 的时候将 CPU stop 的                                                                           |
+| 15       | cpu_exec_start / cpu_exec_start / start_exclusive / end_exclusive                                                      | 因为现在只是支持单核，所以暂时不支持这些个操作                                                                       |
+| 16| cpus.c 中的几个 icount 函数||
