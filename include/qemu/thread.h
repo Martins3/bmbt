@@ -68,4 +68,7 @@ typedef struct {
 static inline void qemu_cond_signal(QemuCond *cond) {}
 static inline void qemu_cond_broadcast(QemuCond *cond) {}
 
+#define QEMU_LOCK_GUARD(x)                                                     \
+  {}
+
 #endif /* end of include guard: THREAD_H_P9X05SBE */
