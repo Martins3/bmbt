@@ -17,4 +17,7 @@
 | 13       | start_tcg_kick_timer                                                                                                   | 暂时只是支持一个 guest vCPU 的，所以无需 timer 来 kick 实现 vCPU 的轮转                                              |
 | 14       | cpu_can_run, CPUState::stop, CPUState::stopped                                                                         | stop 适用于 migration 的时候将 CPU stop 的                                                                           |
 | 15       | cpu_exec_start / cpu_exec_start / start_exclusive / end_exclusive                                                      | 因为现在只是支持单核，所以暂时不支持这些个操作                                                                       |
-| 16| cpus.c 中的几个 icount 函数||
+| 16       | cpus.c 中的几个 icount 函数                                                                                            |                                                                                                                      |
+| 17       | current_cpu                                                                                                            | 只有一次赋值，也许可以 current_cpu != NULL 表示当前在处理 IO 还是模拟执行? 暂时也没有这种需求                        |
+| 18       | QTAILQ_INSERT_TAIL_RCU / QTAILQ_REMOVE_RCU                                                                             | 将 RCU 直接修改为非 RCU 版本的                                                                                       |
+| 19       | do_run_on_cpu                                                                                                          | 因为只有一个 thread 所以 do_run_on_cpu 总是运行在自己的上                                                            |

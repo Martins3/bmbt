@@ -2,6 +2,8 @@
 
 ## 初始化 QEMU 大约需要处理的事情
 - [ ] tcg_register_thread : 唯一 reference 了 MachineState
+- [ ] cpu_exec_realizefn 中调用 cpu_list_add 添加 CPUState 的
+- [ ] CPUState 中的 cpu_index, cluster_index 等
 
 
 ## 几个关键的结构体功能和移植差异说明
