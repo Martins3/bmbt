@@ -4,22 +4,21 @@
 - [ ] tcg_register_thread : 唯一 reference 了 MachineState
 - [ ] cpu_exec_realizefn 中调用 cpu_list_add 添加 CPUState 的
 - [ ] CPUState 中的 cpu_index, cluster_index 等
-
+- [ ] 问题是 PCI 设备实际上是需要的，需要初始化一下 PCI 的设备空间吗?
+  - [ ] 问题是，这个初始化过程中，需要保持那些设备的之间的联系的吗?
+- [ ] fw_cfg 的初始化过程
+- [ ] cpu 初始化
 
 ## 几个关键的结构体功能和移植差异说明
 
-| struct           | explaination                                                                            |
-|------------------|-----------------------------------------------------------------------------------------|
-| CPUClass         | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
-| CPUState         |                                                                                         |
-| CPUX86State      | 和 CPUState 没有父子关系，而是靠 CPUState::env_ptr 决定的 |
-| X86CPU           |                                                                                         |
-| TranslationBlock | 1. size x86 代码的 size 还是 la 代码段的 size </br> 2.                                  |
-| TBContext        | 一个统计，一个 qht, 似乎只是定义了一个全局变量                                                                        |
-| TCGContext       | TODO 每一个 thread 定义了一个，同时存在一个全局的 tcg_init_ctx                         |
-
-x86_cpu_common_class_init 中注册的函数:
-- [ ] 应该感到非常奇怪才对，注册了这么多函数，为什么只有这么一点点才在使用啊
+| struct      | explaination                                                                            |
+|-------------|-----------------------------------------------------------------------------------------|
+| CPUClass    | 在函数 x86_cpu_common_class_init 中已经知道注册的函数, 可以将其直接定义为一个静态函数集 |
+| CPUState    |                                                                                         |
+| CPUX86State | 和 CPUState 没有父子关系，而是靠 CPUState::env_ptr 决定的                               |
+| X86CPU      |                                                                                         |
+| TBContext   | 一个统计，一个 qht, 似乎只是定义了一个全局变量                                          |
+| TCGContext  | TODO 每一个 thread 定义了一个，同时存在一个全局的 tcg_init_ctx                          |
 
 ## 问题
 - [ ] qdev_device_add 是做什么的
@@ -65,7 +64,7 @@ huxueshi:qdev_device_add virtio-9p-pci
 | e820 | :heavy_check_mark: | - [ ] 为什么有了 acpi 还是需要 e820 啊，当使用增加了一个内存条，并没有说非要修改 acpi 啊 |
 | apci | :x:                | - [ ] 在 QEMU 和 kernel 中间都存在 CONFIG_ACPI 的选项，也许暂时可以不去管                |
 | pci  | :x:                | - [ ] `pcmc->pci_enabled`                                                                |
-| cpu  | :x:                | - [ ] 到底初始化的是那几个结构体，和 tcg 耦合的结构体是谁                                                           |
+| cpu  | :x:                | - [ ] 到底初始化的是那几个结构体，和 tcg 耦合的结构体是谁                                |
 
 非 PCI 设备枚举:
 | Device       | parent              |
