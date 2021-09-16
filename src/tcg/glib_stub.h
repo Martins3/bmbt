@@ -62,4 +62,5 @@ gpointer g_try_malloc0(int n_bytes);
 #undef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+gpointer g_malloc0(gint n_bytes);
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */
