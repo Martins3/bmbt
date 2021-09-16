@@ -259,3 +259,55 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
   rcu_unregister_thread();
   return NULL;
 }
+
+void cpu_exit(CPUState *cpu) {
+  atomic_set(&cpu->exit_request, 1);
+  /* Ensure cpu_exec will see the exit request after TCG has exited.  */
+  smp_wmb();
+#ifdef CONFIG_X86toMIPS
+  // FIXME
+#ifdef TODO_SSS
+  if (xtm_sigint_opt()) {
+    pthread_kill(cpu->thread->thread, XTM_SIGINT_SIGNAL);
+    return;
+  }
+#endif
+#endif
+  atomic_set(&cpu->icount_decr_ptr->u16.high, -1);
+}
+
+/* Kick all RR vCPUs */
+static void qemu_cpu_kick_rr_cpus(void) {
+  CPUState *cpu;
+
+  CPU_FOREACH(cpu) { cpu_exit(cpu); };
+}
+
+void qemu_cpu_kick(CPUState *cpu) {
+#ifdef BMBT
+  qemu_cond_broadcast(cpu->halt_cond);
+#endif
+
+  if (tcg_enabled()) {
+    if (qemu_tcg_mttcg_enabled()) {
+      cpu_exit(cpu);
+    } else {
+      qemu_cpu_kick_rr_cpus();
+    }
+  } else {
+    g_assert_not_reached();
+  }
+
+#ifdef BMBT
+  else {
+    if (hax_enabled()) {
+      /*
+       * FIXME: race condition with the exit_request check in
+       * hax_vcpu_hax_exec
+       */
+      cpu->exit_request = 1;
+    }
+    qemu_cpu_kick_thread(cpu);
+  }
+#endif
+}

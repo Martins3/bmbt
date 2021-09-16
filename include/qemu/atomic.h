@@ -114,4 +114,13 @@
     __atomic_thread_fence(__ATOMIC_SEQ_CST);                                   \
   })
 
+#ifndef smp_wmb
+#define smp_wmb()                                                              \
+  {}
+#endif
+#ifndef smp_rmb
+#define smp_rmb()                                                              \
+  {}
+#endif
+
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

@@ -1,5 +1,6 @@
 #include "../../include/qemu/main-loop.h"
 #include "../../include/qemu/rcu.h"
+#include "../tcg/glib_stub.h"
 
 struct qemu_work_item {
   struct qemu_work_item *next;
@@ -14,6 +15,21 @@ static QemuMutex qemu_cpu_list_lock;
 CPUState *current_cpu = NULL;
 
 CPUTailQ cpus = QTAILQ_HEAD_INITIALIZER(cpus);
+
+static void queue_work_on_cpu(CPUState *cpu, struct qemu_work_item *wi) {
+  qemu_mutex_lock(&cpu->work_mutex);
+  if (cpu->queued_work_first == NULL) {
+    cpu->queued_work_first = wi;
+  } else {
+    cpu->queued_work_last->next = wi;
+  }
+  cpu->queued_work_last = wi;
+  wi->next = NULL;
+  wi->done = false;
+  qemu_mutex_unlock(&cpu->work_mutex);
+
+  qemu_cpu_kick(cpu);
+}
 
 void process_queued_cpu_work(CPUState *cpu) {
   struct qemu_work_item *wi;
@@ -54,6 +70,33 @@ void process_queued_cpu_work(CPUState *cpu) {
   }
   qemu_mutex_unlock(&cpu->work_mutex);
   qemu_cond_broadcast(&qemu_work_cond);
+}
+
+void do_run_on_cpu(CPUState *cpu, run_on_cpu_func func, run_on_cpu_data data) {
+  struct qemu_work_item wi;
+
+  if (qemu_cpu_is_self(cpu)) {
+    func(cpu, data);
+    return;
+  }
+  // [interface 19]
+  g_assert_not_reached();
+}
+
+void run_on_cpu(CPUState *cpu, run_on_cpu_func func, run_on_cpu_data data) {
+  do_run_on_cpu(cpu, func, data);
+}
+
+void async_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
+                      run_on_cpu_data data) {
+  struct qemu_work_item *wi;
+
+  wi = g_malloc0(sizeof(struct qemu_work_item));
+  wi->func = func;
+  wi->data = data;
+  wi->free = true;
+
+  queue_work_on_cpu(cpu, wi);
 }
 
 static bool cpu_index_auto_assigned;

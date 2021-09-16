@@ -49,6 +49,26 @@ typedef enum MMUAccessType {
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
 #define CPU_TRACE_DSTATE_MAX_EVENTS 32
 
+/*
+ * Low 16 bits: number of cycles left, used only in icount mode.
+ * High 16 bits: Set to -1 to force TCG to stop executing linked TBs
+ * for this CPU and return to its top level loop (even in non-icount mode).
+ * This allows a single read-compare-cbranch-write sequence to test
+ * for both decrementer underflow and exceptions.
+ */
+typedef union IcountDecr {
+  uint32_t u32;
+  struct {
+#ifdef HOST_WORDS_BIGENDIAN
+    uint16_t high;
+    uint16_t low;
+#else
+    uint16_t low;
+    uint16_t high;
+#endif
+  } u16;
+} IcountDecr;
+
 typedef struct CPUAddressSpace {
   AddressSpace *as;
 } CPUAddressSpace;
@@ -121,6 +141,7 @@ typedef struct CPUState {
   u32 cflags_next_tb;
 
   void *env_ptr; /* CPUArchState */
+  IcountDecr *icount_decr_ptr;
 
   int singlestep_enabled;
 
@@ -403,26 +424,6 @@ static inline void async_safe_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
   // FIXME interface
 }
 
-/*
- * Low 16 bits: number of cycles left, used only in icount mode.
- * High 16 bits: Set to -1 to force TCG to stop executing linked TBs
- * for this CPU and return to its top level loop (even in non-icount mode).
- * This allows a single read-compare-cbranch-write sequence to test
- * for both decrementer underflow and exceptions.
- */
-typedef union IcountDecr {
-  uint32_t u32;
-  struct {
-#ifdef HOST_WORDS_BIGENDIAN
-    uint16_t high;
-    uint16_t low;
-#else
-    uint16_t low;
-    uint16_t high;
-#endif
-  } u16;
-} IcountDecr;
-
 typedef struct CPUWatchpoint CPUWatchpoint;
 
 #define SSTEP_ENABLE 0x1  /* Enable simulated HW single stepping */
@@ -614,7 +615,6 @@ static inline void cpu_exec_end(CPUState *cpu) {
  */
 void process_queued_cpu_work(CPUState *cpu);
 
-
 /**
  * start_exclusive:
  *
@@ -637,6 +637,14 @@ static inline void start_exclusive(void) {
 static inline void end_exclusive(void) {
   // [interface 15]
 }
+
+/**
+ * qemu_cpu_kick:
+ * @cpu: The vCPU to kick.
+ *
+ * Kicks @cpu's thread.
+ */
+void qemu_cpu_kick(CPUState *cpu);
 
 #define UNASSIGNED_CPU_INDEX -1
 #define UNASSIGNED_CLUSTER_INDEX -1
