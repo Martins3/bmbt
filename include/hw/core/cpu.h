@@ -638,4 +638,7 @@ static inline void end_exclusive(void) {
   // [interface 15]
 }
 
+#define UNASSIGNED_CPU_INDEX -1
+#define UNASSIGNED_CLUSTER_INDEX -1
+
 #endif /* end of include guard: CPU_H_5RAXENPS */

@@ -15,4 +15,8 @@ static inline void rcu_unregister_thread(void) {}
 #define RCU_READ_LOCK_GUARD()                                                  \
   {}
 
+// [interface 18]
+#define QTAILQ_INSERT_TAIL_RCU QTAILQ_INSERT_TAIL
+#define QTAILQ_REMOVE_RCU QTAILQ_REMOVE
+
 #endif /* end of include guard: RCU_H_LHWIHDTM */

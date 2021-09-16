@@ -1,4 +1,5 @@
 #include "../../include/qemu/main-loop.h"
+#include "../../include/qemu/rcu.h"
 
 struct qemu_work_item {
   struct qemu_work_item *next;
@@ -8,8 +9,11 @@ struct qemu_work_item {
 };
 
 static QemuCond qemu_work_cond;
+static QemuMutex qemu_cpu_list_lock;
 
 CPUState *current_cpu = NULL;
+
+CPUTailQ cpus = QTAILQ_HEAD_INITIALIZER(cpus);
 
 void process_queued_cpu_work(CPUState *cpu) {
   struct qemu_work_item *wi;
@@ -50,4 +54,41 @@ void process_queued_cpu_work(CPUState *cpu) {
   }
   qemu_mutex_unlock(&cpu->work_mutex);
   qemu_cond_broadcast(&qemu_work_cond);
+}
+
+static bool cpu_index_auto_assigned;
+
+static int cpu_get_free_index(void) {
+  CPUState *some_cpu;
+  int max_cpu_index = 0;
+
+  cpu_index_auto_assigned = true;
+  CPU_FOREACH(some_cpu) {
+    if (some_cpu->cpu_index >= max_cpu_index) {
+      max_cpu_index = some_cpu->cpu_index + 1;
+    }
+  }
+  return max_cpu_index;
+}
+
+void cpu_list_add(CPUState *cpu) {
+  QEMU_LOCK_GUARD(&qemu_cpu_list_lock);
+  if (cpu->cpu_index == UNASSIGNED_CPU_INDEX) {
+    cpu->cpu_index = cpu_get_free_index();
+    assert(cpu->cpu_index != UNASSIGNED_CPU_INDEX);
+  } else {
+    assert(!cpu_index_auto_assigned);
+  }
+  QTAILQ_INSERT_TAIL_RCU(&cpus, cpu, node);
+}
+
+void cpu_list_remove(CPUState *cpu) {
+  QEMU_LOCK_GUARD(&qemu_cpu_list_lock);
+  if (!QTAILQ_IN_USE(cpu, node)) {
+    /* there is nothing to undo since cpu_exec_init() hasn't been called */
+    return;
+  }
+
+  QTAILQ_REMOVE_RCU(&cpus, cpu, node);
+  cpu->cpu_index = UNASSIGNED_CPU_INDEX;
 }

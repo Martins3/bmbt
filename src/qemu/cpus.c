@@ -182,6 +182,7 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
 
     if (!cpu) {
       cpu = first_cpu;
+      g_assert_not_reached();
     }
 
     while (cpu && !cpu->queued_work_first && !cpu->exit_request) {
