@@ -30,6 +30,7 @@
     4. 在 /home/maritns3/core/ld/DuckBuBi/include/sysemu/replay.h 中间定义一些 reply 相关的函数，和 icount 到底是什么关系
     5. CF_USE_ICOUNT ?
     6. use_icount : 这个变量的解释似乎很清晰，不过可以和具体的效果对比一下
+    7. can_do_io : lixinyu 说这个用于实现 icount 的，如果被 icount 那么就不可以直接进行 io 的之类的，阿巴阿巴
 5. log debug 和 trace : 其实暂时可以补全的, 都是一些 printf 而已
     1. tlb_debug
     2. do_tb_flush 中间又是直接使用 printf 的
