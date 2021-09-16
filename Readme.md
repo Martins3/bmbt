@@ -1,7 +1,6 @@
 # BMBT
 ![compile](https://github.com/martins3/BMBT/actions/workflows/compiler-check.yml/badge.svg?branch=dev)
 ![doc](https://github.com/martins3/BMBT/actions/workflows/lint-md.yml/badge.svg?branch=dev)
-[![CodeFactor](https://www.codefactor.io/repository/github/martins3/bmbt/badge?s=9d9536e6f84b669f60d01a3561675ed4040eab79)](https://www.codefactor.io/repository/github/martins3/bmbt)
 
 <p align="center">
   <img src="./front.jpeg"/>

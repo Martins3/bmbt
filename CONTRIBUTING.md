@@ -29,6 +29,10 @@ pre-commit 会在进行 commit 之前执行一些脚本做出检查，如果检�
 - code-test.sh : 每次提交需要保证通过测试
 - [ ] non-ascii-comment.sh : 不要在代码中携带中文注释，最好的代码是没有注释的，如果需要，那么就使用英文，不过表达不清楚，那么就写成一个 blog
 
+## 记录一下疑惑
+- 一般来说，使用 rebase and merge
+  - 但是如果 local 有 commit 没有推上去，就需要手动 merge 了
+
 [^1]: https://mtlynch.io/code-review-love/#12-award-all-ties-to-your-reviewer
 [^2]: https://support.gitkraken.com/working-with-repositories/githooksexample/
 [^3]: https://pre-commit.com/
