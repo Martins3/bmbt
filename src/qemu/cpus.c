@@ -189,8 +189,9 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
 #ifdef BMBT
       // [interface 13]
       atomic_mb_set(&tcg_current_rr_cpu, cpu);
+      // [interface 16]
+      current_cpu = cpu;
 #endif
-      current_cpu = cpu; // @todo does I still need current_cpu ?
 
 #ifdef BMBT
       qemu_clock_enable(QEMU_CLOCK_VIRTUAL,
