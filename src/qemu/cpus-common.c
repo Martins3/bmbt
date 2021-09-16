@@ -9,6 +9,8 @@ struct qemu_work_item {
 
 static QemuCond qemu_work_cond;
 
+CPUState *current_cpu = NULL;
+
 void process_queued_cpu_work(CPUState *cpu) {
   struct qemu_work_item *wi;
 

@@ -301,7 +301,6 @@ typedef struct CPUClass {
 
 #define CPU_GET_CLASS(cpu) cpu->cc
 
-// FIXME initialize it
 /* current CPU in the current thread. It is only valid inside
    cpu_exec() */
 extern CPUState *current_cpu;
