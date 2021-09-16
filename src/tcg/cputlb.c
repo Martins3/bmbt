@@ -705,8 +705,8 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
   vaddr_page = vaddr & TARGET_PAGE_MASK;
   paddr_page = paddr & TARGET_PAGE_MASK;
 
-  mr = address_space_translate_for_iotlb(cpu, asidx, paddr_page, &xlat,
-                                              &sz, attrs, &prot);
+  mr = address_space_translate_for_iotlb(cpu, asidx, paddr_page, &xlat, &sz,
+                                         attrs, &prot);
   assert(sz >= TARGET_PAGE_SIZE);
 
   tlb_debug("vaddr=" TARGET_FMT_lx " paddr=0x" TARGET_FMT_plx

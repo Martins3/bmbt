@@ -107,6 +107,7 @@
     asm volatile("" ::: "memory");                                             \
     (void)0;                                                                   \
   })
+
 #define smp_mb()                                                               \
   ({                                                                           \
     barrier();                                                                 \
