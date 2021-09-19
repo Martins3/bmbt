@@ -1984,4 +1984,7 @@ static inline target_long lshift(target_long x, int n) {
 // FIXME the only user is test-def.h
 void x86_update_hflags(CPUX86State *env);
 
+#define APIC_DEFAULT_ADDRESS 0xfee00000
+#define APIC_SPACE_SIZE      0x100000
+
 #endif /* end of include guard: CPU_H_CJEDABLV */
