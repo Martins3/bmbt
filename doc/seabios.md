@@ -18,6 +18,8 @@
         - 可以找到其 loader script
     - [ ] 需要有一个标准的方法来分析给定一个 bios 地址，然后找到对应 seabios 源码，方便之后的调试
 
+- pci_device_tbl : 中间还有更多的设备，注册了各种 dvices 的初始化 hook 函数
+
 ## 决策
 虽然具体内容不是也很清楚，但是没有一个 MMIO，找到对应的位置就差不多了
 
@@ -162,6 +164,8 @@ This code calls romlayout.S:entry_post() which then calls post.c:handle_post() i
           - optionrom_setup : Non-VGA option rom init
             - run_file_roms : Run all roms in a given CBFS directory. 其实也就是 genroms/linuxboot_dma.bin 和 genroms/kvmvapic.bin
               - init_optionrom
+                - callrom
+                  - `__callrom`
           - [ ] interactive_bootmenu
           - wait_threads
           - make_bios_readonly
