@@ -21,9 +21,11 @@
   - [ ] 没有理清楚 msi / ioapic / pic 的中断到达 apic 的过程
   - [ ] 没有搞清楚 pic 直接发送中断到 cpu 的过程的
 
-- [ ] 中断发送给 lapic 是不是只是靠读写地址空间的方法？
+- [x] 中断发送给 lapic 是不是只是靠读写地址空间的方法？
+  - pic 不是
 
-- [ ] 如果当前设备只是支持 pic 岂不是这个东西即使无需模拟了 ?
+- [x] 如果当前设备只是支持 pic 岂不是这个东西即使无需模拟了 ?
+  - 不是的
 
 分析一下 lapic 的特殊性:
 -  需要回答一个问题，为什么只是 apic 被单独处理了, 只有这个一个在 X86CPU::apic_state 中的
@@ -48,39 +50,10 @@
     - 因为时钟是在另一个线程处理的，所以需要实现
   - 如果不是来自于 pic 的中断，那就清理掉这个中断
 
-使用 tcg 的时候(否则是 kvm 模拟了)，在 QEMU 初始化会调用一次 apic_mem_write
-在内核启动之前会调用一次, 之后 seabios 会调用数次
-```txt
-(qemu) huxueshi:apic_mem_write addr=0 // qemu 初始化 hpet 的时候代码自动触发的
-huxueshi:apic_mem_write addr=f0 // 都是 kernel 启动之前搞定的
-huxueshi:apic_mem_write addr=350
-huxueshi:apic_mem_write eip=ec676 // 暂时没有方法通过地址找 seabios 的源代码
-huxueshi:apic_mem_write val=8700
-huxueshi:apic_mem_write addr=360
-huxueshi:apic_mem_write addr=300
-huxueshi:apic_mem_write addr=300
-```
-因为 seabios 的代码很简单，其实可以很容易的 seabios 操作 apic 的位置在 smp_scan 中
-
 ## 备忘
 - tcg_handle_interrupt / x86_cpu_exec_interrupt 的功能区别:
   - 前者: 让执行线程退出，去检查 interrupt
   - 后者: 线程相关的具体分析 interrupt 该如何处理
-
-#### intel manual
-- volume 3 CHAPTER 6 (INTERRUPT AND EXCEPTION HANDLING) : 从 CPU 的角度描述了中断的处理过程
-- volume 3 CHAPTER 10 (ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)): apic
-  - 10.8.3.1 Task and Processor Priorities
-  - 10.8.4 Interrupt Acceptance for Fixed Interrupts : irr 表示 apic 接受的中断，isr 表示正在处理的中断
-  - 10.8.5 Signaling Interrupt Servicing Completion : 描述 eoi 的作用, 软件写 eoi，然后就从 isr 中可以获取下一个需要处理的中断
-  - 10.11.1 Message Address Register Format : 描述 MSI 地址的格式, 从中看到一个中断如何发送到特定的 vector 的
-
-## 值得一读的文档
-- [Part 1. Interrupt controller evolution](https://habr.com/en/post/446312/)
-- [Part 2. Linux kernel boot options](https://habr.com/en/post/501660/)
-- [Part 3. Interrupt routing setup in a chipset, with the example of coreboot](https://habr.com/en/post/501912/)
-
-- [How to figure out the interrupt source on I/O APIC?](https://stackoverflow.com/questions/57704146/how-to-figure-out-the-interrupt-source-on-i-o-apic)
 
 ## how interrupt simulated by QEMU
 - [ ] 使用 Niugene 的 blog 来分析基本的执行流程
@@ -144,16 +117,6 @@ apic_timer => apic_local_deliver => apic_set_irq 的过程中，本来 apic 的�
 ```txt
 [0=236] [1=65536] [2=65536] [3=67328] [4=1024] [5=254]
 ```
-
-#### irr 和 isr 分别是什么
-- apic_set_irq : 中断首先提交给 irr 的
-- apic_get_interrupt : 进行从 irr 到 isr 的转移, 表示 cpu 将会处理该中断
-- apic_update_irq : 提醒 cpu 存在有, 整个模拟过程中，很多位置都采用
-
-如果没有 priority 的限制，从 irr 就是立刻到 isr 上，否则就首先在 irr 上等着
-高优先级的可以打断低优先级的。
-发送 EOI 中断可以接下来执行 isr 上的下一个中断，当然高优先级的也可以让 cpu 执行下一个中断。
-
 
 - [ ] 解释一下 nvme 中地址空间的内容
 ```txt

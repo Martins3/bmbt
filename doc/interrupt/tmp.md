@@ -11,9 +11,12 @@
 - [how interrupt reach to vCPU](#how-interrupt-reach-to-vcpu)
   - [keyboard](#keyboard)
   - [ide](#ide)
+- [interrupt in intel SDM](#interrupt-in-intel-sdm)
+- [intel manual](#intel-manual)
+    - [irr 和 isr 分别是什么](#irr-和-isr-分别是什么)
 - [tcg pic](#tcg-pic)
 - [tcg ioapic](#tcg-ioapic)
-- [interrupt x86 Linux kernel](#interrupt-x86-linux-kernel)
+- [interrupt in x86 Linux kernel](#interrupt-in-x86-linux-kernel)
   - [code flow from first instruction](#code-flow-from-first-instruction)
     - [start from idt](#start-from-idt)
     - [jump to C function](#jump-to-c-function)
@@ -309,6 +312,7 @@ struct IRQState {
   - 将初始化完成的 qemu_irq 拷贝到 GSIState::ioapic_irq 中
 
 总结: pic 的中断走 pic_irq_request, ioapic 的中断走 ioapic_set_irq
+lapic 因为是每一个 CPU 需要的，所以其初始化在 x86_cpu_realizefn 中进行的。
 
 ## how interrupt reach to vCPU
 
@@ -451,6 +455,36 @@ void qemu_set_irq(qemu_irq irq, int level)
 #33 0x00007ffff61b4293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
 ```
 
+## interrupt in intel SDM
+
+## intel manual
+如果完全没有基础，可以阅读一下 Understanding Linux kernel 的相关章节。
+
+下面是 intel SDM 中相关的几个章节:
+- volume 3 CHAPTER 6 (INTERRUPT AND EXCEPTION HANDLING) : 从 CPU 的角度描述了中断的处理过程
+- volume 3 CHAPTER 10 (ADVANCED PROGRAMMABLE INTERRUPT CONTROLLER (APIC)): apic
+  - 10.8.3.1 Task and Processor Priorities
+  - 10.8.4 Interrupt Acceptance for Fixed Interrupts : irr 表示 apic 接受的中断，isr 表示正在处理的中断
+  - 10.8.5 Signaling Interrupt Servicing Completion : 描述 eoi 的作用, 软件写 eoi，然后就从 isr 中可以获取下一个需要处理的中断
+  - 10.11.1 Message Address Register Format : 描述 MSI 地址的格式, 从中看到一个中断如何发送到特定的 vector 的
+
+还有几个不错的文档可以阅读一下:
+- [Part 1. Interrupt controller evolution](https://habr.com/en/post/446312/)
+- [Part 2. Linux kernel boot options](https://habr.com/en/post/501660/)
+- [Part 3. Interrupt routing setup in a chipset, with the example of coreboot](https://habr.com/en/post/501912/)
+- [How to figure out the interrupt source on I/O APIC?](https://stackoverflow.com/questions/57704146/how-to-figure-out-the-interrupt-source-on-i-o-apic)
+
+#### irr 和 isr 分别是什么
+- apic_set_irq : 中断首先提交给 irr 的
+- apic_get_interrupt : 进行从 irr 到 isr 的转移, 表示 cpu 将会处理该中断
+- apic_update_irq : 提醒 cpu 存在有, 整个模拟过程中，很多位置都采用
+
+如果没有 priority 的限制，从 irr 就是立刻到 isr 上，否则就首先在 irr 上等着
+高优先级的可以打断低优先级的。
+发送 EOI 中断可以接下来执行 isr 上的下一个中断，当然高优先级的也可以让 cpu 执行下一个中断。
+
+
+
 ## tcg pic
 - pc_i8259_create
   - `i8259_init(isa_bus, x86_allocate_cpu_irq())`
@@ -509,7 +543,8 @@ x86_allocate_cpu_irq 会创建出来一个 qemu_irq 出来，其 handler 为 pic
 #18 0x0000555555940c92 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:50
 ```
 
-## interrupt x86 Linux kernel
+
+## interrupt in x86 Linux kernel
 可以首先读读 [Writing an OS in Rust : CPU Exceptions](https://os.phil-opp.com/cpu-exceptions/) 来复习一下 x86 中断。
 
 ### code flow from first instruction
@@ -1033,8 +1068,8 @@ interrupt 的 tirgger 类型。
 2. handle_fasteoi_irq
 3. handle_level_irq
 
-handle_level_irq 只有在 setup_default_timer_irq 中注册 timer_interrupt 是时候使用
-
+handle_level_irq 只有在 setup_default_timer_irq 中注册 timer_interrupt 是时候使用，使用这个 hook 主要是处理 legacy 的设备的，处理 level flow 的情况更多是
+handle_fasteoi_irq
 ```c
 /*
 #0  timer_interrupt (irq=0, dev_id=0x0 <fixed_percpu_data>) at arch/x86/kernel/time.c:57
@@ -1047,7 +1082,6 @@ handle_level_irq 只有在 setup_default_timer_irq 中注册 timer_interrupt 是
 #7  __common_interrupt (regs=<optimized out>, vector=48) at arch/x86/kernel/irq.c:250
 #8  0xffffffff81c366ee in common_interrupt (regs=0xffffffff82603dc8, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
 ```
-
 但是随着系统启动，很快就切换为 lapic 来提供时钟中断，其 flow 类型为 interrupt
 ```c
 /*
@@ -1060,8 +1094,7 @@ handle_level_irq 只有在 setup_default_timer_irq 中注册 timer_interrupt 是
 #6  __sysvec_apic_timer_interrupt (regs=<optimized out>) at arch/x86/kernel/apic/apic.c:1106
 #7  0xffffffff81c3810d in sysvec_apic_timer_interrupt (regs=0xffffc90000013c98) at arch/x86/kernel/apic/apic.c:1100
 ```
-因为 pci interrupt line 是共享的，而只有 level 类型才可以用于共享，可以看到 e1000 的
-
+因为 pci interrupt line 是共享的，而只有 level 类型才可以用于共享，可以看到 e1000 的就是经过 handle_fasteoi_irq 的。
 ```c
 /*
 #0  e1000_intr (irq=11, data=0xffff888100232000) at drivers/net/ethernet/intel/e1000/e1000_main.c:3749
@@ -1074,56 +1107,57 @@ handle_level_irq 只有在 setup_default_timer_irq 中注册 timer_interrupt 是
 #7  __common_interrupt (regs=<optimized out>, vector=40) at arch/x86/kernel/irq.c:250
 #8  0xffffffff81c3670e in common_interrupt (regs=0xffffc900008b3b98, error_code=<optimized out>) at arch/x86/kernel/irq.c:240
 ```
+下面分析一下，通过 elcr[^12] 是如何操控 pic 的中断类型的
 
-- i8259_init_chip : 注册地址
+首先，提供在 io 空间中注册 elcr 的两个端口
+
 - pic_common_realize : 将 PICCommonState::elcr_io 这个地址空间注册到 isa 上去
-- pic_realize : 注册 handler, 似乎超级简单, 作用就是修改 PICCommonState::elcr 的数值，最后的作用体现在 pic_set_irq 上的
+  - `isa_register_ioport(isa, &s->elcr_io, s->elcr_addr);`
+- pic_realize : 注册 handler, 作用就是修改 PICCommonState::elcr 的数值，最后的作用体现在 pic_set_irq 上的
+  - `memory_region_init_io(&s->elcr_io, OBJECT(s), &pic_elcr_ioport_ops, s, "elcr", 1);`
 
-- 为什么需要将 bridge 接入的四个中断全部设置为 level 的
-  - 是不是，实际上，将 piix3 发送的中断是经过 pic 的
-
-- 这里同时搞了两个事情:
-  - pci_config_writeb : 设置 irq 的中断路由规则
-
-- 确定一下 piix3 下的设备都是有谁的
-  - 似乎那是 ISA 总线的事情，实际上，和我们没有关系的哇
-
-- wiki[^12] 描述了 elcr 说处理 isa 总线之类的
-  - 实际上，这个事情似乎和 piix3 关系不大的。
-
-- [ ] 内核中也会调用 piix3_write_config 的, 找到对应的位置
-- 不过 QEMU 中不存在和 piix3_write_config 对称的 piix3_read_config
-
-
-- piix3_write_config 中的 val 根本没用啊，而是使用 `bus->irq_count` 在更新这个东西。
-
-
-```c
-static const MemoryRegionOps pic_elcr_ioport_ops = {
-    .read = elcr_ioport_read,
-    .write = elcr_ioport_write,
-    .impl = {
-        .min_access_size = 1,
-        .max_access_size = 1,
-    },
-};
+```txt
+address-space: I/O
+  0000000000000000-000000000000ffff (prio 0, i/o): io
+    ...
+    00000000000004d0-00000000000004d0 (prio 0, i/o): elcr
+    00000000000004d1-00000000000004d1 (prio 0, i/o): elcr
 ```
-
-修改 PICCommonState::elcr 的内容:
+然后在 seabios 中的 piix_isa_bridge_setup 会调用 pic_elcr_ioport_ops 更新 PICCommonState::elcr
 ```c
 struct PICCommonState {
     uint8_t elcr; /* PIIX edge/trigger selection*/
 }
 ```
 
-在 pic_set_irq 中会使用 elcr 来进行判断。
-
-nvme 并没有挂载到 isa 上，而是直接挂载到 pci 总线上。
-
-从 IBM 的描述上看，实际上，有好多都是 edge 的，因为 irq shared 的原因，从 pci 过来的中断都是需要是 edge 的
-
-所以，fasteoi 就是用于处理 edge 的。
-
+在 pic_set_irq 中可以看到 PICCommonState::elcr 如何影响中断的
+```c
+static void pic_set_irq(void *opaque, int irq, int level)
+{
+    // ...
+    if (s->elcr & mask) {
+        /* level triggered */
+        if (level) {
+            s->irr |= mask;
+            s->last_irr |= mask;
+        } else {
+            s->irr &= ~mask;
+            s->last_irr &= ~mask;
+        }
+    } else {
+        /* edge triggered */
+        if (level) {
+            if ((s->last_irr & mask) == 0) {
+                s->irr |= mask;
+            }
+            s->last_irr |= mask;
+        } else {
+            s->last_irr &= ~mask;
+        }
+    }
+    pic_update_irq(s);
+}
+```
 
 [^5]: https://stackoverflow.com/questions/51490552/how-is-cr8-register-used-to-prioritize-interrupts-in-an-x86-64-cpu
 [^11]: https://cloud.tencent.com/developer/article/1087271
