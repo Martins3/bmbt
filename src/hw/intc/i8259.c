@@ -68,7 +68,8 @@ static void pic_set_irq(void *opaque, int irq, int level) {
   int irq_index = s->master ? irq : irq + 8;
 
   // fuck_trace_pic_set_irq(s->master, irq, level);
-  pic_stat_update_irq(irq_index, level);
+  // [interface 18]
+  // pic_stat_update_irq(irq_index, level);
 
 #ifdef DEBUG_IRQ_LATENCY
   if (level) {
