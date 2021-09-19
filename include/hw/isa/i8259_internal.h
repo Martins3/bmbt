@@ -1,3 +1,6 @@
+#ifndef I8259_INTERNAL_H_XQYSJYON
+#define I8259_INTERNAL_H_XQYSJYON
+
 #include "../../types.h"
 #include "../irq.h"
 typedef struct {
@@ -32,3 +35,5 @@ typedef struct {
 void pic_reset_common(PICCommonState *s);
 // [interface 17]
 void i8259_init_chip(const char *name, bool master);
+
+#endif /* end of include guard: I8259_INTERNAL_H_XQYSJYON */
