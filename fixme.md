@@ -21,6 +21,7 @@
     8. qemu_irq_raise
     9. 在 /home/maritns3/core/vn/docs/qemu/lock.md 的 interrupt_request 的那个 section 并没有理清楚到底如何注入 interrupt 和处理的
     10. ipi 是如何模拟的?
+    11. 在 i386/cpu.h 中的 cpu_report_tpr_access 和 apic_handle_tpr_access_report 暂时无人使用的
 4. icount 机制
     1. cpu_exec
     2. TranslationBlock::icount
