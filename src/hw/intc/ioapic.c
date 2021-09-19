@@ -1,4 +1,5 @@
 #include "../../i386/cpu.h"
+#include "../../include/exec/cpu-all.h"
 #include "../../include/hw/i386/apic-msidef.h"
 #include "../../include/hw/i386/ioapic_internal.h"
 #include "../../include/hw/i386/pc.h"
@@ -98,8 +99,7 @@ static void ioapic_service(IOAPICCommonState *s) {
          * the IOAPIC message into a MSI one, and its
          * address space will decide whether we need a
          * translation. */
-        // what a SHAME
-        // stl_le_phys(ioapic_as, info.addr, info.data);
+        stl_le_phys(ioapic_as, info.addr, info.data);
       }
     }
   }
