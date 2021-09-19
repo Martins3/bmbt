@@ -220,8 +220,8 @@ void address_space_stl_notdirty(AddressSpace *as, hwaddr addr, uint32_t val,
     // [interface 1]
     // dirty_log_mask = memory_region_get_dirty_log_mask(mr);
     // dirty_log_mask &= ~(1 << DIRTY_MEMORY_CODE);
-    // cpu_physical_memory_set_dirty_range(memory_region_get_ram_addr(mr) + addr,
-                                        // 4, dirty_log_mask);
+    // cpu_physical_memory_set_dirty_range(memory_region_get_ram_addr(mr) +
+    // addr, 4, dirty_log_mask);
     r = MEMTX_OK;
   }
   if (result) {
@@ -280,6 +280,12 @@ void address_space_stl(AddressSpace *as, hwaddr addr, uint32_t val,
                        MemTxAttrs attrs, MemTxResult *result) {
   address_space_stl_internal(as, addr, val, attrs, result,
                              DEVICE_NATIVE_ENDIAN);
+}
+
+void address_space_stl_le(AddressSpace *as, hwaddr addr, uint32_t val,
+                          MemTxAttrs attrs, MemTxResult *result) {
+  address_space_stl_internal(as, addr, val, attrs, result,
+                             DEVICE_LITTLE_ENDIAN);
 }
 
 void address_space_stb(AddressSpace *as, hwaddr addr, uint32_t val,

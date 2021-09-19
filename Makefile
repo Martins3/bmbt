@@ -52,7 +52,7 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info GCC=$(GCC))
 # $(info obj_files=$(obj_files))
 # $(info dependency_files=$(dependency_files))
-$(info $(BASE_DIR))
+# $(info $(BASE_DIR))
 
 all: $(kernel) $(LIBCAPSTONE)
 
@@ -72,11 +72,10 @@ $(BUILD_DIR)/%.o: %.S
 
 # Actual target of the binary - depends on all .o files.
 $(kernel) : $(obj_files)
-	# Create build directories - same structure as sources.
-	mkdir -p $(@D)
-	# Just link all the object files.
-	echo "happy"
-	# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
+	@# Create build directories - same structure as sources.
+	@mkdir -p $(@D)
+	@# Just link all the object files.
+	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86
