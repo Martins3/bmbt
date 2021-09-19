@@ -30,5 +30,5 @@ typedef struct {
 } PICCommonState;
 
 void pic_reset_common(PICCommonState *s);
-void *i8259_init_chip(const char *name, bool master);
-void pic_stat_update_irq(int irq, int level);
+// [interface 17]
+void i8259_init_chip(const char *name, bool master);
