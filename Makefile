@@ -63,12 +63,14 @@ all: $(kernel) $(LIBCAPSTONE)
 # by calling `-include $(dependency_files)`.
 $(BUILD_DIR)/%.o : %.c
 	@mkdir -p $(@D)
-	$(GCC) $(CFLAGS) -MMD -c $< -o $@
+	@$(GCC) $(CFLAGS) -MMD -c $< -o $@
+	@echo "  CC      $<"
 
 # compile assembly files
 $(BUILD_DIR)/%.o: %.S
 	@mkdir -p $(@D)
-	$(GCC) $(CFLAGS) -MMD -D__ASSEMBLY__ -c $< -o $@
+	@$(GCC) $(CFLAGS) -MMD -D__ASSEMBLY__ -c $< -o $@
+	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
 $(kernel) : $(obj_files)
@@ -82,8 +84,8 @@ CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86
 
 $(LIBCAPSTONE) :
-	mkdir -p $(@D)
-	$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
+	@mkdir -p $(@D)
+	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
 
 .PHONY: all clean
 
