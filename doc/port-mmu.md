@@ -75,7 +75,7 @@ address_space_translate_internal 中，计算了一个关键的返回值 xlat, �
 | address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                               |      |
 | memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了        |      |
 | qemu_map_ram_ptr                  | 这是一个神仙设计的接口，如果参数 ram_block 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |      |
-| cpu_addressspace |
+| cpu_addressspace                  |                                                                                                               |      |
 
 flush 的函数的异步运行其实可以好好简化一下。
 
@@ -203,3 +203,16 @@ uint32_t helper_atomic_xor_fetchl_le
 ```
 
 但是，构造出来的这么多函数，目前使用者只有 helper_atomic_cmpxchgq_le_mmu
+
+# include/exec/memory_ldst_phys.inc.h
+因为目前只有一个用户: stl_le_phys
+
+所以只是在 cpu-all.h 中间增加了下面两个函数，其余利用上 memory_ldst.inc.c 的内容
+```c
+extern void address_space_stl_le(AddressSpace *as, hwaddr addr, uint32_t val,
+                                 MemTxAttrs attrs, MemTxResult *result);
+
+static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
+  address_space_stl_le(as, addr, val, MEMTXATTRS_UNSPECIFIED, NULL);
+}
+```
