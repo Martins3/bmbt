@@ -114,4 +114,19 @@
     __atomic_thread_fence(__ATOMIC_SEQ_CST);                                   \
   })
 
+#define smp_mb_acquire()                                                       \
+  ({                                                                           \
+    barrier();                                                                 \
+    __atomic_thread_fence(__ATOMIC_ACQUIRE);                                   \
+  })
+
+#define smp_mb_release()                                                       \
+  ({                                                                           \
+    barrier();                                                                 \
+    __atomic_thread_fence(__ATOMIC_RELEASE);                                   \
+  })
+
+#define smp_rmb() smp_mb_acquire()
+#define smp_wmb() smp_mb_release()
+
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

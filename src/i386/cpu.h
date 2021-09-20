@@ -1585,6 +1585,7 @@ typedef struct CPUX86State {
  * so that it can be embedded in individual device state structures.
  */
 typedef struct DeviceState {
+  // FIXME it will be removed, no qdev anymore
   // originally defined in
   // /home/maritns3/core/ld/x86-qemu-mips/include/hw/qdev-core.h
 } DeviceState;
@@ -1605,6 +1606,7 @@ typedef struct X86CPUClass {
   void (*parent_reset)(CPUState *cpu);
 } X86CPUClass;
 
+typedef struct APICCommonState APICCommonState;
 /**
  * X86CPU:
  * @env: #CPUX86State
@@ -1623,7 +1625,7 @@ typedef struct X86CPU {
 
   /* in order to simplify APIC support, we leave this pointer to the
      user */
-  struct DeviceState *apic_state;
+  APICCommonState *apic_state;
 
   uint32_t apic_id;
   bool expose_tcg;
@@ -1710,8 +1712,12 @@ static inline int cpu_mmu_index_kernel(CPUX86State *env) {
 #define CC_SRC2 (env->cc_src2)
 #define CC_OP (env->cc_op)
 
+/* cpu.c other functions (cpuid) */
 void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
                    uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
+void cpu_clear_apic_feature(CPUX86State *env);
+void host_cpuid(uint32_t function, uint32_t count, uint32_t *eax, uint32_t *ebx,
+                uint32_t *ecx, uint32_t *edx);
 
 /* will be suppressed */
 void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0);
@@ -1966,7 +1972,7 @@ void x86_cpu_exec_exit(CPUState *cpu);
 
 /* apic.c */
 void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
-void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip,
+void apic_handle_tpr_access_report(APICCommonState *d, target_ulong ip,
                                    TPRAccess access);
 
 typedef CPUX86State CPUArchState;
@@ -1985,6 +1991,17 @@ static inline target_long lshift(target_long x, int n) {
 void x86_update_hflags(CPUX86State *env);
 
 #define APIC_DEFAULT_ADDRESS 0xfee00000
-#define APIC_SPACE_SIZE      0x100000
+#define APIC_SPACE_SIZE 0x100000
+
+static inline void cpu_x86_load_seg_cache_sipi(X86CPU *cpu,
+                                               uint8_t sipi_vector) {
+  CPUState *cs = CPU(cpu);
+  CPUX86State *env = &cpu->env;
+
+  env->eip = 0;
+  cpu_x86_load_seg_cache(env, R_CS, sipi_vector << 8, sipi_vector << 12,
+                         env->segs[R_CS].limit, env->segs[R_CS].flags);
+  cs->halted = 0;
+}
 
 #endif /* end of include guard: CPU_H_CJEDABLV */
