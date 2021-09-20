@@ -15,6 +15,7 @@ c_source_files := $(wildcard src/tcg/*.c)
 c_source_files += $(wildcard src/i386/*.c)
 c_source_files += $(wildcard src/hw/core/*.c)
 c_source_files += $(wildcard src/hw/intc/*.c)
+c_source_files += $(wildcard src/hw/nvram/*.c)
 c_source_files += $(wildcard src/hw/qemu/*.c)
 c_source_files += $(wildcard src/fpu/*.c)
 c_source_files += $(wildcard src/qemu/*.c)
@@ -54,7 +55,7 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info dependency_files=$(dependency_files))
 # $(info $(BASE_DIR))
 
-all: $(kernel) $(LIBCAPSTONE)
+all: $(kernel)
 
 -include $(dependency_files)
 
@@ -73,12 +74,12 @@ $(BUILD_DIR)/%.o: %.S
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
-$(kernel) : $(obj_files)
+$(kernel) : $(obj_files) $(LIBCAPSTONE)
 	@# Create build directories - same structure as sources.
 	@mkdir -p $(@D)
 	@# Just link all the object files.
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
-	@echo "All things done"
+	@echo "BMBT is ready"
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86
