@@ -2,7 +2,7 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/hw/i386/apic-msidef.h"
 #include "../../include/hw/i386/ioapic_internal.h"
-#include "../../include/hw/i386/pc.h"
+#include "../../include/hw/isa/i8259.h"
 #include <string.h>
 
 static IOAPICCommonState *ioapics[MAX_IOAPICS];
