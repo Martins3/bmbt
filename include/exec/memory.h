@@ -26,6 +26,10 @@ typedef struct MemoryRegion {
   struct AddressSpace *as; // memory region is shared between AddressSpace
 } MemoryRegion;
 
+typedef struct PioRegion {
+
+} PioRegion;
+
 typedef struct AddressSpace {
   // [interface 8]
   MemoryRegion *segments;
