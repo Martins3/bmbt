@@ -62,12 +62,12 @@ all: $(kernel) $(LIBCAPSTONE)
 # The potential dependency on header files is covered
 # by calling `-include $(dependency_files)`.
 $(BUILD_DIR)/%.o : %.c
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
 	$(GCC) $(CFLAGS) -MMD -c $< -o $@
 
 # compile assembly files
 $(BUILD_DIR)/%.o: %.S
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
 	$(GCC) $(CFLAGS) -MMD -D__ASSEMBLY__ -c $< -o $@
 
 # Actual target of the binary - depends on all .o files.
@@ -76,6 +76,7 @@ $(kernel) : $(obj_files)
 	@mkdir -p $(@D)
 	@# Just link all the object files.
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
+	@echo "All things done"
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86

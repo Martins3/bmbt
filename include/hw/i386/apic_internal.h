@@ -21,9 +21,9 @@
  */
 #include "../../exec/hwaddr.h"
 #include "../../qemu/timer.h"
+#include "../../src/i386/cpu.h"
 #include "../../types.h"
 #include "../pci/msi.h"
-#include "../../src/i386/cpu.h"
 
 /* APIC Local Vector Table */
 #define APIC_LVT_TIMER 0
@@ -149,6 +149,7 @@ struct APICCommonState {
   // DeviceState parent_obj;
   /*< public >*/
 
+  APICCommonClass *info;
   // @todo @mem
   // MemoryRegion io_memory;
   X86CPU *cpu;
@@ -179,10 +180,12 @@ struct APICCommonState {
   int wait_for_sipi;
 
   uint32_t vapic_control;
-  // DeviceState *vapic;
+  DeviceState *vapic;
   hwaddr vapic_paddr; /* note: persistence via kvmvapic */
   bool legacy_instance_id;
 };
+
+#define APIC_COMMON_GET_CLASS(s) s->info
 
 typedef struct VAPICState {
   uint8_t tpr;
@@ -199,8 +202,8 @@ bool apic_next_timer(APICCommonState *s, int64_t current_time);
 void apic_enable_tpr_access_reporting(APICCommonState *d, bool enable);
 void apic_enable_vapic(APICCommonState *d, hwaddr paddr);
 
-// void vapic_report_tpr_access(APICCommonState *dev, CPUState *cpu,
-// target_ulong ip, TPRAccess access);
+void vapic_report_tpr_access(DeviceState *dev, CPUState *cpu, target_ulong ip,
+                             TPRAccess access);
 
 int apic_get_ppr(APICCommonState *s);
 
