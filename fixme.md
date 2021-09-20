@@ -38,6 +38,7 @@
     1. ExtraBlock 是 LATX 中特殊需求的，其中 `_top_in` 的类型是 int8, 而 int8 又是定义在 src/i386/LATX/include/types.h 中间了，着很难受啊
     2. HOST_LONG_BITS 和 TARGET_LONG_BITS 的定义位置
     3. target_long 的定义
+    4. hwaddr 的定义
 7. log printf 和 qemu printf
     1. include/qemu/log-for-trace.h 和 include/qemu/log-for-trace.h : 一起搞出来 mask 基于日志的角度
     2. qemu_printf 和 printf 的区别在于当前是否存在 monitor

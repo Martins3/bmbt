@@ -17,4 +17,7 @@
 | 13       | start_tcg_kick_timer                                                                                                   | 暂时只是支持一个 guest vCPU 的，所以无需 timer 来 kick 实现 vCPU 的轮转                                              |
 | 14       | cpu_can_run, CPUState::stop, CPUState::stopped                                                                         | stop 适用于 migration 的时候将 CPU stop 的                                                                           |
 | 15       | cpu_exec_start / cpu_exec_start / start_exclusive / end_exclusive                                                      | 因为现在只是支持单核，所以暂时不支持这些个操作                                                                       |
-| 16| cpus.c 中的几个 icount 函数||
+| 16       | cpus.c 中的几个 icount 函数                                                                                            |                                                                                                                      |
+| 17       | i8259_init_chip                                                                                                        | 没有必要再去构建 ISABus ISADevice 之类的抽象概念了，没有总线的概念了，所有的设备也就是这几个                         |
+| 18       | pic_common_realize                                                                                                     | 统计之类的事情以后再说吧                                                                                             |
+| 19       | i8259.h                                                                                                                | 将 pc.h 中和 i8259 相关的代码移动到 i8259.h 中                                                                       |
