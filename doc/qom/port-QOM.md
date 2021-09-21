@@ -400,6 +400,7 @@ QemuOptsList qemu_global_opts = {
   - 问题是，apic 在当前的语境下面，本身就是 lapic
 - ioapic_init_gsi : 中出现类似的操作
 
+
 ## 附录: 宏展开
 ```c
 #define OBJECT(obj) \
@@ -487,6 +488,8 @@ static inline G_GNUC_UNUSED RTCState *MC146818_RTC(const void *obj) {
 ```
 
 ## qdev
+- [ ] qdev 的增强在于什么地方?
+
 使用路径是如何可以保证其能够使用正确的 machine 的
 
 ```c
