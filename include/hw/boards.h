@@ -1,6 +1,7 @@
 #ifndef BOARDS_H_ANEGSNX6
 #define BOARDS_H_ANEGSNX6
 #include "../exec/cpu-common.h"
+#include "../hw/core/cpu.h"
 #include <stdbool.h>
 
 typedef struct MachineState MachineState;
@@ -19,7 +20,8 @@ typedef struct CPUArchId {
   int64_t vcpus_count;
   // FIXME
   // CpuInstanceProperties props;
-  // CPUState *cpu;
+  // [interface 20]
+  CPUState *cpu;
   const char *type;
 } CPUArchId;
 
