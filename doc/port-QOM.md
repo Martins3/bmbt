@@ -485,3 +485,53 @@ static inline G_GNUC_UNUSED RTCState *MC146818_RTC(const void *obj) {
       ((Object *)(obj)), ("mc146818rtc"), "a.c", 69, __func__));
 }
 ```
+
+## qdev
+使用路径是如何可以保证其能够使用正确的 machine 的
+
+```c
+Object *qdev_get_machine(void)
+{
+    static Object *dev;
+
+    if (dev == NULL) {
+        dev = container_get(object_get_root(), "/machine");
+    }
+
+    return dev;
+}
+```
+
+```c
+static MachineClass *select_machine(QDict *qdict, Error **errp)
+{
+    const char *optarg = qdict_get_try_str(qdict, "type");
+    GSList *machines = object_class_get_list(TYPE_MACHINE, false);
+    MachineClass *machine_class;
+    Error *local_err = NULL;
+
+    if (optarg) {
+        machine_class = find_machine(optarg, machines);
+        qdict_del(qdict, "type");
+        if (!machine_class) {
+            error_setg(&local_err, "unsupported machine type");
+        }
+    } else {
+        machine_class = find_default_machine(machines);
+        if (!machine_class) {
+            error_setg(&local_err, "No machine specified, and there is no default");
+        }
+    }
+
+    g_slist_free(machines);
+    if (local_err) {
+        error_append_hint(&local_err, "Use -machine help to list supported machines\n");
+        error_propagate(errp, local_err);
+    }
+    return machine_class;
+}
+```
+应该是在 qemu_create_machine 中使用，进行添加的
+```c
+object_property_add_child(object_get_root(), "machine", OBJECT(current_machine));
+```
