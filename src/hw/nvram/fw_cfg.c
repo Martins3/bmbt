@@ -1,9 +1,7 @@
 #include "../../include/hw/nvram/fw_cfg.h"
-#include "../../include/hw/boards.h"
 #include "../../include/qemu/bitops.h"
 #include "../../include/qemu/cutils.h"
 #include "../../include/qemu/error-report.h"
-#include "../../include/sysemu/sysemu.h"
 #include "../../tcg/glib_stub.h"
 #include <assert.h>
 #include <string.h>
