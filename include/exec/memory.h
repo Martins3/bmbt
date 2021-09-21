@@ -84,6 +84,42 @@ MemTxResult memory_region_dispatch_write(MemoryRegion *mr, hwaddr addr,
   return res;
 }
 
+/* address_space_access_valid: check for validity of accessing an address
+ * space range
+ *
+ * Check whether memory is assigned to the given address space range, and
+ * access is permitted by any IOMMU regions that are active for the address
+ * space.
+ *
+ * For now, addr and len should be aligned to a page size.  This limitation
+ * will be lifted in the future.
+ *
+ * @as: #AddressSpace to be accessed
+ * @addr: address within that address space
+ * @len: length of the area to be checked
+ * @is_write: indicates the transfer direction
+ * @attrs: memory attributes
+ */
+bool address_space_access_valid(AddressSpace *as, hwaddr addr, hwaddr len,
+                                bool is_write, MemTxAttrs attrs);
+
+/**
+ * address_space_rw: read from or write to an address space.
+ *
+ * Return a MemTxResult indicating whether the operation succeeded
+ * or failed (eg unassigned memory, device rejected the transaction,
+ * IOMMU fault).
+ *
+ * @as: #AddressSpace to be accessed
+ * @addr: address within that address space
+ * @attrs: memory transaction attributes
+ * @buf: buffer with the data transferred
+ * @len: the number of bytes to read or write
+ * @is_write: indicates the transfer direction
+ */
+MemTxResult address_space_rw(AddressSpace *as, hwaddr addr, MemTxAttrs attrs,
+                             uint8_t *buf, hwaddr len, bool is_write);
+
 #define NEED_CPU_H
 #ifdef NEED_CPU_H
 /* enum device_endian to MemOp.  */

@@ -16,7 +16,7 @@ typedef bool gboolean;
 #define TRUE true
 
 typedef int gint;
-typedef void *gconstpointer;
+typedef const void *gconstpointer;
 
 void g_tree_insert(GTree *, gpointer, gpointer);
 void g_tree_remove(GTree *, void *);
@@ -61,6 +61,8 @@ gpointer g_try_malloc0(int n_bytes);
 
 #undef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+gpointer g_memdup(gconstpointer mem, uint byte_size);
 
 gpointer g_malloc0(gint n_bytes);
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */
