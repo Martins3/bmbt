@@ -1,14 +1,20 @@
 # fw_cfg
+- 分析基本原理
+- 再次确认所有的 option rom 都是通过这个玩意儿加载的
+  - 解释了, 那些 ROM 是只读的，seabios 分配的空间是自己管理的，或者说，通过 fw_cfg 读去的数据都是从哪里来的
+- [ ] smbios
+- [ ] 没有搞清楚为什么出现了这么多的 mr ops 的啊
+- [ ] 这些 memory region 实际上都是简单的处理 pio 的吧
 
-- [ ] seabios 需要区分处理文件和非文件
-- [ ] 既然 ROM 是只读的，seabios 分配的空间都是在哪里，或者说，通过 fw_cfg 读去的数据都是从哪里来的
+- seabios 需要区分处理文件和非文件，分析下怎么处理的
 
 ## 基本原理
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
 前者是主要实现，后者主要是为架构中添加一些细节。
+
 - fw_cfg_add_acpi_dsdt : 在 acpi 中添加描述
 - fw_cfg_build_feature_control : 构建 etc/msr_feature_control
-- [ ] fw_cfg_build_smbios : 暂时看不懂
+- fw_cfg_build_smbios
 
 - fw_cfg_arch_create : come from [init-QEMU](./init-QEMU.md)
   - fw_cfg_init_io_dma(FW_CFG_IO_BASE, FW_CFG_IO_BASE + 4, &address_space_memory) : 第一参数是 IO, 第二个是 DMA

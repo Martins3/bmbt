@@ -8,6 +8,9 @@
   - [ ] 问题是，这个初始化过程中，需要保持那些设备的之间的联系的吗?
 - [ ] fw_cfg 的初始化过程
 - [ ] cpu 初始化
+- [ ] /home/maritns3/core/ld/x86-qemu-mips/hw/i386/pc.c
+
+- [ ] 找到最下层的 CPU 和 Machine 的 TypeInfo 是啥不就好了
 
 ## 几个关键的结构体功能和移植差异说明
 
@@ -107,7 +110,6 @@ x-remote
 none
 xenpv
 ```
-
 ## choose cpu
 似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
 
@@ -242,6 +244,13 @@ x86_cpu_get_bit_prop 从来都不会被调用啊, 那么存在什么意义啊
 1. machine 的初始化只是为了完成 cpu 的初始化，所以，当 cpu 没有初始化
 ，machine 的内容完全看不到了。
 2. machine 的工作在于 acpi smbios pci 之类的, 暂时没有处理到
+
+
+- [ ] 需要分析一下 MachineClass 的内容
+
+```c
+X86CPU *cpu = X86_CPU(ms->possible_cpus->cpus[0].cpu);
+```
 
 ## init cpu
 

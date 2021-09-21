@@ -21,3 +21,4 @@
 | 17       | i8259_init_chip                                                                                                        | 没有必要再去构建 ISABus ISADevice 之类的抽象概念了，没有总线的概念了，所有的设备也就是这几个                         |
 | 18       | pic_common_realize                                                                                                     | 统计之类的事情以后再说吧                                                                                             |
 | 19       | i8259.h                                                                                                                | 将 pc.h 中和 i8259 相关的代码移动到 i8259.h 中                                                                       |
+| 20       | CPUArchId::cpu                                                                                                         | 为了保持 X86_CPU 的语义一致性，当然也没有实现 Object 类型，将类型修改为 CPUState 了                                  |
