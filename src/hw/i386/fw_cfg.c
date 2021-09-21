@@ -122,6 +122,7 @@ FWCfgState *fw_cfg_arch_create(MachineState *ms, uint16_t boot_cpus,
 
   return fw_cfg;
 }
+#endif
 
 void fw_cfg_build_feature_control(MachineState *ms, FWCfgState *fw_cfg) {
   X86CPU *cpu = X86_CPU(ms->possible_cpus->cpus[0].cpu);
@@ -149,4 +150,3 @@ void fw_cfg_build_feature_control(MachineState *ms, FWCfgState *fw_cfg) {
   *val = cpu_to_le64(feature_control_bits | FEATURE_CONTROL_LOCKED);
   fw_cfg_add_file(fw_cfg, "etc/msr_feature_control", val, sizeof(*val));
 }
-#endif
