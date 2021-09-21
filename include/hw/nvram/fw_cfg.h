@@ -55,7 +55,7 @@ struct FWCfgState {
   bool dma_enabled;
   dma_addr_t dma_addr;
   // @todo @mem
-  // AddressSpace *dma_as;
+  AddressSpace *dma_as;
   // MemoryRegion dma_iomem;
 };
 

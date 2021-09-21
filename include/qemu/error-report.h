@@ -4,5 +4,6 @@
 #include "../types.h"
 
 void error_report(const char *fmt, ...) GCC_FMT_ATTR(1, 2);
+void warn_report(const char *fmt, ...) GCC_FMT_ATTR(1, 2);
 
 #endif /* end of include guard: ERROR_REPORT_H_UHVN2LTE */
