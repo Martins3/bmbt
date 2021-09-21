@@ -110,6 +110,7 @@ x-remote
 none
 xenpv
 ```
+
 ## choose cpu
 似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
 
