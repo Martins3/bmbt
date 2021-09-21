@@ -27,7 +27,6 @@ typedef struct MemoryRegion {
 } MemoryRegion;
 
 typedef struct PioRegion {
-
 } PioRegion;
 
 typedef struct AddressSpace {
