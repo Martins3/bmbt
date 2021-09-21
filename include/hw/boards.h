@@ -7,6 +7,33 @@ typedef struct MachineState MachineState;
 typedef struct MachineClass MachineClass;
 
 /**
+ * CPUArchId:
+ * @arch_id - architecture-dependent CPU ID of present or possible CPU
+ * @cpu - pointer to corresponding CPU object if it's present on NULL otherwise
+ * @type - QOM class name of possible @cpu object
+ * @props - CPU object properties, initialized by board
+ * #vcpus_count - number of threads provided by @cpu object
+ */
+typedef struct CPUArchId {
+  uint64_t arch_id;
+  int64_t vcpus_count;
+  // FIXME
+  // CpuInstanceProperties props;
+  // CPUState *cpu;
+  const char *type;
+} CPUArchId;
+
+/**
+ * CPUArchIdList:
+ * @len - number of @CPUArchId items in @cpus array
+ * @cpus - array of present or possible CPUs for current machine configuration
+ */
+typedef struct {
+  int len;
+  CPUArchId cpus[0];
+} CPUArchIdList;
+
+/**
  * MachineClass:
  * @deprecation_reason: If set, the machine is marked as deprecated. The
  *    string should provide some clear information about what to use instead.
@@ -177,12 +204,12 @@ struct MachineState {
   char *initrd_filename;
   const char *cpu_type;
   // AccelState *accelerator;
-  // CPUArchIdList *possible_cpus;
+  CPUArchIdList *possible_cpus;
   // CpuTopology smp;
   struct NVDIMMState *nvdimms_state;
   struct NumaState *numa_state;
 };
 
-static inline MachineClass * qdev_get_machine() { return NULL; }
+static inline MachineClass *qdev_get_machine() { return NULL; }
 
 #endif /* end of include guard: BOARDS_H_ANEGSNX6 */
