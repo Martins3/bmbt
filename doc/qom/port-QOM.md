@@ -17,6 +17,8 @@
 
 - [ ] alias 和 link 分别做什么用途的
 
+- [ ] struct ObjectProperty 和 struct Property 的关系是什么?
+
 ## qdev
 ```c
 struct DeviceClass {
@@ -687,7 +689,35 @@ object_property_add_child(object_get_root(), "machine", OBJECT(current_machine))
 object_property_add_child(object_resolve_path(parent_name, NULL), "ioapic", OBJECT(dev));
 ```
 
-#### ObjectProperty::type && link
+#### link
+
+```txt
+huxueshi:object_resolve_link i8042 /machine/unattached/device[19]
+huxueshi:object_resolve_link a20[0] /machine/unattached/non-qdev-gpio[24]
+huxueshi:object_resolve_link a20[0] /machine/unattached/non-qdev-gpio[25]
+```
+
+```c
+/*
+#1  0x0000555555d26d35 in object_resolve_link (errp=0x7fffffffcda0, path=0x555556f74730 "/machine/unattached/device[19]", name=0x555555f1ea10 "i8042", obj=0x555556b27b50) at ../qom/object.c:1832
+#2  object_set_link_property (obj=0x555556b27b50, v=<optimized out>, name=<optimized out>, opaque=0x5555568bd2d0, errp=0x7fffffffcda0) at ../qom/object.c:1874
+#3  0x0000555555d2517c in object_property_set (obj=obj@entry=0x555556b27b50, name=name@entry=0x555555f1ea10 "i8042", v=v@entry=0x555556d0af70, errp=errp@entry=0x555556618680 <error_abort>) at ../qom/object.c:1403
+#4  0x0000555555d217c4 in object_property_set_qobject (obj=0x555556b27b50, name=0x555555f1ea10 "i8042", value=<optimized out>, errp=0x555556618680 <error_abort>) at ../qom/qom-qobject.c:28
+#5  0x0000555555d25269 in object_property_set_str (obj=0x555556b27b50, name=0x555555f1ea10 "i8042", value=<optimized out>, errp=0x555556618680 <error_abort>) at ../qom/object.c:1412
+#6  0x0000555555d265d8 in object_property_set_link (obj=obj@entry=0x555556b27b50, name=name@entry=0x555555f1ea10 "i8042", value=value@entry=0x555556848900, errp=0x555556618680 <error_abort>) at ../qom/object.c:1448
+#7  0x0000555555b9dbe0 in pc_superio_init (no_vmport=<optimized out>, create_fdctrl=<optimized out>, isa_bus=0x555556ad61d0) at ../hw/i386/pc.c:1081
+#8  pc_basic_device_init (pcms=pcms@entry=0x555556811800, isa_bus=0x555556ad61d0, gsi=<optimized out>, rtc_state=rtc_state@entry=0x7fffffffcf38, create_fdctrl=create_fdctrl@entry=true, hpet_irqs=hpet_irqs@entry=4) at ../hw/i386/pc.c:1168
+#9  0x0000555555b8ac0d in pc_init1 (machine=0x555556811800, pci_type=0x555555f5d125 "i440FX", host_type=0x555555ec0aed "i440FX-pcihost") at ../hw/i386/pc_piix.c:238
+#10 0x0000555555a6c094 in machine_run_board_init (machine=0x555556811800) at ../hw/core/machine.c:1273
+#11 0x0000555555c64e64 in qemu_init_board () at ../softmmu/vl.c:2615
+#12 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#13 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#14 0x0000555555c68608 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#15 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+
+#### ObjectProperty::type
 
 ```c
 struct ObjectProperty

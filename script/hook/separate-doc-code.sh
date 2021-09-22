@@ -8,7 +8,7 @@ for fullfile in "${files[@]}"; do
     # or do whatever with individual element of the array
     filename=$(basename -- "$fullfile")
     extension="${filename##*.}"
-    if [ "$extension" == "py" ] || [ "$extension" == "c" ] || [ "$extension" == "sh" ] || [ "$extension" == "h" ]; then
+    if [ "$extension" == "c" ] || [ "$extension" == "h" ]; then
         has_code=true
     elif [ "$extension" == "md" ]; then
         has_doc=true
