@@ -6,6 +6,63 @@
 - [ ] https://qemu.readthedocs.io/en/latest/devel/qom.html
 - [ ] https://www.linux-kvm.org/images/9/90/Kvmforum14-qom.pdf
 
+- [ ] 分析一下两个 info qom-tree 和 info qtree 的实现方法是什么?
+- [ ] 其实 QOM 和 dev 搞的很烦，那就是我现在不知道定位到这些 初始化函数，什么时候调用，调用的先后顺序了
+  - 通过 TypeInfo 和 qdev 的 realize 函数
+
+- [ ] 有没有将所有的 property 打印的方法
+- [ ] qdev 相对于 QOM 的增强在于什么地方?
+
+## qdev
+
+## memory region
+才意识到 memory region 也是一个 qobject 并且是需要挂到
+
+```c
+void memory_region_init(MemoryRegion *mr,
+                        Object *owner,
+                        const char *name,
+                        uint64_t size)
+{
+    object_initialize(mr, sizeof(*mr), TYPE_MEMORY_REGION);
+    memory_region_do_init(mr, owner, name, size);
+}
+```
+qom tree 实际上，不是一个继承关系，比如这样的:
+
+```txt
+  /i440fx (i440FX-pcihost)
+    /ioapic (kvm-ioapic)
+      /kvm-ioapic[0] (memory-region)
+```
+
+## hmp_info_qom_tree
+```c
+static void print_qom_composition(Monitor *mon, Object *obj, int indent)
+{
+    GArray *children = g_array_new(false, false, sizeof(Object *));
+    const char *name;
+    int i;
+
+    if (obj == object_get_root()) {
+        name = "";
+    } else {
+        name = object_get_canonical_path_component(obj);
+    }
+    monitor_printf(mon, "%*s/%s (%s)\n", indent, "", name, // 可以明白了，就是一个是名称 qom tree 的路径，一个是 type 名称
+                   object_get_typename(obj));
+
+    object_child_foreach(obj, insert_qom_composition_child, children);
+    g_array_sort(children, qom_composition_compare);
+
+    for (i = 0; i < children->len; i++) {
+        print_qom_composition(mon, g_array_index(children, Object *, i), // 递归下去
+                              indent + 2);
+    }
+    g_array_free(children, TRUE);
+}
+```
+
 ## TypeInfo
 
 #### type_init
@@ -144,9 +201,44 @@ static const TypeInfo x86_cpu_type_info = {
           - object_init_with_type : 这个函数会首先初始化 parent 类型，然后进行本地初始化
   - qdev_realize : 最后调用 x86_cpu_realizefn
 
-
 从 backtrace 看，kvm -cpu host 的关于 CPU 存在如下
 - [ ] device - x86_64-cpu - max-x86_64-cpu - host-x86_64-cpu
+
+现在 qemu_init 会根据参数调整 cpu_type 的:
+```c
+    /* parse features once if machine provides default cpu_type */
+    current_machine->cpu_type = machine_class->default_cpu_type;
+    if (cpu_option) {
+        current_machine->cpu_type = parse_cpu_option(cpu_option);
+    }
+```
+
+然后在 x86_cpu_new 中初始化的
+
+```c
+void x86_cpu_new(X86MachineState *x86ms, int64_t apic_id, Error **errp)
+{
+    Object *cpu = object_new(MACHINE(x86ms)->cpu_type);
+
+    if (!object_property_set_uint(cpu, "apic-id", apic_id, errp)) {
+        goto out;
+    }
+    qdev_realize(DEVICE(cpu), NULL, errp);
+
+out:
+    object_unref(cpu);
+}
+```
+
+而 `machine_class->default_cpu_type` 的初始化为 pc_machine_class_init, 将默认数值初始化为 TARGET_DEFAULT_CPU_TYPE
+```c
+#ifdef TARGET_X86_64
+#define TARGET_DEFAULT_CPU_TYPE X86_CPU_TYPE_NAME("qemu64")
+#else
+#define TARGET_DEFAULT_CPU_TYPE X86_CPU_TYPE_NAME("qemu32")
+#endif
+```
+
 
 #### OBJECT_DECLARE_TYPE
 - 初始化的时候，只是告诉了 instance_size 和 class_size, 而且也告诉了 class 和 instance 的初始化函数
@@ -335,8 +427,20 @@ To hide this, the -cpu option tcg-cpuid=off can be used.
 ```
 
 #### object_property_add_alias
-- [ ] 干啥用的啊
-  - 因为一些
+比如在 x86_cpu_initfn 中间的操作:
+- [ ] 第一种使用方法，只是为了多一个名称?
+
+```c
+    object_property_add_alias(obj, "sse3", obj, "pni", &error_abort);
+    object_property_add_alias(obj, "pclmuldq", obj, "pclmulqdq", &error_abort);
+    object_property_add_alias(obj, "sse4-1", obj, "sse4.1", &error_abort);
+    object_property_add_alias(obj, "sse4-2", obj, "sse4.2", &error_abort);
+```
+- [ ] 第二种， pc_machine_initfn
+```c
+object_property_add_alias(OBJECT(pcms), "pcspk-audiodev", OBJECT(pcms->pcspk), "audiodev");
+```
+
 
 #### GlobalProperty
 和 property 似乎没有什么关系, 这是从 qdev 中间延伸出来的概念啊
@@ -395,11 +499,217 @@ QemuOptsList qemu_global_opts = {
    syntax works even when driver contains a dot.
 ```
 
-## [ ] object_property_add_child
-- x86_cpu_apic_create : 中调用的，创建一个 apic 然后添加 lapic 作为 child
-  - 问题是，apic 在当前的语境下面，本身就是 lapic
-- ioapic_init_gsi : 中出现类似的操作
+#### [ ] object_property_add_child
+- x86_cpu_apic_create
+- ioapic_init_gsi
 
+
+- [ ] 在使用这个例子来分析一下
+
+```c
+Object *qdev_get_machine(void)
+{
+    static Object *dev;
+
+    if (dev == NULL) {
+        dev = container_get(object_get_root(), "/machine");
+    }
+
+    return dev;
+}
+```
+
+应该是在 qemu_create_machine 中使用，进行添加的
+```c
+object_property_add_child(object_get_root(), "machine", OBJECT(current_machine));
+```
+
+- [ ] 居然还有 object_resolve_path 的操作
+```c
+object_property_add_child(object_resolve_path(parent_name, NULL), "ioapic", OBJECT(dev));
+```
+
+#### ObjectProperty::type && link
+
+```c
+struct ObjectProperty
+{
+    char *name;
+    char *type;
+    char *description;
+    ObjectPropertyAccessor *get;
+    ObjectPropertyAccessor *set;
+    ObjectPropertyResolve *resolve;
+    ObjectPropertyRelease *release;
+    ObjectPropertyInit *init;
+    void *opaque;
+    QObject *defval;
+};
+```
+
+- [ ] ObjectProperty::type
+```c
+static inline bool object_property_is_child(ObjectProperty *prop)
+{
+    printf("huxueshi:%s %s\n", __FUNCTION__, prop->type);
+    return strstart(prop->type, "child<", NULL);
+}
+
+const char *object_get_canonical_path_component(const Object *obj)
+{
+    ObjectProperty *prop = NULL;
+    GHashTableIter iter;
+
+    if (obj->parent == NULL) {
+        return NULL;
+    }
+
+    g_hash_table_iter_init(&iter, obj->parent->properties);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&prop)) {
+        if (!object_property_is_child(prop)) {
+            continue;
+        }
+
+        if (prop->opaque == obj) {
+            return prop->name;
+        }
+    }
+
+    /* obj had a parent but was not a child, should never happen */
+    g_assert_not_reached();
+    return NULL;
+}
+```
+// 我的龟龟，难道这种层级结构体是通过 properties 构建起来的
+
+- [ ] 需要手动构建吗?
+- [ ] 还是需要手动的建立的哇，还是自动建立起来的哇
+```c
+/*
+#0  huxueshi () at ../qom/object.c:609
+#1  0x0000555555d24a65 in object_property_try_add (obj=0x555556810800, name=0x555556709150 "peripheral", type=0x55555691fee0 "child<container>", get=0x555555d26250 <obj
+ect_get_child_property>, set=0x0, release=0x555555d24390 <object_finalize_child_property>, opaque=0x55555691fe50, errp=0x555556617680 <error_abort>) at ../qom/object.c:1238
+#2  0x0000555555d25b91 in object_property_try_add_child (obj=0x555556810800, name=0x555556709150 "peripheral", child=0x55555691fe50, errp=0x555556617680 <error_abort>)at ../qom/object.c:1753
+#3  0x0000555555d21365 in container_get (root=root@entry=0x555556810800, path=path@entry=0x555555f249e9 "/peripheral") at ../qom/container.c:41
+#4  0x0000555555a6c639 in machine_initfn (obj=0x555556810800) at ../hw/core/machine.c:985
+#5  0x0000555555d22ee6 in object_init_with_type (obj=0x555556810800, ti=0x5555566d7a50) at ../qom/object.c:372
+#6  0x0000555555d22ee6 in object_init_with_type (obj=0x555556810800, ti=0x5555566d6d70) at ../qom/object.c:372
+#7  0x0000555555d22ee6 in object_init_with_type (obj=0x555556810800, ti=0x5555566d05f0) at ../qom/object.c:372
+#8  0x0000555555d2454c in object_initialize_with_type (obj=0x555556810800, size=<optimized out>, type=0x5555566d05f0) at ../qom/object.c:518
+#9  0x0000555555d24699 in object_new_with_type (type=0x5555566d05f0) at ../qom/object.c:738
+#10 0x0000555555c65ac0 in qemu_create_machine (qdict=<optimized out>) at ../softmmu/vl.c:2110
+#11 qemu_init (argc=<optimized out>, argv=0x7fffffffd358, envp=<optimized out>) at ../softmmu/vl.c:3640
+#12 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+```c
+static void machine_initfn(Object *obj)
+{
+    MachineState *ms = MACHINE(obj);
+    MachineClass *mc = MACHINE_GET_CLASS(obj);
+
+    container_get(obj, "/peripheral");      // 这个玩意儿的作用是什么?
+    container_get(obj, "/peripheral-anon");
+}
+```
+- container_get 实际上是在 obj 下创建出来两个
+
+
+```c
+static const TypeInfo machine_info = {
+    .name = TYPE_MACHINE,
+    .parent = TYPE_OBJECT,
+    .abstract = true,
+    .class_size = sizeof(MachineClass),
+    .class_init    = machine_class_init,
+    .class_base_init = machine_class_base_init,
+    .instance_size = sizeof(MachineState),
+    .instance_init = machine_initfn,
+    .instance_finalize = machine_finalize,
+};
+```
+
+- [ ] 我不能理解，为什么 machine_info 的 parent 是 TYPE_OBJECT 而不是 qdev 啊
+
+
+- [x] ObjectPropertyRelease : 一个 Property 释放的时候可以调用的 hook
+
+- [x] ObjectPropertyResolve : 用于路径解析的吧!
+```c
+Object *object_resolve_path_component(Object *parent, const char *part)
+{
+    ObjectProperty *prop = object_property_find(parent, part);
+    if (prop == NULL) {
+        return NULL;
+    }
+
+    if (prop->resolve) {
+        return prop->resolve(parent, prop->opaque, part);
+    } else {
+        return NULL;
+    }
+}
+```
+
+其中的 link 是什么意思哇，原来即使 soft link / hard link 的含义:
+```c
+typedef struct {
+    union {
+        Object **targetp;
+        Object *target; /* if OBJ_PROP_LINK_DIRECT, when holding the pointer  */
+        ptrdiff_t offset; /* if OBJ_PROP_LINK_CLASS */
+    };
+    void (*check)(const Object *, const char *, Object *, Error **);
+    ObjectPropertyLinkFlags flags;
+} LinkProperty;
+```
+
+```c
+static void register_smram_listener(Notifier *n, void *unused)
+{
+    MemoryRegion *smram =
+        (MemoryRegion *) object_resolve_path("/machine/smram", NULL);
+```
+
+```c
+/*
+#0  object_resolve_link_property (parent=0x555556810800, opaque=0x555556aa5dd0, part=0x555557e86480 "smram") at ../qom/object.c:1900
+#1  0x0000555555d26416 in object_resolve_abs_path (parent=<optimized out>, parts=<optimized out>, typename=0x555555fc246d "object") at ../qom/object.c:2082
+#2  0x0000555555d2660c in object_resolve_path_type (path=<optimized out>, typename=0x555555fc246d "object", ambiguousp=0x0) at ../qom/object.c:2144
+#3  0x0000555555b78ec8 in register_smram_listener (n=<optimized out>, unused=<optimized out>) at ../target/i386/kvm/kvm.c:2204
+#4  0x0000555555e89817 in notifier_list_notify (list=list@entry=0x5555565f45a8 <machine_init_done_notifiers>, data=data@entry=0x0) at ../util/notify.c:39
+#5  0x0000555555a6c82b in qdev_machine_creation_done () at ../hw/core/machine.c:1321
+#6  0x0000555555c64ec0 in qemu_machine_creation_done () at ../softmmu/vl.c:2669
+#7  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2692
+#8  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2683
+#9  0x0000555555c685a8 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3707
+#10 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+就是获取一下存储到 LinkProperty::targetp 中的内容:
+```c
+static Object *object_resolve_link_property(Object *parent, void *opaque,
+                                            const char *part)
+{
+    LinkProperty *lprop = opaque;
+    return *object_link_get_targetp(parent, lprop);
+}
+
+static Object **
+object_link_get_targetp(Object *obj, LinkProperty *lprop)
+{
+    if (lprop->flags & OBJ_PROP_LINK_DIRECT) {
+        return &lprop->target;
+    } else if (lprop->flags & OBJ_PROP_LINK_CLASS) {
+        return (void *)obj + lprop->offset;
+    } else {
+        return lprop->targetp;
+    }
+}
+```
+这个东西是在 object_add_link_prop 中初始化的。
+
+- [x] ObjectPropertyInit : 初始化的 hook
 
 ## 附录: 宏展开
 ```c
@@ -485,56 +795,4 @@ static inline G_GNUC_UNUSED RTCState *MC146818_RTC(const void *obj) {
   return ((RTCState *)object_dynamic_cast_assert(
       ((Object *)(obj)), ("mc146818rtc"), "a.c", 69, __func__));
 }
-```
-
-## qdev
-- [ ] qdev 的增强在于什么地方?
-
-使用路径是如何可以保证其能够使用正确的 machine 的
-
-```c
-Object *qdev_get_machine(void)
-{
-    static Object *dev;
-
-    if (dev == NULL) {
-        dev = container_get(object_get_root(), "/machine");
-    }
-
-    return dev;
-}
-```
-
-```c
-static MachineClass *select_machine(QDict *qdict, Error **errp)
-{
-    const char *optarg = qdict_get_try_str(qdict, "type");
-    GSList *machines = object_class_get_list(TYPE_MACHINE, false);
-    MachineClass *machine_class;
-    Error *local_err = NULL;
-
-    if (optarg) {
-        machine_class = find_machine(optarg, machines);
-        qdict_del(qdict, "type");
-        if (!machine_class) {
-            error_setg(&local_err, "unsupported machine type");
-        }
-    } else {
-        machine_class = find_default_machine(machines);
-        if (!machine_class) {
-            error_setg(&local_err, "No machine specified, and there is no default");
-        }
-    }
-
-    g_slist_free(machines);
-    if (local_err) {
-        error_append_hint(&local_err, "Use -machine help to list supported machines\n");
-        error_propagate(errp, local_err);
-    }
-    return machine_class;
-}
-```
-应该是在 qemu_create_machine 中使用，进行添加的
-```c
-object_property_add_child(object_get_root(), "machine", OBJECT(current_machine));
 ```
