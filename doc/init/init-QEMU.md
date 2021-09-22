@@ -112,11 +112,13 @@ xenpv
 ```
 
 ## choose cpu
+来好好分析一下: X86CPUModel
+
 似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
 
-当使用上 tcg 的时候，是无法采用 host-x86_64-cpu 的, 当然 -cpu
+当使用上 tcg 的时候，是无法采用 host-x86_64-cpu 的, 当然 -cpu 就无法使用了
 
-- [ ] 如何确定是 32bit 还是 64bit cpu 初始化的区别
+- [ ] 使用的是 builtin_x86_defs 中的 qemu32 还是 qemu64 哇?
 
 - 关于 cpu 中，其实还定义了 base 版本 和 max 版本
 
@@ -125,8 +127,6 @@ xenpv
 static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
 {
     g_autofree char *typename = x86_cpu_type_name(name);
-
-    printf("huxueshi:%s %s\n", __FUNCTION__, typename);
 
     TypeInfo ti = {
         .name = typename,
@@ -170,6 +170,94 @@ static X86CPUDefinition builtin_x86_defs[] = {
 
 当然还可以选择其他的 cpu，其解析工作在 parse_cpu_option
 
+- x86_cpu_register_types : 这个函数是通过 type_init 来调用的
+  - type_register_static(&x86_cpu_type_info); 其他类型的 parent
+  - [ ] type_register_static(&max_x86_cpu_type_info); 为什么需要这个 ？
+  - [ ] type_register_static(&x86_base_cpu_type_info);
+  - x86_register_cpudef_types : 对于 builtin_x86_defs 循环调用
+    - 组装出来 X86CPUModel
+    - x86_register_cpu_model_type : 构建 .class_data = X86CPUModel 的 TypeInfo，在 x86_cpu_cpudef_class_init 的时候，会将这个穿点到 X86CPUClass::model 上
+
+- [ ] 既然注册了这么多的函数 TypeInfo，到时候真正选择是的哪一个哇!
+
+
+x86_cpu_cpudef_class_init 对于每一个 TypeInfo 都是会调用一次的。
+```c
+/*
+#0  x86_cpu_cpudef_class_init (oc=0x55555670a060, data=0x5555566ea960) at ../target/i386/cpu.c:5048
+#1  0x0000555555d239ff in type_initialize (ti=0x5555566ea990) at ../qom/object.c:1075
+#2  object_class_foreach_tramp (key=<optimized out>, value=0x5555566ea990, opaque=0x7fffffffd090) at ../qom/object.c:1075
+#3  0x00007ffff79881b8 in g_hash_table_foreach () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#4  0x0000555555d2403c in object_class_foreach (fn=fn@entry=0x555555d226b0 <object_class_get_list_tramp>, implements_type=implements_type@entry=0x555556257483 "machine"
+, include_abstract=include_abstract@entry=false, opaque=opaque@entry=0x7fffffffd0d0) at ../qom/object.c:86
+#5  0x0000555555d240e6 in object_class_get_list (implements_type=implements_type@entry=0x555556257483 "machine", include_abstract=include_abstract@entry=false) at ../qo
+m/object.c:1154
+#6  0x0000555555c658f7 in select_machine (errp=<optimized out>, qdict=0x555556704560) at ../softmmu/vl.c:1620
+#7  qemu_create_machine (qdict=0x555556704560) at ../softmmu/vl.c:2105
+#8  qemu_init (argc=<optimized out>, argv=0x7fffffffd358, envp=<optimized out>) at ../softmmu/vl.c:3640
+#9  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+```c
+typedef struct X86CPUVersionDefinition {
+    X86CPUVersion version;
+    const char *alias;
+    const char *note;
+    PropValue *props;
+} X86CPUVersionDefinition;
+
+/* Base definition for a CPU model */
+typedef struct X86CPUDefinition {
+    const char *name;
+    uint32_t level;
+    uint32_t xlevel;
+    /* vendor is zero-terminated, 12 character ASCII string */
+    char vendor[CPUID_VENDOR_SZ + 1];
+    int family;
+    int model;
+    int stepping;
+    FeatureWordArray features;
+    const char *model_id;
+    const CPUCaches *const cache_info;
+    /*
+     * Definitions for alternative versions of CPU model.
+     * List is terminated by item with version == 0.
+     * If NULL, version 1 will be registered automatically.
+     */
+    const X86CPUVersionDefinition *versions;
+    const char *deprecation_note;
+} X86CPUDefinition;
+
+/* Reference to a specific CPU model version */
+struct X86CPUModel {
+    /* Base CPU definition */
+    const X86CPUDefinition *cpudef;
+    /* CPU model version */
+    X86CPUVersion version;
+    const char *note;
+    /*
+     * If true, this is an alias CPU model.
+     * This matters only for "-cpu help" and query-cpu-definitions
+     */
+    bool is_alias;
+};
+```
+- X86CPUModel : 在 x86_register_cpudef_types 中间被初始化，
+
+
+```diff
+History:        #0
+Commit:         53db89d93bebe70a3e7f4c45933deffcf3e7cb62
+Author:         Eduardo Habkost <ehabkost@redhat.com>
+Author Date:    Fri 28 Jun 2019 08:28:41 AM CST
+Committer Date: Sat 06 Jul 2019 04:08:04 AM CST
+
+i386: Replace -noTSX, -IBRS, -IBPB CPU models with aliases
+
+The old CPU models will be just aliases for specific versions of
+the original CPU models.
+```
+
 ## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
 ```c
 static const TypeInfo i440fx_pcihost_info = {
@@ -197,9 +285,11 @@ hw/core/bus.c:158
 ```
 
 ## cpu feature
-总体来说，cpu feature 都是通过 CPUX86State::features 进行的，QOM property 闲的很傻
+- [ ] 最后的一个问题，这些 feature 是如何被选择的?
 
-feature_word_info : 是定义了所有的存在的 feature
+总体来说，cpu feature 都是通过 CPUX86State::features 进行的，QOM property 显得很傻
+
+静态变量 feature_word_info 定义了所有的存在的 feature
 
 X86CPUDefinition::features 在 x86_cpu_load_model 中，将这个拷贝到 CPUX86State::features 中
 
@@ -376,9 +466,7 @@ void device_class_set_parent_realize(DeviceClass *dc,
 ```
 同时初始化一下 parent_realize 和 realize
 
-
 所以，最后 x86_cpu_realizefn 会调用 cpu_common_realizefn
-
 #### CPUX86State
 - [ ] smbase : 这个地址似乎用于 smm 保存上下文的地方, 这个东西就是 SMRAM 的基地址
 
