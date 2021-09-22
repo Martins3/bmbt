@@ -178,9 +178,6 @@ static X86CPUDefinition builtin_x86_defs[] = {
     - 组装出来 X86CPUModel
     - x86_register_cpu_model_type : 构建 .class_data = X86CPUModel 的 TypeInfo，在 x86_cpu_cpudef_class_init 的时候，会将这个穿点到 X86CPUClass::model 上
 
-- [ ] 既然注册了这么多的函数 TypeInfo，到时候真正选择是的哪一个哇!
-
-
 x86_cpu_cpudef_class_init 对于每一个 TypeInfo 都是会调用一次的。
 ```c
 /*
@@ -244,7 +241,7 @@ struct X86CPUModel {
 ```
 - X86CPUModel : 在 x86_register_cpudef_types 中间被初始化，
 
-
+alias 的作用
 ```diff
 History:        #0
 Commit:         53db89d93bebe70a3e7f4c45933deffcf3e7cb62
@@ -257,6 +254,19 @@ i386: Replace -noTSX, -IBRS, -IBPB CPU models with aliases
 The old CPU models will be just aliases for specific versions of
 the original CPU models.
 ```
+
+在 x86_cpu_initfn 中
+```c
+    if (xcc->model) {
+        x86_cpu_load_model(cpu, xcc->model);
+    }
+```
+- object_property_set_int
+  - `object_property_set_int(OBJECT(cpu), "family", def->family, &error_abort);`
+    - 类似的赋值还有好几个
+  - `env->features[w] = def->features[w];`
+  - x86_cpu_apply_version_props
+    - [ ] object_property_parse : 不能理解这个做啥的
 
 ## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
 ```c

@@ -13,7 +13,62 @@
 - [ ] 有没有将所有的 property 打印的方法
 - [ ] qdev 相对于 QOM 的增强在于什么地方?
 
+- [ ] 实际上，还是需要将 ResettableState 分析一下
+
+- [ ] alias 和 link 分别做什么用途的
+
 ## qdev
+```c
+struct DeviceClass {
+    /*< private >*/
+    ObjectClass parent_class;
+    /*< public >*/
+
+    DECLARE_BITMAP(categories, DEVICE_CATEGORY_MAX);
+    const char *fw_name;
+    const char *desc;
+
+    /*
+     * The underscore at the end ensures a compile-time error if someone
+     * assigns to dc->props instead of using device_class_set_props.
+     */
+    Property *props_;
+
+    /*
+     * Can this device be instantiated with -device / device_add?
+     * All devices should support instantiation with device_add, and
+     * this flag should not exist.  But we're not there, yet.  Some
+     * devices fail to instantiate with cryptic error messages.
+     * Others instantiate, but don't work.  Exposing users to such
+     * behavior would be cruel; clearing this flag will protect them.
+     * It should never be cleared without a comment explaining why it
+     * is cleared.
+     * TODO remove once we're there
+     */
+    bool user_creatable;
+    bool hotpluggable;
+
+    /* callbacks */
+    /*
+     * Reset method here is deprecated and replaced by methods in the
+     * resettable class interface to implement a multi-phase reset.
+     * TODO: remove once every reset callback is unused
+     */
+    DeviceReset reset;
+    DeviceRealize realize;
+    DeviceUnrealize unrealize;
+
+    /* device state */
+    const VMStateDescription *vmsd;
+
+    /* Private to qdev / bus.  */
+    const char *bus_type;
+};
+```
+实际上多出来的主要内容:
+- [ ] `props_`
+- [ ] reset / realize / unrealize
+
 
 ## memory region
 才意识到 memory region 也是一个 qobject 并且是需要挂到
@@ -62,6 +117,110 @@ static void print_qom_composition(Monitor *mon, Object *obj, int indent)
     g_array_free(children, TRUE);
 }
 ```
+## hmp_info_qtree
+```c
+void hmp_info_qtree(Monitor *mon, const QDict *qdict)
+{
+    if (sysbus_get_default())
+        qbus_print(mon, sysbus_get_default(), 0);
+}
+```
+
+- [ ] 我的龟龟哇 : `static BusState *main_system_bus;`
+
+```c
+/**
+ * BusState:
+ * @hotplug_handler: link to a hotplug handler associated with bus.
+ * @reset: ResettableState for the bus; handled by Resettable interface.
+ */
+struct BusState {
+    Object obj;
+    DeviceState *parent;
+    char *name;
+    HotplugHandler *hotplug_handler;
+    int max_index;
+    bool realized;
+    int num_children;
+
+    /*
+     * children is a RCU QTAILQ, thus readers must use RCU to access it,
+     * and writers must hold the big qemu lock
+     */
+
+    QTAILQ_HEAD(, BusChild) children;
+    QLIST_ENTRY(BusState) sibling;
+    ResettableState reset;
+};
+
+/**
+ * DeviceState:
+ * @realized: Indicates whether the device has been fully constructed.
+ *            When accessed outside big qemu lock, must be accessed with
+ *            qatomic_load_acquire()
+ * @reset: ResettableState for the device; handled by Resettable interface.
+ *
+ * This structure should not be accessed directly.  We declare it here
+ * so that it can be embedded in individual device state structures.
+ */
+struct DeviceState {
+    /*< private >*/
+    Object parent_obj;
+    /*< public >*/
+
+    const char *id;
+    char *canonical_path;
+    bool realized;
+    bool pending_deleted_event;
+    QemuOpts *opts;
+    int hotplugged;
+    bool allow_unplug_during_migration;
+    BusState *parent_bus;                  // 关联了 parent bus 哦
+    QLIST_HEAD(, NamedGPIOList) gpios;
+    QLIST_HEAD(, NamedClockList) clocks;
+    QLIST_HEAD(, BusState) child_bus;
+    int num_child_bus;
+    int instance_id_alias;
+    int alias_required_for_version;
+    ResettableState reset;
+};
+```
+- dev 和 bus 是互相交错放置的
+  - 在 qbus_init 中间，创建的 bus 的时候，使用 BusState::sibling 将 BusState 挂到 DeviceState::child_bus 上
+  - 在 bus_add_child 中，使用 DeviceState::sibling 将 DeviceState 挂到 BusState::children 上
+
+```c
+static void qdev_print(Monitor *mon, DeviceState *dev, int indent){
+    // ...
+    do {
+        qdev_print_props(mon, dev, DEVICE_CLASS(class)->props_, indent);
+        class = object_class_get_parent(class);
+    } while (class != object_class_by_name(TYPE_DEVICE));
+    // ...
+}
+```
+
+```txt
+dev: fw_cfg_io, id ""
+  dma_enabled = true
+  x-file-slots = 32 (0x20)
+  acpi-mr-restore = true
+```
+
+```c
+static Property fw_cfg_mem_properties[] = {
+    DEFINE_PROP_UINT32("data_width", FWCfgMemState, data_width, -1),
+    DEFINE_PROP_BOOL("dma_enabled", FWCfgMemState, parent_obj.dma_enabled,
+                     true),
+    DEFINE_PROP_UINT16("x-file-slots", FWCfgMemState, parent_obj.file_slots,
+                       FW_CFG_FILE_SLOTS_DFLT),
+    DEFINE_PROP_END_OF_LIST(),
+};
+```
+
+- qdev_print_props : 输出属性
+- device_class_set_props : 设置属性
+
 
 ## TypeInfo
 
@@ -70,7 +229,6 @@ static void print_qom_composition(Monitor *mon, Object *obj, int indent)
 
 - [x] type_init 注册的函数什么时候会被调用? (在 constructor 中注册，在 register_module_init 中全体调用)
 - [ ] 将 TypeInfo 注册了，其中的 class_init 和 instance_init 什么时候调用
-
 
 - type_init : 携带参数 MODULE_INIT_QOM 调用 module_init
   - module_init
@@ -582,8 +740,6 @@ const char *object_get_canonical_path_component(const Object *obj)
 ```
 // 我的龟龟，难道这种层级结构体是通过 properties 构建起来的
 
-- [ ] 需要手动构建吗?
-- [ ] 还是需要手动的建立的哇，还是自动建立起来的哇
 ```c
 /*
 #0  huxueshi () at ../qom/object.c:609
@@ -707,7 +863,7 @@ object_link_get_targetp(Object *obj, LinkProperty *lprop)
     }
 }
 ```
-这个东西是在 object_add_link_prop 中初始化的。
+这个东西是在 object_add_link_prop 中初始化的，其调用者为 object_property_add_link 和 object_property_add_const_link
 
 - [x] ObjectPropertyInit : 初始化的 hook
 
