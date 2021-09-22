@@ -19,7 +19,15 @@
 
 - [ ] struct ObjectProperty 和 struct Property 的关系是什么?
 
+- [ ] 这个东西是如何构建出来的? /device[19] 这个名称的构建
+```plain
+    /device[19] (i8042)
+      /i8042-cmd[0] (memory-region)
+      /i8042-data[0] (memory-region)
+```
+
 ## qdev
+- [ ] 将整个 qdev.c 的每个函数分析一下
 ```c
 struct DeviceClass {
     /*< private >*/
@@ -691,6 +699,7 @@ object_property_add_child(object_resolve_path(parent_name, NULL), "ioapic", OBJE
 
 #### link
 
+第一个例子: vmport 和 i8042 之间的 link : object_property_set_link
 ```txt
 huxueshi:object_resolve_link i8042 /machine/unattached/device[19]
 huxueshi:object_resolve_link a20[0] /machine/unattached/non-qdev-gpio[24]
@@ -715,10 +724,48 @@ huxueshi:object_resolve_link a20[0] /machine/unattached/non-qdev-gpio[25]
 #14 0x0000555555c68608 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
 #15 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
+第二个例子:
+在 pc_init1 中，
 
+```c
+        object_property_add_link(OBJECT(machine), PC_MACHINE_ACPI_DEVICE_PROP,
+                                 TYPE_HOTPLUG_HANDLER,
+                                 (Object **)&x86ms->acpi_dev,
+                                 object_property_allow_set_link,
+                                 OBJ_PROP_LINK_STRONG);
+        object_property_set_link(OBJECT(machine), PC_MACHINE_ACPI_DEVICE_PROP,
+                                 OBJECT(piix4_pm), &error_abort);
+```
+
+第三个例子: bus_add_child
+
+第四个: qdev_init_gpio_out_named
+
+- pic_realize
+  - `qdev_init_gpio_out(dev, s->int_out, ARRAY_SIZE(s->int_out));`
+    - [ ] 之后 PICCommonState::int_out 是通往何处的?
+  - `qdev_init_gpio_in(dev, pic_set_irq, 8);`
+
+- qdev_init_gpio_out_named
+```c
+        object_property_add_link(OBJECT(dev), propname, TYPE_IRQ,
+                                 (Object **)&pins[i], // FIXME ???
+                                 object_property_allow_set_link,
+                                 OBJ_PROP_LINK_STRONG);
+```
+
+- qdev_connect_gpio_out_named
+```c
+object_property_set_link(OBJECT(dev), propname, OBJECT(pin), &error_abort);
+```
+
+- object_property_set_link : 实际上，这就是一个简答的赋值操作
+  - object_get_canonical_path : 不是通过继承构建的，而是通过 priority 构建的
+  - object_property_set_str
+    - object_property_set_qobject
+      - object_property_set : 实际上就是简单的赋值了
 
 #### ObjectProperty::type
-
 ```c
 struct ObjectProperty
 {
