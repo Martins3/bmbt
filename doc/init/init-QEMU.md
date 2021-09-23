@@ -261,12 +261,16 @@ the original CPU models.
         x86_cpu_load_model(cpu, xcc->model);
     }
 ```
-- object_property_set_int
+
+- x86_cpu_load_model
   - `object_property_set_int(OBJECT(cpu), "family", def->family, &error_abort);`
     - 类似的赋值还有好几个
   - `env->features[w] = def->features[w];`
-  - x86_cpu_apply_version_props
-    - [ ] object_property_parse : 不能理解这个做啥的
+  - x86_cpu_apply_version_props : 对于 builtin_x86_defs::versions 会在 x86_cpu_def_get_versions 中默认注册一个，其没有关联任何的 prop, 所以最后 x86_cpu_apply_version_props 在 qemu64 的请款下，是一个空操作的
+    - object_property_parse
+
+- X86CPUDefinition::cache_info
+	- 在 x86_cpu_realizefn 中间注册，qemu64 注册上的就是 legacy 的数值
 
 ## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
 ```c
@@ -295,13 +299,9 @@ hw/core/bus.c:158
 ```
 
 ## cpu feature
-- [ ] 最后的一个问题，这些 feature 是如何被选择的?
-
-总体来说，cpu feature 都是通过 CPUX86State::features 进行的，QOM property 显得很傻
-
-静态变量 feature_word_info 定义了所有的存在的 feature
-
-X86CPUDefinition::features 在 x86_cpu_load_model 中，将这个拷贝到 CPUX86State::features 中
+- X86CPUDefinition::features 在 x86_cpu_load_model 中，将这个拷贝到 CPUX86State::features 中
+- cpu feature 都是通过 CPUX86State::features 进行的，QOM property 显得很傻
+- 静态变量 feature_word_info 定义了所有的存在的 feature
 
 - x86_cpu_common_class_init
   - x86_cpu_register_feature_bit_props : 给 xcc 添加上一堆 property , 这些 property 的访问方式是 x86_cpu_set_bit_prop
@@ -329,15 +329,20 @@ tcg
 #5  0x0000555555c82967 in accel_cpu_instance_init (cpu=0x555556c28050) at ../accel/accel-common.c:110
 #6  0x0000555555ba3ffa in x86_cpu_initfn (obj=0x555556c28050) at ../target/i386/cpu.c:4131
 ```
-一共就是只是调用两次 x86_cpu_set_bit_prop
-
-x86_cpu_get_bit_prop 从来都不会被调用啊, 那么存在什么意义啊
+一共就是只是调用两次 x86_cpu_set_bit_prop，就是为了 accel 相关的属性进行修改:
+```c
+/*
+ * TCG-specific defaults that override cpudef models when using TCG.
+ * Only for builtin_x86_defs models initialized with x86_register_cpudef_types.
+ */
+static PropValue tcg_default_props[] = {
+    { "vme", "off" },
+    { NULL, NULL },
+};
+```
 
 - x86_cpu_set_bit_prop 只是在 tcg 和 kvm 的这样使用，那么那些 CPU feature 几乎就是全都没有使用了
   - 实际上，这个有点多余， x86_cpu_set_bit_prop 也只是设置了一下 CPUX86State::features
-
-- 在 86_cpu_initfn 中，多次的调用了 object_property_add_alias 这都是做啥的 (只是为了修改一下名称吧)
-  - 这个想法在 x86_cpu_register_feature_bit_props  x86_cpu_register_feature_bit_props 中得到验证
 
 ## init machine
 我们发现，整个 machine 的体系几乎完全没有被拷贝进去，对此，

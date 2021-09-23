@@ -6,27 +6,129 @@
 - [ ] https://qemu.readthedocs.io/en/latest/devel/qom.html
 - [ ] https://www.linux-kvm.org/images/9/90/Kvmforum14-qom.pdf
 
-- [ ] 分析一下两个 info qom-tree 和 info qtree 的实现方法是什么?
-- [ ] 其实 QOM 和 dev 搞的很烦，那就是我现在不知道定位到这些 初始化函数，什么时候调用，调用的先后顺序了
-  - 通过 TypeInfo 和 qdev 的 realize 函数
+- [x] alias
+- [x] struct ObjectProperty 和 struct Property 的关系是什么?
+	- 一个是动态的，一个是静态的定义
 
-- [ ] 有没有将所有的 property 打印的方法
-- [ ] qdev 相对于 QOM 的增强在于什么地方?
+- [x] visiter : 我放弃了
+	- [ ] visit core 只有 400 行
+	-	[x] 无论如何，玩一下其中的 qapi
+		- https://github.com/arcnmx/qapi-rs : 实际上我并不会写 rust
+		- https://gist.github.com/rgl/dc38c6875a53469fdebb2e9c0a220c6c : 直接使用 nc 就可以了
+	- [ ] parse_numa
 
-- [ ] 实际上，还是需要将 ResettableState 分析一下
 
-- [ ] alias 和 link 分别做什么用途的
+- 和标准的面向对象的差别
+	- 没有办法实现 override 和 overload 的操作
+	- 但是搞了一个很复杂的 property
+		- 构建 QOM tree
+		- 构建 qtree
+		- alias
+		- link
 
-- [ ] struct ObjectProperty 和 struct Property 的关系是什么?
+- [x] init QEMU 中的 feature 最后是如何用起来的
 
-- [ ] 这个东西是如何构建出来的? /device[19] 这个名称的构建
-```plain
-    /device[19] (i8042)
-      /i8042-cmd[0] (memory-region)
-      /i8042-data[0] (memory-region)
+## init
+
+select_machine 需要获取所有的 TYPE_MACHINE 的 class, 这最后会调用到 type_initialize
+
+所有 type 早就注册到此处了:
+
+从 type_table_get 中可以获取所有的 type 的内容
+
+type_initialize 中会分配 class 的空间的
+```c
+/*
+#0  apic_common_class_init (klass=0x5555567cb060, data=0x0) at ../hw/intc/apic_common.c:468
+#1  0x0000555555d23dcf in type_initialize (ti=0x5555566f7460) at ../qom/object.c:1077
+#2  object_class_foreach_tramp (key=<optimized out>, value=0x5555566f7460, opaque=0x7fffffffd030) at ../qom/object.c:1077
+#3  0x00007ffff79881b8 in g_hash_table_foreach () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#4  0x0000555555d2440c in object_class_foreach (fn=fn@entry=0x555555d22aa0 <object_class_get_list_tramp>, implements_type=implements_type@entry=0x555556258463 "machine", include_abstract=include_abstract@entry=false, opaque=opaque@entry=0x7fffffffd070) at ../qom/object.c:86
+#5  0x0000555555d244b6 in object_class_get_list (implements_type=implements_type@entry=0x555556258463 "machine", include_abstract=include_abstract@entry=false) at ../qom/object.c:1156
+#6  0x0000555555c659b7 in select_machine (errp=<optimized out>, qdict=0x555556705560) at ../softmmu/vl.c:1620
+#7  qemu_create_machine (qdict=0x555556705560) at ../softmmu/vl.c:2105
+#8  qemu_init (argc=<optimized out>, argv=0x7fffffffd2f8, envp=<optimized out>) at ../softmmu/vl.c:3639
+#9  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 
+通过调用 object_init_with_type 实现的，并且在启动会 malloc 空间存储这个新的 object 来的。
+```c
+/*
+#0  apic_common_initfn (obj=0x5555569e5db0) at ../hw/intc/apic_common.c:458
+#1  0x0000555555d23316 in object_init_with_type (obj=0x5555569e5db0, ti=0x5555566d4e20) at ../qom/object.c:372
+#2  0x0000555555d2495c in object_initialize_with_type (obj=obj@entry=0x5555569e5db0, size=size@entry=656, type=type@entry=0x5555566d4e20) at ../qom/object.c:525
+#3  0x0000555555d24aa9 in object_new_with_type (type=0x5555566d4e20) at ../qom/object.c:740
+#4  0x0000555555b77fd5 in x86_cpu_apic_create (cpu=cpu@entry=0x555556b08d50, errp=errp@entry=0x7fffffffccc0) at ../target/i386/cpu-sysemu.c:274
+#5  0x0000555555be255f in x86_cpu_realizefn (dev=0x555556b08d50, errp=0x7fffffffcd20) at ../target/i386/cpu.c:6267
+#6  0x0000555555d3e027 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcda0) at ../hw/core/qdev.c:761
+#7  0x0000555555d22caa in property_set_bool (obj=0x555556b08d50, v=<optimized out>, name=<optimized out>, opaque=0x55555670c430, errp=0x7fffffffcda0) at ../qom/object.c:2285
+#8  0x0000555555d251dc in object_property_set (obj=obj@entry=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", v=v@entry=0x555556aeabf0, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/object.c:1410
+#9  0x0000555555d21824 in object_property_set_qobject (obj=obj@entry=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", value=value@entry=0x5555569f30a0, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/qom-qobject.c:28
+#10 0x0000555555d25449 in object_property_set_bool (obj=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", value=value@entry=true, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/object.c:1480
+#11 0x0000555555d3ce52 in qdev_realize (dev=<optimized out>, bus=bus@entry=0x0, errp=errp@entry=0x555556618678 <error_fatal>) at ../hw/core/qdev.c:389
+#12 0x0000555555badf75 in x86_cpu_new (x86ms=x86ms@entry=0x55555677cde0, apic_id=0, errp=errp@entry=0x555556618678 <error_fatal>) at /home/maritns3/core/kvmqemu/include/hw/qdev-core.h:17
+#13 0x0000555555bae05e in x86_cpus_init (x86ms=x86ms@entry=0x55555677cde0, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:138
+#14 0x0000555555b8aaf3 in pc_init1 (machine=0x55555677cde0, pci_type=0x555555f5d125 "i440FX", host_type=0x555555ec0aed "i440FX-pcihost") at ../hw/i386/pc_piix.c:156
+#15 0x0000555555a6c094 in machine_run_board_init (machine=0x55555677cde0) at ../hw/core/machine.c:1273
+#16 0x0000555555c64ec4 in qemu_init_board () at ../softmmu/vl.c:2615
+#17 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#19 0x0000555555c68668 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#20 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+device_class_init 中注册了
+```c
+object_class_property_add_bool(class, "realized", device_get_realized, device_set_realized);
+```
+靠 qdev_realize 就可以了
+
+```c
+/*
+#0  apic_common_realize (dev=0x5555569e5db0, errp=0x7fffffffcb70) at ../hw/intc/apic_common.c:286
+#1  0x0000555555d3e027 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcbf0) at ../hw/core/qdev.c:761
+#2  0x0000555555d22caa in property_set_bool (obj=0x5555569e5db0, v=<optimized out>, name=<optimized out>, opaque=0x55555670c430, errp=0x7fffffffcbf0) at ../qom/object.c
+:2285
+#3  0x0000555555d251dc in object_property_set (obj=obj@entry=0x5555569e5db0, name=name@entry=0x555555fe20d6 "realized", v=v@entry=0x555556a2c940, errp=errp@entry=0x7fff
+ffffccc0) at ../qom/object.c:1410
+#4  0x0000555555d21824 in object_property_set_qobject (obj=obj@entry=0x5555569e5db0, name=name@entry=0x555555fe20d6 "realized", value=value@entry=0x555556c0d9b0, errp=e
+rrp@entry=0x7fffffffccc0) at ../qom/qom-qobject.c:28
+#5  0x0000555555d25449 in object_property_set_bool (obj=0x5555569e5db0, name=name@entry=0x555555fe20d6 "realized", value=value@entry=true, errp=errp@entry=0x7fffffffccc
+0) at ../qom/object.c:1480
+#6  0x0000555555d3ce52 in qdev_realize (dev=<optimized out>, bus=bus@entry=0x0, errp=errp@entry=0x7fffffffccc0) at ../hw/core/qdev.c:389
+#7  0x0000555555b780b9 in x86_cpu_apic_realize (cpu=cpu@entry=0x555556b08d50, errp=errp@entry=0x7fffffffccc0) at /home/maritns3/core/kvmqemu/include/hw/qdev-core.h:17
+#8  0x0000555555be2653 in x86_cpu_realizefn (dev=0x555556b08d50, errp=0x7fffffffcd20) at ../target/i386/cpu.c:6299
+#9  0x0000555555d3e027 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcda0) at ../hw/core/qdev.c:761
+#10 0x0000555555d22caa in property_set_bool (obj=0x555556b08d50, v=<optimized out>, name=<optimized out>, opaque=0x55555670c430, errp=0x7fffffffcda0) at ../qom/object.c
+:2285
+#11 0x0000555555d251dc in object_property_set (obj=obj@entry=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", v=v@entry=0x555556aeabf0, errp=errp@entry=0x5555
+56618678 <error_fatal>) at ../qom/object.c:1410
+#12 0x0000555555d21824 in object_property_set_qobject (obj=obj@entry=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", value=value@entry=0x5555569f30a0, errp=e
+rrp@entry=0x555556618678 <error_fatal>) at ../qom/qom-qobject.c:28
+#13 0x0000555555d25449 in object_property_set_bool (obj=0x555556b08d50, name=name@entry=0x555555fe20d6 "realized", value=value@entry=true, errp=errp@entry=0x55555661867
+8 <error_fatal>) at ../qom/object.c:1480
+#14 0x0000555555d3ce52 in qdev_realize (dev=<optimized out>, bus=bus@entry=0x0, errp=errp@entry=0x555556618678 <error_fatal>) at ../hw/core/qdev.c:389
+#15 0x0000555555badf75 in x86_cpu_new (x86ms=x86ms@entry=0x55555677cde0, apic_id=0, errp=errp@entry=0x555556618678 <error_fatal>) at /home/maritns3/core/kvmqemu/include
+/hw/qdev-core.h:17
+#16 0x0000555555bae05e in x86_cpus_init (x86ms=x86ms@entry=0x55555677cde0, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:138
+#17 0x0000555555b8aaf3 in pc_init1 (machine=0x55555677cde0, pci_type=0x555555f5d125 "i440FX", host_type=0x555555ec0aed "i440FX-pcihost") at ../hw/i386/pc_piix.c:156
+#18 0x0000555555a6c094 in machine_run_board_init (machine=0x55555677cde0) at ../hw/core/machine.c:1273
+#19 0x0000555555c64ec4 in qemu_init_board () at ../softmmu/vl.c:2615
+#20 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#21 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#22 0x0000555555c68668 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#23 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+注意 : class_init 和 instance_init 都是可以自动调用 parent 的 hook 的，但是 realize 不可以的
+
+[听君一席话，如听一席话](http://people.redhat.com/~thuth/blog/qemu/2018/09/10/instance-init-realize.html)
+
+关于 instance_init 和 DeviceRealize 的关系就是根本没有什么关系,
+因为 DeviceRealize 就是为了给设备各种初始化进行抽象的，
+如果非要说有关系: 所有的注册的 realize 都是在 device_set_realized 调用的，而 device_set_realized 是靠 property 机制进行的
+
 ## qdev
+
 - [ ] 将整个 qdev.c 的每个函数分析一下
 ```c
 struct DeviceClass {
@@ -127,6 +229,40 @@ static void print_qom_composition(Monitor *mon, Object *obj, int indent)
     g_array_free(children, TRUE);
 }
 ```
+
+- [x] 这个东西是如何构建出来的? /device[19] 这个名称的构建
+```plain
+    /device[15] (isa-serial)
+      /serial (serial)
+      /serial[0] (memory-region)
+```
+
+在 device_set_realized 中，如果 Object::parent == NULL, 那么会在
+/unattached (container) 中添加增加一个 child 属性为 device[unattached_count]
+
+```c
+if (!obj->parent) {
+    gchar *name = g_strdup_printf("device gg[%d]", unattached_count++);
+
+    object_property_add_child(container_get(qdev_get_machine(),
+                                            "/unattached"),
+                              name, obj);
+    unattached_parent = true;
+    g_free(name);
+}
+```
+
+isa-serial 在继承上的关系有多个，但是 Object::parent 的赋值是在
+object_property_add_child => object_property_try_add_child 中，也即是 parent 还是这个路线上的。
+
+```c
+static const TypeInfo serial_isa_info
+static const TypeInfo isa_device_type_info
+static const TypeInfo device_type_info
+```
+
+
+
 ## hmp_info_qtree
 ```c
 void hmp_info_qtree(Monitor *mon, const QDict *qdict)
@@ -227,6 +363,7 @@ static Property fw_cfg_mem_properties[] = {
     DEFINE_PROP_END_OF_LIST(),
 };
 ```
+关联到结构体的成员上的
 
 - qdev_print_props : 输出属性
 - device_class_set_props : 设置属性
@@ -484,13 +621,6 @@ static const TypeInfo conventional_pci_interface_info = {
     .parent        = TYPE_INTERFACE,
 };
 ```
-
-## DeviceRealize
-关于 instance_init 和 DeviceRealize 的关系就是根本没有什么关系,
-因为 DeviceRealize 就是为了给设备各种初始化进行抽象的，
-如果非要说有关系: 所有的注册的 realize 都是在 device_set_realized 调用的，而 device_set_realized 是靠 property 机制进行的
-
-
 ## object_property
 - [ ] 无法理解 property parent 强于 child, 是 class 强于 object 的
   - [ ] object_property_add_child (出现的位置: fw_cfg_init_io_dma)
@@ -595,8 +725,17 @@ To hide this, the -cpu option tcg-cpuid=off can be used.
 ```
 
 #### object_property_add_alias
+- 在 86_cpu_initfn 中，多次的调用了 object_property_add_alias 只是为了修改名称
+  - 这个想法在 x86_cpu_register_feature_bit_props  x86_cpu_register_feature_bit_props 中得到验证
+
+object_property_add_alias 只是在调用 object_property_add 的时候，其 hook 为
+- property_get_alias
+- property_set_alias
+这和 object_property_add_str 是没有什么区别的。
+
+
 比如在 x86_cpu_initfn 中间的操作:
-- [ ] 第一种使用方法，只是为了多一个名称?
+- [x] 第一种使用方法，多个名称指向同一个属性，从而实现
 
 ```c
     object_property_add_alias(obj, "sse3", obj, "pni", &error_abort);
@@ -604,16 +743,14 @@ To hide this, the -cpu option tcg-cpuid=off can be used.
     object_property_add_alias(obj, "sse4-1", obj, "sse4.1", &error_abort);
     object_property_add_alias(obj, "sse4-2", obj, "sse4.2", &error_abort);
 ```
-- [ ] 第二种， pc_machine_initfn
+object_property_add_alias
+
+- [x] 第二种，pc_machine_initfn，保证两个属性的相同的
 ```c
 object_property_add_alias(OBJECT(pcms), "pcspk-audiodev", OBJECT(pcms->pcspk), "audiodev");
 ```
 
-
 #### GlobalProperty
-和 property 似乎没有什么关系, 这是从 qdev 中间延伸出来的概念啊
-
-
 ```c
 /**
  * GlobalProperty:
@@ -666,8 +803,102 @@ QemuOptsList qemu_global_opts = {
    -global driver.prop=value is shorthand for -global driver=driver,property=prop,value=value.  The longhand
    syntax works even when driver contains a dot.
 ```
+- [ ] 这个东西是和 object 没有关系的 priority 吗?
 
-#### [ ] object_property_add_child
+
+在 x86_cpu_parse_featurestr 中，实际上:
+```c
+/* Parse "+feature,-feature,feature=foo" CPU feature string
+ */
+static void x86_cpu_parse_featurestr(const char *typename, char *features,
+                                     Error **errp)
+```
+构建的 GlobalProperty 通过 qdev_prop_register_global 添加到 global_props 上，其返回一个 staic 数组
+
+
+```c
+bool object_apply_global_props(Object *obj, const GPtrArray *props,
+                               Error **errp)
+{
+    for (i = 0; i < props->len; i++) {
+        GlobalProperty *p = g_ptr_array_index(props, i);
+
+        if (object_dynamic_cast(obj, p->driver) == NULL) {
+            continue;
+        }
+        if (p->optional && !object_property_find(obj, p->property)) {
+            continue;
+        }
+    }
+
+    return true;
+}
+```
+主要的两个调用位置:
+- device_post_init
+- do_configure_accelerator
+
+
+## object_property_add_uint32_ptr
+- object_property_get_uint
+	- object_property_get_qobject
+
+```c
+/*
+#0  property_get_uint32_ptr (obj=0x555557b5f850, v=0x555556cd0e00, name=0x555555e98ccf "pm_io_base", opaque=0x555557b602b0, errp=0x7fffffffcca0) at ../qom/object.c:2480
+#1  0x0000555555d250cc in object_property_get (obj=obj@entry=0x555557b5f850, name=name@entry=0x555555e98ccf "pm_io_base", v=v@entry=0x555556cd0e00, errp=errp@entry=0x0)
+ at ../qom/object.c:1384
+#2  0x0000555555d21891 in object_property_get_qobject (obj=0x555557b5f850, name=0x555555e98ccf "pm_io_base", errp=0x0) at ../qom/qom-qobject.c:40
+#3  0x0000555555d258a7 in object_property_get_uint (obj=obj@entry=0x555557b5f850, name=name@entry=0x555555e98ccf "pm_io_base", errp=errp@entry=0x0) at ../qom/object.c:1
+584
+#4  0x0000555555ba0c68 in init_common_fadt_data (data=0x7fffffffcef8, o=0x555557b5f850, ms=0x555556811800) at ../hw/i386/acpi-build.c:151
+#5  acpi_get_pm_info (machine=machine@entry=0x555556811800, pm=pm@entry=0x7fffffffcef0) at ../hw/i386/acpi-build.c:217
+#6  0x0000555555ba1b4f in acpi_build (tables=tables@entry=0x7fffffffcfd0, machine=0x555556811800) at ../hw/i386/acpi-build.c:2449
+#7  0x0000555555ba4d0e in acpi_setup () at /home/maritns3/core/kvmqemu/include/hw/boards.h:24
+#8  0x0000555555b9afff in pc_machine_done (notifier=0x555556811998, data=<optimized out>) at ../hw/i386/pc.c:783
+#9  0x0000555555e89bd7 in notifier_list_notify (list=list@entry=0x5555565f55a8 <machine_init_done_notifiers>, data=data@entry=0x0) at ../util/notify.c:39
+#10 0x0000555555a6c82b in qdev_machine_creation_done () at ../hw/core/machine.c:1321
+#11 0x0000555555c64fa0 in qemu_machine_creation_done () at ../softmmu/vl.c:2668
+#12 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2691
+#13 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#14 0x0000555555c68668 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#15 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+#### QObject
+```c
+/* Not for use outside include/qapi/qmp/ */
+struct QObjectBase_ {
+    QType type;
+    size_t refcnt;
+};
+
+/* this struct must have no other members than base */
+struct QObject {
+    struct QObjectBase_ base;
+};
+
+#define QOBJECT(obj) ({                                         \
+    typeof(obj) _obj = (obj);                                   \
+    _obj ? container_of(&(_obj)->base, QObject, base) : NULL;   \
+})
+```
+
+QObject 是和这些属性是放到一起的:
+```c
+typedef struct QListEntry {
+    QObject *value;
+    QTAILQ_ENTRY(QListEntry) next;
+} QListEntry;
+
+struct QList {
+    struct QObjectBase_ base;
+    QTAILQ_HEAD(,QListEntry) head;
+};
+```
+
+
+#### object_property_add_child
 - x86_cpu_apic_create
 - ioapic_init_gsi
 
@@ -725,7 +956,7 @@ huxueshi:object_resolve_link a20[0] /machine/unattached/non-qdev-gpio[25]
 #15 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 第二个例子:
-在 pc_init1 中，
+在 pc_init1 中，实际上，我看不懂为什么如此设计
 
 ```c
         object_property_add_link(OBJECT(machine), PC_MACHINE_ACPI_DEVICE_PROP,
@@ -743,27 +974,29 @@ huxueshi:object_resolve_link a20[0] /machine/unattached/non-qdev-gpio[25]
 
 - pic_realize
   - `qdev_init_gpio_out(dev, s->int_out, ARRAY_SIZE(s->int_out));`
-    - [ ] 之后 PICCommonState::int_out 是通往何处的?
   - `qdev_init_gpio_in(dev, pic_set_irq, 8);`
 
-- qdev_init_gpio_out_named
 ```c
         object_property_add_link(OBJECT(dev), propname, TYPE_IRQ,
-                                 (Object **)&pins[i], // FIXME ???
+                                 (Object **)&pins[i],
                                  object_property_allow_set_link,
                                  OBJ_PROP_LINK_STRONG);
 ```
+- qdev_init_gpio_out_named
+  - object_property_add_link
+    - object_add_link_prop
+      - object_property_add : 这个调用就是普通的添加，但是其 get set resolve 对应的 hook 函数不同的
 
-- qdev_connect_gpio_out_named
 ```c
 object_property_set_link(OBJECT(dev), propname, OBJECT(pin), &error_abort);
 ```
 
-- object_property_set_link : 实际上，这就是一个简答的赋值操作
-  - object_get_canonical_path : 不是通过继承构建的，而是通过 priority 构建的
-  - object_property_set_str
-    - object_property_set_qobject
-      - object_property_set : 实际上就是简单的赋值了
+- qdev_connect_gpio_out_named
+  - object_property_set_link : 实际上，这就是一个简答的赋值操作
+    - object_get_canonical_path : 不是通过继承构建的，而是通过 priority 构建的
+    - object_property_set_str
+      - object_property_set_qobject
+        - object_property_set : 实际上就是简单的赋值了
 
 #### ObjectProperty::type
 ```c
