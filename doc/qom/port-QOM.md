@@ -1,9 +1,12 @@
 # QEMU QOM
 在 QOM 的定位中间，一个 TypeImpl 其实表示一个类，其静态部分在 ObjectClass 定义，非静态部分通过 Object 定义
 
+QAPI 的事情 : https://wiki.qemu.org/Features/QAPI
+
 关于 QOM 的进一步参考
-- [ ] http://juniorprincewang.github.io/categories/QEMU/
-- [ ] https://qemu.readthedocs.io/en/latest/devel/qom.html
+- http://juniorprincewang.github.io/categories/QEMU/
+	- http://juniorprincewang.github.io/2018/12/04/QEMU-Object-Model-Style-Guide/
+
 - [ ] https://www.linux-kvm.org/images/9/90/Kvmforum14-qom.pdf
 
 - [x] alias
@@ -17,6 +20,22 @@
 		- https://gist.github.com/rgl/dc38c6875a53469fdebb2e9c0a220c6c : 直接使用 nc 就可以了
 	- [ ] parse_numa
 
+Polymorphic properties (prototype based)
+● Properties are the external interface to an object
+● Different uses of properties:
+	● For construction: set before the object is “started”
+	● For inspection: read after the object is “started”
+	● Very few examples of the second kind :)
+● Similar to Linux sysfs, with arbitrary QAPI
+structs instead of bytes
+
+● Decompose serialization into
+● Marshaling (composite → primitive type)
+● Transport (primitive type ↔ representation)
+● Marshaling done by automatically generated code
+● Transport done by hand written “visitors”
+● QObject (JSON), QemuOpts (key/value pairs), string
+● “Input” vs. “output” visitors
 
 - 和标准的面向对象的差别
 	- 没有办法实现 override 和 overload 的操作
@@ -27,6 +46,50 @@
 		- link
 
 - [x] init QEMU 中的 feature 最后是如何用起来的
+
+分析一下下面的几个内容的构成:
+- [x] object_class_dynamic_cast_assert : 什么都不需要做的
+		- 但是，object_class_get_parent 为什么获取的就完全不是一个 class
+		- object_class_by_name
+
+## Object
+
+```c
+struct Object
+{
+    /* private: */
+    ObjectClass *class; // [ ] 应该是靠这个可以知道如何获取可以 dynamic ccast 到哪里去的
+    ObjectFree *free;
+    GHashTable *properties; // 该 object 只有的 property
+    uint32_t ref;
+    Object *parent;
+};
+```
+free 可能注册为 g_free 或者是 qemu_vfree, 当 Object 的引用计数为 0 的时候，调用
+
+```c
+/**
+ * struct ObjectClass:
+ *
+ * The base for all classes.  The only thing that #ObjectClass contains is an
+ * integer type handle.
+ */
+struct ObjectClass
+{
+    /* private: */
+    Type type;
+    GSList *interfaces;
+
+    const char *object_cast_cache[OBJECT_CLASS_CAST_CACHE];
+    const char *class_cast_cache[OBJECT_CLASS_CAST_CACHE];
+
+    ObjectUnparent *unparent;
+
+    GHashTable *properties;
+};
+```
+- ObjectClass::properties 用于存储 Class 的 properties，当初始化一个 object 的时候，这些 properties
+	- 通过 object_class_property_add 添加
 
 ## init
 
@@ -81,7 +144,9 @@ device_class_init 中注册了
 ```c
 object_class_property_add_bool(class, "realized", device_get_realized, device_set_realized);
 ```
-靠 qdev_realize 就可以了
+注意 qdev_realize 和 device_set_realized 是两个事情。
+- qdev_realize 实际上只是将已经 realize 好的 dev 和 bus 关联起来
+- device_set_realized 才会真正的调用 device_get_realized 的 hook
 
 ```c
 /*
@@ -128,8 +193,6 @@ rrp@entry=0x555556618678 <error_fatal>) at ../qom/qom-qobject.c:28
 如果非要说有关系: 所有的注册的 realize 都是在 device_set_realized 调用的，而 device_set_realized 是靠 property 机制进行的
 
 ## qdev
-
-- [ ] 将整个 qdev.c 的每个函数分析一下
 ```c
 struct DeviceClass {
     /*< private >*/
@@ -178,9 +241,140 @@ struct DeviceClass {
 };
 ```
 实际上多出来的主要内容:
-- [ ] `props_`
-- [ ] reset / realize / unrealize
+- [ ] `props_` : 用于存储 DeviceClass 的 Property 的
+	- 为此多关联出来的一个文件: hw/core/qdev-properties.c
+	- 设置: device_class_set_props
+- [x] reset / realize / unrealize
 
+
+
+下面随便分析一个例子:
+```c
+static Property ioapic_properties[] = {
+    DEFINE_PROP_UINT8("version", IOAPICCommonState, version, IOAPIC_VER_DEF),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+static void ioapic_class_init(ObjectClass *klass, void *data)
+{
+    IOAPICCommonClass *k = IOAPIC_COMMON_CLASS(klass);
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    k->realize = ioapic_realize;
+    k->unrealize = ioapic_unrealize;
+    /*
+     * If APIC is in kernel, we need to update the kernel cache after
+     * migration, otherwise first 24 gsi routes will be invalid.
+     */
+    k->post_load = ioapic_update_kvm_routes;
+    dc->reset = ioapic_reset_common;
+    device_class_set_props(dc, ioapic_properties);
+}
+```
+
+然后
+```c
+static void ioapic_realize(DeviceState *dev, Error **errp)
+{
+    IOAPICCommonState *s = IOAPIC_COMMON(dev);
+
+    if (s->version != 0x11 && s->version != 0x20) {
+        error_setg(errp, "IOAPIC only supports version 0x11 or 0x20 "
+                   "(default: 0x%x).", IOAPIC_VER_DEF);
+        return;
+    }
+```
+关于这个进一步参考 [DEFINE_PROP](#define_prop)
+
+
+```txt
+dev: fw_cfg_io, id ""
+  dma_enabled = true
+  x-file-slots = 32 (0x20)
+  acpi-mr-restore = true
+```
+
+```c
+static Property fw_cfg_mem_properties[] = {
+    DEFINE_PROP_UINT32("data_width", FWCfgMemState, data_width, -1),
+    DEFINE_PROP_BOOL("dma_enabled", FWCfgMemState, parent_obj.dma_enabled,
+                     true),
+    DEFINE_PROP_UINT16("x-file-slots", FWCfgMemState, parent_obj.file_slots,
+                       FW_CFG_FILE_SLOTS_DFLT),
+    DEFINE_PROP_END_OF_LIST(),
+};
+```
+通过调用 device_class_set_props 设置到 `DeviceClass::props_` 上面的，之后就可以通过 qdev_print_props 输出来
+
+```c
+static void qdev_print(Monitor *mon, DeviceState *dev, int indent){
+    // ...
+    do {
+        qdev_print_props(mon, dev, DEVICE_CLASS(class)->props_, indent);
+        class = object_class_get_parent(class);
+    } while (class != object_class_by_name(TYPE_DEVICE));
+    // ...
+}
+```
+总结:
+- qdev_print_props : 输出属性
+- device_class_set_props : 设置属性
+
+所有的 PCI 设备都是会有
+```c
+static Property pci_props[] = {
+    DEFINE_PROP_PCI_DEVFN("addr", PCIDevice, devfn, -1),
+    DEFINE_PROP_STRING("romfile", PCIDevice, romfile),
+    DEFINE_PROP_UINT32("romsize", PCIDevice, romsize, -1),
+    DEFINE_PROP_UINT32("rombar",  PCIDevice, rom_bar, 1),
+    DEFINE_PROP_BIT("multifunction", PCIDevice, cap_present,
+                    QEMU_PCI_CAP_MULTIFUNCTION_BITNR, false),
+    DEFINE_PROP_BIT("x-pcie-lnksta-dllla", PCIDevice, cap_present,
+                    QEMU_PCIE_LNKSTA_DLLLA_BITNR, true),
+    DEFINE_PROP_BIT("x-pcie-extcap-init", PCIDevice, cap_present,
+                    QEMU_PCIE_EXTCAP_INIT_BITNR, true),
+    DEFINE_PROP_STRING("failover_pair_id", PCIDevice,
+                       failover_pair_id),
+    DEFINE_PROP_UINT32("acpi-index",  PCIDevice, acpi_index, 0),
+    DEFINE_PROP_END_OF_LIST()
+};
+```
+
+想不到，原来属性也是同时
+```c
+ObjectProperty *object_property_find(Object *obj, const char *name)
+{
+    ObjectProperty *prop;
+    ObjectClass *klass = object_get_class(obj);
+
+    prop = object_class_property_find(klass, name);
+    if (prop) {
+        return prop;
+    }
+
+    return g_hash_table_lookup(obj->properties, name);
+}
+```
+- object_property_get
+	- object_property_find_err
+		- object_property_find
+			- object_class_property_find : 在 class 中间寻找 properties
+			- g_hash_table_lookup(obj->properties, name); 在 object 中寻找 properties
+
+现在来测一下为什么
+```c
+PCIDevice *pci_new_multifunction(int devfn, bool multifunction,
+                                 const char *name)
+{
+    DeviceState *dev;
+
+    dev = qdev_new(name);
+    qdev_prop_set_int32(dev, "addr", devfn);
+    qdev_prop_set_bit(dev, "multifunction", multifunction);
+    return PCI_DEVICE(dev);
+}
+```
+通过 qdev_prop_set_bit 之类的最后可以设置到 pci_props 描述的 PCIDevice 上的成员上。
 
 ## memory region
 才意识到 memory region 也是一个 qobject 并且是需要挂到
@@ -261,8 +455,6 @@ static const TypeInfo isa_device_type_info
 static const TypeInfo device_type_info
 ```
 
-
-
 ## hmp_info_qtree
 ```c
 void hmp_info_qtree(Monitor *mon, const QDict *qdict)
@@ -271,8 +463,6 @@ void hmp_info_qtree(Monitor *mon, const QDict *qdict)
         qbus_print(mon, sysbus_get_default(), 0);
 }
 ```
-
-- [ ] 我的龟龟哇 : `static BusState *main_system_bus;`
 
 ```c
 /**
@@ -335,39 +525,35 @@ struct DeviceState {
   - 在 qbus_init 中间，创建的 bus 的时候，使用 BusState::sibling 将 BusState 挂到 DeviceState::child_bus 上
   - 在 bus_add_child 中，使用 DeviceState::sibling 将 DeviceState 挂到 BusState::children 上
 
+构建  `static BusState *main_system_bus;` 有点类似 linux kernel platform bus 的感觉:
 ```c
-static void qdev_print(Monitor *mon, DeviceState *dev, int indent){
-    // ...
-    do {
-        qdev_print_props(mon, dev, DEVICE_CLASS(class)->props_, indent);
-        class = object_class_get_parent(class);
-    } while (class != object_class_by_name(TYPE_DEVICE));
-    // ...
-}
-```
-
-```txt
-dev: fw_cfg_io, id ""
-  dma_enabled = true
-  x-file-slots = 32 (0x20)
-  acpi-mr-restore = true
+/*
+#0  qbus_init (bus=0x555556928d80, parent=0x0, name=0x555555f70b09 "main-system-bus") at ../hw/core/bus.c:104
+#1  0x0000555555b4574a in main_system_bus_create () at ../hw/core/sysbus.c:346
+#2  sysbus_get_default () at ../hw/core/sysbus.c:354
+#3  0x0000555555c65c00 in qemu_create_machine (qdict=<optimized out>) at ../softmmu/vl.c:2113
+#4  qemu_init (argc=<optimized out>, argv=0x7fffffffd318, envp=<optimized out>) at ../softmmu/vl.c:3639
+#5  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 
 ```c
-static Property fw_cfg_mem_properties[] = {
-    DEFINE_PROP_UINT32("data_width", FWCfgMemState, data_width, -1),
-    DEFINE_PROP_BOOL("dma_enabled", FWCfgMemState, parent_obj.dma_enabled,
-                     true),
-    DEFINE_PROP_UINT16("x-file-slots", FWCfgMemState, parent_obj.file_slots,
-                       FW_CFG_FILE_SLOTS_DFLT),
-    DEFINE_PROP_END_OF_LIST(),
-};
+/*
+#0  qbus_init (bus=0x555556b179f0, parent=0x555556a05800, name=0x0) at ../hw/core/bus.c:104
+#1  0x0000555555d3a5a7 in qbus_create (typename=typename@entry=0x555555f82245 "PCI", parent=parent@entry=0x555556a05800, name=name@entry=0x0) at ../hw/core/bus.c:166
+#2  0x00005555559a7696 in pci_root_bus_new (parent=parent@entry=0x555556a05800, name=name@entry=0x0, address_space_mem=address_space_mem@entry=0x5555569ec580, address_space_io=address_space_io@entry=0x555556691800, devfn_min=devfn_min@entry=0 '\000', typename=typename@entry=0x555555f82245 "PCI") at ../hw/pci/pci.c:481
+#3  0x00005555559e95dc in i440fx_init (host_type=host_type@entry=0x555555ec0aed "i440FX-pcihost", pci_type=pci_type@entry=0x555555f5d125 "i440FX", pi440fx_state=pi440fx_state@entry=0x7fffffffcef0, address_space_mem=address_space_mem@entry=0x5555566ac430, address_space_io=address_space_io@entry=0x555556691800, ram_size=6442450944, below_4g_mem_size=3221225472, above_4g_mem_size=3221225472, pci_address_space=0x5555569ec580, ram_memory=0x555556693070) at ../hw/pci-host/i440fx.c:260
+#4  0x0000555555b8ab1d in pc_init1 (machine=0x55555677cde0, pci_type=0x555555f5d125 "i440FX", host_type=0x555555ec0aed "i440FX-pcihost") at ../hw/i386/pc_piix.c:199
+#5  0x0000555555a6c094 in machine_run_board_init (machine=0x55555677cde0) at ../hw/core/machine.c:1273
+#6  0x0000555555c64ed4 in qemu_init_board () at ../softmmu/vl.c:2615
+#7  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#8  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#9  0x0000555555c68678 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#10 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
-关联到结构体的成员上的
 
-- qdev_print_props : 输出属性
-- device_class_set_props : 设置属性
-
+- qdev_realize : 就是如此，手动构造的而已
+	- qdev_set_parent_bus
+		- bus_add_child
 
 ## TypeInfo
 
@@ -375,7 +561,7 @@ static Property fw_cfg_mem_properties[] = {
 `type_init(pc_machine_register_types)`
 
 - [x] type_init 注册的函数什么时候会被调用? (在 constructor 中注册，在 register_module_init 中全体调用)
-- [ ] 将 TypeInfo 注册了，其中的 class_init 和 instance_init 什么时候调用
+- [x] 将 TypeInfo 注册了，其中的 class_init 和 instance_init 什么时候调用
 
 - type_init : 携带参数 MODULE_INIT_QOM 调用 module_init
   - module_init
@@ -500,14 +686,14 @@ static const TypeInfo x86_cpu_type_info = {
   - object_new
     - object_new_with_type
       - type_get_by_name : 参数为 host-x86_64-cpu ，因为提供了参数 -cpu host，具体的初始化在 qemu_init 中
-      - [ ] object_new_with_type
+      - [x] object_new_with_type
         - 分配空间 TypeImpl::instance_size
         - object_initialize_with_type
           - object_init_with_type : 这个函数会首先初始化 parent 类型，然后进行本地初始化
   - qdev_realize : 最后调用 x86_cpu_realizefn
 
 从 backtrace 看，kvm -cpu host 的关于 CPU 存在如下
-- [ ] device - x86_64-cpu - max-x86_64-cpu - host-x86_64-cpu
+- [x] device - x86_64-cpu - max-x86_64-cpu - host-x86_64-cpu
 
 现在 qemu_init 会根据参数调整 cpu_type 的:
 ```c
@@ -548,11 +734,7 @@ out:
 #### OBJECT_DECLARE_TYPE
 - 初始化的时候，只是告诉了 instance_size 和 class_size, 而且也告诉了 class 和 instance 的初始化函数
 
-
 在 x86_cpu_new 的一行代码，相当于获取从 X86MachineState 获取 MachineState, 从而知道 cpu_type, 从而初始化 x86
-- [ ] 其中的 x86ms (X86MachineState) 如何靠 MACHINE 的这个 marco 装换为 MachineState
-- [ ] 当两个 OBJECT_DECLARE_TYPE 展开到底得到什么东西 ? 根本没有提到
-
 
 ```c
 Object *cpu = object_new(MACHINE(x86ms)->cpu_type);
@@ -622,10 +804,6 @@ static const TypeInfo conventional_pci_interface_info = {
 };
 ```
 ## object_property
-- [ ] 无法理解 property parent 强于 child, 是 class 强于 object 的
-  - [ ] object_property_add_child (出现的位置: fw_cfg_init_io_dma)
-- [ ] 似乎 property 比想想的更加有趣，实际上，这个 property 关联上  parent_obj.dma_enabled 了
-
 ```c
 static Property fw_cfg_io_properties[] = {
     DEFINE_PROP_BOOL("dma_enabled", FWCfgIoState, parent_obj.dma_enabled,
@@ -640,7 +818,6 @@ qdev_prop_set_bit(dev, "dma_enabled", false);
 
 - [x] 为什么需要定义出来 property 出来
   - 为了动态的添加属性, 比如 create_default_memdev 中，根据参数 mem_path 可以动态的选择到底是创建 TYPE_MEMORY_BACKEND_FILE 还是 TYPE_MEMORY_BACKEND_RAM 对象，以及是否添加 "mem-path" 属性
-  - [ ] 也许还存在其他的原因
 
 
 - property 数组, 比如 i440fx_props, 并没有什么神奇的，添加的时候循环添加进去即可
@@ -803,8 +980,6 @@ QemuOptsList qemu_global_opts = {
    -global driver.prop=value is shorthand for -global driver=driver,property=prop,value=value.  The longhand
    syntax works even when driver contains a dot.
 ```
-- [ ] 这个东西是和 object 没有关系的 priority 吗?
-
 
 在 x86_cpu_parse_featurestr 中，实际上:
 ```c
@@ -903,8 +1078,6 @@ struct QList {
 - ioapic_init_gsi
 
 
-- [ ] 在使用这个例子来分析一下
-
 ```c
 Object *qdev_get_machine(void)
 {
@@ -998,6 +1171,50 @@ object_property_set_link(OBJECT(dev), propname, OBJECT(pin), &error_abort);
       - object_property_set_qobject
         - object_property_set : 实际上就是简单的赋值了
 
+object_add_link_prop 中注册的 ObjectProperty::resolve 为 object_resolve_link_property
+object_resolve_child_property 中注册 object_resolve_child_property
+这都是为了解析一个路径，然后从而获取路径上的对象。
+```c
+MemoryRegion *smram = (MemoryRegion *) object_resolve_path("/machine/smram", NULL);
+```
+
+使用位置:
+```c
+/*
+#0  object_resolve_link_property (parent=0x55555677cde0, opaque=0x555556ae45e0, part=0x555556c64210 "smram") at ../qom/object.c:1892
+#1  0x0000555555d267e6 in object_resolve_abs_path (parent=<optimized out>, parts=<optimized out>, typename=0x555555fc348d "object") at ../qom/object.c:2073
+#2  0x0000555555d269dc in object_resolve_path_type (path=<optimized out>, typename=0x555555fc348d "object", ambiguousp=0x0) at ../qom/object.c:2135
+#3  0x0000555555b78ea8 in register_smram_listener (n=<optimized out>, unused=<optimized out>) at ../target/i386/kvm/kvm.c:2204
+#4  0x0000555555e89c17 in notifier_list_notify (list=list@entry=0x5555565f55a8 <machine_init_done_notifiers>, data=data@entry=0x0) at ../util/notify.c:39
+#5  0x0000555555a6c82b in qdev_machine_creation_done () at ../hw/core/machine.c:1321
+#6  0x0000555555c64fb0 in qemu_machine_creation_done () at ../softmmu/vl.c:2668
+#7  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2691
+#8  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#9  0x0000555555c68678 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#10 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+- object_resolve_path_component
+	- object_property_find : 在一个 object 用 str 作为 key 查询，ObjectProperty 将会知道如何进一步解析
+
+添加位置:
+```c
+/*
+#1  0x0000555555d262d5 in object_add_link_prop (obj=0x55555677cde0, name=<optimized out>, type=0x5555566f0770 "memory-region", ptr=0x555556bf8d50, check=0x0, flags=OBJ_PROP_LINK_DIRECT) at ../qom/object.c:1928
+#2  0x00005555559e9805 in i440fx_init (host_type=host_type@entry=0x555555ec0aed "i440FX-pcihost", pci_type=pci_type@entry=0x555555f5d125 "i440FX", pi440fx_state=pi440fx_state@entry=0x7fffffffcef0, address_space_mem=address_space_mem@entry=0x5555566ac430, address_space_io=address_space_io@entry=0x555556929ef0, ram_size=6442450944, below_4g_mem_size=3221225472, above_4g_mem_size=3221225472, pci_address_space=0x555556ae1e60, ram_memory=0x555556693070) at ../hw/pci-host/i440fx.c:295
+#3  0x0000555555b8ab1d in pc_init1 (machine=0x55555677cde0, pci_type=0x555555f5d125 "i440FX", host_type=0x555555ec0aed "i440FX-pcihost") at ../hw/i386/pc_piix.c:199
+#4  0x0000555555a6c094 in machine_run_board_init (machine=0x55555677cde0) at ../hw/core/machine.c:1273
+#5  0x0000555555c64df4 in qemu_init_board () at ../softmmu/vl.c:2615
+#6  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#7  qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#8  0x0000555555c68598 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#9  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
+```
+
+- i440fx_init
+   - `object_property_add_const_link(qdev_get_machine(), "smram", OBJECT(&f->smram));`
+
+object_set_link_property 可以随意赋值，而 object_property_get_link 的返回对象一定是 object
+
 #### ObjectProperty::type
 ```c
 struct ObjectProperty
@@ -1015,7 +1232,7 @@ struct ObjectProperty
 };
 ```
 
-- [ ] ObjectProperty::type
+- ObjectProperty::type
 ```c
 static inline bool object_property_is_child(ObjectProperty *prop)
 {
@@ -1094,9 +1311,6 @@ static const TypeInfo machine_info = {
     .instance_finalize = machine_finalize,
 };
 ```
-
-- [ ] 我不能理解，为什么 machine_info 的 parent 是 TYPE_OBJECT 而不是 qdev 啊
-
 
 - [x] ObjectPropertyRelease : 一个 Property 释放的时候可以调用的 hook
 
@@ -1244,6 +1458,38 @@ object_link_get_targetp(Object *obj, LinkProperty *lprop)
     DECLARE_INSTANCE_CHECKER(InstanceType, MODULE_OBJ_NAME, TYPE_##MODULE_OBJ_NAME)
 ```
 
+经过上面的装换:
+```c
+#define TYPE_DEVICE "device"
+OBJECT_DECLARE_TYPE(DeviceState, DeviceClass, DEVICE)
+```
+
+可以得到
+```c
+typedef struct DeviceState DeviceState;
+typedef struct DeviceClass DeviceClass;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(DeviceState, object_unref)
+static inline G_GNUC_UNUSED DeviceState *DEVICE(const void *obj) {
+  return ((DeviceState *)object_dynamic_cast_assert(
+      ((Object *)(obj)), ("device"), "a.c", 67, __func__));
+}
+static inline G_GNUC_UNUSED DeviceClass *DEVICE_GET_CLASS(const void *obj) {
+  return ((DeviceClass *)object_class_dynamic_cast_assert(
+      ((ObjectClass *)(object_get_class(((Object *)(obj))))), ("device"), "a.c",
+      67, __func__));
+}
+static inline G_GNUC_UNUSED DeviceClass *DEVICE_CLASS(const void *klass) {
+  return ((DeviceClass *)object_class_dynamic_cast_assert(
+      ((ObjectClass *)(klass)), ("device"), "a.c", 67, __func__));
+}
+```
+- 总结一下几个转换函数:
+	- object_dynamic_cast_assert
+	- object_get_class
+	- [x] object_class_dynamic_cast_assert : 什么都不需要做的
+		- 但是，object_class_get_parent 为什么获取的就完全不是一个 class
+		- object_class_by_name
+
 #### OBJECT_DECLARE_SIMPLE_TYPE
 simple type 只能是一个基本看上去只是将其中的 class 部分去掉
 
@@ -1261,4 +1507,85 @@ static inline G_GNUC_UNUSED RTCState *MC146818_RTC(const void *obj) {
   return ((RTCState *)object_dynamic_cast_assert(
       ((Object *)(obj)), ("mc146818rtc"), "a.c", 69, __func__));
 }
+```
+
+#### DEFINE_PROP
+
+```c
+#define DEFINE_PROP_UINT8(_n, _s, _f, _d)                       \
+    DEFINE_PROP_UNSIGNED(_n, _s, _f, _d, qdev_prop_uint8, uint8_t)
+
+#define DEFINE_PROP_UNSIGNED(_name, _state, _field, _defval, _prop, _type) \
+    DEFINE_PROP(_name, _state, _field, _prop, _type,                       \
+                .set_default = true,                                       \
+                .defval.u  = (_type)_defval)
+
+#define DEFINE_PROP(_name, _state, _field, _prop, _type, ...) {  \
+        .name      = (_name),                                    \
+        .info      = &(_prop),                                   \
+        .offset    = offsetof(_state, _field)                    \
+            + type_check(_type, typeof_field(_state, _field)),   \
+        __VA_ARGS__                                              \
+        }
+
+#define DEFINE_PROP_END_OF_LIST()               \
+    {}
+```
+
+使用下面的例子可以展开为:
+```c
+static Property ioapic_properties[] = {
+    DEFINE_PROP_UINT8("version", IOAPICCommonState, version, IOAPIC_VER_DEF),
+    DEFINE_PROP_END_OF_LIST(),
+};
+```
+
+```c
+static Property ioapic_properties[] = {
+    {.name = ("version"),
+     .info = &(qdev_prop_uint8),
+     .offset = offsetof(IOAPICCommonState, version) +
+               type_check(uint8_t, typeof_field(IOAPICCommonState, version)),
+     .set_default = true,
+     .defval.u = (uint8_t)IOAPIC_VER_DEF},
+    DEFINE_PROP_END_OF_LIST(),
+};
+```
+
+现在分析一下在 ioapic_class_init 中调用 `device_class_set_props(dc, ioapic_properties);` 获取的结果:
+- ioapic_class_init
+	- device_class_set_props(dc, ioapic_properties)
+		- qdev_class_add_property
+			- object_class_property_add
+			- prop->info->set_default_value : 也即是 qdev_prop_uint8
+				- object_property_set_default_uint
+					- object_property_set_default
+						- prop->defval = defval; // 注意，此时此刻，只是将数值保存到了 ObjectProperty 中间了
+						- prop->init = object_property_init_defval; // 同时注册 hook
+
+结合下面的 backtrace 可以分析出来，即使 property 是 class 的，但是依旧可以设置 object 的属性上。
+```c
+/*
+#0  0x0000555555d3ae20 in set_uint8 () at ../hw/core/qdev-properties.c:269
+#1  0x0000555555d23479 in object_property_init_defval (obj=0x5555569e84d0, prop=0x5555567cbc60) at ../qom/object.c:1537
+#2  0x0000555555d249b5 in object_class_property_init_all (obj=0x5555569e84d0) at ../qom/object.c:499
+#3  object_initialize_with_type (obj=obj@entry=0x5555569e84d0, size=size@entry=656, type=type@entry=0x5555566f2b60) at ../qom/object.c:515
+#4  0x0000555555d24ab9 in object_new_with_type (type=0x5555566f2b60) at ../qom/object.c:733
+#5  0x0000555555b77f45 in x86_cpu_apic_create (cpu=cpu@entry=0x555556b09d50, errp=errp@entry=0x7fffffffccf0) at ../target/i386/cpu-sysemu.c:274
+#6  0x0000555555be256f in x86_cpu_realizefn (dev=0x555556b09d50, errp=0x7fffffffcd50) at ../target/i386/cpu.c:6270
+#7  0x0000555555d3e017 in device_set_realized (obj=<optimized out>, value=true, errp=0x7fffffffcdd0) at ../hw/core/qdev.c:761
+#8  0x0000555555d22cba in property_set_bool (obj=0x555556b09d50, v=<optimized out>, name=<optimized out>, opaque=0x55555670c3d0, errp=0x7fffffffcdd0) at ../qom/object.c:2258
+#9  0x0000555555d251ec in object_property_set (obj=obj@entry=0x555556b09d50, name=name@entry=0x555555fe20f6 "realized", v=v@entry=0x555556a2d4e0, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/object.c:1403
+#10 0x0000555555d21834 in object_property_set_qobject (obj=obj@entry=0x555556b09d50, name=name@entry=0x555555fe20f6 "realized", value=value@entry=0x555556a1ea60, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/qom-qobject.c:28
+#11 0x0000555555d25459 in object_property_set_bool (obj=0x555556b09d50, name=name@entry=0x555555fe20f6 "realized", value=value@entry=true, errp=errp@entry=0x555556618678 <error_fatal>) at ../qom/object.c:1473
+#12 0x0000555555d3ce42 in qdev_realize (dev=<optimized out>, bus=bus@entry=0x0, errp=errp@entry=0x555556618678 <error_fatal>) at ../hw/core/qdev.c:389
+#13 0x0000555555badea5 in x86_cpu_new (x86ms=x86ms@entry=0x5555568359e0, apic_id=0, errp=errp@entry=0x555556618678 <error_fatal>) at /home/maritns3/core/kvmqemu/include/hw/qdev-core.h:17
+#14 0x0000555555badf8e in x86_cpus_init (x86ms=x86ms@entry=0x5555568359e0, default_cpu_version=<optimized out>) at ../hw/i386/x86.c:138
+#15 0x0000555555b8aa63 in pc_init1 (machine=0x5555568359e0, pci_type=0x555555f5d125 "i440FX", host_type=0x555555ec0aed "i440FX-pcihost") at ../hw/i386/pc_piix.c:156
+#16 0x0000555555a6c094 in machine_run_board_init (machine=0x5555568359e0) at ../hw/core/machine.c:1273
+#17 0x0000555555c64ed4 in qemu_init_board () at ../softmmu/vl.c:2615
+#18 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2689
+#19 qmp_x_exit_preconfig (errp=<optimized out>) at ../softmmu/vl.c:2682
+#20 0x0000555555c68678 in qemu_init (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/vl.c:3706
+#21 0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
