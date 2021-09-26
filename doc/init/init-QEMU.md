@@ -1,5 +1,21 @@
 # QEMU 启动代码
 
+- [ ] 确认一下，如果所有的 CPU / machine / accle 的 init / class / realize / device_reset 函数搞定之后，还有什么位置在做初始化的工作。
+- [ ] 找到初始化相关的文件
+	- pc.c
+	- hw/i386/pc_piix.c
+		- pc_init1
+	- hw/i386/x86.c
+		- x86_cpu_new
+	- target/i386/cpu.c
+			- x86_cpu_realizefn
+
+## 问题
+- [ ] qemu_register_reset(x86_cpu_machine_reset_cb, cpu); 最后会调用到 cpu_reset 上，post done 和 reset 的关系到底是什么?
+
+- x86_cpu_realizefn
+- apic_realize
+
 ## 初始化 QEMU 大约需要处理的事情
 - [ ] tcg_register_thread : 唯一 reference 了 MachineState
 - [ ] cpu_exec_realizefn 中调用 cpu_list_add 添加 CPUState 的
@@ -9,6 +25,7 @@
 - [ ] fw_cfg 的初始化过程
 - [ ] cpu 初始化
 - [ ] /home/maritns3/core/ld/x86-qemu-mips/hw/i386/pc.c
+- [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
 
 - [ ] 找到最下层的 CPU 和 Machine 的 TypeInfo 是啥不就好了
 
@@ -111,178 +128,6 @@ none
 xenpv
 ```
 
-## choose cpu
-来好好分析一下: X86CPUModel
-
-似乎 cpu 体系的最后，逐步到达 x86_cpu_type_info, 但是下面还是存在别的内容，其中的代码，直接
-
-当使用上 tcg 的时候，是无法采用 host-x86_64-cpu 的, 当然 -cpu 就无法使用了
-
-- [ ] 使用的是 builtin_x86_defs 中的 qemu32 还是 qemu64 哇?
-
-- 关于 cpu 中，其实还定义了 base 版本 和 max 版本
-
-通过 x86_register_cpu_model_type 创建出来了这个一堆 TypeInfo, 其作用:
-```c
-static void x86_register_cpu_model_type(const char *name, X86CPUModel *model)
-{
-    g_autofree char *typename = x86_cpu_type_name(name);
-
-    TypeInfo ti = {
-        .name = typename,
-        .parent = TYPE_X86_CPU,
-        .class_init = x86_cpu_cpudef_class_init,
-        .class_data = model,
-    };
-
-    type_register(&ti);
-}
-```
-
-在 qemu_init 中进行 `current_machine->cpu_type` 的初始化,
-而 pc_machine_class_init 中进行选择 MachineClass::default_cpu_type
-
-```c
-static X86CPUDefinition builtin_x86_defs[] = {
-    {
-        .name = "qemu64",
-        .level = 0xd,
-        .vendor = CPUID_VENDOR_AMD,
-        .family = 6,
-        .model = 6,
-        .stepping = 3,
-        .features[FEAT_1_EDX] =
-            PPRO_FEATURES |
-            CPUID_MTRR | CPUID_CLFLUSH | CPUID_MCA |
-            CPUID_PSE36,
-        .features[FEAT_1_ECX] =
-            CPUID_EXT_SSE3 | CPUID_EXT_CX16,
-        .features[FEAT_8000_0001_EDX] =
-            CPUID_EXT2_LM | CPUID_EXT2_SYSCALL | CPUID_EXT2_NX,
-        .features[FEAT_8000_0001_ECX] =
-            CPUID_EXT3_LAHF_LM | CPUID_EXT3_SVM,
-        .xlevel = 0x8000000A,
-        .model_id = "QEMU Virtual CPU version " QEMU_HW_VERSION,
-    },
-};
-```
-由此可见，重新第一出来的这些 type info 只是为了初始化主流体系而已
-
-当然还可以选择其他的 cpu，其解析工作在 parse_cpu_option
-
-- x86_cpu_register_types : 这个函数是通过 type_init 来调用的
-  - type_register_static(&x86_cpu_type_info); 其他类型的 parent
-  - [ ] type_register_static(&max_x86_cpu_type_info); 为什么需要这个 ？
-  - [ ] type_register_static(&x86_base_cpu_type_info);
-  - x86_register_cpudef_types : 对于 builtin_x86_defs 循环调用
-    - 组装出来 X86CPUModel
-    - x86_register_cpu_model_type : 构建 .class_data = X86CPUModel 的 TypeInfo，在 x86_cpu_cpudef_class_init 的时候，会将这个穿点到 X86CPUClass::model 上
-
-x86_cpu_cpudef_class_init 对于每一个 TypeInfo 都是会调用一次的。
-```c
-/*
-#0  x86_cpu_cpudef_class_init (oc=0x55555670a060, data=0x5555566ea960) at ../target/i386/cpu.c:5048
-#1  0x0000555555d239ff in type_initialize (ti=0x5555566ea990) at ../qom/object.c:1075
-#2  object_class_foreach_tramp (key=<optimized out>, value=0x5555566ea990, opaque=0x7fffffffd090) at ../qom/object.c:1075
-#3  0x00007ffff79881b8 in g_hash_table_foreach () at /lib/x86_64-linux-gnu/libglib-2.0.so.0
-#4  0x0000555555d2403c in object_class_foreach (fn=fn@entry=0x555555d226b0 <object_class_get_list_tramp>, implements_type=implements_type@entry=0x555556257483 "machine"
-, include_abstract=include_abstract@entry=false, opaque=opaque@entry=0x7fffffffd0d0) at ../qom/object.c:86
-#5  0x0000555555d240e6 in object_class_get_list (implements_type=implements_type@entry=0x555556257483 "machine", include_abstract=include_abstract@entry=false) at ../qo
-m/object.c:1154
-#6  0x0000555555c658f7 in select_machine (errp=<optimized out>, qdict=0x555556704560) at ../softmmu/vl.c:1620
-#7  qemu_create_machine (qdict=0x555556704560) at ../softmmu/vl.c:2105
-#8  qemu_init (argc=<optimized out>, argv=0x7fffffffd358, envp=<optimized out>) at ../softmmu/vl.c:3640
-#9  0x0000555555940c8d in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
-```
-
-```c
-typedef struct X86CPUVersionDefinition {
-    X86CPUVersion version;
-    const char *alias;
-    const char *note;
-    PropValue *props;
-} X86CPUVersionDefinition;
-
-/* Base definition for a CPU model */
-typedef struct X86CPUDefinition {
-    const char *name;
-    uint32_t level;
-    uint32_t xlevel;
-    /* vendor is zero-terminated, 12 character ASCII string */
-    char vendor[CPUID_VENDOR_SZ + 1];
-    int family;
-    int model;
-    int stepping;
-    FeatureWordArray features;
-    const char *model_id;
-    const CPUCaches *const cache_info;
-    /*
-     * Definitions for alternative versions of CPU model.
-     * List is terminated by item with version == 0.
-     * If NULL, version 1 will be registered automatically.
-     */
-    const X86CPUVersionDefinition *versions;
-    const char *deprecation_note;
-} X86CPUDefinition;
-
-/* Reference to a specific CPU model version */
-struct X86CPUModel {
-    /* Base CPU definition */
-    const X86CPUDefinition *cpudef;
-    /* CPU model version */
-    X86CPUVersion version;
-    const char *note;
-    /*
-     * If true, this is an alias CPU model.
-     * This matters only for "-cpu help" and query-cpu-definitions
-     */
-    bool is_alias;
-};
-```
-- X86CPUModel : 在 x86_register_cpudef_types 中间被初始化，
-
-alias 的作用
-```diff
-History:        #0
-Commit:         53db89d93bebe70a3e7f4c45933deffcf3e7cb62
-Author:         Eduardo Habkost <ehabkost@redhat.com>
-Author Date:    Fri 28 Jun 2019 08:28:41 AM CST
-Committer Date: Sat 06 Jul 2019 04:08:04 AM CST
-
-i386: Replace -noTSX, -IBRS, -IBPB CPU models with aliases
-
-The old CPU models will be just aliases for specific versions of
-the original CPU models.
-```
-
-在 x86_cpu_initfn 中
-```c
-    if (xcc->model) {
-        x86_cpu_load_model(cpu, xcc->model);
-    }
-```
-
-- x86_cpu_load_model
-  - `object_property_set_int(OBJECT(cpu), "family", def->family, &error_abort);`
-    - 类似的赋值还有好几个
-  - `env->features[w] = def->features[w];`
-  - x86_cpu_apply_version_props : 对于 builtin_x86_defs::versions 会在 x86_cpu_def_get_versions 中默认注册一个，其没有关联任何的 prop, 所以最后 x86_cpu_apply_version_props 在 qemu64 的请款下，是一个空操作的
-    - object_property_parse
-
-- X86CPUDefinition::cache_info
-	- 在 x86_cpu_realizefn 中间注册，qemu64 注册上的就是 legacy 的数值
-
-## 分析一下 TYPE_I440FX_PCI_HOST_BRIDGE
-```c
-static const TypeInfo i440fx_pcihost_info = {
-    .name          = TYPE_I440FX_PCI_HOST_BRIDGE,
-    .parent        = TYPE_PCI_HOST_BRIDGE,
-    .instance_size = sizeof(I440FXState),
-    .instance_init = i440fx_pcihost_initfn,
-    .class_init    = i440fx_pcihost_class_init,
-};
-```
-
 ## BUS
 - pci host bridge 和 pcibus 的关系?
 
@@ -298,62 +143,13 @@ hw/core/bus.c:158
 #6  0x000055555582e575 in main (argc=28, argv=0x7fffffffd7c8, envp=0x7fffffffd8b0) at ../softmmu/main.c:49
 ```
 
-## cpu feature
-- X86CPUDefinition::features 在 x86_cpu_load_model 中，将这个拷贝到 CPUX86State::features 中
-- cpu feature 都是通过 CPUX86State::features 进行的，QOM property 显得很傻
-- 静态变量 feature_word_info 定义了所有的存在的 feature
-
-- x86_cpu_common_class_init
-  - x86_cpu_register_feature_bit_props : 给 xcc 添加上一堆 property , 这些 property 的访问方式是 x86_cpu_set_bit_prop
-
-kvm
-```c
-/*
-#0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd0a0, name=0x55555689ee30 "\220\356\211VUU", opaque=0x555556963e80, errp=0x555556c32070) at ../target/i386/cpu.c:4001
-#1  0x0000555555e64f5a in object_property_set (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", v=0x555556b55070, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1402
-#2  0x0000555555e65b0f in object_property_parse (obj=0x555556c32070, name=0x55555608fef1 "kvmclock", string=0x55555608fefa "on", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
-#3  0x0000555555ba00f3 in x86_cpu_apply_props (cpu=0x555556c32070, props=0x5555566c7e60 <kvm_default_props>) at ../target/i386/cpu.c:2638
-#4  0x0000555555b3df02 in kvm_cpu_instance_init (cs=0x555556c32070) at ../target/i386/kvm/kvm-cpu.c:126
-#5  0x0000555555c82967 in accel_cpu_instance_init (cpu=0x555556c32070) at ../accel/accel-common.c:110
-#6  0x0000555555ba3ffa in x86_cpu_initfn (obj=0x555556c32070) at ../target/i386/cpu.c:4131
-```
-
-tcg
-```c
-/*
-#0  x86_cpu_set_bit_prop (obj=0x555555e64ac8 <object_property_find_err+43>, v=0x7fffffffd090, name=0x5555568963e0 "@d\211VUU", opaque=0x555556974ba0, errp=0x555556c28050) at ../target/i386/cpu.c:4001
-#1  0x0000555555e64f5a in object_property_set (obj=0x555556c28050, name=0x5555560a7af1 "vme", v=0x555556b56000, errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:14
-#2  0x0000555555e65b0f in object_property_parse (obj=0x555556c28050, name=0x5555560a7af1 "vme", string=0x5555560a7af5 "off", errp=0x5555567a1ee8 <error_abort>) at ../qom/object.c:1642
-#3  0x0000555555ba00f3 in x86_cpu_apply_props (cpu=0x555556c28050, props=0x5555566d9c00 <tcg_default_props>) at ../target/i386/cpu.c:2638
-#4  0x0000555555bd68f2 in tcg_cpu_instance_init (cs=0x555556c28050) at ../target/i386/tcg/tcg-cpu.c:95
-#5  0x0000555555c82967 in accel_cpu_instance_init (cpu=0x555556c28050) at ../accel/accel-common.c:110
-#6  0x0000555555ba3ffa in x86_cpu_initfn (obj=0x555556c28050) at ../target/i386/cpu.c:4131
-```
-一共就是只是调用两次 x86_cpu_set_bit_prop，就是为了 accel 相关的属性进行修改:
-```c
-/*
- * TCG-specific defaults that override cpudef models when using TCG.
- * Only for builtin_x86_defs models initialized with x86_register_cpudef_types.
- */
-static PropValue tcg_default_props[] = {
-    { "vme", "off" },
-    { NULL, NULL },
-};
-```
-
-- x86_cpu_set_bit_prop 只是在 tcg 和 kvm 的这样使用，那么那些 CPU feature 几乎就是全都没有使用了
-  - 实际上，这个有点多余， x86_cpu_set_bit_prop 也只是设置了一下 CPUX86State::features
-
 ## init machine
 我们发现，整个 machine 的体系几乎完全没有被拷贝进去，对此，
 原因是
-1. machine 的初始化只是为了完成 cpu 的初始化，所以，当 cpu 没有初始化
-，machine 的内容完全看不到了。
+1. machine 的初始化只是为了完成 cpu 的初始化，所以，当 cpu 没有初始化的时候，machine 的内容完全看不到了。
 2. machine 的工作在于 acpi smbios pci 之类的, 暂时没有处理到
 
-
 - [ ] 需要分析一下 MachineClass 的内容
-
 ```c
 X86CPU *cpu = X86_CPU(ms->possible_cpus->cpus[0].cpu);
 ```
@@ -460,6 +256,7 @@ x86_cpu_common_class_init 注册了大量函数
 x86_cpu_common_class_init 中注册是什么，然后找 cpu_class_init 注册内容:
 
 确定一个决定，**不要删除 CPUClass 这个东西, 将这些函数全部放到一起，这样出入更小，更容易理解**
+
 #### X86CPUClass
 - [x] model 如何处理的 : 用于 list 所有可选 cpu 的, 参考 x86_cpu_list
 - [x] parent_realize 处理的
