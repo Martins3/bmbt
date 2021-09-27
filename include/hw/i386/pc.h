@@ -152,6 +152,17 @@ typedef struct PCMachineClass {
     (X86MachineState *)tmp;                                                    \
   })
 
+#define MACHINE_CLASS(pcmc)                                                    \
+  ({                                                                           \
+    PCMachineClass *tmp = pcmc;                                                \
+    (MachineClass *)tmp;                                                       \
+  })
+
+#define PC_MACHINE_CLASS(m)                                                    \
+  ({                                                                           \
+    MachineClass *tmp = m;                                                     \
+    (PCMachineClass *)tmp;                                                     \
+  })
 /* pc_sysfw.c */
 static inline void pc_system_flash_create(PCMachineState *pcms) {}
 void pc_system_firmware_init(PCMachineState *pcms, MemoryRegion *rom_memory);
