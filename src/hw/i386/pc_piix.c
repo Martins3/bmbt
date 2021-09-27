@@ -170,9 +170,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
 
 #if BMBT
   pc_vga_init(isa_bus, pcmc->pci_enabled ? pci_bus : NULL);
-#endif
 
-#if NEED_LATER
   assert(pcms->vmport != ON_OFF_AUTO__MAX);
   if (pcms->vmport == ON_OFF_AUTO_AUTO) {
     pcms->vmport = xen_enabled() ? ON_OFF_AUTO_OFF : ON_OFF_AUTO_ON;
@@ -186,6 +184,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
   pc_nic_init(pcmc, isa_bus, pci_bus);
 
   ide_drive_get(hd, ARRAY_SIZE(hd));
+
   if (pcmc->pci_enabled) {
     PCIDevice *dev;
     if (xen_enabled()) {
@@ -197,6 +196,8 @@ static void pc_init1(MachineState *machine, const char *host_type,
     idebus[1] = qdev_get_child_bus(&dev->qdev, "ide.1");
     pc_cmos_init(pcms, idebus[0], idebus[1], rtc_state);
   }
+#endif
+
 #ifdef CONFIG_IDE_ISA
   else {
     int i;
@@ -216,6 +217,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
   }
 #endif
 
+#if NEED_LATER
   if (pcmc->pci_enabled && machine_usb(machine)) {
     pci_create_simple(pci_bus, piix3_devfn + 2, "piix3-usb-uhci");
   }
