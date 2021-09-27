@@ -27,6 +27,10 @@ typedef struct GSIState {
 static inline bool kvm_allows_irq0_override(void) { return 1; }
 static inline bool xen_enabled(void) { return false; }
 
+// FIXME copied from include/hw/acpi/pc-hotplug.h
+// maybe we will review the cpu hotplug and memory hotplug later
+#define ACPI_MEMORY_HOTPLUG_BASE 0x0a00
+
 /**
  * PCMachineState:
  * @acpi_dev: link to ACPI PM device that performs ACPI hotplug handling
@@ -36,6 +40,7 @@ static inline bool xen_enabled(void) { return false; }
 typedef struct PCMachineState {
   /*< private >*/
   X86MachineState parent_obj;
+  struct PCMachineClass *pcmc;
 
   /* <public> */
 
@@ -67,6 +72,9 @@ typedef struct PCMachineState {
   /* ACPI Memory hotplug IO base address */
   hwaddr memhp_io_base;
 } PCMachineState;
+
+#define PC_MACHINE_GET_CLASS(pcms) pcms->pcmc
+#define PC_MACHINE(mc) ({ MachineState * tmp = mc; (PCMachineState *)tmp; })
 
 /**
  * PCMachineClass:
@@ -140,5 +148,8 @@ typedef struct PCMachineClass {
     PCMachineState *tmp = pcms;                                                \
     (X86MachineState *)tmp;                                                    \
   })
+
+
+void pc_system_firmware_init(PCMachineState *pcms, MemoryRegion *rom_memory);
 
 #endif /* end of include guard: PC_H_0VFJYDT2 */

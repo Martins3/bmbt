@@ -637,7 +637,7 @@ void fw_cfg_add_file_callback(FWCfgState *s, const char *filename,
                               bool read_only) {
   int i, index, count;
   size_t dsize;
-  MachineClass *mc = qdev_get_machine();
+  MachineClass *mc = MACHINE_GET_CLASS(qdev_get_machine());
   int order = 0;
 
   if (!s->files) {
@@ -734,7 +734,7 @@ void *fw_cfg_modify_file(FWCfgState *s, const char *filename, void *data,
 }
 
 static void fw_cfg_machine_reset(void *opaque) {
-  MachineClass *mc = qdev_get_machine();
+  MachineClass *mc = MACHINE_GET_CLASS(qdev_get_machine());
   FWCfgState *s = opaque;
   void *ptr;
   size_t len;

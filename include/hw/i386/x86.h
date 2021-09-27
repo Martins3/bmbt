@@ -5,6 +5,7 @@
 #include "../boards.h"
 #include "../nvram/fw_cfg.h"
 
+
 typedef struct {
   /*< private >*/
   MachineClass parent;
@@ -49,5 +50,7 @@ typedef struct {
    */
   AddressSpace *ioapic_as;
 } X86MachineState;
+
+void x86_bios_rom_init(MemoryRegion *rom_memory, bool isapc_ram_fw);
 
 #endif /* end of include guard: X86_H_L9VT3E8K */
