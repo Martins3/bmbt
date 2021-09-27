@@ -18,4 +18,6 @@ typedef struct GSIState {
 #define kvm_pic_in_kernel() 0
 #define kvm_ioapic_in_kernel() 0
 
+#define kvm_irqchip_in_kernel() (false)
+
 #endif /* end of include guard: PC_H_0VFJYDT2 */

@@ -19,4 +19,10 @@ void timer_mod(QEMUTimer *ts, int64_t expire_timer);
 
 void timer_del(QEMUTimer *ts);
 
+int64_t cpu_get_ticks(void);
+/* Caller must hold BQL */
+void cpu_enable_ticks(void);
+/* Caller must hold BQL */
+void cpu_disable_ticks(void);
+
 #endif /* end of include guard: TIMER_H_PBGYZKVR */

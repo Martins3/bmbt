@@ -1,6 +1,10 @@
 #include "../../include/hw/i386/pc.h"
 #include "../../i386/cpu.h"
+#include "../../include/exec/cpu-all.h"
 #include "../../include/exec/hwaddr.h"
+#include "../../include/hw/i386/apic.h"
+#include "../../include/hw/isa/i8259.h"
+#include "../../include/qemu/timer.h"
 #include "../../include/sysemu/tcg.h"
 #include "../../tcg/glib_stub.h"
 
@@ -451,7 +455,6 @@ static uint64_t ioportF0_read(void *opaque, hwaddr addr, unsigned size) {
   return 0xffffffffffffffffULL;
 }
 
-#if BMBT
 /* TSC handling */
 uint64_t cpu_get_tsc(CPUX86State *env) { return cpu_get_ticks(); }
 
@@ -497,6 +500,7 @@ static void pic_irq_request(void *opaque, int irq, int level) {
   }
 }
 
+#if BMBT
 /* PC cmos mappings */
 
 #define REG_EQUIPMENT_BYTE 0x14
