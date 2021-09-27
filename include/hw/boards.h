@@ -37,6 +37,16 @@ typedef struct {
 } CPUArchIdList;
 
 /**
+ * DeviceMemoryState:
+ * @base: address in guest physical address space where the memory
+ * address space for memory devices starts
+ * @mr: address space container for memory devices
+ */
+typedef struct DeviceMemoryState {
+  hwaddr base;
+} DeviceMemoryState;
+
+/**
  * MachineClass:
  * @deprecation_reason: If set, the machine is marked as deprecated. The
  *    string should provide some clear information about what to use instead.
@@ -173,6 +183,7 @@ struct MachineState {
   /*< private >*/
   // Object parent_obj;
   // Notifier sysbus_notifier;
+  MachineClass *mc;
 
   /*< public >*/
 
@@ -196,7 +207,7 @@ struct MachineState {
   bool enforce_config_section;
   bool enable_graphics;
   char *memory_encryption;
-  // DeviceMemoryState *device_memory;
+  DeviceMemoryState *device_memory;
 
   ram_addr_t ram_size;
   ram_addr_t maxram_size;
@@ -213,6 +224,8 @@ struct MachineState {
   struct NumaState *numa_state;
 };
 
-static inline MachineClass *qdev_get_machine() { return NULL; }
+static inline MachineState *qdev_get_machine() { return NULL; }
+
+#define MACHINE_GET_CLASS(machine) machine->mc
 
 #endif /* end of include guard: BOARDS_H_ANEGSNX6 */
