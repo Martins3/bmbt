@@ -8,6 +8,7 @@
 #include "../../include/sysemu/sysemu.h"
 #include "../../include/sysemu/tcg.h"
 #include "../../tcg/glib_stub.h"
+#include "acpi-build.h"
 
 /* debug PC/ISA interrupts */
 //#define DEBUG_IRQ
@@ -1053,9 +1054,11 @@ static void rtc_set_cpus_count(ISADevice *rtc, uint16_t cpus_count) {
 #endif
 
 static void pc_machine_done(Notifier *notifier, void *data) {
-#if NEED_LATER
   PCMachineState *pcms = container_of(notifier, PCMachineState, machine_done);
   X86MachineState *x86ms = X86_MACHINE(pcms);
+
+// no extra-pci-roots
+#ifdef BMBT
   PCIBus *bus = pcms->bus;
 
   /* set the number of CPUs */
@@ -1076,6 +1079,7 @@ static void pc_machine_done(Notifier *notifier, void *data) {
       fw_cfg_add_file(x86ms->fw_cfg, "etc/extra-pci-roots", val, sizeof(*val));
     }
   }
+#endif
 
   acpi_setup();
   if (x86ms->fw_cfg) {
@@ -1086,18 +1090,8 @@ static void pc_machine_done(Notifier *notifier, void *data) {
   }
 
   if (x86ms->apic_id_limit > 255 && !xen_enabled()) {
-    IntelIOMMUState *iommu = INTEL_IOMMU_DEVICE(x86_iommu_get_default());
-
-    if (!iommu || !x86_iommu_ir_supported(X86_IOMMU_DEVICE(iommu)) ||
-        iommu->intr_eim != ON_OFF_AUTO_ON) {
-      error_report("current -smp configuration requires "
-                   "Extended Interrupt Mode enabled. "
-                   "You can add an IOMMU using: "
-                   "-device intel-iommu,intremap=on,eim=on");
-      exit(EXIT_FAILURE);
-    }
+    g_assert_not_reached();
   }
-#endif
 }
 
 void pc_guest_info_init(PCMachineState *pcms) {
