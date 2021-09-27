@@ -8,6 +8,7 @@
 #include "../../include/qemu/error-report.h"
 #include "../../include/qemu/timer.h"
 #include "../../include/qemu/units.h"
+#include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/sysemu.h"
 #include "../../include/sysemu/tcg.h"
 #include "../../tcg/glib_stub.h"
@@ -1390,16 +1391,20 @@ void pc_nic_init(PCMachineClass *pcmc, ISABus *isa_bus, PCIBus *pci_bus) {
   }
   rom_reset_order_override();
 }
+#endif
 
-void pc_i8259_create(ISABus *isa_bus, qemu_irq *i8259_irqs) {
+void pc_i8259_create(qemu_irq *i8259_irqs) {
   qemu_irq *i8259;
 
+#if BMBT
   if (kvm_pic_in_kernel()) {
     i8259 = kvm_i8259_init(isa_bus);
   } else if (xen_enabled()) {
     i8259 = xen_interrupt_controller_init();
-  } else {
-    i8259 = i8259_init(isa_bus, pc_allocate_cpu_irq());
+  } else
+#endif
+  {
+    i8259 = i8259_init(pc_allocate_cpu_irq());
   }
 
   for (size_t i = 0; i < ISA_NUM_IRQS; i++) {
@@ -1410,6 +1415,9 @@ void pc_i8259_create(ISABus *isa_bus, qemu_irq *i8259_irqs) {
 }
 
 void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
+  // FIXME it's a little tricky to remove the qobject abstraction
+  // will be fixed later
+#if NEED_LATER
   DeviceState *dev;
   SysBusDevice *d;
   unsigned int i;
@@ -1419,6 +1427,7 @@ void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
   } else {
     dev = qdev_create(NULL, TYPE_IOAPIC);
   }
+
   if (parent_name) {
     object_property_add_child(object_resolve_path(parent_name, NULL), "ioapic",
                               OBJECT(dev), NULL);
@@ -1430,8 +1439,10 @@ void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
   for (i = 0; i < IOAPIC_NUM_PINS; i++) {
     gsi_state->ioapic_irq[i] = qdev_get_gpio_in(dev, i);
   }
+#endif
 }
 
+#ifdef NEED_LATER
 static void pc_memory_pre_plug(HotplugHandler *hotplug_dev, DeviceState *dev,
                                Error **errp) {
   const PCMachineState *pcms = PC_MACHINE(hotplug_dev);
@@ -2019,15 +2030,18 @@ static void pc_machine_set_pit(Object *obj, bool value, Error **errp) {
   pcms->pit_enabled = value;
 }
 
-static void pc_machine_initfn(Object *obj) {
-  PCMachineState *pcms = PC_MACHINE(obj);
+#endif
 
+static void pc_machine_initfn(PCMachineState *pcms) {
+#if NEED_LATER
   pcms->smm = ON_OFF_AUTO_AUTO;
 #ifdef CONFIG_VMPORT
   pcms->vmport = ON_OFF_AUTO_AUTO;
 #else
   pcms->vmport = ON_OFF_AUTO_OFF;
 #endif /* CONFIG_VMPORT */
+#endif
+
   /* acpi build is enabled by default if machine supports it */
   pcms->acpi_build_enabled = PC_MACHINE_GET_CLASS(pcms)->has_acpi_build;
   pcms->smbus_enabled = true;
@@ -2050,11 +2064,15 @@ static void pc_machine_reset(MachineState *machine) {
     cpu = X86_CPU(cs);
 
     if (cpu->apic_state) {
-      device_reset(cpu->apic_state);
+      // device_reset(cpu->apic_state);
+      APICCommonState *as = cpu->apic_state;
+      APICCommonClass *ac = APIC_COMMON_GET_CLASS(as);
+      ac->reset(as);
     }
   }
 }
 
+#if BMBT
 static void pc_machine_wakeup(MachineState *machine) {
   cpu_synchronize_all_states();
   pc_machine_reset(machine);
@@ -2078,11 +2096,12 @@ static bool pc_hotplug_allowed(MachineState *ms, DeviceState *dev,
 
   return true;
 }
+#endif
 
-static void pc_machine_class_init(ObjectClass *oc, void *data) {
-  MachineClass *mc = MACHINE_CLASS(oc);
-  PCMachineClass *pcmc = PC_MACHINE_CLASS(oc);
-  HotplugHandlerClass *hc = HOTPLUG_HANDLER_CLASS(oc);
+static void pc_machine_class_init(PCMachineClass *pcmc, void *data) {
+  MachineClass *mc = MACHINE_CLASS(pcmc);
+  // PCMachineClass *pcmc = PC_MACHINE_CLASS(oc);
+  // HotplugHandlerClass *hc = HOTPLUG_HANDLER_CLASS(oc);
 
   pcmc->pci_enabled = true;
   pcmc->has_acpi_build = true;
@@ -2098,29 +2117,30 @@ static void pc_machine_class_init(ObjectClass *oc, void *data) {
   pcmc->acpi_data_size = 0x20000 + 0x8000;
   pcmc->linuxboot_dma_enabled = true;
   pcmc->pvh_enabled = true;
-  assert(!mc->get_hotplug_handler);
-  mc->get_hotplug_handler = pc_get_hotplug_handler;
-  mc->hotplug_allowed = pc_hotplug_allowed;
-  mc->cpu_index_to_instance_props = x86_cpu_index_to_props;
-  mc->get_default_cpu_node_id = x86_get_default_cpu_node_id;
-  mc->possible_cpu_arch_ids = x86_possible_cpu_arch_ids;
+  // assert(!mc->get_hotplug_handler);
+  // mc->get_hotplug_handler = pc_get_hotplug_handler;
+  // mc->hotplug_allowed = pc_hotplug_allowed;
+  // mc->cpu_index_to_instance_props = x86_cpu_index_to_props;
+  // mc->get_default_cpu_node_id = x86_get_default_cpu_node_id;
+  // mc->possible_cpu_arch_ids = x86_possible_cpu_arch_ids;
   mc->auto_enable_numa_with_memhp = true;
   mc->has_hotpluggable_cpus = true;
   mc->default_boot_order = "cad";
-  mc->hot_add_cpu = pc_hot_add_cpu;
-  mc->smp_parse = pc_smp_parse;
-  mc->block_default_type = IF_IDE;
+  // mc->hot_add_cpu = pc_hot_add_cpu;
+  // mc->smp_parse = pc_smp_parse;
+  // mc->block_default_type = IF_IDE;
   mc->max_cpus = 255;
   mc->reset = pc_machine_reset;
-  mc->wakeup = pc_machine_wakeup;
-  hc->pre_plug = pc_machine_device_pre_plug_cb;
-  hc->plug = pc_machine_device_plug_cb;
-  hc->unplug_request = pc_machine_device_unplug_request_cb;
-  hc->unplug = pc_machine_device_unplug_cb;
-  mc->default_cpu_type = TARGET_DEFAULT_CPU_TYPE;
+  // mc->wakeup = pc_machine_wakeup;
+  // hc->pre_plug = pc_machine_device_pre_plug_cb;
+  // hc->plug = pc_machine_device_plug_cb;
+  // hc->unplug_request = pc_machine_device_unplug_request_cb;
+  // hc->unplug = pc_machine_device_unplug_cb;
+  mc->default_cpu_type = "qemu32";
   mc->nvdimm_supported = true;
   mc->numa_mem_supported = true;
 
+#ifdef BMBT
   object_class_property_add(oc, PC_MACHINE_DEVMEM_REGION_SIZE, "int",
                             pc_machine_get_device_memory_region_size, NULL,
                             NULL, NULL, &error_abort);
@@ -2144,8 +2164,10 @@ static void pc_machine_class_init(ObjectClass *oc, void *data) {
 
   object_class_property_add_bool(oc, PC_MACHINE_PIT, pc_machine_get_pit,
                                  pc_machine_set_pit, &error_abort);
+#endif
 }
 
+#if BMBT
 static const TypeInfo pc_machine_info = {
     .name = TYPE_PC_MACHINE,
     .parent = TYPE_X86_MACHINE,
