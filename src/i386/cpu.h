@@ -5,6 +5,7 @@
 #include "../../include/exec/hwaddr.h"
 #include "../../include/fpu/softfloat-types.h"
 #include "../../include/hw/core/cpu.h"
+#include "../../include/hw/irq.h"
 #include "../../include/qemu/bitops.h"
 #include "../../include/sysemu/tcg.h"
 #include "../../include/types.h"
@@ -1847,9 +1848,6 @@ bool cpu_is_bsp(X86CPU *cpu);
 void do_cpu_init(X86CPU *cpu);
 void do_cpu_sipi(X86CPU *cpu);
 
-// defined in hw/i386/pc.c
-int cpu_get_pic_interrupt(CPUX86State *s);
-
 /**
  * x86_cpu_do_interrupt:
  * @cpu: vCPU the interrupt is to be handled by.
@@ -2003,5 +2001,8 @@ static inline void cpu_x86_load_seg_cache_sipi(X86CPU *cpu,
   cs->halted = 0;
 }
 
+int cpu_get_pic_interrupt(CPUX86State *s);
+/* MSDOS compatibility mode FPU exception support */
+void x86_register_ferr_irq(qemu_irq irq);
 void cpu_set_ignne(void);
 #endif /* end of include guard: CPU_H_CJEDABLV */
