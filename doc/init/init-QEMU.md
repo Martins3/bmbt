@@ -1,13 +1,15 @@
 # QEMU 启动代码
 
 - [ ] 确认一下，如果所有的 CPU / machine / accle 的 init / class / realize / device_reset 函数搞定之后，还有什么位置在做初始化的工作。
-- [ ] 找到初始化相关的文件
-	- pc.c
-	- hw/i386/pc_piix.c
+- 找到初始化相关的文件
+	- [x] /hw/i386/pc.c
+		- 注册了 TypeInfo, 注册 pc_machine_info 和 pc_machine_class_init
+	- [ ] hw/i386/pc_piix.c
 		- pc_init1
-	- hw/i386/x86.c
+	- [ ] hw/i386/x86.c
+		- x86_machine_info : 注册 x86_machine_initfn 和 86_machine_class_init
 		- x86_cpu_new
-	- target/i386/cpu.c
+	- [ ] target/i386/cpu.c
 			- x86_cpu_realizefn
 
 ## 问题
@@ -27,7 +29,10 @@
 - [ ] /home/maritns3/core/ld/x86-qemu-mips/hw/i386/pc.c
 - [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
 
-- [ ] 找到最下层的 CPU 和 Machine 的 TypeInfo 是啥不就好了
+- [ ] 如何降低 include/sysemu/numa.h 的影响
+- [ ] 分析一下 include/hw/i386/topology.h 的实现
+
+- [ ] PCMachineClass 中为什么需要将 smm 和 vmport 单独分析出来
 
 ## 几个关键的结构体功能和移植差异说明
 
@@ -97,7 +102,6 @@ huxueshi:qdev_device_add virtio-9p-pci
 
 从 type info 上可以轻易的看到一个设备是不是 TYPE_ISA_DEVICE
 
-
 ## e820
 - 信息是如何构造出来的
   - 在  pc_memory_init 调用两次 e820_add_entry, 分别添加 below_4g_mem_size 和 above_4g_mem_size
@@ -107,7 +111,7 @@ huxueshi:qdev_device_add virtio-9p-pci
 - [ ] 类似 pci 映射的 MMIO 空间的分配是 e820 负责的操作的吗 ?
 
 ## choose Machine
-挺无聊的一个， select_machine
+1. select_machine
 
 从注册的里面进行选择一个 default, 也可以从参数中靠 machine_parse 解析出来
 ```c
@@ -126,6 +130,73 @@ isapc
 x-remote
 none
 xenpv
+```
+2. 注册 MachineClass::init，这个将会在 machine_run_board_init 中调用
+
+举个例子，将 Machine 展开
+```c
+DEFINE_I440FX_MACHINE(v0_12, "pc-0.12", pc_compat_0_13, pc_i440fx_0_12_machine_options);
+```
+
+```c
+static void pc_init_v4_2(MachineState *machine) {
+  void (*compat)(MachineState * m) = (NULL);
+  if (compat) {
+    compat(machine);
+  }
+  pc_init1(machine, TYPE_I440FX_PCI_HOST_BRIDGE, TYPE_I440FX_PCI_DEVICE);
+}
+static void pc_machine_v4_2_class_init(ObjectClass *oc, void *data) {
+  MachineClass *mc = MACHINE_CLASS(oc);
+  pc_i440fx_4_2_machine_options(mc);
+  mc->init = pc_init_v4_2;
+}
+static const TypeInfo pc_machine_type_v4_2 = {
+    .name = "pc-i440fx-4.2"
+            "-machine",
+    .parent = TYPE_PC_MACHINE,
+    .class_init = pc_machine_v4_2_class_init,
+};
+static void pc_machine_init_v4_2(void) { type_register(&pc_machine_type_v4_2); }
+type_init(pc_machine_init_v4_2);
+```
+
+3. machine 的继承关系
+	- pc_piix.c : 具体的主板号
+	- pc.c : pc 类型
+	- x86.c : x86 的机器
+	- machine.c : 根类型
+
+```c
+static const TypeInfo pc_machine_info = {
+    .name = TYPE_PC_MACHINE,
+    .parent = TYPE_X86_MACHINE,
+    .abstract = true,
+    .instance_size = sizeof(PCMachineState),
+    .instance_init = pc_machine_initfn,
+    .class_size = sizeof(PCMachineClass),
+    .class_init = pc_machine_class_init,
+    .interfaces = (InterfaceInfo[]) {
+         { TYPE_HOTPLUG_HANDLER },
+         { }
+    },
+};
+```
+
+```c
+static const TypeInfo x86_machine_info = {
+    .name = TYPE_X86_MACHINE,
+    .parent = TYPE_MACHINE,
+    .abstract = true,
+    .instance_size = sizeof(X86MachineState),
+    .instance_init = x86_machine_initfn,
+    .class_size = sizeof(X86MachineClass),
+    .class_init = x86_machine_class_init,
+    .interfaces = (InterfaceInfo[]) {
+         { TYPE_NMI },
+         { }
+    },
+};
 ```
 
 ## BUS
@@ -245,8 +316,13 @@ c:1472
 ```
 
 ##### cpu_index / cluster_index
-
 - [ ] cluster_index : 应该是没有被重新初始化过，具体需要使用 xqm 分析一下
+
+为了获取 X86MachineState::apic_id_limit
+
+- x86_cpu_apic_id_from_index
+	- init_topo_info
+	- x86_apicid_from_cpu_idx
 
 #### CPUClass
 几乎所有的成员都是和 vmstate 相关的，所以实际上，
