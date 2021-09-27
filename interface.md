@@ -22,3 +22,11 @@
 | 18       | pic_common_realize                                                                                                     | 统计之类的事情以后再说吧                                                                                             |
 | 19       | i8259.h                                                                                                                | 将 pc.h 中和 i8259 相关的代码移动到 i8259.h 中                                                                       |
 | 20       | CPUArchId::cpu                                                                                                         | 为了保持 X86_CPU 的语义一致性，当然也没有实现 Object 类型，将类型修改为 CPUState 了                                  |
+| 21       | pc_memory_init                                                                                                         | 在这里设置了众多的 memory region 的映射问题，但是实际上，我们是进行了硬编码处理这个事情的                            |
+| 22       | pc_system_firmware_init                                                                                                | 因为不支持 pflash 所以这个函数被简化为直接调用 x86_bios_rom_init 了                                                  |
+
+# 几个 macro 的说明
+我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
+
+- NEED_LATER : 将来应该需要
+- BMBT : 一定不需要，应该在每一个 BMBT 跟上解释为什么不需要这个东西

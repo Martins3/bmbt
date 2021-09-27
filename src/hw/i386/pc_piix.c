@@ -7,12 +7,12 @@ static void pc_init1(MachineState *machine, const char *host_type,
 
 static void pc_i440fx_machine_options(MachineClass *m) {
   PCMachineClass *pcmc = PC_MACHINE_CLASS(m);
-  pcmc->default_nic_model = "e1000";
+  // pcmc->default_nic_model = "e1000";
 
   m->family = "pc_piix";
   m->desc = "Standard PC (i440FX + PIIX, 1996)";
-  m->default_machine_opts = "firmware=bios-256k.bin";
-  m->default_display = "std";
+  // m->default_machine_opts = "firmware=bios-256k.bin";
+  // m->default_display = "std";
   // machine_class_allow_dynamic_sysbus_dev(m, TYPE_RAMFB_DEVICE);
 }
 
