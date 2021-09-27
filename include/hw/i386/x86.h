@@ -3,8 +3,8 @@
 
 #include "../../src/hw/i386/fw_cfg.h"
 #include "../boards.h"
+#include "../irq.h"
 #include "../nvram/fw_cfg.h"
-
 
 typedef struct {
   /*< private >*/
@@ -27,9 +27,9 @@ typedef struct {
 #ifdef NEED_LATER
   /* Pointers to devices and objects: */
   ISADevice *rtc;
-  qemu_irq *gsi;
   GMappedFile *initrd_mapped_file;
 #endif
+  qemu_irq *gsi;
   FWCfgState *fw_cfg;
 
   /* Configuration options: */
@@ -52,5 +52,6 @@ typedef struct {
 } X86MachineState;
 
 void x86_bios_rom_init(MemoryRegion *rom_memory, bool isapc_ram_fw);
+void x86_cpus_init(X86MachineState *pcms, int default_cpu_version);
 
 #endif /* end of include guard: X86_H_L9VT3E8K */

@@ -22,7 +22,9 @@ typedef struct GSIState {
 #define kvm_pic_in_kernel() 0
 #define kvm_ioapic_in_kernel() 0
 
+#define kvm_enabled() 0
 #define kvm_irqchip_in_kernel() (false)
+#define whpx_enabled() 0
 
 static inline bool kvm_allows_irq0_override(void) { return 1; }
 static inline bool xen_enabled(void) { return false; }
@@ -166,5 +168,15 @@ typedef struct PCMachineClass {
 /* pc_sysfw.c */
 static inline void pc_system_flash_create(PCMachineState *pcms) {}
 void pc_system_firmware_init(PCMachineState *pcms, MemoryRegion *rom_memory);
+
+void pc_guest_info_init(PCMachineState *pcms);
+
+void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
+                    MemoryRegion *rom_memory, MemoryRegion **ram_memory);
+
+GSIState *pc_gsi_create(qemu_irq **irqs, bool pci_enabled);
+
+void pc_i8259_create(qemu_irq *i8259_irqs);
+void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name);
 
 #endif /* end of include guard: PC_H_0VFJYDT2 */
