@@ -25,6 +25,7 @@ typedef struct GSIState {
 #define kvm_irqchip_in_kernel() (false)
 
 static inline bool kvm_allows_irq0_override(void) { return 1; }
+static inline bool xen_enabled(void) { return false; }
 
 /**
  * PCMachineState:

@@ -1,7 +1,9 @@
 #ifndef X86_H_L9VT3E8K
 #define X86_H_L9VT3E8K
 
+#include "../../src/hw/i386/fw_cfg.h"
 #include "../boards.h"
+#include "../nvram/fw_cfg.h"
 
 typedef struct {
   /*< private >*/
@@ -24,10 +26,10 @@ typedef struct {
 #ifdef NEED_LATER
   /* Pointers to devices and objects: */
   ISADevice *rtc;
-  FWCfgState *fw_cfg;
   qemu_irq *gsi;
   GMappedFile *initrd_mapped_file;
 #endif
+  FWCfgState *fw_cfg;
 
   /* Configuration options: */
   uint64_t max_ram_below_4g;
