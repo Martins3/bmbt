@@ -5,6 +5,7 @@
 #include "../../include/hw/i386/apic.h"
 #include "../../include/hw/isa/i8259.h"
 #include "../../include/qemu/timer.h"
+#include "../../include/sysemu/sysemu.h"
 #include "../../include/sysemu/tcg.h"
 #include "../../tcg/glib_stub.h"
 
@@ -500,7 +501,8 @@ static void pic_irq_request(void *opaque, int irq, int level) {
   }
 }
 
-#if BMBT
+// FIXME
+#if NEED_LATER
 /* PC cmos mappings */
 
 #define REG_EQUIPMENT_BYTE 0x14
@@ -929,7 +931,12 @@ void pc_acpi_smi_interrupt(void *opaque, int irq, int level) {
     cpu_interrupt(CPU(cpu), CPU_INTERRUPT_SMI);
   }
 }
+#endif
 
+// 1. no QemuOpts
+// 2. ms->smp.cpus = 1
+// 3. doesn't support cpu hotplug
+#ifdef BMBT
 /*
  * This function is very similar to smp_parse()
  * in hw/core/machine.c but includes CPU die support.
@@ -1029,7 +1036,9 @@ void pc_hot_add_cpu(MachineState *ms, const int64_t id, Error **errp) {
     return;
   }
 }
+#endif
 
+#if NEED_LATER
 static void rtc_set_cpus_count(ISADevice *rtc, uint16_t cpus_count) {
   if (cpus_count > 0xff) {
     /* If the number of CPUs can't be represented in 8 bits, the
@@ -1041,8 +1050,10 @@ static void rtc_set_cpus_count(ISADevice *rtc, uint16_t cpus_count) {
     rtc_set_memory(rtc, 0x5f, cpus_count - 1);
   }
 }
+#endif
 
 static void pc_machine_done(Notifier *notifier, void *data) {
+#if NEED_LATER
   PCMachineState *pcms = container_of(notifier, PCMachineState, machine_done);
   X86MachineState *x86ms = X86_MACHINE(pcms);
   PCIBus *bus = pcms->bus;
@@ -1086,6 +1097,7 @@ static void pc_machine_done(Notifier *notifier, void *data) {
       exit(EXIT_FAILURE);
     }
   }
+#endif
 }
 
 void pc_guest_info_init(PCMachineState *pcms) {
@@ -1104,6 +1116,9 @@ void pc_guest_info_init(PCMachineState *pcms) {
   qemu_add_machine_init_done_notifier(&pcms->machine_done);
 }
 
+// 1. memory region is redesigned, no more MemoryRegion overlap
+// 2. xen
+#if BMBT
 /* setup pci memory address space mapping into system address space */
 void pc_pci_as_mapping_init(Object *owner, MemoryRegion *system_memory,
                             MemoryRegion *pci_address_space) {
@@ -1135,7 +1150,9 @@ void xen_load_linux(PCMachineState *pcms) {
   }
   x86ms->fw_cfg = fw_cfg;
 }
+#endif
 
+#if NEED_LATER
 void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
                     MemoryRegion *rom_memory, MemoryRegion **ram_memory) {
   int linux_boot, i;

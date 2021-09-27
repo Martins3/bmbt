@@ -2,6 +2,7 @@
 #define BOARDS_H_ANEGSNX6
 #include "../exec/cpu-common.h"
 #include "../hw/core/cpu.h"
+#include "../sysemu/numa.h"
 #include <stdbool.h>
 
 typedef struct MachineState MachineState;
