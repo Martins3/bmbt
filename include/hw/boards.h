@@ -230,11 +230,5 @@ static inline MachineState *qdev_get_machine() { return NULL; }
 
 #define MACHINE_GET_CLASS(machine) machine->mc
 
-// FIXME a better way to check PCMachineClass is child of MachineClass
-#define MACHINE_CLASS(pcmc)                                                    \
-  ({                                                                           \
-    PCMachineClass *tmp = pcmc;                                                \
-    (MachineClass *)tmp;                                                       \
-  })
 
 #endif /* end of include guard: BOARDS_H_ANEGSNX6 */
