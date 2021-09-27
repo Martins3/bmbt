@@ -61,7 +61,6 @@ static void cpu_clear_ignne(void)
     env->hflags2 &= ~HF2_IGNNE_MASK;
 }
 
-#if 0
 void cpu_set_ignne(void)
 {
     CPUX86State *env = &X86_CPU(first_cpu)->env;
@@ -75,7 +74,6 @@ void cpu_set_ignne(void)
      */
     qemu_irq_lower(ferr_irq);
 }
-#endif
 #endif
 
 static inline void fpush(CPUX86State *env)

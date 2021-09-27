@@ -2004,4 +2004,5 @@ static inline void cpu_x86_load_seg_cache_sipi(X86CPU *cpu,
   cs->halted = 0;
 }
 
+void cpu_set_ignne(void);
 #endif /* end of include guard: CPU_H_CJEDABLV */
