@@ -129,7 +129,7 @@ struct MachineClass {
 
   void (*init)(MachineState *state);
   void (*reset)(MachineState *state);
-  void (*wakeup)(MachineState *state);
+  // void (*wakeup)(MachineState *state);
   // void (*hot_add_cpu)(MachineState *state, const int64_t id, Error **errp);
   int (*kvm_type)(MachineState *machine, const char *arg);
   // void (*smp_parse)(MachineState *ms, QemuOpts *opts);
@@ -170,10 +170,12 @@ struct MachineClass {
   // HotplugHandler *(*get_hotplug_handler)(MachineState *machine,
   // DeviceState *dev);
   // bool (*hotplug_allowed)(MachineState *state, DeviceState *dev, Error
-  // **errp); CpuInstanceProperties (*cpu_index_to_instance_props)(MachineState
-  // *machine, unsigned cpu_index);
-  // const CPUArchIdList *(*possible_cpu_arch_ids)(MachineState *machine);
-  // int64_t (*get_default_cpu_node_id)(const MachineState *ms, int idx);
+  // **errp);
+
+  // CpuInstanceProperties (*cpu_index_to_instance_props)(MachineState *machine,
+  // unsigned cpu_index);
+  const CPUArchIdList *(*possible_cpu_arch_ids)(MachineState *machine);
+  int64_t (*get_default_cpu_node_id)(const MachineState *ms, int idx);
 };
 
 /**
@@ -227,5 +229,12 @@ struct MachineState {
 static inline MachineState *qdev_get_machine() { return NULL; }
 
 #define MACHINE_GET_CLASS(machine) machine->mc
+
+// FIXME a better way to check PCMachineClass is child of MachineClass
+#define MACHINE_CLASS(pcmc)                                                    \
+  ({                                                                           \
+    PCMachineClass *tmp = pcmc;                                                \
+    (MachineClass *)tmp;                                                       \
+  })
 
 #endif /* end of include guard: BOARDS_H_ANEGSNX6 */

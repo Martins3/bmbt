@@ -57,7 +57,6 @@ typedef struct PCMachineState {
   /* Configuration options: */
   OnOffAuto vmport;
   OnOffAuto smm;
-
 #endif
 
   bool acpi_build_enabled;
@@ -74,7 +73,11 @@ typedef struct PCMachineState {
 } PCMachineState;
 
 #define PC_MACHINE_GET_CLASS(pcms) pcms->pcmc
-#define PC_MACHINE(mc) ({ MachineState * tmp = mc; (PCMachineState *)tmp; })
+#define PC_MACHINE(mc)                                                         \
+  ({                                                                           \
+    MachineState *tmp = mc;                                                    \
+    (PCMachineState *)tmp;                                                     \
+  })
 
 /**
  * PCMachineClass:
@@ -149,7 +152,8 @@ typedef struct PCMachineClass {
     (X86MachineState *)tmp;                                                    \
   })
 
-
+/* pc_sysfw.c */
+static inline void pc_system_flash_create(PCMachineState *pcms) {}
 void pc_system_firmware_init(PCMachineState *pcms, MemoryRegion *rom_memory);
 
 #endif /* end of include guard: PC_H_0VFJYDT2 */

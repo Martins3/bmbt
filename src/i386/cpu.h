@@ -1606,7 +1606,6 @@ typedef struct X86CPUClass {
   void (*parent_reset)(CPUState *cpu);
 } X86CPUClass;
 
-typedef struct APICCommonState APICCommonState;
 /**
  * X86CPU:
  * @env: #CPUX86State
@@ -1625,7 +1624,7 @@ typedef struct X86CPU {
 
   /* in order to simplify APIC support, we leave this pointer to the
      user */
-  APICCommonState *apic_state;
+  struct APICCommonState *apic_state;
 
   uint32_t apic_id;
   bool expose_tcg;
@@ -1972,7 +1971,7 @@ void x86_cpu_exec_exit(CPUState *cpu);
 
 /* apic.c */
 void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
-void apic_handle_tpr_access_report(APICCommonState *d, target_ulong ip,
+void apic_handle_tpr_access_report(struct APICCommonState *d, target_ulong ip,
                                    TPRAccess access);
 
 typedef CPUX86State CPUArchState;
