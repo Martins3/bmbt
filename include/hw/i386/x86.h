@@ -21,6 +21,7 @@ typedef struct {
 typedef struct {
   /*< private >*/
   MachineState parent;
+  X86MachineClass *x86mc;
 
   /*< public >*/
 
@@ -50,6 +51,8 @@ typedef struct {
    */
   AddressSpace *ioapic_as;
 } X86MachineState;
+
+#define X86_MACHINE_GET_CLASS(x86ms) x86ms->x86mc
 
 void x86_bios_rom_init(MemoryRegion *rom_memory, bool isapc_ram_fw);
 void x86_cpus_init(X86MachineState *pcms, int default_cpu_version);

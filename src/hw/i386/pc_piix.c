@@ -1,7 +1,6 @@
 #include "../../i386/cpu.h"
 #include "../../include/hw/firmware/smbios.h"
 #include "../../include/hw/i386/pc.h"
-#include "../../include/hw/i386/x86.h"
 #include "../../include/hw/pci-host/i440fx.h"
 #include "../../include/qemu/error-report.h"
 #include "../../include/qemu/units.h"

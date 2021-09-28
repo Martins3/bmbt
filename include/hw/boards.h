@@ -8,6 +8,19 @@
 typedef struct MachineState MachineState;
 typedef struct MachineClass MachineClass;
 
+typedef struct {
+  bool has_node_id;
+  int64_t node_id;
+  bool has_socket_id;
+  int64_t socket_id;
+  bool has_die_id;
+  int64_t die_id;
+  bool has_core_id;
+  int64_t core_id;
+  bool has_thread_id;
+  int64_t thread_id;
+} CpuInstanceProperties;
+
 /**
  * CPUArchId:
  * @arch_id - architecture-dependent CPU ID of present or possible CPU
@@ -19,8 +32,7 @@ typedef struct MachineClass MachineClass;
 typedef struct CPUArchId {
   uint64_t arch_id;
   int64_t vcpus_count;
-  // FIXME
-  // CpuInstanceProperties props;
+  CpuInstanceProperties props;
   // [interface 20]
   CPUState *cpu;
   const char *type;
@@ -179,6 +191,20 @@ struct MachineClass {
 };
 
 /**
+ * CpuTopology:
+ * @cpus: the number of present logical processors on the machine
+ * @cores: the number of cores in one package
+ * @threads: the number of threads in one core
+ * @max_cpus: the maximum number of logical processors on the machine
+ */
+typedef struct CpuTopology {
+  unsigned int cpus;
+  unsigned int cores;
+  unsigned int threads;
+  unsigned int max_cpus;
+} CpuTopology;
+
+/**
  * MachineState:
  */
 struct MachineState {
@@ -221,7 +247,7 @@ struct MachineState {
   const char *cpu_type;
   // AccelState *accelerator;
   CPUArchIdList *possible_cpus;
-  // CpuTopology smp;
+  CpuTopology smp;
   struct NVDIMMState *nvdimms_state;
   struct NumaState *numa_state;
 };
@@ -229,6 +255,5 @@ struct MachineState {
 static inline MachineState *qdev_get_machine() { return NULL; }
 
 #define MACHINE_GET_CLASS(machine) machine->mc
-
 
 #endif /* end of include guard: BOARDS_H_ANEGSNX6 */

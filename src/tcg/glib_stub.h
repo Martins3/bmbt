@@ -67,4 +67,16 @@ gpointer g_try_malloc0(int n_bytes);
 gpointer g_memdup(gconstpointer mem, uint byte_size);
 
 gpointer g_malloc0(gint n_bytes);
+
+typedef struct _GList GList;
+
+struct _GList {
+  gpointer data;
+  GList *next;
+  GList *prev;
+};
+
+typedef struct QDict {
+} QDict;
+
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */
