@@ -1,33 +1,30 @@
 #ifndef BITOPS_H_Z29X3LYD
 #define BITOPS_H_Z29X3LYD
-#include <limits.h>
-#include <assert.h>
 #include "../types.h"
 #include "atomic.h"
 #include "osdep.h"
+#include <assert.h>
+#include <limits.h>
 
-#define BIT(nr)                 (1UL << (nr))
+#define BIT(nr) (1UL << (nr))
 
-#define MAKE_64BIT_MASK(shift, length) \
-    (((~0ULL) >> (64 - (length))) << (shift))
+#define MAKE_64BIT_MASK(shift, length) (((~0ULL) >> (64 - (length))) << (shift))
 
+#define BITS_PER_BYTE CHAR_BIT
+#define BITS_PER_LONG (sizeof(unsigned long) * BITS_PER_BYTE)
+#define BIT_WORD(nr) ((nr) / BITS_PER_LONG)
+#define BIT_WORD(nr) ((nr) / BITS_PER_LONG)
+#define BITS_TO_LONGS(nr) DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
 
-#define BITS_PER_BYTE           CHAR_BIT
-#define BITS_PER_LONG           (sizeof (unsigned long) * BITS_PER_BYTE)
-#define BIT_WORD(nr)            ((nr) / BITS_PER_LONG)
-#define BIT_WORD(nr)            ((nr) / BITS_PER_LONG)
-#define BITS_TO_LONGS(nr)       DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
-
-#define BIT_MASK(nr)            (1UL << ((nr) % BITS_PER_LONG))
+#define BIT_MASK(nr) (1UL << ((nr) % BITS_PER_LONG))
 
 /**
  * test_bit - Determine whether a bit is set
  * @nr: bit number to test
  * @addr: Address to start counting from
  */
-static inline int test_bit(long nr, const unsigned long *addr)
-{
-    return 1UL & (addr[BIT_WORD(nr)] >> (nr & (BITS_PER_LONG-1)));
+static inline int test_bit(long nr, const unsigned long *addr) {
+  return 1UL & (addr[BIT_WORD(nr)] >> (nr & (BITS_PER_LONG - 1)));
 }
 
 /**
@@ -48,12 +45,11 @@ static inline int test_bit(long nr, const unsigned long *addr)
  * Returns: the modified @value.
  */
 static inline uint32_t deposit32(uint32_t value, int start, int length,
-                                 uint32_t fieldval)
-{
-    uint32_t mask;
-    assert(start >= 0 && length > 0 && length <= 32 - start);
-    mask = (~0U >> (32 - length)) << start;
-    return (value & ~mask) | ((fieldval << start) & mask);
+                                 uint32_t fieldval) {
+  uint32_t mask;
+  assert(start >= 0 && length > 0 && length <= 32 - start);
+  mask = (~0U >> (32 - length)) << start;
+  return (value & ~mask) | ((fieldval << start) & mask);
 }
 
 /**
@@ -74,12 +70,11 @@ static inline uint32_t deposit32(uint32_t value, int start, int length,
  * Returns: the modified @value.
  */
 static inline uint64_t deposit64(uint64_t value, int start, int length,
-                                 uint64_t fieldval)
-{
-    uint64_t mask;
-    assert(start >= 0 && length > 0 && length <= 64 - start);
-    mask = (~0ULL >> (64 - length)) << start;
-    return (value & ~mask) | ((fieldval << start) & mask);
+                                 uint64_t fieldval) {
+  uint64_t mask;
+  assert(start >= 0 && length > 0 && length <= 64 - start);
+  mask = (~0ULL >> (64 - length)) << start;
+  return (value & ~mask) | ((fieldval << start) & mask);
 }
 
 /**
@@ -95,10 +90,9 @@ static inline uint64_t deposit64(uint64_t value, int start, int length,
  *
  * Returns: the value of the bit field extracted from the input value.
  */
-static inline uint64_t extract64(uint64_t value, int start, int length)
-{
-    assert(start >= 0 && length > 0 && length <= 64 - start);
-    return (value >> start) & (~0ULL >> (64 - length));
+static inline uint64_t extract64(uint64_t value, int start, int length) {
+  assert(start >= 0 && length > 0 && length <= 64 - start);
+  return (value >> start) & (~0ULL >> (64 - length));
 }
 
 /**
@@ -106,9 +100,8 @@ static inline uint64_t extract64(uint64_t value, int start, int length)
  * @word: value to rotate
  * @shift: bits to roll
  */
-static inline uint32_t rol32(uint32_t word, unsigned int shift)
-{
-    return (word << shift) | (word >> ((32 - shift) & 31));
+static inline uint32_t rol32(uint32_t word, unsigned int shift) {
+  return (word << shift) | (word >> ((32 - shift) & 31));
 }
 
 /**
@@ -116,14 +109,28 @@ static inline uint32_t rol32(uint32_t word, unsigned int shift)
  * @nr: the bit to set
  * @addr: the address to start counting from
  */
-static inline void set_bit_atomic(long nr, unsigned long *addr)
-{
-    unsigned long mask = BIT_MASK(nr);
-    unsigned long *p = addr + BIT_WORD(nr);
+static inline void set_bit_atomic(long nr, unsigned long *addr) {
+  unsigned long mask = BIT_MASK(nr);
+  unsigned long *p = addr + BIT_WORD(nr);
 
-    atomic_or(p, mask);
+  atomic_or(p, mask);
 }
 
+/**
+ * find_last_bit - find the last set bit in a memory region
+ * @addr: The address to start the search at
+ * @size: The maximum size to search
+ *
+ * Returns the bit number of the first set bit, or size.
+ */
+unsigned long find_last_bit(const unsigned long *addr, unsigned long size);
+
+/**
+ * find_next_bit - find the next set bit in a memory region
+ * @addr: The address to base the search on
+ * @offset: The bitnumber to start searching at
+ * @size: The bitmap size in bits
+ */
 unsigned long find_next_bit(const unsigned long *addr, unsigned long size,
                             unsigned long offset);
 

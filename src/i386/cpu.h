@@ -1430,8 +1430,6 @@ typedef struct CPUX86State {
 
   uint32_t pkru;
 
-  FeatureWordArray features;
-
   uint64_t vm_vmcb;
   uint64_t tsc_offset;
   uint64_t intercept;
@@ -1475,6 +1473,34 @@ typedef struct CPUX86State {
 
   uint64_t tsc_aux;
 
+  // FIXME feild are put here randomly, we will fix them
+  /* Fields after this point are preserved across CPU reset. */
+
+  /* processor features (e.g. for CPUID insn) */
+  /* Minimum cpuid leaf 7 value */
+  uint32_t cpuid_level_func7;
+  /* Actual cpuid leaf 7 value */
+  uint32_t cpuid_min_level_func7;
+  /* Minimum level/xlevel/xlevel2, based on CPU model + features */
+  uint32_t cpuid_min_level, cpuid_min_xlevel, cpuid_min_xlevel2;
+  /* Maximum level/xlevel/xlevel2 value for auto-assignment: */
+  uint32_t cpuid_max_level, cpuid_max_xlevel, cpuid_max_xlevel2;
+  /* Actual level/xlevel/xlevel2 value: */
+  uint32_t cpuid_level, cpuid_xlevel, cpuid_xlevel2;
+  uint32_t cpuid_vendor1;
+  uint32_t cpuid_vendor2;
+  uint32_t cpuid_vendor3;
+  uint32_t cpuid_version;
+  FeatureWordArray features;
+  /* Features that were explicitly enabled/disabled */
+  FeatureWordArray user_features;
+  uint32_t cpuid_model[12];
+  /* Cache information for CPUID.  When legacy-cache=on, the cache data
+   * on each CPUID leaf will be different, because we keep compatibility
+   * with old QEMU versions.
+   */
+  CPUCaches cache_info_cpuid2, cache_info_cpuid4, cache_info_amd;
+
   /* MTRRs */
   uint64_t mtrr_fixed[11];
   uint64_t mtrr_deftype;
@@ -1491,26 +1517,6 @@ typedef struct CPUX86State {
   uint64_t mcg_status;
 
   uint64_t msr_ia32_misc_enable;
-
-  /* Actual level/xlevel/xlevel2 value: */
-  uint32_t cpuid_level, cpuid_xlevel, cpuid_xlevel2;
-  uint32_t cpuid_vendor1;
-  uint32_t cpuid_vendor2;
-  uint32_t cpuid_vendor3;
-  uint32_t cpuid_version;
-  /* processor features (e.g. for CPUID insn) */
-  /* Minimum cpuid leaf 7 value */
-  uint32_t cpuid_level_func7;
-
-  // FIXME why is cache_info_amd, not cache_info_intel ?
-  // notice : cache_info_cpuid2, cache_info_cpuid4 has no referenced
-  /* Cache information for CPUID.  When legacy-cache=on, the cache data
-   * on each CPUID leaf will be different, because we keep compatibility
-   * with old QEMU versions.
-   */
-  CPUCaches cache_info_cpuid2, cache_info_cpuid4, cache_info_amd;
-
-  uint32_t cpuid_model[12];
 
 #ifdef CONFIG_X86toMIPS
 #ifndef CONFIG_LATX
@@ -1591,6 +1597,8 @@ typedef struct DeviceState {
   // /home/maritns3/core/ld/x86-qemu-mips/include/hw/qdev-core.h
 } DeviceState;
 
+typedef struct X86CPUModel X86CPUModel;
+
 /**
  * X86CPUClass:
  * @cpu_def: CPU model definition
@@ -1604,6 +1612,29 @@ typedef struct DeviceState {
  * An x86 CPU model or family.
  */
 typedef struct X86CPUClass {
+  /*< private >*/
+  CPUClass parent_class;
+  /*< public >*/
+
+  /* CPU definition, automatically loaded by instance_init if not NULL.
+   * Should be eventually replaced by subclass-specific property defaults.
+   */
+  X86CPUModel *model;
+
+  bool host_cpuid_required;
+  int ordering;
+  bool migration_safe;
+  bool static_model;
+
+  /* Optional description of CPU model.
+   * If unavailable, cpu_def->model_id is used */
+  const char *model_description;
+
+  // FIXME we will rethink realize at:
+  // x86_cpu_common_class_inijo
+  //
+  // DeviceRealize parent_realize;
+  // DeviceUnrealize parent_unrealize;
   void (*parent_reset)(CPUState *cpu);
 } X86CPUClass;
 
@@ -1617,30 +1648,119 @@ typedef struct X86CPUClass {
  * An x86 CPU.
  */
 typedef struct X86CPU {
-  X86CPUClass *xcc;
+  /*< private >*/
   CPUState parent_obj;
+  X86CPUClass *xcc;
+
+  /*< public >*/
 
   CPUNegativeOffsetState neg;
   CPUX86State env;
 
-  /* in order to simplify APIC support, we leave this pointer to the
-     user */
-  struct APICCommonState *apic_state;
+  uint32_t hyperv_spinlock_attempts;
+  char *hyperv_vendor_id;
+  bool hyperv_synic_kvm_only;
+  uint64_t hyperv_features;
+  bool hyperv_passthrough;
+  // OnOffAuto hyperv_no_nonarch_cs;
 
-  uint32_t apic_id;
-  bool expose_tcg;
-  /* Number of physical address bits supported */
-  uint32_t phys_bits;
-  /* Compatibility bits for old machine types.
-   * If true present virtual l3 cache for VM, the vcpus in the same virtual
-   * socket share an virtual l3 cache.
+  bool check_cpuid;
+  bool enforce_cpuid;
+  /*
+   * Force features to be enabled even if the host doesn't support them.
+   * This is dangerous and should be done only for testing CPUID
+   * compatibility.
    */
-  bool enable_l3_cache;
+  bool force_features;
+  bool expose_kvm;
+  bool expose_tcg;
+  bool migratable;
+  bool migrate_smi_count;
+  bool max_features; /* Enable all supported features automatically */
+  uint32_t apic_id;
+
+  /* Enables publishing of TSC increment and Local APIC bus frequencies to
+   * the guest OS in CPUID page 0x40000010, the same way that VMWare does. */
+  bool vmware_cpuid_freq;
+
+  /* if true the CPUID code directly forward host cache leaves to the guest */
+  bool cache_info_passthrough;
+
+  /* if true the CPUID code directly forwards
+   * host monitor/mwait leaves to the guest */
+  struct {
+    uint32_t eax;
+    uint32_t ebx;
+    uint32_t ecx;
+    uint32_t edx;
+  } mwait;
+
+  /* Features that were filtered out because of missing host capabilities */
+  FeatureWordArray filtered_features;
+
+  /* Enable PMU CPUID bits. This can't be enabled by default yet because
+   * it doesn't have ABI stability guarantees, as it passes all PMU CPUID
+   * bits returned by GET_SUPPORTED_CPUID (that depend on host CPU and kernel
+   * capabilities) directly to the guest.
+   */
+  bool enable_pmu;
+
   /* LMCE support can be enabled/disabled via cpu option 'lmce=on/off'. It is
    * disabled by default to avoid breaking migration between QEMU with
    * different LMCE configurations.
    */
   bool enable_lmce;
+
+  /* Compatibility bits for old machine types.
+   * If true present virtual l3 cache for VM, the vcpus in the same virtual
+   * socket share an virtual l3 cache.
+   */
+  bool enable_l3_cache;
+
+  /* Compatibility bits for old machine types.
+   * If true present the old cache topology information
+   */
+  bool legacy_cache;
+
+  /* Compatibility bits for old machine types: */
+  bool enable_cpuid_0xb;
+
+  /* Enable auto level-increase for all CPUID leaves */
+  bool full_cpuid_auto_level;
+
+  /* Enable auto level-increase for Intel Processor Trace leave */
+  bool intel_pt_auto_level;
+
+  /* if true fill the top bits of the MTRR_PHYSMASKn variable range */
+  bool fill_mtrr_mask;
+
+  /* if true override the phys_bits value with a value read from the host */
+  bool host_phys_bits;
+
+  /* if set, limit maximum value for phys_bits when host_phys_bits is true */
+  uint8_t host_phys_bits_limit;
+
+  /* Stop SMI delivery for migration compatibility with old machines */
+  bool kvm_no_smi_migration;
+
+  /* Number of physical address bits supported */
+  uint32_t phys_bits;
+
+  /* in order to simplify APIC support, we leave this pointer to the
+     user */
+  struct APICCommonState *apic_state;
+  struct MemoryRegion *cpu_as_root, *cpu_as_mem, *smram;
+  // Notifier machine_done;
+
+  struct kvm_msrs *kvm_msr_buf;
+
+  int32_t node_id; /* NUMA node this CPU belongs to */
+  int32_t socket_id;
+  int32_t die_id;
+  int32_t core_id;
+  int32_t thread_id;
+
+  int32_t hv_max_vps;
 } X86CPU;
 #define X86_CPU_GET_CLASS(cpu) cpu->xcc
 
@@ -2005,4 +2125,12 @@ int cpu_get_pic_interrupt(CPUX86State *s);
 /* MSDOS compatibility mode FPU exception support */
 void x86_register_ferr_irq(qemu_irq irq);
 void cpu_set_ignne(void);
+
+typedef int X86CPUVersion;
+
+/*
+ * Set default CPU model version for CPU models having
+ * version == CPU_VERSION_AUTO.
+ */
+void x86_cpu_set_default_version(X86CPUVersion version);
 #endif /* end of include guard: CPU_H_CJEDABLV */

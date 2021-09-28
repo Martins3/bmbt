@@ -67,4 +67,13 @@ extern intptr_t qemu_real_host_page_mask;
 int qemu_mprotect_none(void *addr, size_t size);
 void *qemu_memalign(size_t alignment, size_t size);
 
+/* Starting on QEMU 2.5, qemu_hw_version() returns "2.5+" by default
+ * instead of QEMU_VERSION, so setting hw_version on MachineClass
+ * is no longer mandatory.
+ *
+ * Do NOT change this string, or it will break compatibility on all
+ * machine classes that don't set hw_version.
+ */
+#define QEMU_HW_VERSION "2.5+"
+
 #endif /* end of include guard: OSDEP_H_DXJTBG8M */

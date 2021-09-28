@@ -141,7 +141,16 @@ typedef struct PCMachineClass {
   bool pvh_enabled;
 } PCMachineClass;
 
-// FIXME what if pcms is not PCMachineState ?
+#define compare_types(T1, T2) _Generic(((T1){0}), T2 : 1, default : 0)
+
+static inline MachineState *X86_TO_MACHINE(X86MachineState *x) {
+  return (MachineState *)x;
+}
+
+static inline X86MachineState *MS_TO_X86_MACHINE(const MachineState *x) {
+  return (X86MachineState *)x;
+}
+
 #define MACHINE(pcms)                                                          \
   ({                                                                           \
     PCMachineState *tmp = pcms;                                                \
@@ -158,6 +167,12 @@ typedef struct PCMachineClass {
   ({                                                                           \
     PCMachineClass *tmp = pcmc;                                                \
     (MachineClass *)tmp;                                                       \
+  })
+
+#define X86_MACHINE_CLASS(mc)                                                  \
+  ({                                                                           \
+    MachineClass *tmp = mc;                                                    \
+    (X86MachineClass *)tmp;                                                    \
   })
 
 #define PC_MACHINE_CLASS(m)                                                    \
