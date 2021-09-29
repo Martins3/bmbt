@@ -1,23 +1,44 @@
 # QEMU 启动代码
 
-- [ ] 确认一下，如果所有的 CPU / machine / accle 的 init / class / realize / device_reset 函数搞定之后，还有什么位置在做初始化的工作。
-- 找到初始化相关的文件
+- Machine 层次相关
+	- [x] hw/i386/x86.c
+		- x86_machine_info : 注册 x86_machine_initfn 和 86_machine_class_init
+		- x86_cpu_new
 	- [x] /hw/i386/pc.c
 		- 注册了 TypeInfo, 注册 pc_machine_info 和 pc_machine_class_init
 	- [x] hw/i386/pc_piix.c
 		- pc_init1
-	- [x] hw/i386/x86.c
-		- x86_machine_info : 注册 x86_machine_initfn 和 86_machine_class_init
-		- x86_cpu_new
-	- [ ] target/i386/cpu.c
+- CPU 层次相关
+  - [x] hw/core/cpu.c
+	- [x] target/i386/cpu.c
 			- x86_cpu_realizefn
 
-- [ ] 在 x86_cpu_new 直接初始化为最基础的 CPU, CPU 的初始化工作之后完成
+- [ ] 在 x86_cpu_new 直接初始化为整个 CPU, CPU 的初始化工作之后完成
 - [ ] 需要再次核实一下 x86_cpu_apply_version_props
   - [ ] 而且 x86_register_cpu_model_type 中更加烦人的问题，他会因为 version 多次调用 x86_register_cpu_model_type
 - [ ] x86_cpu_filter_features 中发现有的 feature 需要 mark_unavailable_features 那么又如何?
 - [ ] user_features 这个东西到底是干啥的哇
   - x86_cpu_set_bit_prop : 总是会把这个东西设置上
+
+- [ ] 在 target/i386/cpu.c 中间删除和 hotplugged 相关的代码的时候，没有过于深入的思考，实际上，不是这个样子的。
+似乎，`cpu->apic_id` 就是在这里被初始化的。
+```c
+/*
+#0  x86_find_cpu_slot (ms=0x555556095510 <__func__.35759>, id=32767, idx=0x555555d79f55 <trace_object_dynamic_cast_assert+57>) at ../hw/i386/x86.c:172
+#1  0x0000555555b5e714 in x86_cpu_pre_plug (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/x86.c:357
+#2  0x0000555555b96ced in pc_machine_device_pre_plug_cb (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/pc.c:1380
+#3  0x0000555555d70dd8 in hotplug_handler_pre_plug (plug_handler=0x5555569069e0, plugged_dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/core/hotplug.c:23
+#4  0x0000555555d757f6 in device_set_realized (obj=0x555556d00c00, value=true, errp=0x7fffffffd198) at ../hw/core/qdev.c:754
+```
+
+```c
+/*
+#0  x86_possible_cpu_arch_ids (ms=0x555555b5da43 <x86_cpu_apic_id_from_index+86>) at ../hw/i386/x86.c:451
+#1  0x0000555555b5dbd3 in x86_cpus_init (x86ms=0x5555569069e0, default_cpu_version=1) at ../hw/i386/x86.c:138
+#2  0x0000555555b627cb in pc_init1 (machine=0x5555569069e0, host_type=0x555556095eaa "i440FX-pcihost", pci_type=0x555556095ea3 "i440FX") at ../hw/i386/pc_piix.c:157
+```
+
+- [ ] x86_cpu_properties : 这个向 X86CPUClass 中初始化成员，也有可能被直接删除掉了，从而这些初始化被永远忘掉了
 
 ## 问题
 - [ ] qemu_register_reset(x86_cpu_machine_reset_cb, cpu); 最后会调用到 cpu_reset 上，post done 和 reset 的关系到底是什么?
@@ -41,6 +62,7 @@
 
 - [ ] PCMachineClass 中为什么需要将 smm 和 vmport 单独分析出来
 
+- [ ] tcg_init_ctx 应该是自动被初始化好了，但是 review tcg.c 中相关的代码吧
 ## 几个关键的结构体功能和移植差异说明
 
 | struct      | explaination                                                                            |
