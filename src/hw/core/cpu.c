@@ -160,14 +160,7 @@ static vaddr cpu_adjust_watchpoint_address(CPUState *cpu, vaddr addr, int len) {
 }
 
 static void generic_handle_interrupt(CPUState *cpu, int mask) {
-  cpu->interrupt_request |= mask;
-
-  if (!qemu_cpu_is_self(cpu)) {
-    // FIXME interrpt has to be handle specially
-    // it's not really clear now
     g_assert_not_reached();
-    // qemu_cpu_kick(cpu);
-  }
 }
 
 CPUInterruptHandler cpu_interrupt_handler = generic_handle_interrupt;
