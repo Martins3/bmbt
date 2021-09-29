@@ -15,6 +15,9 @@
 - [ ] 在 x86_cpu_new 直接初始化为最基础的 CPU, CPU 的初始化工作之后完成
 - [ ] 需要再次核实一下 x86_cpu_apply_version_props
   - [ ] 而且 x86_register_cpu_model_type 中更加烦人的问题，他会因为 version 多次调用 x86_register_cpu_model_type
+- [ ] x86_cpu_filter_features 中发现有的 feature 需要 mark_unavailable_features 那么又如何?
+- [ ] user_features 这个东西到底是干啥的哇
+  - x86_cpu_set_bit_prop : 总是会把这个东西设置上
 
 ## 问题
 - [ ] qemu_register_reset(x86_cpu_machine_reset_cb, cpu); 最后会调用到 cpu_reset 上，post done 和 reset 的关系到底是什么?
