@@ -4073,9 +4073,6 @@ static Property x86_cpu_properties[] = {
     DEFINE_PROP_END_OF_LIST()};
 #endif
 
-// FIXME maybe changed to to better way
-// parent_realize = cpu_common_realizefn
-// and qdev_realize = cpu_common_realizefn
 /*
 void device_class_set_parent_realize(DeviceClass *dc, DeviceRealize dev_realize,
                                      DeviceRealize *parent_realize) {
@@ -4088,7 +4085,6 @@ static void x86_cpu_common_class_init(X86CPUClass *xcc) {
   CPUClass *cc = CPU_CLASS(xcc);
   // DeviceClass *dc = DEVICE_CLASS(oc);
 
-  // FIXME
   /*
   device_class_set_parent_realize(dc, x86_cpu_realizefn, &xcc->parent_realize);
   device_class_set_parent_unrealize(dc, x86_cpu_unrealizefn,
