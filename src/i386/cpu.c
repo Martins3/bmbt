@@ -3,10 +3,15 @@
 #include "../../include/exec/exec-all.h"
 #include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/fpu/softfloat.h"
+#include "../../include/hw/core/cpu.h"
 #include "../../include/hw/i386/apic.h"
+#include "../../include/hw/i386/pc.h"
+#include "../../include/hw/i386/topology.h"
 #include "../../include/qemu/bswap.h"
+#include "../../include/qemu/error-report.h"
 #include "../../include/qemu/log-for-trace.h"
 #include "../../include/qemu/units.h"
+#include "../../include/sysemu/reset.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -1412,6 +1417,7 @@ typedef struct X86CPUDefinition {
 struct X86CPUModel {
   /* Base CPU definition */
   X86CPUDefinition *cpudef;
+#if BMBT
   /* CPU model version */
   X86CPUVersion version;
   /*
@@ -1419,6 +1425,7 @@ struct X86CPUModel {
    * This matters only for "-cpu help" and query-cpu-definitions
    */
   bool is_alias;
+#endif
 };
 
 /* Get full model name for CPU version */
@@ -1751,6 +1758,7 @@ static char *feature_word_description(FeatureWordInfo *f, uint32_t bit) {
 
   return NULL;
 }
+#endif
 
 static bool x86_cpu_have_filtered_features(X86CPU *cpu) {
   FeatureWord w;
@@ -1763,7 +1771,6 @@ static bool x86_cpu_have_filtered_features(X86CPU *cpu) {
 
   return false;
 }
-#endif
 
 static void mark_unavailable_features(X86CPU *cpu, FeatureWord w, uint64_t mask,
                                       const char *verbose_prefix) {
@@ -2249,9 +2256,7 @@ static gchar *x86_gdb_arch_name(CPUState *cs) {
 }
 #endif
 
-static void x86_cpu_cpudef_class_init(X86CPUClass *xcc, void *data) {
-  X86CPUModel *model = data;
-
+static void x86_cpu_cpudef_class_init(X86CPUClass *xcc, X86CPUModel *model) {
   xcc->model = model;
   xcc->migration_safe = true;
 }
@@ -2270,6 +2275,7 @@ static void x86_register_cpu_model_type(const char *name, X86CPUModel *model) {
   type_register(&ti);
   g_free(typename);
 }
+#endif
 
 static void x86_register_cpudef_types(X86CPUDefinition *def) {
   X86CPUModel *m;
@@ -2286,6 +2292,8 @@ static void x86_register_cpudef_types(X86CPUDefinition *def) {
   /* Unversioned model: */
   m = g_new0(X86CPUModel, 1);
   m->cpudef = def;
+  // no need to support the BMBT
+#if BMBT
   m->version = CPU_VERSION_AUTO;
   m->is_alias = true;
   x86_register_cpu_model_type(def->name, m);
@@ -2308,6 +2316,7 @@ static void x86_register_cpudef_types(X86CPUDefinition *def) {
       x86_register_cpu_model_type(vdef->alias, am);
     }
   }
+#endif
 }
 
 #if !defined(CONFIG_USER_ONLY)
@@ -2927,11 +2936,13 @@ static void x86_cpu_reset(CPUState *s) {
 
   s->halted = !cpu_is_bsp(cpu);
 
+#ifdef BMBT
   if (kvm_enabled()) {
     kvm_arch_reset_vcpu(cpu);
   } else if (hvf_enabled()) {
     hvf_reset_vcpu(s);
   }
+#endif
 #endif
 }
 
@@ -2964,6 +2975,7 @@ static void mce_init(X86CPU *cpu) {
 }
 
 #ifndef CONFIG_USER_ONLY
+#ifdef BMBT
 APICCommonClass *apic_get_class(void) {
   const char *apic_type = "apic";
 
@@ -2976,44 +2988,46 @@ APICCommonClass *apic_get_class(void) {
 
   return APIC_COMMON_CLASS(object_class_by_name(apic_type));
 }
+#endif
 
-static void x86_cpu_apic_create(X86CPU *cpu, Error **errp) {
+static void x86_cpu_apic_create(X86CPU *cpu) {
   APICCommonState *apic;
-  ObjectClass *apic_class = OBJECT_CLASS(apic_get_class());
 
-  cpu->apic_state = DEVICE(object_new(object_class_get_name(apic_class)));
-
-  object_property_add_child(OBJECT(cpu), "lapic", OBJECT(cpu->apic_state),
-                            &error_abort);
-  object_unref(OBJECT(cpu->apic_state));
-
-  qdev_prop_set_uint32(cpu->apic_state, "id", cpu->apic_id);
-  /* TODO: convert to link<> */
-  apic = APIC_COMMON(cpu->apic_state);
+  // FIXME How to init a type variable
+  cpu->apic_state = NULL;
+  // FIXME port this line after apic_common.c is totally port
+  // qdev_prop_set_uint32(cpu->apic_state, "id", cpu->apic_id);
   apic->cpu = cpu;
   apic->apicbase = APIC_DEFAULT_ADDRESS | MSR_IA32_APICBASE_ENABLE;
 }
 
-static void x86_cpu_apic_realize(X86CPU *cpu, Error **errp) {
+static void x86_cpu_apic_realize(X86CPU *cpu) {
   APICCommonState *apic;
   static bool apic_mmio_map_once;
 
   if (cpu->apic_state == NULL) {
     return;
   }
-  object_property_set_bool(OBJECT(cpu->apic_state), true, "realized", errp);
+
+  // FIXME call the realize function
+  // object_property_set_bool(OBJECT(cpu->apic_state), true, "realized", errp);
 
   /* Map APIC MMIO area */
-  apic = APIC_COMMON(cpu->apic_state);
+  apic = cpu->apic_state;
   if (!apic_mmio_map_once) {
+#ifdef NEED_LATER
     memory_region_add_subregion_overlap(get_system_memory(),
                                         apic->apicbase & MSR_IA32_APICBASE_BASE,
                                         &apic->io_memory, 0x1000);
+#endif
     apic_mmio_map_once = true;
   }
 }
 
 static void x86_cpu_machine_done(Notifier *n, void *unused) {
+// FIXME
+// review the code here if memmory finished
+#ifdef NEED_LATER
   X86CPU *cpu = container_of(n, X86CPU, machine_done);
   MemoryRegion *smram =
       (MemoryRegion *)object_resolve_path("/machine/smram", NULL);
@@ -3025,6 +3039,7 @@ static void x86_cpu_machine_done(Notifier *n, void *unused) {
     memory_region_set_enabled(cpu->smram, true);
     memory_region_add_subregion_overlap(cpu->cpu_as_root, 0, cpu->smram, 1);
   }
+#endif
 }
 #else
 static void x86_cpu_apic_realize(X86CPU *cpu, Error **errp) {}
@@ -3152,13 +3167,13 @@ static void x86_cpu_enable_xsave_components(X86CPU *cpu) {
 /* Expand CPU configuration data, based on configured features
  * and host/accelerator capabilities when appropriate.
  */
-static void x86_cpu_expand_features(X86CPU *cpu, Error **errp) {
+static void x86_cpu_expand_features(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
   FeatureWord w;
   int i;
   GList *l;
-  Error *local_err = NULL;
 
+#ifdef BMBT
   for (l = plus_features; l; l = l->next) {
     const char *prop = l->data;
     object_property_set_bool(OBJECT(cpu), true, prop, &local_err);
@@ -3190,6 +3205,7 @@ static void x86_cpu_expand_features(X86CPU *cpu, Error **errp) {
           ~env->user_features[w] & ~feature_word_info[w].no_autoenable_flags;
     }
   }
+#endif
 
   for (i = 0; i < ARRAY_SIZE(feature_dependencies); i++) {
     FeatureDep *d = &feature_dependencies[i];
@@ -3265,10 +3281,12 @@ static void x86_cpu_expand_features(X86CPU *cpu, Error **errp) {
     env->cpuid_xlevel2 = env->cpuid_min_xlevel2;
   }
 
+#ifdef BMBT
 out:
   if (local_err != NULL) {
     error_propagate(errp, local_err);
   }
+#endif
 }
 
 /*
@@ -3294,6 +3312,7 @@ static void x86_cpu_filter_features(X86CPU *cpu, bool verbose) {
     mark_unavailable_features(cpu, w, unavailable_features, prefix);
   }
 
+#ifdef BMBT
   if ((env->features[FEAT_7_0_EBX] & CPUID_7_0_EBX_INTEL_PT) && kvm_enabled()) {
     KVMState *s = CPU(cpu)->kvm_state;
     uint32_t eax_0 = kvm_arch_get_supported_cpuid(s, 0x14, 0, R_EAX);
@@ -3318,17 +3337,18 @@ static void x86_cpu_filter_features(X86CPU *cpu, bool verbose) {
                                 prefix);
     }
   }
+#endif
 }
 
-static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
-  CPUState *cs = CPU(dev);
-  X86CPU *cpu = X86_CPU(dev);
-  X86CPUClass *xcc = X86_CPU_GET_CLASS(dev);
+static void x86_cpu_realizefn(X86CPU *cpu) {
+  CPUState *cs = CPU(cpu);
+  X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
   CPUX86State *env = &cpu->env;
-  Error *local_err = NULL;
   static bool ht_warned;
 
   if (xcc->host_cpuid_required) {
+    g_assert_not_reached();
+#if BMBT
     if (!accel_uses_host_cpuid()) {
       char *name = x86_cpu_class_get_model_name(xcc);
       error_setg(&local_err, "CPU model '%s' requires KVM", name);
@@ -3341,6 +3361,7 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
                  &cpu->mwait.edx);
       env->features[FEAT_1_ECX] |= CPUID_EXT_MONITOR;
     }
+#endif
   }
 
   /* mwait extended info: needed for Core compatibility */
@@ -3348,22 +3369,16 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
   cpu->mwait.ecx |= CPUID_MWAIT_EMX | CPUID_MWAIT_IBE;
 
   if (cpu->apic_id == UNASSIGNED_APIC_ID) {
-    error_setg(errp, "apic-id property was not initialized properly");
+    g_assert_not_reached();
     return;
   }
 
-  x86_cpu_expand_features(cpu, &local_err);
-  if (local_err) {
-    goto out;
-  }
+  x86_cpu_expand_features(cpu);
 
   x86_cpu_filter_features(cpu, cpu->check_cpuid || cpu->enforce_cpuid);
 
   if (cpu->enforce_cpuid && x86_cpu_have_filtered_features(cpu)) {
-    error_setg(&local_err, accel_uses_host_cpuid()
-                               ? "Host doesn't support requested features"
-                               : "TCG doesn't support requested features");
-    goto out;
+    g_assert_not_reached();
   }
 
   /* On AMD CPUs, some CPUID[8000_0001].EDX bits must match the bits on
@@ -3407,15 +3422,20 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
 
       if (cpu->phys_bits && (cpu->phys_bits > TARGET_PHYS_ADDR_SPACE_BITS ||
                              cpu->phys_bits < 32)) {
-        error_setg(errp,
-                   "phys-bits should be between 32 and %u "
-                   " (but is %u)",
-                   TARGET_PHYS_ADDR_SPACE_BITS, cpu->phys_bits);
+        g_assert_not_reached();
+        /*
+      error_setg(errp,
+                 "phys-bits should be between 32 and %u "
+                 " (but is %u)",
+                 TARGET_PHYS_ADDR_SPACE_BITS, cpu->phys_bits);
+                 */
         return;
       }
     } else {
       if (cpu->phys_bits && cpu->phys_bits != TCG_PHYS_ADDR_BITS) {
-        error_setg(errp, "TCG only supports phys-bits=%u", TCG_PHYS_ADDR_BITS);
+        /* error_setg(errp, "TCG only supports phys-bits=%u",
+         * TCG_PHYS_ADDR_BITS); */
+        g_assert_not_reached();
         return;
       }
     }
@@ -3431,7 +3451,8 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
      * phys_bits consistent with what we tell the guest.
      */
     if (cpu->phys_bits != 0) {
-      error_setg(errp, "phys-bits is not user-configurable in 32 bit");
+      g_assert_not_reached();
+      // error_setg(errp, "phys-bits is not user-configurable in 32 bit");
       return;
     }
 
@@ -3446,7 +3467,9 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
   if (!cpu->legacy_cache) {
     if (!xcc->model || !xcc->model->cpudef->cache_info) {
       char *name = x86_cpu_class_get_model_name(xcc);
-      error_setg(errp, "CPU model '%s' doesn't support legacy-cache=off", name);
+      // error_setg(errp, "CPU model '%s' doesn't support legacy-cache=off",
+      // name);
+      g_assert_not_reached();
       g_free(name);
       return;
     }
@@ -3470,21 +3493,14 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
     env->cache_info_amd.l3_cache = &legacy_l3_cache;
   }
 
-  cpu_exec_realizefn(cs, &local_err);
-  if (local_err != NULL) {
-    error_propagate(errp, local_err);
-    return;
-  }
+  cpu_exec_realizefn(cs);
 
 #ifndef CONFIG_USER_ONLY
-  MachineState *ms = MACHINE(qdev_get_machine());
+  MachineState *ms = qdev_get_machine();
   qemu_register_reset(x86_cpu_machine_reset_cb, cpu);
 
   if (cpu->env.features[FEAT_1_EDX] & CPUID_APIC || ms->smp.cpus > 1) {
-    x86_cpu_apic_create(cpu, &local_err);
-    if (local_err != NULL) {
-      goto out;
-    }
+    x86_cpu_apic_create(cpu);
   }
 #endif
 
@@ -3492,6 +3508,7 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
 
 #ifndef CONFIG_USER_ONLY
   if (tcg_enabled()) {
+#if BMBT
     cpu->cpu_as_mem = g_new(MemoryRegion, 1);
     cpu->cpu_as_root = g_new(MemoryRegion, 1);
 
@@ -3515,6 +3532,7 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
     /* ... SMRAM with higher priority, linked from /machine/smram.  */
     cpu->machine_done.notify = x86_cpu_machine_done;
     qemu_add_machine_init_done_notifier(&cpu->machine_done);
+#endif
   }
 #endif
 
@@ -3535,30 +3553,29 @@ static void x86_cpu_realizefn(DeviceState *dev, Error **errp) {
     warn_report("This family of AMD CPU doesn't support "
                 "hyperthreading(%d)",
                 cs->nr_threads);
-    error_printf("Please configure -smp options properly"
+    error_report("Please configure -smp options properly"
                  " or try enabling topoext feature.\n");
     ht_warned = true;
   }
 
-  x86_cpu_apic_realize(cpu, &local_err);
-  if (local_err != NULL) {
-    goto out;
-  }
+  x86_cpu_apic_realize(cpu);
   cpu_reset(cs);
 
-  xcc->parent_realize(dev, &local_err);
+  xcc->parent_realize(cpu);
 
+#ifdef BMBT
 out:
   if (local_err != NULL) {
     error_propagate(errp, local_err);
     return;
   }
+#endif
 }
 
-static void x86_cpu_unrealizefn(DeviceState *dev, Error **errp) {
-  X86CPU *cpu = X86_CPU(dev);
-  X86CPUClass *xcc = X86_CPU_GET_CLASS(dev);
-  Error *local_err = NULL;
+static void x86_cpu_unrealizefn(X86CPU *cpu) {
+  // FIXME when will QEMU call unrealizefn?
+#if BMBT
+  X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
 
 #ifndef CONFIG_USER_ONLY
   cpu_remove_sync(CPU(dev));
@@ -3575,8 +3592,11 @@ static void x86_cpu_unrealizefn(DeviceState *dev, Error **errp) {
     error_propagate(errp, local_err);
     return;
   }
+#endif
 }
 
+// access feature bit directly
+#ifdef BMBT
 typedef struct BitProperty {
   FeatureWord w;
   uint64_t mask;
@@ -3670,7 +3690,9 @@ static void x86_cpu_register_feature_bit_props(X86CPU *cpu, FeatureWord w,
   assert(!strchr(name, '|'));
   x86_cpu_register_bit_prop(cpu, name, w, bitnr);
 }
+#endif
 
+#ifdef BMBT
 static GuestPanicInformation *x86_cpu_get_crash_info(CPUState *cs) {
   X86CPU *cpu = X86_CPU(cs);
   CPUX86State *env = &cpu->env;
@@ -3711,16 +3733,18 @@ static void x86_cpu_get_crash_info_qom(Object *obj, Visitor *v,
   visit_type_GuestPanicInformation(v, "crash-information", &panic_info, errp);
   qapi_free_GuestPanicInformation(panic_info);
 }
+#endif
 
-static void x86_cpu_initfn(Object *obj) {
-  X86CPU *cpu = X86_CPU(obj);
-  X86CPUClass *xcc = X86_CPU_GET_CLASS(obj);
+static void x86_cpu_initfn(X86CPU *cpu) {
+  X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
   CPUX86State *env = &cpu->env;
   FeatureWord w;
 
   env->nr_dies = 1;
   cpu_set_cpustate_pointers(cpu);
 
+  // FIXME last three property are never used
+#ifdef BMBT
   object_property_add(obj, "family", "int", x86_cpuid_version_get_family,
                       x86_cpuid_version_set_family, NULL, NULL, NULL);
   object_property_add(obj, "model", "int", x86_cpuid_version_get_model,
@@ -3731,6 +3755,7 @@ static void x86_cpu_initfn(Object *obj) {
                           x86_cpuid_set_vendor, NULL);
   object_property_add_str(obj, "model-id", x86_cpuid_get_model_id,
                           x86_cpuid_set_model_id, NULL);
+
   object_property_add(obj, "tsc-frequency", "int", x86_cpuid_get_tsc_freq,
                       x86_cpuid_set_tsc_freq, NULL, NULL, NULL);
   object_property_add(obj, "feature-words", "X86CPUFeatureWordInfo",
@@ -3739,6 +3764,9 @@ static void x86_cpu_initfn(Object *obj) {
   object_property_add(obj, "filtered-features", "X86CPUFeatureWordInfo",
                       x86_cpu_get_feature_words, NULL, NULL,
                       (void *)cpu->filtered_features, NULL);
+#endif
+
+#ifdef BMBT
   /*
    * The "unavailable-features" property has the same semantics as
    * CpuDefinitionInfo.unavailable-features on the "query-cpu-definitions"
@@ -3751,7 +3779,9 @@ static void x86_cpu_initfn(Object *obj) {
 
   object_property_add(obj, "crash-information", "GuestPanicInformation",
                       x86_cpu_get_crash_info_qom, NULL, NULL, NULL, NULL);
+#endif
 
+#ifdef BMBT
   for (w = 0; w < FEATURE_WORDS; w++) {
     int bitnr;
 
@@ -3759,7 +3789,9 @@ static void x86_cpu_initfn(Object *obj) {
       x86_cpu_register_feature_bit_props(cpu, w, bitnr);
     }
   }
+#endif
 
+#ifdef BMBT
   object_property_add_alias(obj, "sse3", obj, "pni", &error_abort);
   object_property_add_alias(obj, "pclmuldq", obj, "pclmulqdq", &error_abort);
   object_property_add_alias(obj, "sse4-1", obj, "sse4.1", &error_abort);
@@ -3797,9 +3829,10 @@ static void x86_cpu_initfn(Object *obj) {
                             &error_abort);
   object_property_add_alias(obj, "sse4_1", obj, "sse4.1", &error_abort);
   object_property_add_alias(obj, "sse4_2", obj, "sse4.2", &error_abort);
+#endif
 
   if (xcc->model) {
-    x86_cpu_load_model(cpu, xcc->model, &error_abort);
+    x86_cpu_load_model(cpu, xcc->model);
   }
 }
 
@@ -3872,6 +3905,7 @@ static bool x86_cpu_has_work(CPUState *cs) {
   return x86_cpu_pending_interrupt(cs, cs->interrupt_request) != 0;
 }
 
+#ifdef BMBT
 static void x86_disas_set_info(CPUState *cs, disassemble_info *info) {
   X86CPU *cpu = X86_CPU(cs);
   CPUX86State *env = &cpu->env;
@@ -3889,6 +3923,7 @@ static void x86_disas_set_info(CPUState *cs, disassemble_info *info) {
   info->cap_insn_unit = 1;
   info->cap_insn_split = 8;
 }
+#endif
 
 void x86_update_hflags(CPUX86State *env) {
   uint32_t hflags;
@@ -3931,6 +3966,8 @@ void x86_update_hflags(CPUX86State *env) {
   env->hflags = hflags;
 }
 
+// FIXME check this one by one
+#ifdef BMBT
 static Property x86_cpu_properties[] = {
 #ifdef CONFIG_USER_ONLY
     /* apic_id = 0 by default for *-user, see commit 9886e834 */
@@ -4034,53 +4071,67 @@ static Property x86_cpu_properties[] = {
     DEFINE_PROP_BOOL("x-intel-pt-auto-level", X86CPU, intel_pt_auto_level,
                      true),
     DEFINE_PROP_END_OF_LIST()};
+#endif
 
-static void x86_cpu_common_class_init(ObjectClass *oc, void *data) {
-  X86CPUClass *xcc = X86_CPU_CLASS(oc);
-  CPUClass *cc = CPU_CLASS(oc);
-  DeviceClass *dc = DEVICE_CLASS(oc);
+// FIXME maybe changed to to better way
+// parent_realize = cpu_common_realizefn
+// and qdev_realize = cpu_common_realizefn
+/*
+void device_class_set_parent_realize(DeviceClass *dc, DeviceRealize dev_realize,
+                                     DeviceRealize *parent_realize) {
+  *parent_realize = dc->realize;
+  dc->realize = dev_realize;
+}
+*/
 
+static void x86_cpu_common_class_init(X86CPUClass *xcc) {
+  CPUClass *cc = CPU_CLASS(xcc);
+  // DeviceClass *dc = DEVICE_CLASS(oc);
+
+  // FIXME
+  /*
   device_class_set_parent_realize(dc, x86_cpu_realizefn, &xcc->parent_realize);
   device_class_set_parent_unrealize(dc, x86_cpu_unrealizefn,
                                     &xcc->parent_unrealize);
-  dc->props = x86_cpu_properties;
+  */
+  // dc->props = x86_cpu_properties;
 
   xcc->parent_reset = cc->reset;
   cc->reset = x86_cpu_reset;
   cc->reset_dump_flags = CPU_DUMP_FPU | CPU_DUMP_CCOP;
 
-  cc->class_by_name = x86_cpu_class_by_name;
-  cc->parse_features = x86_cpu_parse_featurestr;
+  // cc->class_by_name = x86_cpu_class_by_name;
+  // cc->parse_features = x86_cpu_parse_featurestr;
   cc->has_work = x86_cpu_has_work;
 #ifdef CONFIG_TCG
   cc->do_interrupt = x86_cpu_do_interrupt;
   cc->cpu_exec_interrupt = x86_cpu_exec_interrupt;
 #endif
-  cc->dump_state = x86_cpu_dump_state;
-  cc->get_crash_info = x86_cpu_get_crash_info;
+  // cc->dump_state = x86_cpu_dump_state;
+  // cc->get_crash_info = x86_cpu_get_crash_info;
   cc->set_pc = x86_cpu_set_pc;
   cc->synchronize_from_tb = x86_cpu_synchronize_from_tb;
-  cc->gdb_read_register = x86_cpu_gdb_read_register;
-  cc->gdb_write_register = x86_cpu_gdb_write_register;
+  // cc->gdb_read_register = x86_cpu_gdb_read_register;
+  // cc->gdb_write_register = x86_cpu_gdb_write_register;
   cc->get_arch_id = x86_cpu_get_arch_id;
   cc->get_paging_enabled = x86_cpu_get_paging_enabled;
 #ifndef CONFIG_USER_ONLY
   cc->asidx_from_attrs = x86_asidx_from_attrs;
-  cc->get_memory_mapping = x86_cpu_get_memory_mapping;
-  cc->get_phys_page_attrs_debug = x86_cpu_get_phys_page_attrs_debug;
-  cc->write_elf64_note = x86_cpu_write_elf64_note;
-  cc->write_elf64_qemunote = x86_cpu_write_elf64_qemunote;
-  cc->write_elf32_note = x86_cpu_write_elf32_note;
-  cc->write_elf32_qemunote = x86_cpu_write_elf32_qemunote;
-  cc->vmsd = &vmstate_x86_cpu;
+  // cc->get_memory_mapping = x86_cpu_get_memory_mapping;
+  // cc->get_phys_page_attrs_debug = x86_cpu_get_phys_page_attrs_debug;
+  // cc->write_elf64_note = x86_cpu_write_elf64_note;
+  // cc->write_elf64_qemunote = x86_cpu_write_elf64_qemunote;
+  // cc->write_elf32_note = x86_cpu_write_elf32_note;
+  // cc->write_elf32_qemunote = x86_cpu_write_elf32_qemunote;
+  // cc->vmsd = &vmstate_x86_cpu;
 #endif
-  cc->gdb_arch_name = x86_gdb_arch_name;
+  // cc->gdb_arch_name = x86_gdb_arch_name;
 #ifdef TARGET_X86_64
   cc->gdb_core_xml_file = "i386-64bit.xml";
   cc->gdb_num_core_regs = 66;
 #else
-  cc->gdb_core_xml_file = "i386-32bit.xml";
-  cc->gdb_num_core_regs = 50;
+  // cc->gdb_core_xml_file = "i386-32bit.xml";
+  // cc->gdb_num_core_regs = 50;
 #endif
 #if defined(CONFIG_TCG) && !defined(CONFIG_USER_ONLY)
   cc->debug_excp_handler = breakpoint_handler;
@@ -4091,11 +4142,13 @@ static void x86_cpu_common_class_init(ObjectClass *oc, void *data) {
   cc->tcg_initialize = tcg_x86_init;
   cc->tlb_fill = x86_cpu_tlb_fill;
 #endif
-  cc->disas_set_info = x86_disas_set_info;
+  // cc->disas_set_info = x86_disas_set_info;
 
-  dc->user_creatable = true;
+  // FIXME why we need user_creatable?
+  // dc->user_creatable = true;
 }
 
+#ifdef BMBT
 static const TypeInfo x86_cpu_type_info = {
     .name = TYPE_X86_CPU,
     .parent = TYPE_CPU,

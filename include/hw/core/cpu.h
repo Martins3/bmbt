@@ -53,6 +53,26 @@ typedef struct CPUAddressSpace {
   AddressSpace *as;
 } CPUAddressSpace;
 
+/*
+ * Low 16 bits: number of cycles left, used only in icount mode.
+ * High 16 bits: Set to -1 to force TCG to stop executing linked TBs
+ * for this CPU and return to its top level loop (even in non-icount mode).
+ * This allows a single read-compare-cbranch-write sequence to test
+ * for both decrementer underflow and exceptions.
+ */
+typedef union {
+  uint32_t u32;
+  struct {
+#ifdef HOST_WORDS_BIGENDIAN
+    uint16_t high;
+    uint16_t low;
+#else
+    uint16_t low;
+    uint16_t high;
+#endif
+  } u16;
+} IcountDecr;
+
 // FIXME maybe we have copy too many comments here, remove them later
 /**
  * CPUState:
@@ -121,6 +141,8 @@ typedef struct CPUState {
   u32 cflags_next_tb;
 
   void *env_ptr; /* CPUArchState */
+
+  IcountDecr *icount_decr_ptr;
 
   int singlestep_enabled;
 
@@ -300,6 +322,11 @@ typedef struct CPUClass {
 } CPUClass;
 
 #define CPU_GET_CLASS(cpu) cpu->cc
+#define CPU_CLASS(oc)                                                          \
+  ({                                                                           \
+    X86CPUClass *tmp = oc;                                                     \
+    (CPUClass *)tmp;                                                           \
+  })
 
 /* current CPU in the current thread. It is only valid inside
    cpu_exec() */
@@ -333,6 +360,7 @@ void cpu_check_watchpoint(CPUState *cpu, vaddr addr, vaddr len,
                           MemTxAttrs attrs, int flags, uintptr_t ra);
 int cpu_watchpoint_address_matches(CPUState *cpu, vaddr addr, vaddr len);
 
+// FIXME similar check
 /* Since this macro is used a lot in hot code paths and in conjunction with
  * FooCPU *foo_env_get_cpu(), we deviate from usual QOM practice by using
  * an unchecked cast.
@@ -402,26 +430,6 @@ static inline void async_safe_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
                                          run_on_cpu_data data) {
   // FIXME interface
 }
-
-/*
- * Low 16 bits: number of cycles left, used only in icount mode.
- * High 16 bits: Set to -1 to force TCG to stop executing linked TBs
- * for this CPU and return to its top level loop (even in non-icount mode).
- * This allows a single read-compare-cbranch-write sequence to test
- * for both decrementer underflow and exceptions.
- */
-typedef union IcountDecr {
-  uint32_t u32;
-  struct {
-#ifdef HOST_WORDS_BIGENDIAN
-    uint16_t high;
-    uint16_t low;
-#else
-    uint16_t low;
-    uint16_t high;
-#endif
-  } u16;
-} IcountDecr;
 
 typedef struct CPUWatchpoint CPUWatchpoint;
 
@@ -614,7 +622,6 @@ static inline void cpu_exec_end(CPUState *cpu) {
  */
 void process_queued_cpu_work(CPUState *cpu);
 
-
 /**
  * start_exclusive:
  *
@@ -640,5 +647,18 @@ static inline void end_exclusive(void) {
 
 #define UNASSIGNED_CPU_INDEX -1
 #define UNASSIGNED_CLUSTER_INDEX -1
+
+// FIXME port later
+void cpu_exec_initfn(CPUState *cpu);
+void cpu_exec_realizefn(CPUState *cpu);
+void cpu_exec_unrealizefn(CPUState *cpu);
+
+/**
+ * qemu_init_vcpu:
+ * @cpu: The vCPU to initialize.
+ *
+ * Initializes a vCPU.
+ */
+void qemu_init_vcpu(CPUState *cpu);
 
 #endif /* end of include guard: CPU_H_5RAXENPS */

@@ -1,4 +1,3 @@
-
 #include "../../include/sysemu/reset.h"
 #include "../../include/qemu/queue.h"
 #include "../../include/types.h"
