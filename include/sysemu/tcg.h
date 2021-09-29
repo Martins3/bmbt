@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 void tcg_exec_init(unsigned long tb_size);
+int tcg_init();
 
 extern bool tcg_allowed;
 #define tcg_enabled() (tcg_allowed)

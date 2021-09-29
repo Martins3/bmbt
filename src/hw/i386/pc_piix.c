@@ -266,10 +266,6 @@ static void pc_i440fx_4_2_machine_options(MachineClass *m) {
 }
 
 static void pc_init_v4_2(MachineState *machine) {
-  void (*compat)(MachineState * m) = (NULL);
-  if (compat) {
-    compat(machine);
-  }
   pc_init1(machine, TYPE_I440FX_PCI_HOST_BRIDGE, TYPE_I440FX_PCI_DEVICE);
 }
 
@@ -280,11 +276,8 @@ static void pc_machine_v4_2_class_init(MachineClass *mc, void *data) {
 
 #if BMBT
 static const TypeInfo pc_machine_type_v4_2 = {
-    .name = "pc-i440fx-4.2"
-            "-machine",
+    .name = "pc-i440fx-4.2-machine",
     .parent = TYPE_PC_MACHINE,
     .class_init = pc_machine_v4_2_class_init,
 };
-static void pc_machine_init_v4_2(void) { type_register(&pc_machine_type_v4_2); }
-type_init(pc_machine_init_v4_2);
 #endif
