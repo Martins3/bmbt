@@ -39,7 +39,7 @@ static void tcg_handle_interrupt(CPUState *cpu, int mask) {
   }
 }
 
-static int tcg_init() {
+int tcg_init() {
   tcg_exec_init(tcg_tb_size * 1024 * 1024);
   cpu_interrupt_handler = tcg_handle_interrupt;
   return 0;

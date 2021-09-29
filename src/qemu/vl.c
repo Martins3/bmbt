@@ -1,4 +1,5 @@
 #include "../../include/qemu/notify.h"
+#include "../../include/sysemu/tcg.h"
 #include <stdbool.h>
 
 bool machine_init_done;
@@ -12,3 +13,5 @@ void qemu_add_machine_init_done_notifier(Notifier *notify) {
     notify->notify(notify, NULL);
   }
 }
+
+void qemu_init() { tcg_init(); }
