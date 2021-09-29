@@ -1430,6 +1430,22 @@ typedef struct CPUX86State {
 
   uint32_t pkru;
 
+  uint64_t pat;
+  uint32_t smbase;
+  uint64_t msr_smi_count;
+
+  uint64_t mcg_status;
+  uint64_t msr_ia32_misc_enable;
+  uint64_t msr_ia32_feature_control;
+
+  uint64_t msr_fixed_ctr_ctrl;
+  uint64_t msr_global_ctrl;
+  uint64_t msr_global_status;
+  uint64_t msr_global_ovf_ctrl;
+  uint64_t msr_fixed_counters[MAX_FIXED_COUNTERS];
+  uint64_t msr_gp_counters[MAX_GP_COUNTERS];
+  uint64_t msr_gp_evtsel[MAX_GP_COUNTERS];
+
   uint64_t vm_vmcb;
   uint64_t tsc_offset;
   uint64_t intercept;
@@ -1468,9 +1484,6 @@ typedef struct CPUX86State {
   struct {
   } end_reset_fields;
 
-  uint32_t smbase;
-  uint64_t msr_smi_count;
-
   uint64_t tsc_aux;
 
   // FIXME feild are put here randomly, we will fix them
@@ -1501,10 +1514,39 @@ typedef struct CPUX86State {
    */
   CPUCaches cache_info_cpuid2, cache_info_cpuid4, cache_info_amd;
 
+  /* KVM states, automatically cleared on reset */
+  uint8_t nmi_injected;
+  uint8_t nmi_pending;
+
   /* MTRRs */
   uint64_t mtrr_fixed[11];
   uint64_t mtrr_deftype;
   MTRRVar mtrr_var[MSR_MTRRcap_VCNT];
+
+  /* For KVM */
+  uint32_t mp_state;
+  int32_t exception_nr;
+  int32_t interrupt_injected;
+  uint8_t soft_interrupt;
+  uint8_t exception_pending;
+  uint8_t exception_injected;
+  uint8_t has_error_code;
+  uint8_t exception_has_payload;
+  uint64_t exception_payload;
+  uint32_t ins_len;
+  uint32_t sipi_vector;
+  bool tsc_valid;
+  int64_t tsc_khz;
+  int64_t user_tsc_khz; /* for sanity check only */
+#if defined(CONFIG_KVM) || defined(CONFIG_HVF)
+  void *xsave_buf;
+#endif
+#if defined(CONFIG_KVM)
+  struct kvm_nested_state *nested_state;
+#endif
+#if defined(CONFIG_HVF)
+  HVFX86EmulatorState *hvf_emul;
+#endif
 
   uint64_t mcg_cap;
   uint64_t mcg_ctl;
@@ -1512,11 +1554,17 @@ typedef struct CPUX86State {
   uint64_t mce_banks[MCE_BANKS_DEF * 4];
   uint64_t xstate_bv;
 
-  uint64_t pat;
+  /* vmstate */
+  uint16_t fpus_vmstate;
+  uint16_t fptag_vmstate;
+  uint16_t fpregs_format_vmstate;
 
-  uint64_t mcg_status;
+  uint64_t xss;
+  uint32_t umwait;
 
-  uint64_t msr_ia32_misc_enable;
+  // TPRAccess tpr_access_type;
+
+  unsigned nr_dies;
 
 #ifdef CONFIG_X86toMIPS
 #ifndef CONFIG_LATX
@@ -1598,6 +1646,10 @@ typedef struct DeviceState {
 } DeviceState;
 
 typedef struct X86CPUModel X86CPUModel;
+typedef struct X86CPU X86CPU;
+
+typedef void (*DeviceRealize)(X86CPU *xcc);
+typedef void (*DeviceUnrealize)(X86CPU *dev);
 
 /**
  * X86CPUClass:
@@ -1611,7 +1663,7 @@ typedef struct X86CPUModel X86CPUModel;
  *
  * An x86 CPU model or family.
  */
-typedef struct X86CPUClass {
+typedef struct {
   /*< private >*/
   CPUClass parent_class;
   /*< public >*/
@@ -1631,10 +1683,9 @@ typedef struct X86CPUClass {
   const char *model_description;
 
   // FIXME we will rethink realize at:
-  // x86_cpu_common_class_inijo
-  //
-  // DeviceRealize parent_realize;
-  // DeviceUnrealize parent_unrealize;
+  // x86_cpu_common_class_init
+  DeviceRealize parent_realize;
+  DeviceUnrealize parent_unrealize;
   void (*parent_reset)(CPUState *cpu);
 } X86CPUClass;
 
@@ -1647,7 +1698,7 @@ typedef struct X86CPUClass {
  *
  * An x86 CPU.
  */
-typedef struct X86CPU {
+struct X86CPU {
   /*< private >*/
   CPUState parent_obj;
   X86CPUClass *xcc;
@@ -1761,7 +1812,7 @@ typedef struct X86CPU {
   int32_t thread_id;
 
   int32_t hv_max_vps;
-} X86CPU;
+};
 #define X86_CPU_GET_CLASS(cpu) cpu->xcc
 
 #define X86_CPU(ptr) container_of(ptr, X86CPU, parent_obj)
@@ -2091,6 +2142,10 @@ void x86_cpu_exec_exit(CPUState *cpu);
 void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
 void apic_handle_tpr_access_report(struct APICCommonState *d, target_ulong ip,
                                    TPRAccess access);
+
+// FIXME should be empty, verify it
+/* translate.c */
+void tcg_x86_init(void);
 
 typedef CPUX86State CPUArchState;
 typedef X86CPU ArchCPU;

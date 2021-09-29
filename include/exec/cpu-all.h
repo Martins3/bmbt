@@ -243,4 +243,15 @@ void cpu_exec_step_atomic(CPUState *cpu);
 #define stn_p(p, sz, v) stn_le_p(p, sz, v)
 #endif
 
+/**
+ * cpu_set_cpustate_pointers(cpu)
+ * @cpu: The cpu object
+ *
+ * Set the generic pointers in CPUState into the outer object.
+ */
+static inline void cpu_set_cpustate_pointers(ArchCPU *cpu) {
+  cpu->parent_obj.env_ptr = &cpu->env;
+  cpu->parent_obj.icount_decr_ptr = &cpu->neg.icount_decr;
+}
+
 #endif /* end of include guard: CPU_ALL_H_9ZPFYTXB */
