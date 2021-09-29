@@ -34,5 +34,6 @@ struct NumaState {
   struct NodeInfo nodes[MAX_NODES];
 };
 typedef struct NumaState NumaState;
+typedef struct NodeInfo NodeInfo;
 
 #endif /* end of include guard: NUMA_H_4ZUXICHZ */

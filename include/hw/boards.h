@@ -159,7 +159,7 @@ struct MachineClass {
   const char *default_display;
   // GPtrArray *compat_props;
   const char *hw_version;
-  // ram_addr_t default_ram_size;
+  ram_addr_t default_ram_size;
   const char *default_cpu_type;
   bool default_kernel_irqchip_split;
   bool option_rom_has_mr;
@@ -171,8 +171,8 @@ struct MachineClass {
   const char **valid_cpu_types;
   // strList *allowed_dynamic_sysbus_devices;
   bool auto_enable_numa_with_memhp;
-  // void (*numa_auto_assign_ram)(MachineClass *mc, NodeInfo *nodes, int
-  // nb_nodes, ram_addr_t size);
+  void (*numa_auto_assign_ram)(MachineClass *mc, NodeInfo *nodes, int nb_nodes,
+                               ram_addr_t size);
   bool ignore_boot_device_suffixes;
   bool smbus_no_migration_support;
   bool nvdimm_supported;
@@ -184,8 +184,8 @@ struct MachineClass {
   // bool (*hotplug_allowed)(MachineState *state, DeviceState *dev, Error
   // **errp);
 
-  // CpuInstanceProperties (*cpu_index_to_instance_props)(MachineState *machine,
-  // unsigned cpu_index);
+  CpuInstanceProperties (*cpu_index_to_instance_props)(MachineState *machine,
+                                                       unsigned cpu_index);
   const CPUArchIdList *(*possible_cpu_arch_ids)(MachineState *machine);
   int64_t (*get_default_cpu_node_id)(const MachineState *ms, int idx);
 };
