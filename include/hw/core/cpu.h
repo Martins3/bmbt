@@ -383,9 +383,7 @@ enum CPUDumpFlags {
  * cpu_reset:
  * @cpu: The CPU whose state is to be reset.
  */
-static inline void cpu_reset(CPUState *cpu) {
-  // FIXME interface
-}
+void cpu_reset(CPUState *cpu);
 
 // FIXME initialize cpu_interrupt_handler
 // surely, we can simplify it.
