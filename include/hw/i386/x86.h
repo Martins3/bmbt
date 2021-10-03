@@ -57,4 +57,7 @@ typedef struct {
 void x86_bios_rom_init(MemoryRegion *rom_memory, bool isapc_ram_fw);
 void x86_cpus_init(X86MachineState *pcms, int default_cpu_version);
 
+void x86_machine_class_init(X86MachineClass *x86mc);
+void x86_machine_initfn(X86MachineState *x86ms);
+
 #endif /* end of include guard: X86_H_L9VT3E8K */

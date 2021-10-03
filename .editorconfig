@@ -29,7 +29,7 @@ emacs_mode = makefile
 
 [*.{c,h,c.inc,h.inc}]
 indent_style = space
-indent_size = 4
+indent_size = 2
 emacs_mode = c
 
 [*.sh]

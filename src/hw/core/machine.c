@@ -2,6 +2,8 @@
 #include "../../include/qemu/units.h"
 #include "../../include/sysemu/numa.h"
 
+static void smp_parse(MachineState *ms) { g_assert_not_reached(); }
+
 // FIXME
 // 1. it's orignally put on numa.h, reference MachineState made header inclusion
 // tricky more survey on numa is needed
@@ -9,11 +11,11 @@ void numa_complete_configuration(MachineState *ms);
 void numa_default_auto_assign_ram(MachineClass *mc, NodeInfo *nodes,
                                   int nb_nodes, ram_addr_t size);
 
-static void machine_class_init(MachineClass *mc) {
+void machine_class_init(MachineClass *mc) {
   /* Default 128 MB as guest ram size */
   mc->default_ram_size = 128 * MiB;
   mc->rom_file_has_mr = true;
-  // mc->smp_parse = smp_parse;
+  mc->smp_parse = smp_parse;
 
   /* numa node memory size aligned on 8MB by default.
    * On Linux, each node's border has to be 8MB aligned
@@ -136,21 +138,21 @@ static void machine_class_init(MachineClass *mc) {
 #endif
 }
 
-static void machine_class_base_init(MachineClass *mc) {
-  // FIXME this is hardred code
+void machine_class_base_init(MachineClass *mc) {
+  // FIXME this is hard coded, I don't know why MachineClass name this one
   mc->name = "pc-i440fx-4.2";
   // FIXME compat_props
   // mc->compat_props = g_ptr_array_new();
 }
 
-static void machine_initfn(MachineState *ms) {
+void machine_initfn(MachineState *ms) {
   MachineClass *mc = MACHINE_GET_CLASS(ms);
 
   ms->kernel_irqchip_allowed = true;
   ms->kernel_irqchip_split = mc->default_kernel_irqchip_split;
   ms->kvm_shadow_mem = -1;
   ms->dump_guest_core = true;
-  ms->mem_merge = true;
+  // ms->mem_merge = true;
   ms->enable_graphics = true;
 
   // FIXME check it, we don't support nvdimm

@@ -1,5 +1,7 @@
+#include "../../include/hw/i386/pc.h"
 #include "../../include/qemu/notify.h"
 #include "../../include/sysemu/tcg.h"
+
 #include <stdbool.h>
 
 bool machine_init_done;
@@ -17,7 +19,5 @@ void qemu_add_machine_init_done_notifier(Notifier *notify) {
 void qemu_init() {
   tcg_init();
 
-  // qdev_machine_creation_done
-
-  // qemu_system_reset
+  machine_init();
 }
