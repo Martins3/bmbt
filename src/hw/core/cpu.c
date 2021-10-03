@@ -135,7 +135,7 @@ static void cpu_common_realizefn(DeviceState *dev, Error **errp) {
 }
 #endif
 
-static void cpu_common_initfn(CPUState *cpu) {
+void cpu_common_initfn(CPUState *cpu) {
   CPUClass *cc = CPU_GET_CLASS(cpu);
 
   cpu->cpu_index = UNASSIGNED_CPU_INDEX;
@@ -165,7 +165,7 @@ static void generic_handle_interrupt(CPUState *cpu, int mask) {
 
 CPUInterruptHandler cpu_interrupt_handler = generic_handle_interrupt;
 
-static void cpu_class_init(CPUClass *k) {
+void cpu_class_init(CPUClass *k) {
   // k->parse_features = cpu_common_parse_features;
   k->reset = cpu_common_reset;
   k->get_arch_id = cpu_common_get_arch_id;

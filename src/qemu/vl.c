@@ -11,6 +11,7 @@ bool machine_init_done;
 static NotifierList machine_init_done_notifiers =
     NOTIFIER_LIST_INITIALIZER(machine_init_done_notifiers);
 
+// FIXME done notifier
 void qemu_add_machine_init_done_notifier(Notifier *notify) {
   notifier_list_add(&machine_init_done_notifiers, notify);
   if (machine_init_done) {
@@ -51,11 +52,15 @@ void QOM_machine_init() {
   PCMachineState *pcms = &__pcms;
   PCMachineClass *pcmc = &__pcmc;
 
-  MachineClass *mc = MACHINE_CLASS(pcmc);
   MachineState *ms = MACHINE(pcms);
+  MachineClass *mc = MACHINE_CLASS(pcmc);
 
-  X86MachineClass *x86mc = X86_MACHINE_CLASS(mc);
   X86MachineState *x86ms = X86_MACHINE(&__pcms);
+  X86MachineClass *x86mc = X86_MACHINE_CLASS(mc);
+
+  pcms->pcmc = pcmc;
+  ms->mc = mc;
+  x86ms->x86mc = x86mc;
 
   machine_class_init(mc);
   machine_class_base_init(mc);

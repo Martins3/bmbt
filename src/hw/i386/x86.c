@@ -33,13 +33,14 @@ uint32_t x86_cpu_apic_id_from_index(X86MachineState *x86ms,
 
 void x86_cpu_new(X86MachineState *x86ms, int64_t apic_id) {
   CPUX86State *env = NULL;
-
-#if NEED_LATER
-  cpu = object_new(MACHINE(x86ms)->cpu_type);
+  // FIXME when did the newly allocated CPU passed to exec thread ?
+  X86CPU *cpu = QOM_cpu_init();
 
   env = &X86_CPU(cpu)->env;
   env->nr_dies = x86ms->smp_dies;
 
+  // FIXME TODO
+#ifdef BMBT
   object_property_set_uint(cpu, apic_id, "apic-id", &local_err);
   object_property_set_bool(cpu, true, "realized", &local_err);
 #endif
