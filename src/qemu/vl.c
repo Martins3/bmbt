@@ -11,12 +11,16 @@ bool machine_init_done;
 static NotifierList machine_init_done_notifiers =
     NOTIFIER_LIST_INITIALIZER(machine_init_done_notifiers);
 
-// FIXME done notifier
 void qemu_add_machine_init_done_notifier(Notifier *notify) {
   notifier_list_add(&machine_init_done_notifiers, notify);
   if (machine_init_done) {
     notify->notify(notify, NULL);
   }
+}
+
+static void qemu_run_machine_init_done_notifiers(void) {
+  machine_init_done = true;
+  notifier_list_notify(&machine_init_done_notifiers, NULL);
 }
 
 /*
@@ -135,6 +139,11 @@ PCMachineState *machine_init() {
   // parse_numa_opts(current_machine);
 
   machine_run_board_init(current_machine);
+
+  // qdev_machine_creation_done();
+  // FIXME in qbus_reset_all_fn, all qdev::reset will be called, e.g.,
+  // fw_cfg_reset qemu_register_reset(qbus_reset_all_fn, sysbus_get_default());
+  qemu_run_machine_init_done_notifiers();
 
   qemu_system_reset(machine_class, current_machine);
 
