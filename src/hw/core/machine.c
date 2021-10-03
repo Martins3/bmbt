@@ -23,6 +23,7 @@ void machine_class_init(MachineClass *mc) {
   mc->numa_mem_align_shift = 23;
   mc->numa_auto_assign_ram = numa_default_auto_assign_ram;
 
+  // [interface 24]
 #ifdef BMBT
   object_class_property_add_str(oc, "accel", machine_get_accel,
                                 machine_set_accel, &error_abort);
