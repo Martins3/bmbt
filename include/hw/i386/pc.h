@@ -213,5 +213,6 @@ void pc_machine_class_init(PCMachineClass *pcmc);
 void pc_machine_initfn(PCMachineState *pcms);
 
 PCMachineState *machine_init();
+void pc_machine_v4_2_class_init(MachineClass *mc);
 
 #endif /* end of include guard: PC_H_0VFJYDT2 */
