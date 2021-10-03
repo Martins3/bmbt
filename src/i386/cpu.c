@@ -2258,7 +2258,7 @@ static gchar *x86_gdb_arch_name(CPUState *cs) {
 
 static void x86_cpu_cpudef_class_init(X86CPUClass *xcc, X86CPUModel *model) {
   xcc->model = model;
-  xcc->migration_safe = true;
+  // xcc->migration_safe = true;
 }
 
 // only qmue32 is needed
@@ -2277,10 +2277,10 @@ static void x86_register_cpu_model_type(const char *name, X86CPUModel *model) {
 }
 #endif
 
-static void x86_register_cpudef_types(X86CPUDefinition *def) {
-  X86CPUModel *m;
-  const X86CPUVersionDefinition *vdef;
-  char *name;
+static X86CPUModel *x86_register_cpudef_types(X86CPUDefinition *def) {
+  static X86CPUModel *m;
+  // const X86CPUVersionDefinition *vdef;
+  // char *name;
 
   /* AMD aliases are handled at runtime based on CPUID vendor, so
    * they shouldn't be set on the CPU model table.
@@ -2290,9 +2290,9 @@ static void x86_register_cpudef_types(X86CPUDefinition *def) {
   assert(def->model_id && strlen(def->model_id) <= 48);
 
   /* Unversioned model: */
-  m = g_new0(X86CPUModel, 1);
+  // m = g_new0(X86CPUModel, 1);
   m->cpudef = def;
-  // no need to support the BMBT
+  // no need to support the version
 #if BMBT
   m->version = CPU_VERSION_AUTO;
   m->is_alias = true;
@@ -4142,6 +4142,32 @@ static void x86_cpu_common_class_init(X86CPUClass *xcc) {
 
   // FIXME why we need user_creatable?
   // dc->user_creatable = true;
+}
+
+// only one cpu is supported, static initialized here.
+static X86CPU __x86_cpu;
+static X86CPUClass __x86_cpu_class;
+
+X86CPU *QOM_cpu_init() {
+  // FIXME when did the newly allocated CPU passed to exec thread ?
+  X86CPU *x86_cpu = &__x86_cpu;
+  X86CPUClass *x86_cpu_class = &__x86_cpu_class;
+  X86CPUModel *model = x86_register_cpudef_types(&builtin_x86_defs[0]);
+  CPUState *cpu = CPU(x86_cpu);
+  CPUClass *cpu_class = CPU_GET_CLASS(cpu);
+
+  x86_cpu_cpudef_class_init(x86_cpu_class, model);
+
+  x86_cpu->xcc = x86_cpu_class;
+  cpu->cc = cpu_class;
+
+  cpu_common_initfn(cpu);
+  cpu_class_init(cpu_class);
+
+  x86_cpu_initfn(x86_cpu);
+  x86_cpu_common_class_init(x86_cpu_class);
+
+  return x86_cpu;
 }
 
 #ifdef BMBT

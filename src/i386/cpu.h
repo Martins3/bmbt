@@ -1675,8 +1675,8 @@ typedef struct {
 
   bool host_cpuid_required;
   int ordering;
-  bool migration_safe;
-  bool static_model;
+  // bool migration_safe;
+  // bool static_model;
 
   /* Optional description of CPU model.
    * If unavailable, cpu_def->model_id is used */
@@ -2188,4 +2188,7 @@ typedef int X86CPUVersion;
  * version == CPU_VERSION_AUTO.
  */
 void x86_cpu_set_default_version(X86CPUVersion version);
+
+X86CPU *QOM_cpu_init();
+
 #endif /* end of include guard: CPU_H_CJEDABLV */

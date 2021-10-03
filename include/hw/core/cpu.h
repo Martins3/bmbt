@@ -360,7 +360,6 @@ void cpu_check_watchpoint(CPUState *cpu, vaddr addr, vaddr len,
                           MemTxAttrs attrs, int flags, uintptr_t ra);
 int cpu_watchpoint_address_matches(CPUState *cpu, vaddr addr, vaddr len);
 
-// FIXME similar check
 /* Since this macro is used a lot in hot code paths and in conjunction with
  * FooCPU *foo_env_get_cpu(), we deviate from usual QOM practice by using
  * an unchecked cast.
@@ -658,5 +657,8 @@ void cpu_exec_unrealizefn(CPUState *cpu);
  * Initializes a vCPU.
  */
 void qemu_init_vcpu(CPUState *cpu);
+
+void cpu_class_init(CPUClass *k);
+void cpu_common_initfn(CPUState *cpu);
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
