@@ -2190,5 +2190,6 @@ typedef int X86CPUVersion;
 void x86_cpu_set_default_version(X86CPUVersion version);
 
 X86CPU *QOM_cpu_init();
+void x86_cpu_realizefn(X86CPU *cpu);
 
 #endif /* end of include guard: CPU_H_CJEDABLV */

@@ -3340,7 +3340,7 @@ static void x86_cpu_filter_features(X86CPU *cpu, bool verbose) {
 #endif
 }
 
-static void x86_cpu_realizefn(X86CPU *cpu) {
+void x86_cpu_realizefn(X86CPU *cpu) {
   CPUState *cs = CPU(cpu);
   X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
   CPUX86State *env = &cpu->env;
