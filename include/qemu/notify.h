@@ -22,4 +22,12 @@ static inline void notifier_list_add(NotifierList *list, Notifier *notifier) {
   QLIST_INSERT_HEAD(&list->notifiers, notifier, node);
 }
 
+static inline void notifier_list_notify(NotifierList *list, void *data) {
+  Notifier *notifier, *next;
+
+  QLIST_FOREACH_SAFE(notifier, &list->notifiers, node, next) {
+    notifier->notify(notifier, data);
+  }
+}
+
 #endif /* end of include guard: NOTIFY_H_B3HZ5KGJ */
