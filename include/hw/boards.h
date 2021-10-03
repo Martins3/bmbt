@@ -144,7 +144,8 @@ struct MachineClass {
   // void (*wakeup)(MachineState *state);
   // void (*hot_add_cpu)(MachineState *state, const int64_t id, Error **errp);
   int (*kvm_type)(MachineState *machine, const char *arg);
-  // void (*smp_parse)(MachineState *ms, QemuOpts *opts);
+  // [interface 23]
+  void (*smp_parse)(MachineState *ms);
 
   // BlockInterfaceType block_default_type;
   int units_per_default_bus;
@@ -215,17 +216,17 @@ struct MachineState {
 
   /*< public >*/
 
-  char *accel;
+  // char *accel;
   bool kernel_irqchip_allowed;
   bool kernel_irqchip_required;
   bool kernel_irqchip_split;
   int kvm_shadow_mem;
   char *dtb;
   char *dumpdtb;
-  int phandle_start;
+  // int phandle_start;
   char *dt_compatible;
   bool dump_guest_core;
-  bool mem_merge;
+  // bool mem_merge;
   bool usb;
   bool usb_disabled;
   bool igd_gfx_passthru;
@@ -258,5 +259,11 @@ static inline MachineState *qdev_get_machine() {
 }
 
 #define MACHINE_GET_CLASS(machine) machine->mc
+
+void machine_class_init(MachineClass *mc);
+void machine_class_base_init(MachineClass *mc);
+void machine_initfn(MachineState *ms);
+
+void machine_run_board_init(MachineState *machine);
 
 #endif /* end of include guard: BOARDS_H_ANEGSNX6 */

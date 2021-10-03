@@ -939,85 +939,17 @@ void pc_acpi_smi_interrupt(void *opaque, int irq, int level) {
 }
 #endif
 
-// 1. no QemuOpts
-// 2. ms->smp.cpus = 1
-// 3. doesn't support cpu hotplug
-#ifdef BMBT
 /*
  * This function is very similar to smp_parse()
  * in hw/core/machine.c but includes CPU die support.
  */
-void pc_smp_parse(MachineState *ms, QemuOpts *opts) {
-  X86MachineState *x86ms = X86_MACHINE(ms);
-
-  if (opts) {
-    unsigned cpus = qemu_opt_get_number(opts, "cpus", 0);
-    unsigned sockets = qemu_opt_get_number(opts, "sockets", 0);
-    unsigned dies = qemu_opt_get_number(opts, "dies", 1);
-    unsigned cores = qemu_opt_get_number(opts, "cores", 0);
-    unsigned threads = qemu_opt_get_number(opts, "threads", 0);
-
-    /* compute missing values, prefer sockets over cores over threads */
-    if (cpus == 0 || sockets == 0) {
-      cores = cores > 0 ? cores : 1;
-      threads = threads > 0 ? threads : 1;
-      if (cpus == 0) {
-        sockets = sockets > 0 ? sockets : 1;
-        cpus = cores * threads * dies * sockets;
-      } else {
-        ms->smp.max_cpus = qemu_opt_get_number(opts, "maxcpus", cpus);
-        sockets = ms->smp.max_cpus / (cores * threads * dies);
-      }
-    } else if (cores == 0) {
-      threads = threads > 0 ? threads : 1;
-      cores = cpus / (sockets * dies * threads);
-      cores = cores > 0 ? cores : 1;
-    } else if (threads == 0) {
-      threads = cpus / (cores * dies * sockets);
-      threads = threads > 0 ? threads : 1;
-    } else if (sockets * dies * cores * threads < cpus) {
-      error_report("cpu topology: "
-                   "sockets (%u) * dies (%u) * cores (%u) * threads (%u) < "
-                   "smp_cpus (%u)",
-                   sockets, dies, cores, threads, cpus);
-      exit(1);
-    }
-
-    ms->smp.max_cpus = qemu_opt_get_number(opts, "maxcpus", cpus);
-
-    if (ms->smp.max_cpus < cpus) {
-      error_report("maxcpus must be equal to or greater than smp");
-      exit(1);
-    }
-
-    if (sockets * dies * cores * threads > ms->smp.max_cpus) {
-      error_report("cpu topology: "
-                   "sockets (%u) * dies (%u) * cores (%u) * threads (%u) > "
-                   "maxcpus (%u)",
-                   sockets, dies, cores, threads, ms->smp.max_cpus);
-      exit(1);
-    }
-
-    if (sockets * dies * cores * threads != ms->smp.max_cpus) {
-      warn_report("Invalid CPU topology deprecated: "
-                  "sockets (%u) * dies (%u) * cores (%u) * threads (%u) "
-                  "!= maxcpus (%u)",
-                  sockets, dies, cores, threads, ms->smp.max_cpus);
-    }
-
-    ms->smp.cpus = cpus;
-    ms->smp.cores = cores;
-    ms->smp.threads = threads;
-    x86ms->smp_dies = dies;
-  }
-
-  if (ms->smp.cpus > 1) {
-    Error *blocker = NULL;
-    error_setg(&blocker, QERR_REPLAY_NOT_SUPPORTED, "smp");
-    replay_add_blocker(blocker);
-  }
+void pc_smp_parse(MachineState *ms) {
+  printf("huxueshi:%s %s\n", __FUNCTION__, "No extra QemuOpts needed");
 }
 
+// 1. ms->smp.cpus = 1
+// 2. doesn't support cpu hotplug
+#ifdef BMBT
 void pc_hot_add_cpu(MachineState *ms, const int64_t id, Error **errp) {
   X86MachineState *x86ms = X86_MACHINE(ms);
   int64_t apic_id = x86_cpu_apic_id_from_index(x86ms, id);
@@ -2032,7 +1964,7 @@ static void pc_machine_set_pit(Object *obj, bool value, Error **errp) {
 
 #endif
 
-static void pc_machine_initfn(PCMachineState *pcms) {
+void pc_machine_initfn(PCMachineState *pcms) {
 #if NEED_LATER
   pcms->smm = ON_OFF_AUTO_AUTO;
 #ifdef CONFIG_VMPORT
@@ -2098,7 +2030,7 @@ static bool pc_hotplug_allowed(MachineState *ms, DeviceState *dev,
 }
 #endif
 
-static void pc_machine_class_init(PCMachineClass *pcmc, void *data) {
+void pc_machine_class_init(PCMachineClass *pcmc) {
   MachineClass *mc = MACHINE_CLASS(pcmc);
   // PCMachineClass *pcmc = PC_MACHINE_CLASS(oc);
   // HotplugHandlerClass *hc = HOTPLUG_HANDLER_CLASS(oc);
@@ -2127,7 +2059,7 @@ static void pc_machine_class_init(PCMachineClass *pcmc, void *data) {
   mc->has_hotpluggable_cpus = true;
   mc->default_boot_order = "cad";
   // mc->hot_add_cpu = pc_hot_add_cpu;
-  // mc->smp_parse = pc_smp_parse;
+  mc->smp_parse = pc_smp_parse;
   // mc->block_default_type = IF_IDE;
   mc->max_cpus = 255;
   mc->reset = pc_machine_reset;

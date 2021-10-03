@@ -149,8 +149,6 @@ typedef struct PCMachineClass {
   bool pvh_enabled;
 } PCMachineClass;
 
-#define compare_types(T1, T2) _Generic(((T1){0}), T2 : 1, default : 0)
-
 static inline MachineState *X86_TO_MACHINE(X86MachineState *x) {
   return (MachineState *)x;
 }
@@ -177,6 +175,12 @@ static inline X86MachineState *MS_TO_X86_MACHINE(const MachineState *x) {
     (MachineClass *)tmp;                                                       \
   })
 
+#define X86_TO_MACHINE_CLASS(pcmc)                                             \
+  ({                                                                           \
+    X86MachineClass *tmp = pcmc;                                               \
+    (MachineClass *)tmp;                                                       \
+  })
+
 #define X86_MACHINE_CLASS(mc)                                                  \
   ({                                                                           \
     MachineClass *tmp = mc;                                                    \
@@ -188,6 +192,7 @@ static inline X86MachineState *MS_TO_X86_MACHINE(const MachineState *x) {
     MachineClass *tmp = m;                                                     \
     (PCMachineClass *)tmp;                                                     \
   })
+
 /* pc_sysfw.c */
 static inline void pc_system_flash_create(PCMachineState *pcms) {}
 void pc_system_firmware_init(PCMachineState *pcms, MemoryRegion *rom_memory);
@@ -201,5 +206,12 @@ GSIState *pc_gsi_create(qemu_irq **irqs, bool pci_enabled);
 
 void pc_i8259_create(qemu_irq *i8259_irqs);
 void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name);
+
+PCMachineState *machine_init();
+
+void pc_machine_class_init(PCMachineClass *pcmc);
+void pc_machine_initfn(PCMachineState *pcms);
+
+PCMachineState *machine_init();
 
 #endif /* end of include guard: PC_H_0VFJYDT2 */

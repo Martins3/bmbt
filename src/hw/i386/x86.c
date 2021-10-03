@@ -671,14 +671,14 @@ static void x86_machine_set_max_ram_below_4g(Object *obj, Visitor *v,
 }
 #endif
 
-static void x86_machine_initfn(X86MachineState *x86ms) {
+void x86_machine_initfn(X86MachineState *x86ms) {
   x86ms->max_ram_below_4g = 0; /* use default */
   x86ms->smp_dies = 1;
 }
 
-static void x86_machine_class_init(MachineClass *mc, void *data) {
-  // MachineClass *mc = MACHINE_CLASS(oc);
-  X86MachineClass *x86mc = X86_MACHINE_CLASS(mc);
+void x86_machine_class_init(X86MachineClass *x86mc) {
+  MachineClass *mc = X86_TO_MACHINE_CLASS(x86mc);
+  // X86MachineClass *x86mc = X86_MACHINE_CLASS(mc);
   // NMIClass *nc = NMI_CLASS(oc);
 
   // mc->cpu_index_to_instance_props = x86_cpu_index_to_props;
