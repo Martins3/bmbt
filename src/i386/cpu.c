@@ -2123,8 +2123,26 @@ static uint64_t x86_cpu_get_supported_feature_word(FeatureWord w,
   return r;
 }
 
-static void x86_cpu_apply_props(X86CPU *cpu, PropValue *props) {
-  // FIXME implement this in a native way
+typedef struct BitProperty {
+  FeatureWord w;
+  uint64_t mask;
+} BitProperty;
+
+// change x86_cpu_apply_tcg_props => x86_cpu_set_bit_prop to native style
+static void x86_cpu_apply_tcg_props(X86CPU *cpu, PropValue *props) {
+  // printf("s %s %x %lx %d\n", __FUNCTION__, name, fp->w, fp->mask, value);
+  // x86_cpu_set_bit_prop vme 0 2 0
+  bool value = false;
+  BitProperty f;
+  f.w = 0;
+  f.mask = 0x2;
+  BitProperty *fp = &f;
+  if (value) {
+    cpu->env.features[fp->w] |= fp->mask;
+  } else {
+    cpu->env.features[fp->w] &= ~fp->mask;
+  }
+  cpu->env.user_features[fp->w] |= fp->mask;
 }
 
 /* Apply properties for the CPU model version specified in model */
@@ -2170,19 +2188,8 @@ static void x86_cpu_load_model(X86CPU *cpu, X86CPUModel *model) {
   cpu->legacy_cache = !def->cache_info;
 
   /* Special cases not set in the X86CPUDefinition structs: */
-  /* TODO: in-kernel irqchip for hvf */
-#ifdef BMBT
-  if (kvm_enabled()) {
-    if (!kvm_irqchip_in_kernel()) {
-      x86_cpu_change_kvm_default("x2apic", "off");
-    }
-
-    x86_cpu_apply_props(cpu, kvm_default_props);
-  } else
-#endif
-
-      if (tcg_enabled()) {
-    x86_cpu_apply_props(cpu, tcg_default_props);
+  if (tcg_enabled()) {
+    x86_cpu_apply_tcg_props(cpu, tcg_default_props);
   }
 
   env->features[FEAT_1_ECX] |= CPUID_EXT_HYPERVISOR;
@@ -2207,8 +2214,7 @@ static void x86_cpu_load_model(X86CPU *cpu, X86CPUModel *model) {
 #endif
   x86_cpuid_set_vendor(cpu, vendor);
 
-  // FIXME version need more accurate analyze
-  // x86_cpu_apply_version_props(cpu, model);
+  x86_cpu_apply_version_props(cpu, model);
 }
 
 // no need to support qmp_query_cpu_model_expansion
