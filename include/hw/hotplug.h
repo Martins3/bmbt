@@ -57,4 +57,11 @@ static inline void hotplug_handler_plug(HotplugHandler *hd, X86CPU *cpu) {
   }
 }
 
+static inline void hotplug_handler_pre_plug(HotplugHandler *hd, X86CPU *cpu) {
+  HotplugHandlerClass *hdc = hd->hdc;
+  if (hdc->plug) {
+    hdc->pre_plug(hd, cpu);
+  }
+}
+
 #endif /* end of include guard: HOTPLUG_H_NA2XQOM0 */

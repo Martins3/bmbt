@@ -1927,6 +1927,7 @@ static void pc_machine_set_pit(Object *obj, bool value, Error **errp) {
 #endif
 
 void pc_machine_initfn(PCMachineState *pcms) {
+  PCMachineClass *pcmc = PC_MACHINE_GET_CLASS(pcms);
 #if NEED_LATER
   pcms->smm = ON_OFF_AUTO_AUTO;
 #ifdef CONFIG_VMPORT
@@ -1937,12 +1938,16 @@ void pc_machine_initfn(PCMachineState *pcms) {
 #endif
 
   /* acpi build is enabled by default if machine supports it */
-  pcms->acpi_build_enabled = PC_MACHINE_GET_CLASS(pcms)->has_acpi_build;
+  pcms->acpi_build_enabled = pcmc->has_acpi_build;
   pcms->smbus_enabled = true;
   pcms->sata_enabled = true;
   pcms->pit_enabled = true;
 
   pc_system_flash_create(pcms);
+
+  pcms->hd.hdc = &pcmc->hdc;
+  pcms->hd.parent = pcms;
+  pcms->hd.parent_type = "PCMachineState";
 }
 
 static void pc_machine_reset(MachineState *machine) {
@@ -1995,7 +2000,7 @@ static bool pc_hotplug_allowed(MachineState *ms, DeviceState *dev,
 void pc_machine_class_init(PCMachineClass *pcmc) {
   MachineClass *mc = MACHINE_CLASS(pcmc);
   // PCMachineClass *pcmc = PC_MACHINE_CLASS(mc);
-  HotplugHandlerClass *hc = pcmc->hdc;
+  HotplugHandlerClass *hc = &pcmc->hdc;
 
   pcmc->pci_enabled = true;
   pcmc->has_acpi_build = true;
@@ -2012,7 +2017,6 @@ void pc_machine_class_init(PCMachineClass *pcmc) {
   pcmc->linuxboot_dma_enabled = true;
   pcmc->pvh_enabled = true;
   // assert(!mc->get_hotplug_handler);
-  // FIXME how to port get_hotplug_handler
   // mc->get_hotplug_handler = pc_get_hotplug_handler;
   // mc->hotplug_allowed = pc_hotplug_allowed;
   // mc->cpu_index_to_instance_props = x86_cpu_index_to_props;
