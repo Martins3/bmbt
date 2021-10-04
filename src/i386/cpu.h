@@ -5,6 +5,7 @@
 #include "../../include/exec/hwaddr.h"
 #include "../../include/fpu/softfloat-types.h"
 #include "../../include/hw/core/cpu.h"
+#include "../../include/hw/hotplug.h"
 #include "../../include/hw/irq.h"
 #include "../../include/qemu/bitops.h"
 #include "../../include/sysemu/tcg.h"

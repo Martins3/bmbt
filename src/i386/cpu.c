@@ -4167,11 +4167,11 @@ X86CPU *QOM_cpu_init() {
   x86_cpu->xcc = x86_cpu_class;
   cpu->cc = cpu_class;
 
-  cpu_common_initfn(cpu);
+  x86_cpu_common_class_init(x86_cpu_class);
   cpu_class_init(cpu_class);
 
+  cpu_common_initfn(cpu);
   x86_cpu_initfn(x86_cpu);
-  x86_cpu_common_class_init(x86_cpu_class);
 
   return x86_cpu;
 }

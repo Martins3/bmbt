@@ -33,8 +33,8 @@ uint32_t x86_cpu_apic_id_from_index(X86MachineState *x86ms,
 
 void x86_cpu_new(X86MachineState *x86ms, int64_t apic_id) {
   CPUX86State *env = NULL;
-  // FIXME when did the newly allocated CPU passed to exec thread ?
   X86CPU *cpu = QOM_cpu_init();
+  PCMachineState *pcms = PC_MACHINE(X86_TO_MACHINE(x86ms));
 
   env = &X86_CPU(cpu)->env;
   env->nr_dies = x86ms->smp_dies;
@@ -44,7 +44,10 @@ void x86_cpu_new(X86MachineState *x86ms, int64_t apic_id) {
   object_property_set_bool(cpu, true, "realized", &local_err);
 #endif
   cpu->apic_id = apic_id;
+
+  hotplug_handler_pre_plug(&pcms->hd, cpu);
   x86_cpu_realizefn(cpu);
+  hotplug_handler_plug(&pcms->hd, cpu);
 }
 
 void x86_cpus_init(X86MachineState *x86ms, int default_cpu_version) {
