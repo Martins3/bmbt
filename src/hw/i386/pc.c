@@ -3,6 +3,7 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/hwaddr.h"
 #include "../../include/hw/i386/apic.h"
+#include "../../include/hw/i386/topology.h"
 #include "../../include/hw/isa/i8259.h"
 #include "../../include/hw/loader.h"
 #include "../../include/qemu/error-report.h"
@@ -1374,7 +1375,7 @@ void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
 #endif
 }
 
-#ifdef NEED_LATER
+#ifdef BMBT
 static void pc_memory_pre_plug(HotplugHandler *hotplug_dev, DeviceState *dev,
                                Error **errp) {
   const PCMachineState *pcms = PC_MACHINE(hotplug_dev);
@@ -1471,10 +1472,12 @@ static void pc_memory_unplug(HotplugHandler *hotplug_dev, DeviceState *dev,
   }
 
   pc_dimm_unplug(PC_DIMM(dev), MACHINE(pcms));
+
   object_property_set_bool(OBJECT(dev), false, "realized", NULL);
 out:
   error_propagate(errp, local_err);
 }
+#endif
 
 static int pc_apic_cmp(const void *a, const void *b) {
   CPUArchId *apic_a = (CPUArchId *)a;
@@ -1499,35 +1502,34 @@ static CPUArchId *pc_find_cpu_slot(MachineState *ms, uint32_t id, int *idx) {
   return found_cpu;
 }
 
-static void pc_cpu_plug(HotplugHandler *hotplug_dev, DeviceState *dev,
-                        Error **errp) {
+static void pc_cpu_plug(HotplugHandler *handler, X86CPU *cpu) {
   CPUArchId *found_cpu;
-  Error *local_err = NULL;
-  X86CPU *cpu = X86_CPU(dev);
-  PCMachineState *pcms = PC_MACHINE(hotplug_dev);
+  PCMachineState *pcms = (PCMachineState *)(handler->parent);
   X86MachineState *x86ms = X86_MACHINE(pcms);
 
+  hotplug_check_cast(handler, "PCMachineState");
+
   if (pcms->acpi_dev) {
-    hotplug_handler_plug(HOTPLUG_HANDLER(pcms->acpi_dev), dev, &local_err);
-    if (local_err) {
-      goto out;
-    }
+    hotplug_handler_plug(pcms->acpi_dev, cpu);
   }
 
   /* increment the number of CPUs */
   x86ms->boot_cpus++;
+  // FIXME port rtc later
+#ifdef NEED_LATER
   if (x86ms->rtc) {
     rtc_set_cpus_count(x86ms->rtc, x86ms->boot_cpus);
   }
+#endif
   if (x86ms->fw_cfg) {
     fw_cfg_modify_i16(x86ms->fw_cfg, FW_CFG_NB_CPUS, x86ms->boot_cpus);
   }
 
   found_cpu = pc_find_cpu_slot(MACHINE(pcms), cpu->apic_id, NULL);
-  found_cpu->cpu = OBJECT(dev);
-out:
-  error_propagate(errp, local_err);
+  found_cpu->cpu = CPU(cpu);
 }
+
+#ifdef BMBT
 static void pc_cpu_unplug_request_cb(HotplugHandler *hotplug_dev,
                                      DeviceState *dev, Error **errp) {
   int idx = -1;
@@ -1582,25 +1584,28 @@ static void pc_cpu_unplug_cb(HotplugHandler *hotplug_dev, DeviceState *dev,
 out:
   error_propagate(errp, local_err);
 }
+#endif
 
-static void pc_cpu_pre_plug(HotplugHandler *hotplug_dev, DeviceState *dev,
-                            Error **errp) {
+static void pc_cpu_pre_plug(HotplugHandler *hotplug_dev, X86CPU *cpu) {
   int idx;
   CPUState *cs;
   CPUArchId *cpu_slot;
   X86CPUTopoInfo topo;
-  X86CPU *cpu = X86_CPU(dev);
+  // X86CPU *cpu = X86_CPU(dev);
   CPUX86State *env = &cpu->env;
-  MachineState *ms = MACHINE(hotplug_dev);
-  PCMachineState *pcms = PC_MACHINE(hotplug_dev);
+  PCMachineState *pcms = (PCMachineState *)hotplug_dev->parent;
+  MachineState *ms = MACHINE(pcms);
+  hotplug_check_cast(hotplug_dev, "PCMachineState");
   X86MachineState *x86ms = X86_MACHINE(pcms);
   unsigned int smp_cores = ms->smp.cores;
   unsigned int smp_threads = ms->smp.threads;
 
+#ifdef BMBT
   if (!object_dynamic_cast(OBJECT(cpu), ms->cpu_type)) {
     error_setg(errp, "Invalid CPU type, expected cpu type: '%s'", ms->cpu_type);
     return;
   }
+#endif
 
   env->nr_dies = x86ms->smp_dies;
 
@@ -1609,56 +1614,7 @@ static void pc_cpu_pre_plug(HotplugHandler *hotplug_dev, DeviceState *dev,
    * set it based on socket/die/core/thread properties.
    */
   if (cpu->apic_id == UNASSIGNED_APIC_ID) {
-    int max_socket =
-        (ms->smp.max_cpus - 1) / smp_threads / smp_cores / x86ms->smp_dies;
-
-    /*
-     * die-id was optional in QEMU 4.0 and older, so keep it optional
-     * if there's only one die per socket.
-     */
-    if (cpu->die_id < 0 && x86ms->smp_dies == 1) {
-      cpu->die_id = 0;
-    }
-
-    if (cpu->socket_id < 0) {
-      error_setg(errp, "CPU socket-id is not set");
-      return;
-    } else if (cpu->socket_id > max_socket) {
-      error_setg(errp, "Invalid CPU socket-id: %u must be in range 0:%u",
-                 cpu->socket_id, max_socket);
-      return;
-    }
-    if (cpu->die_id < 0) {
-      error_setg(errp, "CPU die-id is not set");
-      return;
-    } else if (cpu->die_id > x86ms->smp_dies - 1) {
-      error_setg(errp, "Invalid CPU die-id: %u must be in range 0:%u",
-                 cpu->die_id, x86ms->smp_dies - 1);
-      return;
-    }
-    if (cpu->core_id < 0) {
-      error_setg(errp, "CPU core-id is not set");
-      return;
-    } else if (cpu->core_id > (smp_cores - 1)) {
-      error_setg(errp, "Invalid CPU core-id: %u must be in range 0:%u",
-                 cpu->core_id, smp_cores - 1);
-      return;
-    }
-    if (cpu->thread_id < 0) {
-      error_setg(errp, "CPU thread-id is not set");
-      return;
-    } else if (cpu->thread_id > (smp_threads - 1)) {
-      error_setg(errp, "Invalid CPU thread-id: %u must be in range 0:%u",
-                 cpu->thread_id, smp_threads - 1);
-      return;
-    }
-
-    topo.pkg_id = cpu->socket_id;
-    topo.die_id = cpu->die_id;
-    topo.core_id = cpu->core_id;
-    topo.smt_id = cpu->thread_id;
-    cpu->apic_id =
-        apicid_from_topo_ids(x86ms->smp_dies, smp_cores, smp_threads, &topo);
+    g_assert_not_reached();
   }
 
   cpu_slot = pc_find_cpu_slot(MACHINE(pcms), cpu->apic_id, &idx);
@@ -1667,17 +1623,15 @@ static void pc_cpu_pre_plug(HotplugHandler *hotplug_dev, DeviceState *dev,
 
     x86_topo_ids_from_apicid(cpu->apic_id, x86ms->smp_dies, smp_cores,
                              smp_threads, &topo);
-    error_setg(errp,
-               "Invalid CPU [socket: %u, die: %u, core: %u, thread: %u] with"
-               " APIC ID %" PRIu32 ", valid index range 0:%d",
-               topo.pkg_id, topo.die_id, topo.core_id, topo.smt_id,
-               cpu->apic_id, ms->possible_cpus->len - 1);
+    error_report("Invalid CPU [socket: %u, die: %u, core: %u, thread: %u] with"
+                 " APIC ID %" PRIu32 ", valid index range 0:%d",
+                 topo.pkg_id, topo.die_id, topo.core_id, topo.smt_id,
+                 cpu->apic_id, ms->possible_cpus->len - 1);
     return;
   }
 
   if (cpu_slot->cpu) {
-    error_setg(errp, "CPU[%d] with APIC ID %" PRIu32 " exists", idx,
-               cpu->apic_id);
+    error_report("CPU[%d] with APIC ID %" PRIu32 " exists", idx, cpu->apic_id);
     return;
   }
 
@@ -1690,53 +1644,53 @@ static void pc_cpu_pre_plug(HotplugHandler *hotplug_dev, DeviceState *dev,
   x86_topo_ids_from_apicid(cpu->apic_id, x86ms->smp_dies, smp_cores,
                            smp_threads, &topo);
   if (cpu->socket_id != -1 && cpu->socket_id != topo.pkg_id) {
-    error_setg(errp,
-               "property socket-id: %u doesn't match set apic-id:"
-               " 0x%x (socket-id: %u)",
-               cpu->socket_id, cpu->apic_id, topo.pkg_id);
+    error_report("property socket-id: %u doesn't match set apic-id:"
+                 " 0x%x (socket-id: %u)",
+                 cpu->socket_id, cpu->apic_id, topo.pkg_id);
     return;
   }
   cpu->socket_id = topo.pkg_id;
 
   if (cpu->die_id != -1 && cpu->die_id != topo.die_id) {
-    error_setg(errp,
-               "property die-id: %u doesn't match set apic-id:"
-               " 0x%x (die-id: %u)",
-               cpu->die_id, cpu->apic_id, topo.die_id);
+    error_report("property die-id: %u doesn't match set apic-id:"
+                 " 0x%x (die-id: %u)",
+                 cpu->die_id, cpu->apic_id, topo.die_id);
     return;
   }
   cpu->die_id = topo.die_id;
 
   if (cpu->core_id != -1 && cpu->core_id != topo.core_id) {
-    error_setg(errp,
-               "property core-id: %u doesn't match set apic-id:"
-               " 0x%x (core-id: %u)",
-               cpu->core_id, cpu->apic_id, topo.core_id);
+    error_report("property core-id: %u doesn't match set apic-id:"
+                 " 0x%x (core-id: %u)",
+                 cpu->core_id, cpu->apic_id, topo.core_id);
     return;
   }
   cpu->core_id = topo.core_id;
 
   if (cpu->thread_id != -1 && cpu->thread_id != topo.smt_id) {
-    error_setg(errp,
-               "property thread-id: %u doesn't match set apic-id:"
-               " 0x%x (thread-id: %u)",
-               cpu->thread_id, cpu->apic_id, topo.smt_id);
+    error_report("property thread-id: %u doesn't match set apic-id:"
+                 " 0x%x (thread-id: %u)",
+                 cpu->thread_id, cpu->apic_id, topo.smt_id);
     return;
   }
   cpu->thread_id = topo.smt_id;
 
+#ifdef BMBT
   if (hyperv_feat_enabled(cpu, HYPERV_FEAT_VPINDEX) &&
       !kvm_hv_vpindex_settable()) {
     error_setg(errp, "kernel doesn't allow setting HyperV VP_INDEX");
     return;
   }
+#endif
 
   cs = CPU(cpu);
   cs->cpu_index = idx;
 
-  numa_cpu_pre_plug(cpu_slot, dev, errp);
+  // FIXME port later
+  // numa_cpu_pre_plug(cpu_slot, cpu);
 }
 
+#ifdef BMBT
 static void pc_virtio_pmem_pci_pre_plug(HotplugHandler *hotplug_dev,
                                         DeviceState *dev, Error **errp) {
   HotplugHandler *hotplug_dev2 = qdev_get_bus_hotplug_handler(dev);
@@ -1792,8 +1746,11 @@ static void pc_virtio_pmem_pci_unplug(HotplugHandler *hotplug_dev,
   /* We don't support virtio pmem hot unplug */
 }
 
+#endif
+
 static void pc_machine_device_pre_plug_cb(HotplugHandler *hotplug_dev,
-                                          DeviceState *dev, Error **errp) {
+                                          X86CPU *dev) {
+#ifdef BMBT
   if (object_dynamic_cast(OBJECT(dev), TYPE_PC_DIMM)) {
     pc_memory_pre_plug(hotplug_dev, dev, errp);
   } else if (object_dynamic_cast(OBJECT(dev), TYPE_CPU)) {
@@ -1801,10 +1758,12 @@ static void pc_machine_device_pre_plug_cb(HotplugHandler *hotplug_dev,
   } else if (object_dynamic_cast(OBJECT(dev), TYPE_VIRTIO_PMEM_PCI)) {
     pc_virtio_pmem_pci_pre_plug(hotplug_dev, dev, errp);
   }
+#endif
+  pc_cpu_pre_plug(hotplug_dev, dev);
 }
 
-static void pc_machine_device_plug_cb(HotplugHandler *hotplug_dev,
-                                      DeviceState *dev, Error **errp) {
+static void pc_machine_device_plug_cb(HotplugHandler *hdc, X86CPU *cpu) {
+#ifdef BMBT
   if (object_dynamic_cast(OBJECT(dev), TYPE_PC_DIMM)) {
     pc_memory_plug(hotplug_dev, dev, errp);
   } else if (object_dynamic_cast(OBJECT(dev), TYPE_CPU)) {
@@ -1812,8 +1771,11 @@ static void pc_machine_device_plug_cb(HotplugHandler *hotplug_dev,
   } else if (object_dynamic_cast(OBJECT(dev), TYPE_VIRTIO_PMEM_PCI)) {
     pc_virtio_pmem_pci_plug(hotplug_dev, dev, errp);
   }
+#endif
+  pc_cpu_plug(hdc, cpu);
 }
 
+#ifdef BMBT
 static void pc_machine_device_unplug_request_cb(HotplugHandler *hotplug_dev,
                                                 DeviceState *dev,
                                                 Error **errp) {
@@ -2032,8 +1994,8 @@ static bool pc_hotplug_allowed(MachineState *ms, DeviceState *dev,
 
 void pc_machine_class_init(PCMachineClass *pcmc) {
   MachineClass *mc = MACHINE_CLASS(pcmc);
-  // PCMachineClass *pcmc = PC_MACHINE_CLASS(oc);
-  // HotplugHandlerClass *hc = HOTPLUG_HANDLER_CLASS(oc);
+  // PCMachineClass *pcmc = PC_MACHINE_CLASS(mc);
+  HotplugHandlerClass *hc = pcmc->hdc;
 
   pcmc->pci_enabled = true;
   pcmc->has_acpi_build = true;
@@ -2050,6 +2012,7 @@ void pc_machine_class_init(PCMachineClass *pcmc) {
   pcmc->linuxboot_dma_enabled = true;
   pcmc->pvh_enabled = true;
   // assert(!mc->get_hotplug_handler);
+  // FIXME how to port get_hotplug_handler
   // mc->get_hotplug_handler = pc_get_hotplug_handler;
   // mc->hotplug_allowed = pc_hotplug_allowed;
   // mc->cpu_index_to_instance_props = x86_cpu_index_to_props;
@@ -2063,9 +2026,10 @@ void pc_machine_class_init(PCMachineClass *pcmc) {
   // mc->block_default_type = IF_IDE;
   mc->max_cpus = 255;
   mc->reset = pc_machine_reset;
+  // FIXME verify pc_machine_wakeup is never get called
   // mc->wakeup = pc_machine_wakeup;
-  // hc->pre_plug = pc_machine_device_pre_plug_cb;
-  // hc->plug = pc_machine_device_plug_cb;
+  hc->pre_plug = pc_machine_device_pre_plug_cb;
+  hc->plug = pc_machine_device_plug_cb;
   // hc->unplug_request = pc_machine_device_unplug_request_cb;
   // hc->unplug = pc_machine_device_unplug_cb;
   mc->default_cpu_type = "qemu32";

@@ -2,6 +2,7 @@
 #define PC_H_0VFJYDT2
 
 #include "../../exec/hwaddr.h"
+#include "../../hw/hotplug.h"
 #include "../../qemu/notify.h"
 #include "../../sysemu/numa.h"
 #include "../../types.h"
@@ -57,9 +58,9 @@ typedef struct PCMachineState {
   /* State for other subsystems/APIs: */
   Notifier machine_done;
 
-#ifdef NEED_LATER
   /* Pointers to devices and objects: */
   HotplugHandler *acpi_dev;
+#ifdef NEED_LATER
   PCIBus *bus;
   I2CBus *smbus;
   PFlashCFI01 *flash[2];
@@ -110,6 +111,7 @@ typedef struct PCMachineClass {
   X86MachineClass parent_class;
 
   /*< public >*/
+  HotplugHandlerClass *hdc;
 
   /* Device configuration: */
   bool pci_enabled;
