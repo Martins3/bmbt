@@ -213,17 +213,14 @@ void page_size_init(void) {
   qemu_host_page_mask = -(intptr_t)qemu_host_page_size;
 }
 
-MemoryRegion *iotlb_to_section(CPUState *cpu,
-                                      hwaddr index, MemTxAttrs attrs)
-{
-    // [interface 6]
-    int asidx = cpu_asidx_from_attrs(cpu, attrs);
-    CPUAddressSpace *cpuas = &cpu->cpu_ases[asidx];
-    // AddressSpaceDispatch *d = atomic_rcu_read(&cpuas->memory_dispatch);
-    MemoryRegion *sections = cpuas->as->segments;
-    return &sections[index & ~TARGET_PAGE_MASK];
+MemoryRegion *iotlb_to_section(CPUState *cpu, hwaddr index, MemTxAttrs attrs) {
+  // [interface 6]
+  int asidx = cpu_asidx_from_attrs(cpu, attrs);
+  CPUAddressSpace *cpuas = &cpu->cpu_ases[asidx];
+  // AddressSpaceDispatch *d = atomic_rcu_read(&cpuas->memory_dispatch);
+  MemoryRegion *sections = cpuas->as->segments;
+  return &sections[index & ~TARGET_PAGE_MASK];
 }
-
 
 /* Return a host pointer to ram allocated with qemu_ram_alloc.
  * This should not be used for general purpose DMA.  Use address_space_map
@@ -241,31 +238,27 @@ void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr) {
   return ramblock_ptr(ram_block, addr);
 }
 
+static void tlb_reset_dirty_range_all(ram_addr_t start, ram_addr_t length) {
+  CPUState *cpu;
+  ram_addr_t start1;
+  RAMBlock *block;
+  ram_addr_t end;
 
-static void tlb_reset_dirty_range_all(ram_addr_t start, ram_addr_t length)
-{
-    CPUState *cpu;
-    ram_addr_t start1;
-    RAMBlock *block;
-    ram_addr_t end;
+  assert(tcg_enabled());
+  end = TARGET_PAGE_ALIGN(start + length);
+  start &= TARGET_PAGE_MASK;
 
-    assert(tcg_enabled());
-    end = TARGET_PAGE_ALIGN(start + length);
-    start &= TARGET_PAGE_MASK;
-
-    RCU_READ_LOCK_GUARD();
-    block = qemu_get_ram_block(start);
-    assert(block == qemu_get_ram_block(end - 1));
-    start1 = (uintptr_t)ramblock_ptr(block, start - block->offset);
-    CPU_FOREACH(cpu) {
-        tlb_reset_dirty(cpu, start1, length);
-    }
+  RCU_READ_LOCK_GUARD();
+  block = qemu_get_ram_block(start);
+  assert(block == qemu_get_ram_block(end - 1));
+  start1 = (uintptr_t)ramblock_ptr(block, start - block->offset);
+  CPU_FOREACH(cpu) { tlb_reset_dirty(cpu, start1, length); }
 }
 
 /* Note: start and end must be within the same ram block.  */
 bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
-                                                            ram_addr_t length,
-                                                            unsigned client) {
+                                              ram_addr_t length,
+                                              unsigned client) {
   DirtyMemoryBlocks *blocks;
   unsigned long end, page;
   bool dirty = false;
@@ -326,24 +319,23 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
  * ram_addr_t.
  */
 RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
-                                   ram_addr_t *offset)
-{
-    RAMBlock *block;
-    uint8_t *host = ptr;
+                                   ram_addr_t *offset) {
+  RAMBlock *block;
+  uint8_t *host = ptr;
 
-    RCU_READ_LOCK_GUARD();
-    block = atomic_rcu_read(&ram_list.mru_block);
-    if (block && block->host && host - block->host < block->length) {
-        goto found;
-    }
+  RCU_READ_LOCK_GUARD();
+  block = atomic_rcu_read(&ram_list.mru_block);
+  if (block && block->host && host - block->host < block->length) {
+    goto found;
+  }
 
-    g_assert_not_reached();
+  g_assert_not_reached();
 found:
-    *offset = (host - block->host);
-    if (round_offset) {
-        *offset &= TARGET_PAGE_MASK;
-    }
-    return block;
+  *offset = (host - block->host);
+  if (round_offset) {
+    *offset &= TARGET_PAGE_MASK;
+  }
+  return block;
 }
 
 ram_addr_t qemu_ram_addr_from_host(void *ptr) {
@@ -356,4 +348,43 @@ ram_addr_t qemu_ram_addr_from_host(void *ptr) {
   }
 
   return block->offset + offset;
+}
+
+void cpu_exec_initfn(CPUState *cpu) {
+  // cpu->as = NULL;
+  cpu->num_ases = 0;
+
+#ifndef CONFIG_USER_ONLY
+  cpu->thread_id = qemu_get_thread_id();
+  // cpu->memory = system_memory;
+  // object_ref(OBJECT(cpu->memory));
+#endif
+}
+
+void cpu_exec_realizefn(CPUState *cpu) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+  static bool tcg_target_initialized;
+
+  cpu_list_add(cpu);
+
+  if (tcg_enabled() && !tcg_target_initialized) {
+    tcg_target_initialized = true;
+    cc->tcg_initialize();
+  }
+  tlb_init(cpu);
+
+  // qemu_plugin_vcpu_init_hook(cpu);
+
+#ifndef CONFIG_USER_ONLY
+#ifdef BMBT
+  if (qdev_get_vmsd(DEVICE(cpu)) == NULL) {
+    vmstate_register(NULL, cpu->cpu_index, &vmstate_cpu_common, cpu);
+  }
+  if (cc->vmsd != NULL) {
+    vmstate_register(NULL, cpu->cpu_index, cc->vmsd, cpu);
+  }
+
+  cpu->iommu_notifiers = g_array_new(false, true, sizeof(TCGIOMMUNotifier *));
+#endif
+#endif
 }

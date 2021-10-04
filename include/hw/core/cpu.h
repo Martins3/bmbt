@@ -645,10 +645,8 @@ static inline void end_exclusive(void) {
 #define UNASSIGNED_CPU_INDEX -1
 #define UNASSIGNED_CLUSTER_INDEX -1
 
-// FIXME port later
 void cpu_exec_initfn(CPUState *cpu);
 void cpu_exec_realizefn(CPUState *cpu);
-void cpu_exec_unrealizefn(CPUState *cpu);
 
 /**
  * qemu_init_vcpu:
@@ -660,5 +658,11 @@ void qemu_init_vcpu(CPUState *cpu);
 
 void cpu_class_init(CPUClass *k);
 void cpu_common_initfn(CPUState *cpu);
+
+/**
+ * cpu_list_add:
+ * @cpu: The CPU to be added to the list of CPUs.
+ */
+void cpu_list_add(CPUState *cpu);
 
 #endif /* end of include guard: CPU_H_5RAXENPS */
