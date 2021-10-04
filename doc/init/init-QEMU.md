@@ -13,42 +13,10 @@
 	- [x] target/i386/cpu.c
 			- x86_cpu_realizefn
 
-- [ ] 在 x86_cpu_new 直接初始化为整个 CPU, CPU 的初始化工作之后完成
-- [ ] 需要再次核实一下 x86_cpu_apply_version_props
-  - [ ] 而且 x86_register_cpu_model_type 中更加烦人的问题，他会因为 version 多次调用 x86_register_cpu_model_type
-- [ ] x86_cpu_filter_features 中发现有的 feature 需要 mark_unavailable_features 那么又如何?
-- [ ] user_features 这个东西到底是干啥的哇
-  - x86_cpu_set_bit_prop : 总是会把这个东西设置上
-
-- [ ] 在 target/i386/cpu.c 中间删除和 hotplugged 相关的代码的时候，没有过于深入的思考，实际上，不是这个样子的。
-似乎，`cpu->apic_id` 就是在这里被初始化的。
-```c
-/*
-#0  x86_find_cpu_slot (ms=0x555556095510 <__func__.35759>, id=32767, idx=0x555555d79f55 <trace_object_dynamic_cast_assert+57>) at ../hw/i386/x86.c:172
-#1  0x0000555555b5e714 in x86_cpu_pre_plug (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/x86.c:357
-#2  0x0000555555b96ced in pc_machine_device_pre_plug_cb (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/pc.c:1380
-#3  0x0000555555d70dd8 in hotplug_handler_pre_plug (plug_handler=0x5555569069e0, plugged_dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/core/hotplug.c:23
-#4  0x0000555555d757f6 in device_set_realized (obj=0x555556d00c00, value=true, errp=0x7fffffffd198) at ../hw/core/qdev.c:754
-```
-
-```c
-/*
-#0  x86_possible_cpu_arch_ids (ms=0x555555b5da43 <x86_cpu_apic_id_from_index+86>) at ../hw/i386/x86.c:451
-#1  0x0000555555b5dbd3 in x86_cpus_init (x86ms=0x5555569069e0, default_cpu_version=1) at ../hw/i386/x86.c:138
-#2  0x0000555555b627cb in pc_init1 (machine=0x5555569069e0, host_type=0x555556095eaa "i440FX-pcihost", pci_type=0x555556095ea3 "i440FX") at ../hw/i386/pc_piix.c:157
-```
-
-- [ ] x86_cpu_properties : 这个向 X86CPUClass 中初始化成员，也有可能被直接删除掉了，从而这些初始化被永远忘掉了
-
-## 问题
-- [ ] qemu_register_reset(x86_cpu_machine_reset_cb, cpu); 最后会调用到 cpu_reset 上，post done 和 reset 的关系到底是什么?
-
-- x86_cpu_realizefn
-- apic_realize
+- [ ] cpu_exec_realizefn 中调用 cpu_list_add 添加 CPUState 的
 
 ## 初始化 QEMU 大约需要处理的事情
 - [ ] tcg_register_thread : 唯一 reference 了 MachineState
-- [ ] cpu_exec_realizefn 中调用 cpu_list_add 添加 CPUState 的
 - [ ] CPUState 中的 cpu_index, cluster_index 等
 - [ ] 问题是 PCI 设备实际上是需要的，需要初始化一下 PCI 的设备空间吗?
   - [ ] 问题是，这个初始化过程中，需要保持那些设备的之间的联系的吗?
@@ -130,6 +98,15 @@ huxueshi:qdev_device_add virtio-9p-pci
 | i8259        | TYPE_ISA_DEVICE     |
 
 从 type info 上可以轻易的看到一个设备是不是 TYPE_ISA_DEVICE
+
+
+- qemu_register_reset(x86_cpu_machine_reset_cb, cpu);
+  - pc_machine_reset
+    - qemu_devices_reset
+      - 调用那些 qemu_register_reset 注册的 hook，其中包括 x86_cpu_machine_reset_cb
+        - cpu_reset
+    - APICCommonClass::reset
+- qemu_run_machine_init_done_notifiers
 
 ## e820
 - 信息是如何构造出来的
@@ -254,6 +231,8 @@ hw/core/bus.c:158
 X86CPU *cpu = X86_CPU(ms->possible_cpus->cpus[0].cpu);
 ```
 
+### machine_class_base_init 和 machine_class_init
+
 ## init cpu
 
 
@@ -303,47 +282,6 @@ X86CPU *cpu = X86_CPU(ms->possible_cpus->cpus[0].cpu);
 | singlestep_enabled            | 暂时保证永远不会被启动吧                                       |
 | cpu_index / cluster_index     |                                                                |
 
-##### apic_id
-```c
-/*
-#0  x86_find_cpu_slot (ms=0x555556095510 <__func__.35759>, id=32767, idx=0x555555d79f55 <trace_object_dynamic_cast_assert+57>) at ../hw/i386/x86.c:172
-#1  0x0000555555b5e714 in x86_cpu_pre_plug (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/x86.c:357
-#2  0x0000555555b96ced in pc_machine_device_pre_plug_cb (hotplug_dev=0x5555569069e0, dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/i386/pc.c:1380
-#3  0x0000555555d70dd8 in hotplug_handler_pre_plug (plug_handler=0x5555569069e0, plugged_dev=0x555556d00c00, errp=0x7fffffffd090) at ../hw/core/hotplug.c:23
-#4  0x0000555555d757f6 in device_set_realized (obj=0x555556d00c00, value=true, errp=0x7fffffffd198) at ../hw/core/qdev.c:754
-#5  0x0000555555d7f28d in property_set_bool (obj=0x555556d00c00, v=0x555556c07c60, name=0x5555560f1e79 "realized", opaque=0x555556884f70, errp=0x7fffffffd198) at ../qom
-/object.c:2257
-#6  0x0000555555d7d2ae in object_property_set (obj=0x555556d00c00, name=0x5555560f1e79 "realized", v=0x555556c07c60, errp=0x5555567a1f68 <error_fatal>) at ../qom/object
-.c:1402
-#7  0x0000555555d79b63 in object_property_set_qobject (obj=0x555556d00c00, name=0x5555560f1e79 "realized", value=0x555556bc6e50, errp=0x5555567a1f68 <error_fatal>) at .
-./qom/qom-qobject.c:28
-#8  0x0000555555d7d626 in object_property_set_bool (obj=0x555556d00c00, name=0x5555560f1e79 "realized", value=true, errp=0x5555567a1f68 <error_fatal>) at ../qom/object.
-c:1472
-#9  0x0000555555d7484e in qdev_realize (dev=0x555556d00c00, bus=0x0, errp=0x5555567a1f68 <error_fatal>) at ../hw/core/qdev.c:389
-#10 0x0000555555b5db48 in x86_cpu_new (x86ms=0x5555569069e0, apic_id=0, errp=0x5555567a1f68 <error_fatal>) at ../hw/i386/x86.c:113
-#11 0x0000555555b5dc1b in x86_cpus_init (x86ms=0x5555569069e0, default_cpu_version=1) at ../hw/i386/x86.c:140
-#12 0x0000555555b627cb in pc_init1 (machine=0x5555569069e0, host_type=0x555556095eaa "i440FX-pcihost", pci_type=0x555556095ea3 "i440FX") at ../hw/i386/pc_piix.c:157
-#13 0x0000555555b6337e in pc_init_v6_1 (machine=0x5555569069e0) at ../hw/i386/pc_piix.c:425
-#14 0x0000555555963cc6 in machine_run_board_init (machine=0x5555569069e0) at ../hw/core/machine.c:1239
-#15 0x0000555555c67acd in qemu_init_board () at ../softmmu/vl.c:2526
-#16 0x0000555555c67cac in qmp_x_exit_preconfig (errp=0x5555567a1f68 <error_fatal>) at ../softmmu/vl.c:2600
-#17 0x0000555555c6a384 in qemu_init (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/vl.c:3635
-#18 0x000055555582c575 in main (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/main.c:49
-```
-和
-```c
-/*
-#0  x86_possible_cpu_arch_ids (ms=0x555555b5da43 <x86_cpu_apic_id_from_index+86>) at ../hw/i386/x86.c:451
-#1  0x0000555555b5dbd3 in x86_cpus_init (x86ms=0x5555569069e0, default_cpu_version=1) at ../hw/i386/x86.c:138
-#2  0x0000555555b627cb in pc_init1 (machine=0x5555569069e0, host_type=0x555556095eaa "i440FX-pcihost", pci_type=0x555556095ea3 "i440FX") at ../hw/i386/pc_piix.c:157
-#3  0x0000555555b6337e in pc_init_v6_1 (machine=0x5555569069e0) at ../hw/i386/pc_piix.c:425
-#4  0x0000555555963cc6 in machine_run_board_init (machine=0x5555569069e0) at ../hw/core/machine.c:1239
-#5  0x0000555555c67acd in qemu_init_board () at ../softmmu/vl.c:2526
-#6  0x0000555555c67cac in qmp_x_exit_preconfig (errp=0x5555567a1f68 <error_fatal>) at ../softmmu/vl.c:2600
-#7  0x0000555555c6a384 in qemu_init (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/vl.c:3635
-#8  0x000055555582c575 in main (argc=29, argv=0x7fffffffd748, envp=0x7fffffffd838) at ../softmmu/main.c:49
-```
-
 ##### cpu_index / cluster_index
 - [ ] cluster_index : 应该是没有被重新初始化过，具体需要使用 xqm 分析一下
 
@@ -386,5 +324,31 @@ void device_class_set_parent_realize(DeviceClass *dc,
 所以，最后 x86_cpu_realizefn 会调用 cpu_common_realizefn
 #### CPUX86State
 - [ ] smbase : 这个地址似乎用于 smm 保存上下文的地方, 这个东西就是 SMRAM 的基地址
+
+#### features
+```c
+features [Field] :1546:22                                                                                                                                                                                                                               │
+max_features [Field] :1643:10                                                                                                                                                                                                                           │
+force_features [Field] :1638:10                                                                                                                                                                                                                         │
+hyperv_features [Field] :1627:14                                                                                                                                                                                                                        │
+filtered_features [Field] :1663:22                                                                                                                                                                                                                      │
+
+    /* Features that were explicitly enabled/disabled */
+    FeatureWordArray user_features;
+```
+- [ ] 这里面的几个内容暂时也是没有逐个分析的
+
+```c
+(qemu) 78bfbfd 2001 0 0 0 0 20100800 5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 huxueshi:x86_cpu_load_model
+78bfbfd 80002001 0 0 0 0 2193fbfd 5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 huxueshi:x86_cpu_realizefn
+```
+
+对于 env::features 增加赋值在两个地方:
+- x86_cpu_realizefn
+  - IS_AMD_CPU
+  - x86_cpu_load_model
+
+
+- [ ] x86_cpu_filter_features 中发现有的 feature 需要 mark_unavailable_features 那么又如何?
 
 [^2]: https://en.wikipedia.org/wiki/Machine-check_exception

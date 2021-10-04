@@ -40,6 +40,15 @@
     - 在这里设置了众多的 memory region 的映射问题，在 pc_init1 中处理了 PCI 相关的地址空间，在 x86_bios_rom_init 处理 bios 相关的空间, x86_cpu_apic_realize 中处理 apic 相关的, 在 x86_cpu_machine_done 中再次处理和 smram 相关的内容|
 22. pc_system_firmware_init
     - 因为不支持 pflash 所以这个函数被简化为直接调用 x86_bios_rom_init 了
+23. smp_parse
+    - 虽然不支持 smp_parse，但是保留空的接口
+24. machine_class_init 中的定义的 MachineClass property
+    - 最后这个玩意儿只是在 machine_class_init 中通过 machine_set_property 设置，但是这些变量都是写死的
+25. hotplug.h
+    - hotplug 的使用位置只有两个地方，pc.c 和 acpi.h，需要 plug 的总是 CPU
+    - hotplug.c 在 qdev_realize 的位置手动显示的调用
+    - 为了让 HotplugHandler * 可以装换为 DeviceState 或者是 PCMachineState 之类的，需要让 PCMachineState 内部持有一个 HotplugHandler
+    - 然后 HotplugHandler 再持有 HotplugDeviceClass * 并且手动检查
 
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
