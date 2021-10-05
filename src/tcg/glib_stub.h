@@ -53,6 +53,13 @@ gpointer g_try_malloc0(int n_bytes);
 #define g_assert_not_reached()                                                 \
   { exit(0); }
 
+#define duck_check(x)                                                          \
+  {                                                                            \
+    if (!x) {                                                                  \
+      g_assert_not_reached()                                                   \
+    }                                                                          \
+  }
+
 #define g_new0(struct_type, n_structs) (struct_type *)NULL
 #define g_renew(struct_type, mem, n_structs) (struct_type *)NULL
 

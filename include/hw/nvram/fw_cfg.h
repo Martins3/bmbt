@@ -12,10 +12,6 @@
 #define TYPE_FW_CFG_IO "fw_cfg_io"
 #define TYPE_FW_CFG_MEM "fw_cfg_mem"
 
-#define FW_CFG(obj) OBJECT_CHECK(FWCfgState, (obj), TYPE_FW_CFG)
-#define FW_CFG_IO(obj) OBJECT_CHECK(FWCfgIoState, (obj), TYPE_FW_CFG_IO)
-#define FW_CFG_MEM(obj) OBJECT_CHECK(FWCfgMemState, (obj), TYPE_FW_CFG_MEM)
-
 typedef struct FWCfgEntry FWCfgEntry;
 typedef struct FWCfgState FWCfgState;
 typedef struct fw_cfg_file FWCfgFile;
@@ -49,36 +45,42 @@ struct FWCfgState {
   FWCfgFiles *files;
   uint16_t cur_entry;
   uint32_t cur_offset;
-  // @todo use a how to call the Notifier schema
-  // Notifier machine_ready;
+  Notifier machine_ready;
 
   int fw_cfg_order_override;
 
   bool dma_enabled;
   dma_addr_t dma_addr;
-  // @todo @mem
+
   AddressSpace *dma_as;
-  // MemoryRegion dma_iomem;
+  MemoryRegion dma_iomem;
 };
 
-struct FWCfgIoState {
+#define FW_CFG(ios)                                                            \
+  ({                                                                           \
+    FWCfgIoState *tmp = ios;                                                   \
+    (FWCfgState *)tmp;                                                         \
+  })
+
+typedef struct FWCfgIoState {
   /*< private >*/
   FWCfgState parent_obj;
   /*< public >*/
 
-  // @todo change to PioRegion ?
-  // MemoryRegion comb_iomem;
-};
+  MemoryRegion comb_iomem;
+} FWCfgIoState;
 
+#ifdef BMBT
 struct FWCfgMemState {
   /*< private >*/
   FWCfgState parent_obj;
   /*< public >*/
 
-  // MemoryRegion ctl_iomem, data_iomem;
+  MemoryRegion ctl_iomem, data_iomem;
   uint32_t data_width;
-  // MemoryRegionOps wide_data_ops;
+  MemoryRegionOps wide_data_ops;
 };
+#endif
 
 /**
  * fw_cfg_add_bytes:

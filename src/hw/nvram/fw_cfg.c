@@ -1,7 +1,9 @@
 #include "../../include/hw/nvram/fw_cfg.h"
+#include "../../include/hw/i386/pc.h"
 #include "../../include/qemu/bitops.h"
 #include "../../include/qemu/cutils.h"
 #include "../../include/qemu/error-report.h"
+#include "../../include/sysemu/reset.h"
 #include "../../tcg/glib_stub.h"
 #include <assert.h>
 #include <string.h>
@@ -83,8 +85,11 @@ static inline const char *trace_key_name(uint16_t key);
 static char *read_splashfile(char *filename, gsize *file_sizep,
                              int *file_typep);
 
-static void fw_cfg_bootsplash(FWCfgState *s);
 #endif
+
+static void fw_cfg_bootsplash(FWCfgState *s) {
+  // no extra configuration, can be simplified
+}
 
 static void fw_cfg_reboot(FWCfgState *s) {
   const char *reboot_timeout = NULL;
@@ -751,25 +756,22 @@ static void fw_cfg_machine_reset(void *opaque) {
   }
 }
 
-// @todo how to port reset hook
-#if TODO
 static void fw_cfg_machine_ready(struct Notifier *n, void *data) {
   FWCfgState *s = container_of(n, FWCfgState, machine_ready);
   qemu_register_reset(fw_cfg_machine_reset, s);
 }
-#endif
 
-
-#if MEM_TODO
-static void fw_cfg_common_realize(DeviceState *dev, Error **errp) {
-  FWCfgState *s = FW_CFG(dev);
-  MachineState *machine = MACHINE(qdev_get_machine());
+static void fw_cfg_common_realize(FWCfgState *s) {
+  // FWCfgState *s = FW_CFG(dev);
+  MachineState *machine = qdev_get_machine();
   uint32_t version = FW_CFG_VERSION;
 
+#ifdef BMBT
   if (!fw_cfg_find()) {
-    error_setg(errp, "at most one %s device is permitted", TYPE_FW_CFG);
+    error_report("at most one %s device is permitted", TYPE_FW_CFG);
     return;
   }
+#endif
 
   fw_cfg_add_bytes(s, FW_CFG_SIGNATURE, (char *)"QEMU", 4);
   fw_cfg_add_bytes(s, FW_CFG_UUID, &qemu_uuid, 16);
@@ -788,39 +790,41 @@ static void fw_cfg_common_realize(DeviceState *dev, Error **errp) {
   qemu_add_machine_init_done_notifier(&s->machine_ready);
 }
 
+static FWCfgIoState __fw_state;
+
 FWCfgState *fw_cfg_init_io_dma(uint32_t iobase, uint32_t dma_iobase,
                                AddressSpace *dma_as) {
-  DeviceState *dev;
-  SysBusDevice *sbd;
-  FWCfgIoState *ios;
-  FWCfgState *s;
+  FWCfgIoState *ios = &__fw_state;
+  FWCfgState *s = FW_CFG(ios);
+
   bool dma_requested = dma_iobase && dma_as;
 
-  dev = qdev_create(NULL, TYPE_FW_CFG_IO);
   if (!dma_requested) {
-    qdev_prop_set_bit(dev, "dma_enabled", false);
+    // qdev_prop_set_bit(dev, "dma_enabled", false);
+    s->dma_enabled = false;
   }
 
+  duck_check(s->dma_enabled);
+
+#ifdef BMBT
   object_property_add_child(OBJECT(qdev_get_machine()), TYPE_FW_CFG,
                             OBJECT(dev), NULL);
   qdev_init_nofail(dev);
+#endif
 
-  sbd = SYS_BUS_DEVICE(dev);
-  ios = FW_CFG_IO(dev);
-  sysbus_add_io(sbd, iobase, &ios->comb_iomem);
-
-  s = FW_CFG(dev);
+  io_add_memory_region(iobase, &ios->comb_iomem);
 
   if (s->dma_enabled) {
     /* 64 bits for the address field */
     s->dma_as = dma_as;
     s->dma_addr = 0;
-    sysbus_add_io(sbd, dma_iobase, &s->dma_iomem);
+    io_add_memory_region(dma_iobase, &s->dma_iomem);
   }
 
   return s;
 }
 
+#ifdef BMBT
 FWCfgState *fw_cfg_init_io(uint32_t iobase) {
   return fw_cfg_init_io_dma(iobase, 0, NULL);
 }
@@ -867,4 +871,165 @@ FWCfgState *fw_cfg_find(void) {
   /* Returns NULL unless there is exactly one fw_cfg device */
   return FW_CFG(object_resolve_path_type("", TYPE_FW_CFG, NULL));
 }
+#endif
+
+// FIXME
+// 1. call the reset hook manually
+// 2. call the fw_cfg_find manually
+#ifdef BMBT
+static void fw_cfg_class_init(ObjectClass *klass, void *data) {
+  DeviceClass *dc = DEVICE_CLASS(klass);
+
+  dc->reset = fw_cfg_reset;
+  dc->vmsd = &vmstate_fw_cfg;
+}
+
+static const TypeInfo fw_cfg_info = {
+    .name = TYPE_FW_CFG,
+    .parent = TYPE_SYS_BUS_DEVICE,
+    .abstract = true,
+    .instance_size = sizeof(FWCfgState),
+    .class_init = fw_cfg_class_init,
+};
+#endif
+
+static void fw_cfg_file_slots_allocate(FWCfgState *s) {
+  uint16_t file_slots_max;
+
+  if (fw_cfg_file_slots(s) < FW_CFG_FILE_SLOTS_MIN) {
+    error_report("\"file_slots\" must be at least 0x%x", FW_CFG_FILE_SLOTS_MIN);
+    return;
+  }
+
+  /* (UINT16_MAX & FW_CFG_ENTRY_MASK) is the highest inclusive selector value
+   * that we permit. The actual (exclusive) value coming from the
+   * configuration is (FW_CFG_FILE_FIRST + fw_cfg_file_slots(s)). */
+  file_slots_max = (UINT16_MAX & FW_CFG_ENTRY_MASK) - FW_CFG_FILE_FIRST + 1;
+  if (fw_cfg_file_slots(s) > file_slots_max) {
+    error_report("\"file_slots\" must not exceed 0x%" PRIx16, file_slots_max);
+    return;
+  }
+
+  s->entries[0] = g_new0(FWCfgEntry, fw_cfg_max_entry(s));
+  s->entries[1] = g_new0(FWCfgEntry, fw_cfg_max_entry(s));
+  s->entry_order = g_new0(int, fw_cfg_max_entry(s));
+}
+
+// FIXME initialize
+#ifdef BMBT
+static Property fw_cfg_io_properties[] = {
+    DEFINE_PROP_BOOL("dma_enabled", FWCfgIoState, parent_obj.dma_enabled, true),
+    DEFINE_PROP_UINT16("x-file-slots", FWCfgIoState, parent_obj.file_slots,
+                       FW_CFG_FILE_SLOTS_DFLT),
+    DEFINE_PROP_END_OF_LIST(),
+};
+#endif
+
+static void fw_cfg_io_realize(FWCfgIoState *s) {
+  fw_cfg_file_slots_allocate(FW_CFG(s));
+
+  /* when using port i/o, the 8-bit data register ALWAYS overlaps
+   * with half of the 16-bit control register. Hence, the total size
+   * of the i/o region used is FW_CFG_CTL_SIZE */
+
+  // FIXME init the memory region
+  // memory_region_init_io(&s->comb_iomem, OBJECT(s), &fw_cfg_comb_mem_ops,
+  // FW_CFG(s), "fwcfg", FW_CFG_CTL_SIZE);
+
+  if (FW_CFG(s)->dma_enabled) {
+    // FIXME init the memory region
+    // memory_region_init_io(&FW_CFG(s)->dma_iomem, OBJECT(s),
+    // &fw_cfg_dma_mem_ops, FW_CFG(s), "fwcfg.dma", sizeof(dma_addr_t));
+  }
+
+  fw_cfg_common_realize(FW_CFG(s));
+}
+
+// FIXME call
+// 1. fw_cfg_io_realize
+// 2. fw_cfg_io_class_init
+#ifdef BMBT
+static void fw_cfg_io_class_init(ObjectClass *klass, void *data) {
+  DeviceClass *dc = DEVICE_CLASS(klass);
+
+  dc->realize = fw_cfg_io_realize;
+  dc->props = fw_cfg_io_properties;
+}
+
+static const TypeInfo fw_cfg_io_info = {
+    .name = TYPE_FW_CFG_IO,
+    .parent = TYPE_FW_CFG,
+    .instance_size = sizeof(FWCfgIoState),
+    .class_init = fw_cfg_io_class_init,
+};
+#endif
+
+#ifdef BMBT
+static Property fw_cfg_mem_properties[] = {
+    DEFINE_PROP_UINT32("data_width", FWCfgMemState, data_width, -1),
+    DEFINE_PROP_BOOL("dma_enabled", FWCfgMemState, parent_obj.dma_enabled,
+                     true),
+    DEFINE_PROP_UINT16("x-file-slots", FWCfgMemState, parent_obj.file_slots,
+                       FW_CFG_FILE_SLOTS_DFLT),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+static void fw_cfg_mem_realize(DeviceState *dev, Error **errp) {
+  FWCfgMemState *s = FW_CFG_MEM(dev);
+  SysBusDevice *sbd = SYS_BUS_DEVICE(dev);
+  const MemoryRegionOps *data_ops = &fw_cfg_data_mem_ops;
+  Error *local_err = NULL;
+  printf("huxueshi:%s \n", __FUNCTION__);
+
+  fw_cfg_file_slots_allocate(FW_CFG(s), &local_err);
+  if (local_err) {
+    error_propagate(errp, local_err);
+    return;
+  }
+
+  memory_region_init_io(&s->ctl_iomem, OBJECT(s), &fw_cfg_ctl_mem_ops,
+                        FW_CFG(s), "fwcfg.ctl", FW_CFG_CTL_SIZE);
+  sysbus_init_mmio(sbd, &s->ctl_iomem);
+
+  if (s->data_width > data_ops->valid.max_access_size) {
+    s->wide_data_ops = *data_ops;
+
+    s->wide_data_ops.valid.max_access_size = s->data_width;
+    s->wide_data_ops.impl.max_access_size = s->data_width;
+    data_ops = &s->wide_data_ops;
+  }
+  memory_region_init_io(&s->data_iomem, OBJECT(s), data_ops, FW_CFG(s),
+                        "fwcfg.data", data_ops->valid.max_access_size);
+  sysbus_init_mmio(sbd, &s->data_iomem);
+
+  if (FW_CFG(s)->dma_enabled) {
+    memory_region_init_io(&FW_CFG(s)->dma_iomem, OBJECT(s), &fw_cfg_dma_mem_ops,
+                          FW_CFG(s), "fwcfg.dma", sizeof(dma_addr_t));
+    sysbus_init_mmio(sbd, &FW_CFG(s)->dma_iomem);
+  }
+
+  fw_cfg_common_realize(dev, errp);
+}
+
+static void fw_cfg_mem_class_init(ObjectClass *klass, void *data) {
+  DeviceClass *dc = DEVICE_CLASS(klass);
+
+  dc->realize = fw_cfg_mem_realize;
+  dc->props = fw_cfg_mem_properties;
+}
+
+static const TypeInfo fw_cfg_mem_info = {
+    .name = TYPE_FW_CFG_MEM,
+    .parent = TYPE_FW_CFG,
+    .instance_size = sizeof(FWCfgMemState),
+    .class_init = fw_cfg_mem_class_init,
+};
+
+static void fw_cfg_register_types(void) {
+  type_register_static(&fw_cfg_info);
+  type_register_static(&fw_cfg_io_info);
+  type_register_static(&fw_cfg_mem_info);
+}
+
+type_init(fw_cfg_register_types)
 #endif
