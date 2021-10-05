@@ -793,6 +793,15 @@ static void fw_cfg_common_realize(FWCfgState *s) {
   qemu_add_machine_init_done_notifier(&s->machine_ready);
 }
 
+static void fw_cfg_io_realize(FWCfgIoState *s);
+
+void QOM_FWCFG_init(FWCfgIoState *ios) {
+  FWCfgState *s = FW_CFG(ios);
+
+  s->dma_enabled = true;
+  s->file_slots = FW_CFG_FILE_SLOTS_DFLT;
+}
+
 FWCfgState *fw_cfg_init_io_dma(uint32_t iobase, uint32_t dma_iobase,
                                AddressSpace *dma_as) {
   FWCfgIoState *ios = &__fw_state;
@@ -800,12 +809,23 @@ FWCfgState *fw_cfg_init_io_dma(uint32_t iobase, uint32_t dma_iobase,
 
   bool dma_requested = dma_iobase && dma_as;
 
+#ifdef BMBT
+  dev = qdev_create(NULL, TYPE_FW_CFG_IO);
+#endif
+  QOM_FWCFG_init(ios);
+
   if (!dma_requested) {
     // qdev_prop_set_bit(dev, "dma_enabled", false);
     s->dma_enabled = false;
   }
-
   duck_check(s->dma_enabled);
+
+#ifdef BMBT
+  object_property_add_child(OBJECT(qdev_get_machine()), TYPE_FW_CFG,
+                            OBJECT(dev), NULL);
+  qdev_init_nofail(dev);
+#endif
+  fw_cfg_io_realize(ios);
 
 #ifdef BMBT
   object_property_add_child(OBJECT(qdev_get_machine()), TYPE_FW_CFG,
@@ -872,12 +892,7 @@ FWCfgState *fw_cfg_find(void) {
   /* Returns NULL unless there is exactly one fw_cfg device */
   return FW_CFG(object_resolve_path_type("", TYPE_FW_CFG, NULL));
 }
-#endif
 
-// FIXME
-// 1. call the reset hook manually
-// 2. call the fw_cfg_find manually
-#ifdef BMBT
 static void fw_cfg_class_init(ObjectClass *klass, void *data) {
   DeviceClass *dc = DEVICE_CLASS(klass);
 
@@ -916,7 +931,6 @@ static void fw_cfg_file_slots_allocate(FWCfgState *s) {
   s->entry_order = g_new0(int, fw_cfg_max_entry(s));
 }
 
-// FIXME initialize
 #ifdef BMBT
 static Property fw_cfg_io_properties[] = {
     DEFINE_PROP_BOOL("dma_enabled", FWCfgIoState, parent_obj.dma_enabled, true),
@@ -946,9 +960,6 @@ static void fw_cfg_io_realize(FWCfgIoState *s) {
   fw_cfg_common_realize(FW_CFG(s));
 }
 
-// FIXME call
-// 1. fw_cfg_io_realize
-// 2. fw_cfg_io_class_init
 #ifdef BMBT
 static void fw_cfg_io_class_init(ObjectClass *klass, void *data) {
   DeviceClass *dc = DEVICE_CLASS(klass);
