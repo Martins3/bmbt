@@ -12,6 +12,7 @@
  * little-endian "wire format" described in the SMBIOS 2.6 specification.
  */
 QemuUUID qemu_uuid;
+ram_addr_t ram_size;
 
 bool machine_init_done;
 
@@ -140,8 +141,9 @@ PCMachineState *machine_init() {
   qemu_opt_foreach(machine_opts, machine_set_property, current_machine,
                    &error_fatal);
 #endif
-  current_machine->ram_size = 128 * MiB;
-  current_machine->maxram_size = 128 * MiB;
+  ram_size = 128 * MiB;
+  current_machine->ram_size = ram_size;
+  current_machine->maxram_size = ram_size;
   current_machine->ram_slots = 0;
 
   current_machine->boot_order = "cad";
@@ -163,7 +165,6 @@ PCMachineState *machine_init() {
 }
 
 void qemu_init() {
-  tcg_init();
-
   machine_init();
+  tcg_init();
 }
