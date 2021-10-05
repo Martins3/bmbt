@@ -221,4 +221,6 @@ void pc_machine_initfn(PCMachineState *pcms);
 PCMachineState *machine_init();
 void pc_machine_v4_2_class_init(MachineClass *mc);
 
+#define FW_CFG_IO_BASE 0x510
+
 #endif /* end of include guard: PC_H_0VFJYDT2 */

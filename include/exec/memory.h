@@ -34,7 +34,17 @@ typedef struct AddressSpace {
   MemoryRegion *segments;
 } AddressSpace;
 
+// move include/exec/address-spaces.h code here
 extern AddressSpace address_space_io;
+extern AddressSpace address_space_memory;
+
+static inline void io_add_memory_region(hwaddr offset, MemoryRegion *mr) {
+  // FIXME
+}
+
+static inline void mem_add_memory_region(hwaddr offset, MemoryRegion *mr) {
+  // FIXME
+}
 
 #define RAM_ADDR_INVALID (~(ram_addr_t)0)
 

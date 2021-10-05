@@ -2,9 +2,15 @@
 #include "../../include/qemu/error-report.h"
 #include "../../include/qemu/notify.h"
 #include "../../include/qemu/units.h"
+#include "../../include/qemu/uuid.h"
 #include "../../include/sysemu/tcg.h"
 
 #include <stdbool.h>
+
+/* The bytes in qemu_uuid are in the order specified by RFC4122, _not_ in the
+ * little-endian "wire format" described in the SMBIOS 2.6 specification.
+ */
+QemuUUID qemu_uuid;
 
 bool machine_init_done;
 

@@ -1,5 +1,6 @@
 #include "../../include/hw/nvram/fw_cfg.h"
 #include "../../i386/cpu.h"
+#include "../../include/hw/i386/pc.h"
 #include "../../include/qemu/osdep.h"
 #include "fw_cfg.h"
 
@@ -65,7 +66,6 @@ void fw_cfg_build_smbios(MachineState *ms, FWCfgState *fw_cfg) {
 }
 #endif
 
-#if FIXME
 FWCfgState *fw_cfg_arch_create(MachineState *ms, uint16_t boot_cpus,
                                uint16_t apic_id_limit) {
   FWCfgState *fw_cfg;
@@ -92,7 +92,10 @@ FWCfgState *fw_cfg_arch_create(MachineState *ms, uint16_t boot_cpus,
    * "etc/max-cpus" actually being apic_id_limit
    */
   fw_cfg_add_i16(fw_cfg, FW_CFG_MAX_CPUS, apic_id_limit);
+  // FIXME ram_size is put in cpu-common.h, that's fucking so weird
+  // why not access from MachineState ?
   fw_cfg_add_i64(fw_cfg, FW_CFG_RAM_SIZE, (uint64_t)ram_size);
+#ifdef NEED_LATER
   fw_cfg_add_bytes(fw_cfg, FW_CFG_ACPI_TABLES, acpi_tables, acpi_tables_len);
   fw_cfg_add_i32(fw_cfg, FW_CFG_IRQ0_OVERRIDE, kvm_allows_irq0_override());
 
@@ -106,6 +109,7 @@ FWCfgState *fw_cfg_arch_create(MachineState *ms, uint16_t boot_cpus,
    * of nodes, one word for each VCPU->node and one word for each node to
    * hold the amount of memory.
    */
+#endif
   numa_fw_cfg = g_new0(uint64_t, 1 + apic_id_limit + nb_numa_nodes);
   numa_fw_cfg[0] = cpu_to_le64(nb_numa_nodes);
   for (i = 0; i < cpus->len; i++) {
@@ -122,7 +126,6 @@ FWCfgState *fw_cfg_arch_create(MachineState *ms, uint16_t boot_cpus,
 
   return fw_cfg;
 }
-#endif
 
 void fw_cfg_build_feature_control(MachineState *ms, FWCfgState *fw_cfg) {
   X86CPU *cpu = X86_CPU(ms->possible_cpus->cpus[0].cpu);
