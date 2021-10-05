@@ -8,6 +8,16 @@
 
 - seabios 需要区分处理文件和非文件，分析下怎么处理的
 
+- [ ] 很烦，为什么需要 reset 的时候进行 fw_cfg_select
+```c
+static void fw_cfg_reset(FWCfgState *s) {
+  /* we never register a read callback for FW_CFG_SIGNATURE */
+  fw_cfg_select(s, FW_CFG_SIGNATURE);
+}
+```
+
+- FWCfgEntry::select_cb 仅仅被注册上 acpi_build_update
+
 ## 基本原理
 fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
 前者是主要实现，后者主要是为架构中添加一些细节。
@@ -28,6 +38,14 @@ fw_cfg 出现在两个文件中， hw/nvram/fw_cfg.c 和 hw/i386/fw_cfg.c，
       - memory_region_add_subregion
     - 一堆 fw_cfg_add_i16 添加 x86 特有的配置
     - 处理 NUMA 相关的内容
+
+
+- FWCfgState 的两个 child
+  - FWCfgIoState
+  - FWCfgMemState
+
+但是其中的 FWCfgIoState 才会因为 fw_cfg_init_io_dma 被调用
+
 
 ## 流程分析 : etc/acpi/rsdp 如何通过 fw_cfg 告知 guest 的
 通过两个端口来通信
