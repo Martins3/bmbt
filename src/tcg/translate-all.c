@@ -9,11 +9,11 @@
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
 #include "../../include/qemu/bitmap.h"
+#include "../../include/qemu/main-loop.h"
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/plugin.h"
 #include "../../include/qemu/qemu-printf.h"
 #include "../../include/qemu/thread.h"
-#include "../../include/qemu/main-loop.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 
@@ -42,9 +42,6 @@ int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
 
 // defined in accel/tcg/cpu-exec-common.c, which is simple file
 bool tcg_allowed;
-
-// FIXME defined in vl.c
-ram_addr_t ram_size;
 
 // FIXME copied from  util/cacheinfo.c
 // why I should take care of icache size ?
