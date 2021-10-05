@@ -3,6 +3,7 @@
 #include "../../include/qemu/notify.h"
 #include "../../include/qemu/units.h"
 #include "../../include/qemu/uuid.h"
+#include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/tcg.h"
 
 #include <stdbool.h>
@@ -27,6 +28,12 @@ void qemu_add_machine_init_done_notifier(Notifier *notify) {
 static void qemu_run_machine_init_done_notifiers(void) {
   machine_init_done = true;
   notifier_list_notify(&machine_init_done_notifiers, NULL);
+}
+
+void fw_cfg_reset();
+void qbus_reset_all_fn(void *opaque) {
+  // FIXME maybe we have a better way to port the code
+  fw_cfg_reset();
 }
 
 /*
@@ -133,7 +140,6 @@ PCMachineState *machine_init() {
   qemu_opt_foreach(machine_opts, machine_set_property, current_machine,
                    &error_fatal);
 #endif
-
   current_machine->ram_size = 128 * MiB;
   current_machine->maxram_size = 128 * MiB;
   current_machine->ram_slots = 0;
@@ -147,8 +153,8 @@ PCMachineState *machine_init() {
   machine_run_board_init(current_machine);
 
   // qdev_machine_creation_done();
-  // FIXME in qbus_reset_all_fn, all qdev::reset will be called, e.g.,
-  // fw_cfg_reset qemu_register_reset(qbus_reset_all_fn, sysbus_get_default());
+  // FIXME all qdev::reset will be called, e.g., fw_cfg_reset
+  qemu_register_reset(qbus_reset_all_fn, NULL);
   qemu_run_machine_init_done_notifiers();
 
   qemu_system_reset(machine_class, current_machine);
