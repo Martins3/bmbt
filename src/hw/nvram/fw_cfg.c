@@ -80,6 +80,8 @@ static const char *key_name(uint16_t key) {
   return NULL;
 }
 
+static FWCfgIoState __fw_state;
+
 #if BMBT
 static inline const char *trace_key_name(uint16_t key);
 static char *read_splashfile(char *filename, gsize *file_sizep,
@@ -377,14 +379,15 @@ static const MemoryRegionOps fw_cfg_dma_mem_ops = {
     .valid.max_access_size = 8,
     .impl.max_access_size = 8,
 };
+#endif
 
-static void fw_cfg_reset(DeviceState *d) {
-  FWCfgState *s = FW_CFG(d);
-
+void fw_cfg_reset() {
   /* we never register a read callback for FW_CFG_SIGNATURE */
-  fw_cfg_select(s, FW_CFG_SIGNATURE);
+  FWCfgIoState *ios = &__fw_state;
+  fw_cfg_select(FW_CFG(ios), FW_CFG_SIGNATURE);
 }
 
+#ifdef BMBT
 /* Save restore 32 bit int as uint16_t
    This is a Big hack, but it is how the old state did it.
    Or we broke compatibility in the state, or we can't use struct tm
@@ -789,8 +792,6 @@ static void fw_cfg_common_realize(FWCfgState *s) {
   s->machine_ready.notify = fw_cfg_machine_ready;
   qemu_add_machine_init_done_notifier(&s->machine_ready);
 }
-
-static FWCfgIoState __fw_state;
 
 FWCfgState *fw_cfg_init_io_dma(uint32_t iobase, uint32_t dma_iobase,
                                AddressSpace *dma_as) {
