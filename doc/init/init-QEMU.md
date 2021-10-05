@@ -13,19 +13,16 @@
 	- [x] target/i386/cpu.c
 			- x86_cpu_realizefn
 
-- [ ] cpu_exec_realizefn 中调用 cpu_list_add 添加 CPUState 的
-
 ## 初始化 QEMU 大约需要处理的事情
 - [ ] tcg_register_thread : 唯一 reference 了 MachineState
-- [ ] CPUState 中的 cpu_index, cluster_index 等
 - [ ] 问题是 PCI 设备实际上是需要的，需要初始化一下 PCI 的设备空间吗?
   - [ ] 问题是，这个初始化过程中，需要保持那些设备的之间的联系的吗?
-- [ ] fw_cfg 的初始化过程
-- [ ] cpu 初始化
+- [x] fw_cfg 的初始化过程
 - [ ] /home/maritns3/core/ld/x86-qemu-mips/hw/i386/pc.c
 - [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
 
 - [ ] 如何降低 include/sysemu/numa.h 的影响
+  - [ ] CPUState 中的 cpu_index, cluster_index 等
 - [ ] 分析一下 include/hw/i386/topology.h 的实现
 
 - [ ] PCMachineClass 中为什么需要将 smm 和 vmport 单独分析出来

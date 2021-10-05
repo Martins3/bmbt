@@ -49,9 +49,13 @@
     - hotplug.c 在 qdev_realize 的位置手动显示的调用
     - 为了让 HotplugHandler * 可以装换为 DeviceState 或者是 PCMachineState 之类的，需要让 PCMachineState 内部持有一个 HotplugHandler
     - 然后 HotplugHandler 再持有 HotplugDeviceClass * 并且手动检查
+26. ram_size
+    - 因为 `current_machine->ram_size` == ram_size 的，所以在 fw_cfg_arch_create 直接替换掉
+    - [ ] 虽然暂时没有完全移除掉，但是我希望之后彻底移除掉这个 ram_size，通过 `qdev_get_machine()->ram_size` 代替
 
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
 
 - NEED_LATER : 将来应该需要
 - BMBT : 一定不需要，应该在每一个 BMBT 跟上解释为什么不需要这个东西
+- MEM_TODO : 暂时没有移植的，和 MEM 相关的
