@@ -1,6 +1,9 @@
 #ifndef IOAPIC_INTERNAL_H_NKHBSHQ4
 #define IOAPIC_INTERNAL_H_NKHBSHQ4
 
+#include "../../exec/memory.h"
+#include "../../qemu/error-report.h"
+#include "../../qemu/notify.h"
 #include "../../types.h"
 #include "ioapic.h"
 
@@ -60,20 +63,31 @@
 
 typedef struct IOAPICCommonState IOAPICCommonState;
 
+typedef struct IOAPICCommonClass {
+  // SysBusDeviceClass parent_class;
+
+  void (*realize)(IOAPICCommonState *s);
+  // DeviceUnrealize unrealize;
+  void (*pre_save)(IOAPICCommonState *s);
+  void (*post_load)(IOAPICCommonState *s);
+} IOAPICCommonClass;
+
 struct IOAPICCommonState {
   // SysBusDevice busdev;
-  // MemoryRegion io_memory;
+  IOAPICCommonClass *icc;
+  MemoryRegion io_memory;
   uint8_t id;
   uint8_t ioregsel;
   uint32_t irr;
   uint64_t ioredtbl[IOAPIC_NUM_PINS];
-  // Notifier machine_done;
+  Notifier machine_done;
   uint8_t version;
   uint64_t irq_count[IOAPIC_NUM_PINS];
   int irq_level[IOAPIC_NUM_PINS];
   int irq_eoi[IOAPIC_NUM_PINS];
   // QEMUTimer *delayed_ioapic_service_timer; // FIXME what's delayed ?
 };
+#define IOAPIC_COMMON_GET_CLASS(is) is->icc
 
 void ioapic_reset_common(IOAPICCommonState *s);
 

@@ -3,6 +3,9 @@
 #include "../../include/hw/i386/apic-msidef.h"
 #include "../../include/hw/i386/ioapic_internal.h"
 #include "../../include/hw/isa/i8259.h"
+#include "../../include/qemu/error-report.h"
+#include "../../include/qemu/notify.h"
+#include "../../include/sysemu/sysemu.h"
 #include <string.h>
 
 static IOAPICCommonState *ioapics[MAX_IOAPICS];
@@ -362,6 +365,7 @@ static const MemoryRegionOps ioapic_io_ops = {
     .write = ioapic_mem_write,
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
+#endif
 
 static void ioapic_machine_done_notify(Notifier *notifier, void *data) {
 #ifdef CONFIG_KVM
@@ -382,57 +386,66 @@ static void ioapic_machine_done_notify(Notifier *notifier, void *data) {
 
 #define IOAPIC_VER_DEF 0x20
 
-static void ioapic_realize(DeviceState *dev, Error **errp) {
-  IOAPICCommonState *s = IOAPIC_COMMON(dev);
-
+static void ioapic_realize(IOAPICCommonState *s) {
   if (s->version != 0x11 && s->version != 0x20) {
-    error_setg(errp,
-               "IOAPIC only supports version 0x11 or 0x20 "
-               "(default: 0x%x).",
-               IOAPIC_VER_DEF);
+    error_report("IOAPIC only supports version 0x11 or 0x20 "
+                 "(default: 0x%x).",
+                 IOAPIC_VER_DEF);
     return;
   }
 
+// FIXME
+// 1. memory region init
+// 2. the timer
+#ifdef NEED_LATER
   memory_region_init_io(&s->io_memory, OBJECT(s), &ioapic_io_ops, s, "ioapic",
                         0x1000);
 
   s->delayed_ioapic_service_timer =
       timer_new_ns(QEMU_CLOCK_VIRTUAL, delayed_ioapic_service_cb, s);
+#endif
 
-  qdev_init_gpio_in(dev, ioapic_set_irq, IOAPIC_NUM_PINS);
+  // FIXME later
+  // qdev_init_gpio_in(dev, ioapic_set_irq, IOAPIC_NUM_PINS);
 
   ioapics[ioapic_no] = s;
   s->machine_done.notify = ioapic_machine_done_notify;
   qemu_add_machine_init_done_notifier(&s->machine_done);
 }
 
+#ifdef BMBT
 static void ioapic_unrealize(DeviceState *dev, Error **errp) {
   IOAPICCommonState *s = IOAPIC_COMMON(dev);
 
   timer_del(s->delayed_ioapic_service_timer);
   timer_free(s->delayed_ioapic_service_timer);
 }
+#endif
 
+// FIXME init the variable later
+#ifdef BMBT
 static Property ioapic_properties[] = {
     DEFINE_PROP_UINT8("version", IOAPICCommonState, version, IOAPIC_VER_DEF),
     DEFINE_PROP_END_OF_LIST(),
 };
+#endif
 
-static void ioapic_class_init(ObjectClass *klass, void *data) {
-  IOAPICCommonClass *k = IOAPIC_COMMON_CLASS(klass);
-  DeviceClass *dc = DEVICE_CLASS(klass);
+static void ioapic_class_init(IOAPICCommonClass *k) {
+  // DeviceClass *dc = DEVICE_CLASS(klass);
 
   k->realize = ioapic_realize;
-  k->unrealize = ioapic_unrealize;
+  // k->unrealize = ioapic_unrealize;
   /*
    * If APIC is in kernel, we need to update the kernel cache after
    * migration, otherwise first 24 gsi routes will be invalid.
    */
   k->post_load = ioapic_update_kvm_routes;
-  dc->reset = ioapic_reset_common;
-  dc->props = ioapic_properties;
+  // FIXME call the reset
+  // dc->reset = ioapic_reset_common;
+  // dc->props = ioapic_properties;
 }
 
+#ifdef BMBT
 static const TypeInfo ioapic_info = {
     .name = TYPE_IOAPIC,
     .parent = TYPE_IOAPIC_COMMON,
