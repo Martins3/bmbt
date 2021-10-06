@@ -26,6 +26,12 @@ typedef struct PICClass {
   void (*parent_realize)(PICCommonState *s);
 } PICClass;
 
+#define PIC_COMMON_CLASS(pc)                                                   \
+  ({                                                                           \
+    PICClass *tmp = pc;                                                        \
+    (PICCommonClass *)pc;                                                      \
+  })
+
 struct PICCommonState {
   // ISADevice parent_obj;
   PICClass *pc;
@@ -60,5 +66,12 @@ void pic_reset_common(PICCommonState *s);
 PICCommonState *i8259_init_chip(const char *name, bool master);
 
 #define PIC_GET_CLASS(i) i->pc
+
+void pic_realize(PICCommonState *s);
+void pic_common_realize(PICCommonState *s);
+void i8259_class_init(PICClass *k);
+PICCommonState *QOM_init_PIC(bool master);
+
+void pic_init_reset(PICCommonState *s);
 
 #endif /* end of include guard: I8259_INTERNAL_H_XQYSJYON */

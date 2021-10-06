@@ -156,12 +156,11 @@ int pic_read_irq(PICCommonState *s) {
   return intno;
 }
 
-static void pic_init_reset(PICCommonState *s) {
+void pic_init_reset(PICCommonState *s) {
   pic_reset_common(s);
   pic_update_irq(s);
 }
 
-// @todo @init
 static void pic_reset(PICCommonState *s) {
   s->elcr = 0;
   pic_init_reset(s);
@@ -324,7 +323,7 @@ static const MemoryRegionOps pic_elcr_ioport_ops = {
 };
 #endif
 
-static void pic_realize(PICCommonState *s) {
+void pic_realize(PICCommonState *s) {
   PICClass *pc = PIC_GET_CLASS(s);
 
 #ifdef NEED_LATER
@@ -337,6 +336,7 @@ static void pic_realize(PICCommonState *s) {
   qdev_init_gpio_in(dev, pic_set_irq, 8);
 #endif
 
+  duck_check(pc->parent_realize == pic_common_realize);
   pc->parent_realize(s);
 }
 
@@ -374,13 +374,10 @@ qemu_irq *i8259_init(qemu_irq parent_irq) {
   return irq_set;
 }
 
-static void i8259_class_init(PICClass *k) {
+void i8259_class_init(PICClass *k) {
   // DeviceClass *dc = DEVICE_CLASS(klass);
 
-  // FIXME
-  // 1. call the reest
-  // 2. setup parent realize (when the realize function will be caleed)
-  //
+  k->parent_realize = pic_common_realize;
   // device_class_set_parent_realize(dc, pic_realize, &k->parent_realize);
   // dc->reset = pic_reset;
 }

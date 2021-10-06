@@ -55,7 +55,7 @@ gpointer g_try_malloc0(int n_bytes);
 
 #define duck_check(x)                                                          \
   {                                                                            \
-    if (!x) {                                                                  \
+    if (!(x)) {                                                                \
       g_assert_not_reached()                                                   \
     }                                                                          \
   }
