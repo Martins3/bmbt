@@ -3,6 +3,8 @@
 #include "../../include/hw/isa/i8259_internal.h"
 #include "../../include/qemu/log.h"
 
+#define TYPE_I8259 "isa-i8259"
+PICCommonState *isa_pic;
 static PICCommonState *slave_pic;
 
 /* return the highest priority found in mask (highest = smallest
@@ -320,11 +322,12 @@ static const MemoryRegionOps pic_elcr_ioport_ops = {
             .max_access_size = 1,
         },
 };
+#endif
 
-static void pic_realize(DeviceState *dev, Error **errp) {
-  PICCommonState *s = PIC_COMMON(dev);
-  PICClass *pc = PIC_GET_CLASS(dev);
+static void pic_realize(PICCommonState *s) {
+  PICClass *pc = PIC_GET_CLASS(s);
 
+#ifdef NEED_LATER
   memory_region_init_io(&s->base_io, OBJECT(s), &pic_base_ioport_ops, s, "pic",
                         2);
   memory_region_init_io(&s->elcr_io, OBJECT(s), &pic_elcr_ioport_ops, s, "elcr",
@@ -332,49 +335,57 @@ static void pic_realize(DeviceState *dev, Error **errp) {
 
   qdev_init_gpio_out(dev, s->int_out, ARRAY_SIZE(s->int_out));
   qdev_init_gpio_in(dev, pic_set_irq, 8);
+#endif
 
-  pc->parent_realize(dev, errp);
+  pc->parent_realize(s);
 }
 
-qemu_irq *i8259_init(ISABus *bus, qemu_irq parent_irq) {
+qemu_irq *i8259_init(qemu_irq parent_irq) {
   qemu_irq *irq_set;
-  DeviceState *dev;
-  ISADevice *isadev;
+  PICCommonState *isadev;
   int i;
 
   irq_set = g_new0(qemu_irq, ISA_NUM_IRQS);
 
-  isadev = i8259_init_chip(TYPE_I8259, bus, true);
-  dev = DEVICE(isadev);
+  isadev = i8259_init_chip(TYPE_I8259, true);
 
+  // FIXME do it later
+#ifdef BMBT
   qdev_connect_gpio_out(dev, 0, parent_irq);
   for (i = 0; i < 8; i++) {
     irq_set[i] = qdev_get_gpio_in(dev, i);
   }
+#endif
 
-  isa_pic = dev;
+  isa_pic = isadev;
 
-  isadev = i8259_init_chip(TYPE_I8259, bus, false);
-  dev = DEVICE(isadev);
+  isadev = i8259_init_chip(TYPE_I8259, false);
 
+  // FIXME do it later
+#ifdef BMBT
   qdev_connect_gpio_out(dev, 0, irq_set[2]);
   for (i = 0; i < 8; i++) {
     irq_set[i + 8] = qdev_get_gpio_in(dev, i);
   }
+#endif
 
-  slave_pic = PIC_COMMON(dev);
+  slave_pic = isadev;
 
   return irq_set;
 }
 
-static void i8259_class_init(ObjectClass *klass, void *data) {
-  PICClass *k = PIC_CLASS(klass);
-  DeviceClass *dc = DEVICE_CLASS(klass);
+static void i8259_class_init(PICClass *k) {
+  // DeviceClass *dc = DEVICE_CLASS(klass);
 
-  device_class_set_parent_realize(dc, pic_realize, &k->parent_realize);
-  dc->reset = pic_reset;
+  // FIXME
+  // 1. call the reest
+  // 2. setup parent realize (when the realize function will be caleed)
+  //
+  // device_class_set_parent_realize(dc, pic_realize, &k->parent_realize);
+  // dc->reset = pic_reset;
 }
 
+#ifdef BMBT
 static const TypeInfo i8259_info = {
     .name = TYPE_I8259,
     .instance_size = sizeof(PICCommonState),

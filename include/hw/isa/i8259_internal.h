@@ -1,10 +1,34 @@
 #ifndef I8259_INTERNAL_H_XQYSJYON
 #define I8259_INTERNAL_H_XQYSJYON
 
+#include "../../exec/memory.h"
 #include "../../types.h"
 #include "../irq.h"
-typedef struct {
+
+typedef struct PICCommonState PICCommonState;
+typedef struct PICCommonClass {
+  // FIXME can I remove it safely
+#ifdef BMBT
+  ISADeviceClass parent_class;
+
+  void (*pre_save)(PICCommonState *s);
+  void (*post_load)(PICCommonState *s);
+#endif
+} PICCommonClass;
+
+/**
+ * PICClass:
+ * @parent_realize: The parent's realizefn.
+ */
+typedef struct PICClass {
+  PICCommonClass parent_class;
+
+  void (*parent_realize)(PICCommonState *s);
+} PICClass;
+
+struct PICCommonState {
   // ISADevice parent_obj;
+  PICClass *pc;
 
   uint8_t last_irr;     /* edge detection */
   uint8_t irr;          /* interrupt request register */
@@ -27,13 +51,14 @@ typedef struct {
   uint32_t master; /* reflects /SP input pin */
   uint32_t iobase;
   uint32_t elcr_addr;
-  // @todo fix it in memory model module
-  // MemoryRegion base_io;
-  // MemoryRegion elcr_io;
-} PICCommonState;
+  MemoryRegion base_io;
+  MemoryRegion elcr_io;
+};
 
 void pic_reset_common(PICCommonState *s);
 // [interface 17]
-void i8259_init_chip(const char *name, bool master);
+PICCommonState *i8259_init_chip(const char *name, bool master);
+
+#define PIC_GET_CLASS(i) i->pc
 
 #endif /* end of include guard: I8259_INTERNAL_H_XQYSJYON */
