@@ -48,9 +48,8 @@ static int pic_dispatch_post_load(void *opaque, int version_id) {
 }
 #endif
 
-static void pic_common_realize(PICCommonState *s) {
-  // FIXME carefully review it, please
-#ifdef NEED_LATER
+void pic_common_realize(PICCommonState *s) {
+#ifdef BMBT
   ISADevice *isa = ISA_DEVICE(dev);
 
   isa_register_ioport(isa, &s->base_io, s->iobase);
@@ -60,31 +59,25 @@ static void pic_common_realize(PICCommonState *s) {
 
   qdev_set_legacy_instance_id(dev, s->iobase, 1);
 #endif
+  io_add_memory_region(s->iobase, &s->base_io);
+  if (s->elcr_addr != -1) {
+    io_add_memory_region(s->elcr_addr, &s->elcr_io);
+  }
 }
-
 PICCommonState *i8259_init_chip(const char *name, bool master) {
-  // FIXME review it
-  PICCommonState *pic;
-#ifdef NEED_LATER
+#ifdef BMBT
   DeviceState *dev;
 
   isadev = isa_create(bus, name);
   dev = DEVICE(isadev);
-#endif
 
-  // FIXME
-  // 1. setup prop
-  // 2. qdev_init_nofail will ...
-  //    1. setup prop ?
-  //    2. realize ?
-#ifdef BMBT
   qdev_prop_set_uint32(dev, "iobase", master ? 0x20 : 0xa0);
   qdev_prop_set_uint32(dev, "elcr_addr", master ? 0x4d0 : 0x4d1);
   qdev_prop_set_uint8(dev, "elcr_mask", master ? 0xf8 : 0xde);
   qdev_prop_set_bit(dev, "master", master);
   qdev_init_nofail(dev);
 #endif
-  return pic;
+  return QOM_init_PIC(master);
 }
 
 void pic_stat_update_irq(int irq, int level) {
@@ -161,7 +154,7 @@ static void pic_common_class_init(PICCommonClass *pc) {
   // InterruptStatsProviderClass *ic = INTERRUPT_STATS_PROVIDER_CLASS(klass);
 
   // dc->vmsd = &vmstate_pic_common;
-  // dc->props = pic_properties_common; // FIXME check pic_properties_common,
+  // dc->props = pic_properties_common;
   // did I notice it and port it ? dc->realize = pic_common_realize;
   /*
    * Reason: unlike ordinary ISA devices, the PICs need additional
@@ -169,9 +162,37 @@ static void pic_common_class_init(PICCommonClass *pc) {
    * wiring of the slave to the master is hard-coded in device model
    * code.
    */
-  // dc->user_creatable = false; // FIXME why we need user_creatable ?
+  // dc->user_creatable = false;
   // ic->get_statistics = pic_get_statistics;
   // ic->print_info = pic_print_info;
+}
+
+static PICCommonState __master_pic;
+static PICClass __master_pc;
+
+static PICCommonState __slave_pic;
+static PICClass __slave_pc;
+
+PICCommonState *QOM_init_PIC(bool master) {
+  PICCommonState *pic = master ? &__master_pic : &__slave_pic;
+  PICClass *pc = master ? &__master_pc : &__slave_pc;
+  pic->pc = pc;
+
+  pic_common_class_init(PIC_COMMON_CLASS(pc));
+  i8259_class_init(pc);
+
+  pic->iobase = master ? 0x20 : 0xa0;
+  pic->elcr_addr = master ? 0x4d0 : 0x4d1;
+  pic->elcr_mask = master ? 0xf8 : 0xde;
+  pic->master = master;
+
+  pic_realize(pic);
+  return pic;
+}
+
+void pic_reset() {
+  pic_init_reset(&__master_pic);
+  pic_init_reset(&__slave_pic);
 }
 
 #ifdef BMBT

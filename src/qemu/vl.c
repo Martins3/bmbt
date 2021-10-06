@@ -32,9 +32,11 @@ static void qemu_run_machine_init_done_notifiers(void) {
 }
 
 void fw_cfg_reset();
+void pic_reset();
 void qbus_reset_all_fn(void *opaque) {
   // FIXME maybe we have a better way to port the code
   fw_cfg_reset();
+  pic_reset();
 }
 
 /*
