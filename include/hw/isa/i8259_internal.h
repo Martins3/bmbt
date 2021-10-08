@@ -36,6 +36,8 @@ struct PICCommonState {
   // ISADevice parent_obj;
   PICClass *pc;
 
+  GPIOList gpio;
+
   uint8_t last_irr;     /* edge detection */
   uint8_t irr;          /* interrupt request register */
   uint8_t imr;          /* interrupt mask register */

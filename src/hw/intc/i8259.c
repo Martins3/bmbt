@@ -326,15 +326,15 @@ static const MemoryRegionOps pic_elcr_ioport_ops = {
 void pic_realize(PICCommonState *s) {
   PICClass *pc = PIC_GET_CLASS(s);
 
-#ifdef NEED_LATER
+#ifdef MEM_TODO
   memory_region_init_io(&s->base_io, OBJECT(s), &pic_base_ioport_ops, s, "pic",
                         2);
   memory_region_init_io(&s->elcr_io, OBJECT(s), &pic_elcr_ioport_ops, s, "elcr",
                         1);
-
-  qdev_init_gpio_out(dev, s->int_out, ARRAY_SIZE(s->int_out));
-  qdev_init_gpio_in(dev, pic_set_irq, 8);
 #endif
+
+  qdev_init_gpio_out(&s->gpio, s->int_out, ARRAY_SIZE(s->int_out));
+  qdev_init_gpio_in(&s->gpio, pic_set_irq, s, 8);
 
   duck_check(pc->parent_realize == pic_common_realize);
   pc->parent_realize(s);
@@ -349,25 +349,20 @@ qemu_irq *i8259_init(qemu_irq parent_irq) {
 
   isadev = i8259_init_chip(TYPE_I8259, true);
 
-  // FIXME do it later
-#ifdef BMBT
-  qdev_connect_gpio_out(dev, 0, parent_irq);
+  qdev_connect_gpio_out(&isadev->gpio, 0, parent_irq);
+  duck_check(parent_irq == isadev->int_out[0]);
   for (i = 0; i < 8; i++) {
-    irq_set[i] = qdev_get_gpio_in(dev, i);
+    irq_set[i] = qdev_get_gpio_in(&isadev->gpio, i);
   }
-#endif
 
   isa_pic = isadev;
 
   isadev = i8259_init_chip(TYPE_I8259, false);
 
-  // FIXME do it later
-#ifdef BMBT
-  qdev_connect_gpio_out(dev, 0, irq_set[2]);
+  qdev_connect_gpio_out(&isadev->gpio, 0, irq_set[2]);
   for (i = 0; i < 8; i++) {
-    irq_set[i + 8] = qdev_get_gpio_in(dev, i);
+    irq_set[i + 8] = qdev_get_gpio_in(&isadev->gpio, i);
   }
-#endif
 
   slave_pic = isadev;
 
