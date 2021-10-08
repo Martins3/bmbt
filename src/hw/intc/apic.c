@@ -4,6 +4,7 @@
 #include "../../include/hw/i386/ioapic.h"
 #include "../../include/hw/isa/i8259.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/error-report.h"
 #include <string.h>
 
 #define MAX_APICS 255
@@ -45,6 +46,10 @@ static int get_highest_priority_int(uint32_t *tab) {
     }
   }
   return -1;
+}
+
+static void apic_vapic_base_update(APICCommonState *s) {
+  duck_check(!s->vapic_paddr);
 }
 
 static void apic_local_deliver(APICCommonState *s, int vector) {
@@ -742,25 +747,33 @@ static const MemoryRegionOps apic_io_ops = {
     .valid.max_access_size = 4,
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
+#endif
 
-static void apic_realize(DeviceState *dev, Error **errp) {
-  APICCommonState *s = APIC(dev);
+// FIXME put msi_nonbroken here temporarily, maybe we never need it
+bool msi_nonbroken = false;
+
+static void apic_realize(APICCommonState *s) {
 
   if (s->id >= MAX_APICS) {
-    error_setg(errp, "%s initialization failed. APIC ID %d is invalid",
-               object_get_typename(OBJECT(dev)), s->id);
+    error_report("initialization failed. APIC ID %d is invalid", s->id);
     return;
   }
 
+#ifdef MEM_TODO
   memory_region_init_io(&s->io_memory, OBJECT(s), &apic_io_ops, s, "apic-msi",
                         APIC_SPACE_SIZE);
+#endif
 
+#ifdef NEED_LATER
   s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, apic_timer, s);
+#endif
+
   local_apics[s->id] = s;
 
   msi_nonbroken = true;
 }
 
+#ifdef BMBT
 static void apic_unrealize(DeviceState *dev, Error **errp) {
   APICCommonState *s = APIC(dev);
 
@@ -768,12 +781,11 @@ static void apic_unrealize(DeviceState *dev, Error **errp) {
   timer_free(s->timer);
   local_apics[s->id] = NULL;
 }
+#endif
 
-static void apic_class_init(ObjectClass *klass, void *data) {
-  APICCommonClass *k = APIC_COMMON_CLASS(klass);
-
+void apic_class_init(APICCommonClass *k) {
   k->realize = apic_realize;
-  k->unrealize = apic_unrealize;
+  // k->unrealize = apic_unrealize;
   k->set_base = apic_set_base;
   k->set_tpr = apic_set_tpr;
   k->get_tpr = apic_get_tpr;
@@ -784,6 +796,7 @@ static void apic_class_init(ObjectClass *klass, void *data) {
   k->send_msi = apic_send_msi;
 }
 
+#ifdef BMBT
 static const TypeInfo apic_info = {
     .name = TYPE_APIC,
     .instance_size = sizeof(APICCommonState),
