@@ -1,5 +1,6 @@
 #ifndef NUMA_H_4ZUXICHZ
 #define NUMA_H_4ZUXICHZ
+#include "../../src/i386/cpu.h"
 #include "../types.h"
 
 struct CPUArchId;
@@ -35,5 +36,7 @@ struct NumaState {
 };
 typedef struct NumaState NumaState;
 typedef struct NodeInfo NodeInfo;
+
+void numa_cpu_pre_plug(const struct CPUArchId *slot, X86CPU *cpu);
 
 #endif /* end of include guard: NUMA_H_4ZUXICHZ */
