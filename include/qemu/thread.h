@@ -47,8 +47,6 @@ typedef struct {
 } QemuThread;
 
 static inline void qemu_thread_get_self(QemuThread *thread) {
-  // @todo this is really stupid
-  // I just don't know how to port QemuThread and why it's useful
   thread->thread = 0x1234;
 }
 
