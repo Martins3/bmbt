@@ -11,8 +11,6 @@ struct qemu_work_item {
 static QemuCond qemu_work_cond;
 static QemuMutex qemu_cpu_list_lock;
 
-CPUState *current_cpu = NULL;
-
 CPUTailQ cpus = QTAILQ_HEAD_INITIALIZER(cpus);
 
 void process_queued_cpu_work(CPUState *cpu) {
