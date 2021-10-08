@@ -1,5 +1,7 @@
 #ifndef IRQ_H_TZGVAY9K
 #define IRQ_H_TZGVAY9K
+#include "../../src/tcg/glib_stub.h"
+#include <assert.h>
 
 typedef void (*qemu_irq_handler)(void *opaque, int n, int level);
 
@@ -33,5 +35,34 @@ qemu_irq qemu_allocate_irq(qemu_irq_handler handler, void *opaque, int n);
  */
 qemu_irq *qemu_extend_irqs(qemu_irq *old, int n_old, qemu_irq_handler handler,
                            void *opaque, int n);
+
+typedef struct {
+  qemu_irq *in;
+  qemu_irq *out[1];
+} GPIOList;
+
+static inline void qdev_init_gpio_in(GPIOList *dev_gpio,
+                                     qemu_irq_handler handler, void *opaque,
+                                     int n) {
+  dev_gpio->in = g_new(qemu_irq, n);
+  for (int i = 0; i < n; i++) {
+    dev_gpio->in[i] = qemu_allocate_irq(handler, opaque, i);
+  }
+}
+
+static inline void qdev_init_gpio_out(GPIOList *dev_gpio, qemu_irq *pins,
+                                      int n) {
+  assert(n == 1);
+  dev_gpio->out[0] = &pins[0];
+}
+
+static inline void qdev_connect_gpio_out(GPIOList *dev_gpio, int n,
+                                         qemu_irq pin) {
+  assert(n == 0);
+  *(dev_gpio->out[n]) = pin;
+}
+static inline qemu_irq qdev_get_gpio_in(GPIOList *dev_gpio, int n) {
+  return dev_gpio->in[n];
+}
 
 #endif /* end of include guard: IRQ_H_TZGVAY9K */
