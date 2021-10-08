@@ -913,7 +913,7 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
     cpu_io_recompile(cpu, retaddr);
   }
 
-  if (mr->global_locking && !qemu_mutex_iothread_locked()) {
+  if (!qemu_mutex_iothread_locked()) {
     qemu_mutex_lock_iothread();
     locked = true;
   }
@@ -945,7 +945,7 @@ static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, int mmu_idx,
   }
   cpu->mem_io_pc = retaddr;
 
-  if (mr->global_locking && !qemu_mutex_iothread_locked()) {
+  if (!qemu_mutex_iothread_locked()) {
     qemu_mutex_lock_iothread();
     locked = true;
   }

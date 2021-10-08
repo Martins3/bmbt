@@ -19,8 +19,6 @@ typedef struct MemoryRegion {
   bool ram;
 
   struct RAMBlock *ram_block;
-  // @todo remove it as 4174495408afdf27b6bfb32701c3fd9775e6bca3 suggested
-  bool global_locking;
 
   hwaddr offset_in_ram_block;
   struct AddressSpace *as; // memory region is shared between AddressSpace
