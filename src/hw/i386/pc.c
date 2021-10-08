@@ -1351,9 +1351,6 @@ void pc_i8259_create(qemu_irq *i8259_irqs) {
 }
 
 void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
-// FIXME
-// 1. qdev_create : instance_init
-// 2. qdev_init_nofail : realize
 #ifdef BMBT
   DeviceState *dev;
   SysBusDevice *d;
