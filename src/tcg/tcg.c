@@ -4,11 +4,12 @@
 #include "../../include/exec/exec-all.h"
 #include "../../include/exec/tb-hash.h"
 #include "../../include/exec/tb-lookup.h"
+#include "../../include/hw/boards.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/atomic.h"
+#include "../../include/qemu/main-loop.h"
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/thread.h"
-#include "../../include/qemu/main-loop.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 #include "../i386/LATX/x86tomips-config.h"
@@ -584,9 +585,8 @@ void tcg_context_init(TCGContext *s) {
   tcg_ctxs = &tcg_ctx;
   n_tcg_ctxs = 1;
 #else
-  // FIXME ...
-  // MachineState *ms = MACHINE(qdev_get_machine());
-  // unsigned int max_cpus = ms->smp.max_cpus;
+  MachineState *ms = qdev_get_machine();
+  unsigned int max_cpus = ms->smp.max_cpus;
   tcg_ctxs = g_new(TCGContext *, max_cpus);
 #endif
 
@@ -607,10 +607,9 @@ static size_t tcg_n_regions(void) {
 
   /* Use a single region if all we have is one vCPU thread */
 #if !defined(CONFIG_USER_ONLY)
-  // FIXME review MachineState related code later
-  // MachineState *ms = MACHINE(qdev_get_machine());
-  // unsigned int max_cpus = ms->smp.max_cpus;
-  unsigned int max_cpus = 1;
+  MachineState *ms = qdev_get_machine();
+  unsigned int max_cpus = ms->smp.max_cpus;
+  duck_check(max_cpus == 1);
 #endif
   if (max_cpus == 1 || !qemu_tcg_mttcg_enabled()) {
     return 1;
@@ -789,8 +788,7 @@ void tcg_region_init(void) {
  * over the array (e.g. tcg_code_size() the same for both softmmu and user-mode.
  */
 void tcg_register_thread(void) {
-  // FIXME we will port MachineState related code later
-  // MachineState *ms = MACHINE(qdev_get_machine());
+  MachineState *ms = qdev_get_machine();
   TCGContext *s = g_malloc(sizeof(*s));
   unsigned int i, n;
   bool err;
@@ -799,8 +797,7 @@ void tcg_register_thread(void) {
 
   /* Claim an entry in tcg_ctxs */
   n = atomic_fetch_inc(&n_tcg_ctxs);
-  // FIXME
-  // g_assert(n < ms->smp.max_cpus);
+  g_assert(n < ms->smp.max_cpus);
   atomic_set(&tcg_ctxs[n], s);
 
   if (n > 0) {

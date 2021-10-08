@@ -70,6 +70,13 @@ void qemu_system_reset(MachineClass *mc, MachineState *current_machine) {
 static PCMachineState __pcms;
 static PCMachineClass __pcmc;
 
+static bool machine_inited = false;
+
+MachineState *qdev_get_machine() {
+  duck_check(machine_inited);
+  return MACHINE(&__pcms);
+}
+
 void QOM_machine_init() {
   PCMachineState *pcms = &__pcms;
   PCMachineClass *pcmc = &__pcmc;
@@ -95,6 +102,8 @@ void QOM_machine_init() {
   pc_machine_initfn(pcms);
 
   pc_machine_v4_2_class_init(mc);
+
+  machine_inited = true;
 }
 
 PCMachineState *machine_init() {
