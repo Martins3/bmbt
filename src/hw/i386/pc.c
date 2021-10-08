@@ -508,8 +508,7 @@ static void pic_irq_request(void *opaque, int irq, int level) {
   }
 }
 
-// FIXME
-#if NEED_LATER
+#if RTC_TODO
 /* PC cmos mappings */
 
 #define REG_EQUIPMENT_BYTE 0x14
@@ -1518,8 +1517,7 @@ static void pc_cpu_plug(HotplugHandler *handler, X86CPU *cpu) {
 
   /* increment the number of CPUs */
   x86ms->boot_cpus++;
-  // FIXME port rtc later
-#ifdef NEED_LATER
+#ifdef RTC_TODO
   if (x86ms->rtc) {
     rtc_set_cpus_count(x86ms->rtc, x86ms->boot_cpus);
   }
@@ -1689,8 +1687,7 @@ static void pc_cpu_pre_plug(HotplugHandler *hotplug_dev, X86CPU *cpu) {
   cs = CPU(cpu);
   cs->cpu_index = idx;
 
-  // FIXME port later
-  // numa_cpu_pre_plug(cpu_slot, cpu);
+  numa_cpu_pre_plug(cpu_slot, cpu);
 }
 
 #ifdef BMBT
@@ -2033,7 +2030,6 @@ void pc_machine_class_init(PCMachineClass *pcmc) {
   // mc->block_default_type = IF_IDE;
   mc->max_cpus = 255;
   mc->reset = pc_machine_reset;
-  // FIXME verify pc_machine_wakeup is never get called
   // mc->wakeup = pc_machine_wakeup;
   hc->pre_plug = pc_machine_device_pre_plug_cb;
   hc->plug = pc_machine_device_plug_cb;
