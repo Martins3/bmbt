@@ -24,4 +24,10 @@ int apic_get_interrupt(APICCommonState *s);
 /* pc.c */
 APICCommonState *cpu_get_current_apic(void);
 
+// for QOM
+void apic_common_set_id(APICCommonState *s, uint32_t value);
+APICCommonState *QOM_apic_init();
+void apic_class_init(APICCommonClass *k);
+void apic_common_realize(APICCommonState *s);
+
 #endif /* end of include guard: APIC_H_JOIQEZ9X */

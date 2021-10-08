@@ -2284,7 +2284,7 @@ static void x86_register_cpu_model_type(const char *name, X86CPUModel *model) {
 #endif
 
 static X86CPUModel *x86_register_cpudef_types(X86CPUDefinition *def) {
-  static X86CPUModel *m;
+  static X86CPUModel m;
   // const X86CPUVersionDefinition *vdef;
   // char *name;
 
@@ -2297,9 +2297,10 @@ static X86CPUModel *x86_register_cpudef_types(X86CPUDefinition *def) {
 
   /* Unversioned model: */
   // m = g_new0(X86CPUModel, 1);
-  m->cpudef = def;
+  duck_check(m.cpudef == NULL); // x86_register_cpudef_types is only called once
+  m.cpudef = def;
   // no need to support the version
-#if BMBT
+#ifdef BMBT
   m->version = CPU_VERSION_AUTO;
   m->is_alias = true;
   x86_register_cpu_model_type(def->name, m);
@@ -2323,6 +2324,7 @@ static X86CPUModel *x86_register_cpudef_types(X86CPUDefinition *def) {
     }
   }
 #endif
+  return &m;
 }
 
 #if !defined(CONFIG_USER_ONLY)
@@ -2999,10 +3001,12 @@ APICCommonClass *apic_get_class(void) {
 static void x86_cpu_apic_create(X86CPU *cpu) {
   APICCommonState *apic;
 
-  // FIXME How to init a type variable
-  cpu->apic_state = NULL;
-  // FIXME port this line after apic_common.c is totally port
+  // ObjectClass *apic_class = OBJECT_CLASS(apic_get_class());
+  // cpu->apic_state = DEVICE(object_new(object_class_get_name(apic_class)));
+  apic = QOM_apic_init();
+  cpu->apic_state = apic;
   // qdev_prop_set_uint32(cpu->apic_state, "id", cpu->apic_id);
+  apic_common_set_id(apic, cpu->apic_id);
   apic->cpu = cpu;
   apic->apicbase = APIC_DEFAULT_ADDRESS | MSR_IA32_APICBASE_ENABLE;
 }
@@ -3015,13 +3019,13 @@ static void x86_cpu_apic_realize(X86CPU *cpu) {
     return;
   }
 
-  // FIXME call the realize function
   // object_property_set_bool(OBJECT(cpu->apic_state), true, "realized", errp);
+  apic_common_realize(cpu->apic_state);
 
   /* Map APIC MMIO area */
   apic = cpu->apic_state;
   if (!apic_mmio_map_once) {
-#ifdef NEED_LATER
+#ifdef MEM_TODO
     memory_region_add_subregion_overlap(get_system_memory(),
                                         apic->apicbase & MSR_IA32_APICBASE_BASE,
                                         &apic->io_memory, 0x1000);

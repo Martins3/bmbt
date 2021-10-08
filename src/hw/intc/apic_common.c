@@ -181,7 +181,11 @@ void apic_designate_bsp(APICCommonState *s, bool bsp) {
   }
 }
 
-static void apic_reset_common(APICCommonState *s) {
+APICCommonState __apic;
+APICCommonClass __apic_class;
+
+void apic_reset_common() {
+  APICCommonState *s = &__apic;
   APICCommonClass *info = APIC_COMMON_GET_CLASS(s);
   uint32_t bsp;
 
@@ -192,28 +196,31 @@ static void apic_reset_common(APICCommonState *s) {
   apic_reset_irq_delivered();
 
   s->vapic_paddr = 0;
+  // FIXME how assigned ?
   info->vapic_base_update(s);
 
   apic_init_reset(s);
 }
 
-#if MEM_TODO
+#if BMBT
 static const VMStateDescription vmstate_apic_common;
+#endif
 
-static void apic_common_realize(DeviceState *dev, Error **errp) {
-  APICCommonState *s = APIC_COMMON(dev);
+void apic_common_realize(APICCommonState *s) {
   APICCommonClass *info;
   static DeviceState *vapic;
   int instance_id = s->id;
 
   info = APIC_COMMON_GET_CLASS(s);
-  info->realize(dev, errp);
+  info->realize(s);
 
+#ifdef BMBT
   /* Note: We need at least 1M to map the VAPIC option ROM */
   if (!vapic && s->vapic_control & VAPIC_ENABLE_MASK && !hax_enabled() &&
       ram_size >= 1024 * 1024) {
     vapic = sysbus_create_simple("kvmvapic", -1, NULL);
   }
+#endif
   s->vapic = vapic;
   if (apic_report_tpr_access && info->enable_tpr_reporting) {
     info->enable_tpr_reporting(s, true);
@@ -222,10 +229,13 @@ static void apic_common_realize(DeviceState *dev, Error **errp) {
   if (s->legacy_instance_id) {
     instance_id = -1;
   }
+#ifdef BMBT
   vmstate_register_with_alias_id(NULL, instance_id, &vmstate_apic_common, s, -1,
                                  0, NULL);
+#endif
 }
 
+#ifdef BMBT
 static void apic_common_unrealize(DeviceState *dev, Error **errp) {
   APICCommonState *s = APIC_COMMON(dev);
   APICCommonClass *info = APIC_COMMON_GET_CLASS(s);
@@ -317,7 +327,9 @@ static const VMStateDescription vmstate_apic_common = {
             VMSTATE_END_OF_LIST()},
     .subsections =
         (const VMStateDescription *[]){&vmstate_apic_common_sipi, NULL}};
+#endif
 
+#ifdef BMBT
 static Property apic_properties_common[] = {
     DEFINE_PROP_UINT8("version", APICCommonState, version, 0x14),
     DEFINE_PROP_BIT("vapic", APICCommonState, vapic_control, VAPIC_ENABLE_BIT,
@@ -335,9 +347,10 @@ static void apic_common_get_id(Object *obj, Visitor *v, const char *name,
   value = s->apicbase & MSR_IA32_APICBASE_EXTD ? s->initial_apic_id : s->id;
   visit_type_uint32(v, name, &value, errp);
 }
+#endif
 
-static void apic_common_set_id(Object *obj, Visitor *v, const char *name,
-                               void *opaque, Error **errp) {
+void apic_common_set_id(APICCommonState *s, uint32_t value) {
+#ifdef BMBT
   APICCommonState *s = APIC_COMMON(obj);
   DeviceState *dev = DEVICE(obj);
   Error *local_err = NULL;
@@ -353,33 +366,55 @@ static void apic_common_set_id(Object *obj, Visitor *v, const char *name,
     error_propagate(errp, local_err);
     return;
   }
+#endif
 
   s->initial_apic_id = value;
   s->id = (uint8_t)value;
 }
 
-static void apic_common_initfn(Object *obj) {
-  APICCommonState *s = APIC_COMMON(obj);
+static void apic_common_initfn(APICCommonState *s) {
+  // APICCommonState *s = APIC_COMMON(obj);
 
   s->id = s->initial_apic_id = -1;
+
+  // port apic_properties_common
+  s->version = 0x14;
+  s->vapic_control = 0;
+  s->legacy_instance_id = false;
+
+#ifdef BMBT
   object_property_add(obj, "id", "uint32", apic_common_get_id,
                       apic_common_set_id, NULL, NULL, NULL);
+#endif
 }
 
-static void apic_common_class_init(ObjectClass *klass, void *data) {
-  DeviceClass *dc = DEVICE_CLASS(klass);
+static void apic_common_class_init() {
+  // DeviceClass *dc = DEVICE_CLASS(klass);
 
-  dc->reset = apic_reset_common;
-  dc->props = apic_properties_common;
-  dc->realize = apic_common_realize;
-  dc->unrealize = apic_common_unrealize;
+  // dc->reset = apic_reset_common;
+  // dc->props = apic_properties_common;
+  // dc->realize = apic_common_realize;
+  // dc->unrealize = apic_common_unrealize;
   /*
    * Reason: APIC and CPU need to be wired up by
    * x86_cpu_apic_create()
    */
-  dc->user_creatable = false;
+  // dc->user_creatable = false;
 }
 
+APICCommonState *QOM_apic_init() {
+  APICCommonState *apic = &__apic;
+  APICCommonClass *apic_class = &__apic_class;
+
+  apic_common_class_init();
+  apic_class_init(apic_class);
+
+  apic_common_initfn(apic);
+
+  return apic;
+}
+
+#ifdef BMBT
 static const TypeInfo apic_common_type = {
     .name = TYPE_APIC_COMMON,
     .parent = TYPE_DEVICE,
