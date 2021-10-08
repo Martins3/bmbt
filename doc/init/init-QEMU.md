@@ -14,10 +14,6 @@
 			- x86_cpu_realizefn
 
 ## 初始化 QEMU 大约需要处理的事情
-- [ ] tcg_register_thread : 唯一 reference 了 MachineState
-- [ ] 问题是 PCI 设备实际上是需要的，需要初始化一下 PCI 的设备空间吗?
-  - [ ] 问题是，这个初始化过程中，需要保持那些设备的之间的联系的吗?
-- [x] fw_cfg 的初始化过程
 - [ ] /home/maritns3/core/ld/x86-qemu-mips/hw/i386/pc.c
 - [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
 
@@ -347,5 +343,13 @@ filtered_features [Field] :1663:22                                              
 
 
 - [ ] x86_cpu_filter_features 中发现有的 feature 需要 mark_unavailable_features 那么又如何?
+
+## qdev
+
+这些属性都是在 instance_init 的时候初始化的:
+```c
+  dc->props = apic_properties_common;
+```
+
 
 [^2]: https://en.wikipedia.org/wiki/Machine-check_exception

@@ -37,7 +37,11 @@
 20. CPUArchId::cpu
     - 为了保持 X86_CPU 的语义一致性，当然也没有实现 Object 类型，将类型修改为 CPUState 了
 21. pc_memory_init
-    - 在这里设置了众多的 memory region 的映射问题，在 pc_init1 中处理了 PCI 相关的地址空间，在 x86_bios_rom_init 处理 bios 相关的空间, x86_cpu_apic_realize 中处理 apic 相关的, 在 x86_cpu_machine_done 中再次处理和 smram 相关的内容|
+    - 在这里设置了众多的 memory region 的映射问题
+      - 在 pc_init1 中处理了 PCI 相关的地址空间
+      - 在 x86_bios_rom_init 处理 bios 相关的空间
+    - [ ] 整个 pc_memory_init 实际上被过多的删除了，需要重新 review 一下，而且 pc.ram 之类的东西还是重新在这里添加的
+
 22. pc_system_firmware_init
     - 因为不支持 pflash 所以这个函数被简化为直接调用 x86_bios_rom_init 了
 23. smp_parse
@@ -59,3 +63,4 @@
 - NEED_LATER : 将来应该需要
 - BMBT : 一定不需要，应该在每一个 BMBT 跟上解释为什么不需要这个东西
 - MEM_TODO : 暂时没有移植的，和 MEM 相关的
+- RTC_TODO : 关于 rtc 的代码
