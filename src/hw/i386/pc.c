@@ -3,6 +3,7 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/hwaddr.h"
 #include "../../include/hw/i386/apic.h"
+#include "../../include/hw/i386/ioapic_internal.h"
 #include "../../include/hw/i386/topology.h"
 #include "../../include/hw/isa/i8259.h"
 #include "../../include/hw/loader.h"
@@ -1350,9 +1351,10 @@ void pc_i8259_create(qemu_irq *i8259_irqs) {
 }
 
 void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
-  // FIXME it's a little tricky to remove the qobject abstraction
-  // will be fixed later
-#if NEED_LATER
+// FIXME
+// 1. qdev_create : instance_init
+// 2. qdev_init_nofail : realize
+#ifdef BMBT
   DeviceState *dev;
   SysBusDevice *d;
   unsigned int i;
@@ -1369,12 +1371,15 @@ void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
   }
   qdev_init_nofail(dev);
   d = SYS_BUS_DEVICE(dev);
-  sysbus_mmio_map(d, 0, IO_APIC_DEFAULT_ADDRESS);
-
-  for (i = 0; i < IOAPIC_NUM_PINS; i++) {
-    gsi_state->ioapic_irq[i] = qdev_get_gpio_in(dev, i);
-  }
 #endif
+  IOAPICCommonState *s = QOM_ioapic_init();
+#ifdef MEM_TODO
+  // sysbus_mmio_map(d, 0, IO_APIC_DEFAULT_ADDRESS);
+#endif
+
+  for (int i = 0; i < IOAPIC_NUM_PINS; i++) {
+    gsi_state->ioapic_irq[i] = qdev_get_gpio_in(&s->gpio, i);
+  }
 }
 
 #ifdef BMBT

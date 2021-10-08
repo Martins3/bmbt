@@ -34,11 +34,13 @@ static void qemu_run_machine_init_done_notifiers(void) {
 void fw_cfg_reset();
 void pic_reset();
 void apic_reset_common();
+void iopaic_reset();
 
 void qbus_reset_all_fn(void *opaque) {
   fw_cfg_reset();
   pic_reset();
   apic_reset_common();
+  iopaic_reset();
 }
 
 /*

@@ -5,6 +5,7 @@
 #include "../../qemu/error-report.h"
 #include "../../qemu/notify.h"
 #include "../../types.h"
+#include "../irq.h"
 #include "ioapic.h"
 
 #define MAX_IOAPICS 1
@@ -74,6 +75,8 @@ typedef struct IOAPICCommonClass {
 
 struct IOAPICCommonState {
   // SysBusDevice busdev;
+  GPIOList gpio;
+
   IOAPICCommonClass *icc;
   MemoryRegion io_memory;
   uint8_t id;
@@ -89,6 +92,9 @@ struct IOAPICCommonState {
 };
 #define IOAPIC_COMMON_GET_CLASS(is) is->icc
 
+// QOM
+IOAPICCommonState *QOM_ioapic_init();
+void ioapic_common_class_init(IOAPICCommonClass *c);
 void ioapic_reset_common(IOAPICCommonState *s);
 
 #endif /* end of include guard: IOAPIC_INTERNAL_H_NKHBSHQ4 */
