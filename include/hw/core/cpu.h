@@ -587,7 +587,6 @@ static inline hwaddr cpu_get_phys_page_attrs_debug(CPUState *cpu, vaddr addr,
 }
 
 bool qemu_cpu_is_self(CPUState *cpu) {
-  // @todo always return true ?
   return true;
 }
 

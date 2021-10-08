@@ -40,7 +40,7 @@
 #define DEBUG_TLB_LOG_GATE 0
 #endif
 #else
-#define DEBUG_TLB_GATE 0
+#define DEBUG_TLB_GATE 1
 #define DEBUG_TLB_LOG_GATE 0
 #endif
 
