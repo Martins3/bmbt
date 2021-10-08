@@ -223,7 +223,7 @@ void ioapic_eoi_broadcast(int vector) {
            * detect an interrupt storm.
            */
           s->irq_eoi[n] = 0;
-          // @todo FIXME timer ???
+          // FIXME :linker: timer ???
           // timer_mod_anticipate(s->delayed_ioapic_service_timer,
           // qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
           // NANOSECONDS_PER_SECOND / 100);
@@ -395,19 +395,16 @@ static void ioapic_realize(IOAPICCommonState *s) {
     return;
   }
 
-// FIXME
-// 1. memory region init
-// 2. the timer
-#ifdef NEED_LATER
+#ifdef MEM_TODO
   memory_region_init_io(&s->io_memory, OBJECT(s), &ioapic_io_ops, s, "ioapic",
                         0x1000);
 
+  // FIXME :linker: timer
   s->delayed_ioapic_service_timer =
       timer_new_ns(QEMU_CLOCK_VIRTUAL, delayed_ioapic_service_cb, s);
 #endif
 
-  // FIXME later
-  // qdev_init_gpio_in(dev, ioapic_set_irq, IOAPIC_NUM_PINS);
+  qdev_init_gpio_in(&s->gpio, ioapic_set_irq, s, IOAPIC_NUM_PINS);
 
   ioapics[ioapic_no] = s;
   s->machine_done.notify = ioapic_machine_done_notify;
@@ -423,7 +420,6 @@ static void ioapic_unrealize(DeviceState *dev, Error **errp) {
 }
 #endif
 
-// FIXME init the variable later
 #ifdef BMBT
 static Property ioapic_properties[] = {
     DEFINE_PROP_UINT8("version", IOAPICCommonState, version, IOAPIC_VER_DEF),
@@ -441,10 +437,25 @@ static void ioapic_class_init(IOAPICCommonClass *k) {
    * migration, otherwise first 24 gsi routes will be invalid.
    */
   k->post_load = ioapic_update_kvm_routes;
-  // FIXME call the reset
   // dc->reset = ioapic_reset_common;
   // dc->props = ioapic_properties;
 }
+
+IOAPICCommonState __ioapic_s;
+IOAPICCommonClass __ioapic_c;
+IOAPICCommonState *QOM_ioapic_init() {
+  IOAPICCommonState *s = &__ioapic_s;
+  IOAPICCommonClass *c = &__ioapic_c;
+
+  ioapic_common_class_init(c);
+  ioapic_class_init(c);
+
+  s->version = IOAPIC_VER_DEF;
+
+  return s;
+}
+
+void iopaic_reset() { ioapic_reset_common(&__ioapic_s); }
 
 #ifdef BMBT
 static const TypeInfo ioapic_info = {

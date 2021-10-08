@@ -129,7 +129,9 @@ static void ioapic_common_realize(IOAPICCommonState *s) {
   info = IOAPIC_COMMON_GET_CLASS(s);
   info->realize(s);
 
-  // sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->io_memory);
+#ifdef MEM_TODO
+  sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->io_memory);
+#endif
   ioapic_no++;
 }
 
@@ -156,7 +158,7 @@ static const VMStateDescription vmstate_ioapic_common = {
         VMSTATE_END_OF_LIST()}};
 #endif
 
-static void ioapic_common_class_init(IOAPICCommonClass *c) {
+void ioapic_common_class_init(IOAPICCommonClass *c) {
   // FIXME call realize functions
 #ifdef BMBT
   DeviceClass *dc = DEVICE_CLASS(klass);

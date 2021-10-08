@@ -167,7 +167,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
     x86_register_ferr_irq(x86ms->gsi[13]);
   }
 
-#if BMBT
+#if RTC_TODO
   pc_vga_init(isa_bus, pcmc->pci_enabled ? pci_bus : NULL);
 
   assert(pcms->vmport != ON_OFF_AUTO__MAX);
