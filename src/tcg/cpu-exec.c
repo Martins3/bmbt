@@ -441,9 +441,6 @@ static inline bool cpu_handle_interrupt(CPUState *cpu,
       (use_icount &&
        cpu_neg(cpu)->icount_decr.u16.low + cpu->icount_extra == 0)) {
     atomic_set(&cpu->exit_request, 0);
-    // @todo: how exception_index works ?
-    // 1. what does it mean by = -1 ?
-    // 2. what's exception interrupt ?
     if (cpu->exception_index == -1) {
       cpu->exception_index = EXCP_INTERRUPT;
     }
