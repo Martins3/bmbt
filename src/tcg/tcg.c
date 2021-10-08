@@ -309,8 +309,10 @@ static void tcg_target_qemu_prologue(TCGContext *s) {
 #ifdef CONFIG_LATX
   i = target_x86_to_mips_static_codes(s->code_ptr);
   s->code_ptr += i;
+#ifdef BMBT
   s->code_gen_prologue = (void *)context_switch_bt_to_native;
   s->code_gen_epilogue = (void *)context_switch_native_to_bt;
+#endif
 #else
   /* TB prologue */
   tcg_out_opc_imm(s, ALIAS_PADDI, TCG_REG_SP, TCG_REG_SP, -FRAME_SIZE);
@@ -422,8 +424,9 @@ void tcg_prologue_init(TCGContext *s) {
   s->code_ptr = buf0;
   s->code_buf = buf0;
   s->data_gen_ptr = NULL;
-  // @todo useless assignment, assigned again in tcg_target_qemu_prologue
+#ifdef BMBT
   s->code_gen_prologue = buf0;
+#endif
 
   /* Compute a high-water mark, at which we voluntarily flush the buffer
      and start over.  The size here is arbitrary, significantly larger
@@ -475,10 +478,13 @@ void tcg_prologue_init(TCGContext *s) {
   }
 #endif
 
+  // code_gen_epilogue is usuelss
+#ifdef BMBT
   /* Assert that goto_ptr is implemented completely.  */
   if (TCG_TARGET_HAS_goto_ptr) {
     tcg_debug_assert(s->code_gen_epilogue != NULL);
   }
+#endif
 }
 
 static void tcg_region_tree_lock_all(void) {
@@ -573,7 +579,6 @@ static void alloc_tcg_plugin_context(TCGContext *s) {}
 void tcg_context_init(TCGContext *s) {
   memset(s, 0, sizeof(*s));
 
-  // FIXME multi thread style code will be changed
   tcg_ctx = s;
   /*
    * In user-mode we simply share the init context among threads, since we

@@ -71,8 +71,10 @@ typedef struct TCGContext {
      here, because there's too much arithmetic throughout that relies
      on addition and subtraction working on bytes.  Rely on the GCC
      extension that allows arithmetic on void*.  */
+#ifdef BMBT
   void *code_gen_prologue;
   void *code_gen_epilogue;
+#endif
   void *code_gen_buffer;
   size_t code_gen_buffer_size;
   void *code_gen_ptr;
@@ -169,33 +171,33 @@ uint64_t helper_le_ldq_cmmu(CPUArchState *env, target_ulong addr,
 
 /* Temporary aliases until backends are converted.  */
 #ifdef TARGET_WORDS_BIGENDIAN
-# define helper_ret_ldsw_mmu  helper_be_ldsw_mmu
-# define helper_ret_lduw_mmu  helper_be_lduw_mmu
-# define helper_ret_ldsl_mmu  helper_be_ldsl_mmu
-# define helper_ret_ldul_mmu  helper_be_ldul_mmu
-# define helper_ret_ldl_mmu   helper_be_ldul_mmu
-# define helper_ret_ldq_mmu   helper_be_ldq_mmu
-# define helper_ret_stw_mmu   helper_be_stw_mmu
-# define helper_ret_stl_mmu   helper_be_stl_mmu
-# define helper_ret_stq_mmu   helper_be_stq_mmu
-# define helper_ret_lduw_cmmu  helper_be_lduw_cmmu
-# define helper_ret_ldsw_cmmu  helper_be_ldsw_cmmu
-# define helper_ret_ldl_cmmu  helper_be_ldl_cmmu
-# define helper_ret_ldq_cmmu  helper_be_ldq_cmmu
+#define helper_ret_ldsw_mmu helper_be_ldsw_mmu
+#define helper_ret_lduw_mmu helper_be_lduw_mmu
+#define helper_ret_ldsl_mmu helper_be_ldsl_mmu
+#define helper_ret_ldul_mmu helper_be_ldul_mmu
+#define helper_ret_ldl_mmu helper_be_ldul_mmu
+#define helper_ret_ldq_mmu helper_be_ldq_mmu
+#define helper_ret_stw_mmu helper_be_stw_mmu
+#define helper_ret_stl_mmu helper_be_stl_mmu
+#define helper_ret_stq_mmu helper_be_stq_mmu
+#define helper_ret_lduw_cmmu helper_be_lduw_cmmu
+#define helper_ret_ldsw_cmmu helper_be_ldsw_cmmu
+#define helper_ret_ldl_cmmu helper_be_ldl_cmmu
+#define helper_ret_ldq_cmmu helper_be_ldq_cmmu
 #else
-# define helper_ret_ldsw_mmu  helper_le_ldsw_mmu
-# define helper_ret_lduw_mmu  helper_le_lduw_mmu
-# define helper_ret_ldsl_mmu  helper_le_ldsl_mmu
-# define helper_ret_ldul_mmu  helper_le_ldul_mmu
-# define helper_ret_ldl_mmu   helper_le_ldul_mmu
-# define helper_ret_ldq_mmu   helper_le_ldq_mmu
-# define helper_ret_stw_mmu   helper_le_stw_mmu
-# define helper_ret_stl_mmu   helper_le_stl_mmu
-# define helper_ret_stq_mmu   helper_le_stq_mmu
-# define helper_ret_lduw_cmmu  helper_le_lduw_cmmu
-# define helper_ret_ldsw_cmmu  helper_le_ldsw_cmmu
-# define helper_ret_ldl_cmmu  helper_le_ldl_cmmu
-# define helper_ret_ldq_cmmu  helper_le_ldq_cmmu
+#define helper_ret_ldsw_mmu helper_le_ldsw_mmu
+#define helper_ret_lduw_mmu helper_le_lduw_mmu
+#define helper_ret_ldsl_mmu helper_le_ldsl_mmu
+#define helper_ret_ldul_mmu helper_le_ldul_mmu
+#define helper_ret_ldl_mmu helper_le_ldul_mmu
+#define helper_ret_ldq_mmu helper_le_ldq_mmu
+#define helper_ret_stw_mmu helper_le_stw_mmu
+#define helper_ret_stl_mmu helper_le_stl_mmu
+#define helper_ret_stq_mmu helper_le_stq_mmu
+#define helper_ret_lduw_cmmu helper_le_lduw_cmmu
+#define helper_ret_ldsw_cmmu helper_le_ldsw_cmmu
+#define helper_ret_ldl_cmmu helper_le_ldl_cmmu
+#define helper_ret_ldq_cmmu helper_le_ldq_cmmu
 #endif
 #endif
 
