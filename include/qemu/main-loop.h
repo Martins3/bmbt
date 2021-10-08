@@ -4,7 +4,6 @@
 #include "../hw/core/cpu.h"
 #include <stdbool.h>
 
-// @todo icount
 extern int use_icount;
 
 /**

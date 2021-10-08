@@ -6,11 +6,14 @@
 #include "../../include/qemu/error-report.h"
 #include <errno.h>
 
-// FIXME maybe init it as zero
 /* 0 = Do not count executed instructions.
    1 = Precise instruction counting.
    2 = Adaptive rate instruction counting.  */
 int use_icount;
+
+/* current CPU in the current thread. It is only valid inside
+   cpu_exec() */
+CPUState *current_cpu;
 
 static void breakpoint_invalidate(CPUState *cpu, target_ulong pc) {
   MemTxAttrs attrs;
