@@ -253,10 +253,7 @@ struct MachineState {
   struct NumaState *numa_state;
 };
 
-static inline MachineState *qdev_get_machine() {
-  // FIXME
-  return NULL;
-}
+MachineState *qdev_get_machine();
 
 #define MACHINE_GET_CLASS(machine) machine->mc
 

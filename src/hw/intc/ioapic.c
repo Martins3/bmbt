@@ -1,11 +1,14 @@
-#include "../../i386/cpu.h"
+// #include "../../i386/cpu.h"
 #include "../../include/exec/cpu-all.h"
+#include "../../include/hw/boards.h"
 #include "../../include/hw/i386/apic-msidef.h"
 #include "../../include/hw/i386/ioapic_internal.h"
+#include "../../include/hw/i386/pc.h"
 #include "../../include/hw/isa/i8259.h"
 #include "../../include/qemu/error-report.h"
 #include "../../include/qemu/notify.h"
 #include "../../include/sysemu/sysemu.h"
+
 #include <string.h>
 
 static IOAPICCommonState *ioapics[MAX_IOAPICS];
@@ -55,9 +58,7 @@ static void ioapic_entry_parse(uint64_t entry, struct ioapic_entry_info *info) {
 }
 
 static void ioapic_service(IOAPICCommonState *s) {
-  // @todo @mem I know this is the address_space_memory, I will init this later
-  // AddressSpace *ioapic_as = X86_MACHINE(qdev_get_machine())->ioapic_as;
-  AddressSpace *ioapic_as;
+  AddressSpace *ioapic_as = MS_TO_X86_MACHINE(qdev_get_machine())->ioapic_as;
   struct ioapic_entry_info info;
   uint8_t i;
   uint32_t mask;
