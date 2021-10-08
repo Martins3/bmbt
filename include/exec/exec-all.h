@@ -454,8 +454,8 @@ static inline MemoryRegion *
 address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
                                   hwaddr *xlat, hwaddr *plen, MemTxAttrs attrs,
                                   int *prot) {
-  // [interface 2] @todo Please return MemoryRegion instead of
-  // MemoryRegionSection
+  // [interface 2]
+  // FIXME :linker: Please return MemoryRegion instead of MemoryRegionSection
   return NULL;
 }
 
