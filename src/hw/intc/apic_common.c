@@ -196,7 +196,6 @@ void apic_reset_common() {
   apic_reset_irq_delivered();
 
   s->vapic_paddr = 0;
-  // FIXME how assigned ?
   info->vapic_base_update(s);
 
   apic_init_reset(s);
