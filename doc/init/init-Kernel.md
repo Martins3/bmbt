@@ -53,7 +53,7 @@
       - [ ] efi_runtime_init
       - [ ] register_smp_ops : 检查一下这些注册函数的使用位置
       - loongson_acpi_init
-        - irq_create_fwspec_mapping : FIXME 这里应该是一个 bug, 在中断系统初始化之前注册这个 acpi 中断
+        - irq_create_fwspec_mapping : ??? 这里应该是一个 bug, 在中断系统初始化之前注册这个 acpi 中断
         - [ ] acpi_registers_setup : 写一些寄存器，需要手册的支持
         - [ ] acpi_hw_clear_status : 写一些寄存器，需要手册的支持
     - cpu_report : 显示一些输出信息
