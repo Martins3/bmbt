@@ -202,7 +202,7 @@ static const VMStateDescription vmstate_apic_common;
 
 void apic_common_realize(APICCommonState *s) {
   APICCommonClass *info;
-  static DeviceState *vapic;
+  static VAPICROMState *vapic;
   int instance_id = s->id;
 
   info = APIC_COMMON_GET_CLASS(s);

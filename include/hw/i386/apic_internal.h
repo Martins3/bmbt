@@ -143,6 +143,9 @@ typedef struct APICCommonClass {
   void (*send_msi)(MSIMessage *msi);
 } APICCommonClass;
 
+typedef struct {
+} VAPICROMState;
+
 struct APICCommonState {
   /*< private >*/
   // DeviceState parent_obj;
@@ -179,7 +182,7 @@ struct APICCommonState {
   int wait_for_sipi;
 
   uint32_t vapic_control;
-  DeviceState *vapic;
+  VAPICROMState *vapic;
   hwaddr vapic_paddr; /* note: persistence via kvmvapic */
   bool legacy_instance_id;
 };

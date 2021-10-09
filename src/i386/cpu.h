@@ -1633,19 +1633,6 @@ typedef struct CPUX86State {
 #endif
 } CPUX86State;
 
-/**
- * DeviceState:
- * @realized: Indicates whether the device has been fully constructed.
- *
- * This structure should not be accessed directly.  We declare it here
- * so that it can be embedded in individual device state structures.
- */
-typedef struct DeviceState {
-  // FIXME it will be removed, no qdev anymore
-  // originally defined in
-  // /home/maritns3/core/ld/x86-qemu-mips/include/hw/qdev-core.h
-} DeviceState;
-
 typedef struct X86CPUModel X86CPUModel;
 
 typedef void (*DeviceRealize)(X86CPU *xcc);
