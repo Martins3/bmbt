@@ -167,7 +167,7 @@ struct MachineClass {
   bool rom_file_has_mr;
   int minimum_page_bits;
   bool has_hotpluggable_cpus;
-  bool ignore_memory_transaction_failures;
+  // bool ignore_memory_transaction_failures;
   int numa_mem_align_shift;
   const char **valid_cpu_types;
   // strList *allowed_dynamic_sysbus_devices;

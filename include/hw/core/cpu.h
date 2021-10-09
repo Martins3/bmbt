@@ -586,9 +586,7 @@ static inline hwaddr cpu_get_phys_page_attrs_debug(CPUState *cpu, vaddr addr,
   return cc->get_phys_page_debug(cpu, addr);
 }
 
-bool qemu_cpu_is_self(CPUState *cpu) {
-  return true;
-}
+bool qemu_cpu_is_self(CPUState *cpu) { return true; }
 
 /**
  * cpu_exec_start:
@@ -664,4 +662,6 @@ void cpu_common_initfn(CPUState *cpu);
  */
 void cpu_list_add(CPUState *cpu);
 
+// originally put into cpu-common.h, put here because of header cycle dependence
+void tcg_flush_softmmu_tlb(CPUState *cs);
 #endif /* end of include guard: CPU_H_5RAXENPS */

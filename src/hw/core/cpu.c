@@ -1,5 +1,6 @@
 #include "../../../include/hw/core/cpu.h"
 #include "../../../include/qemu/main-loop.h"
+#include "../../../include/sysemu/tcg.h"
 
 CPUInterruptHandler cpu_interrupt_handler;
 
@@ -101,12 +102,35 @@ void cpu_reset(CPUState *cpu) {
   // fuck_trace_guest_cpu_reset(cpu);
 }
 
-static void cpu_common_reset(CPUState *cpu) { g_assert_not_reached(); }
+static void cpu_common_reset(CPUState *cpu) {
+  CPUClass *cc = CPU_GET_CLASS(cpu);
+
+#ifdef BMBT
+  if (qemu_loglevel_mask(CPU_LOG_RESET)) {
+    qemu_log("CPU Reset (CPU %d)\n", cpu->cpu_index);
+    log_cpu_state(cpu, cc->reset_dump_flags);
+  }
+#endif
+
+  cpu->interrupt_request = 0;
+  cpu->halted = 0;
+  cpu->mem_io_pc = 0;
+  cpu->icount_extra = 0;
+  atomic_set(&cpu->icount_decr_ptr->u32, 0);
+  cpu->can_do_io = 1;
+  cpu->exception_index = -1;
+  // cpu->crash_occurred = false;
+  cpu->cflags_next_tb = -1;
+
+  if (tcg_enabled()) {
+    cpu_tb_jmp_cache_clear(cpu);
+
+    tcg_flush_softmmu_tlb(cpu);
+  }
+}
 
 static bool cpu_common_has_work(CPUState *cs) { return false; }
 
-// 1. ignore_memory_transaction_failures is used by ARM
-// 2. hotplugged is not supported
 #ifdef BMBT
 static void cpu_common_realizefn(DeviceState *dev, Error **errp) {
   CPUState *cpu = CPU(dev);

@@ -1635,9 +1635,6 @@ typedef struct CPUX86State {
 
 typedef struct X86CPUModel X86CPUModel;
 
-typedef void (*DeviceRealize)(X86CPU *xcc);
-typedef void (*DeviceUnrealize)(X86CPU *dev);
-
 /**
  * X86CPUClass:
  * @cpu_def: CPU model definition
@@ -1669,10 +1666,7 @@ typedef struct {
    * If unavailable, cpu_def->model_id is used */
   const char *model_description;
 
-  // FIXME we will rethink realize at:
-  // x86_cpu_common_class_init
-  DeviceRealize parent_realize;
-  DeviceUnrealize parent_unrealize;
+  void (*parent_realize)(X86CPU *xcc);
   void (*parent_reset)(CPUState *cpu);
 } X86CPUClass;
 
@@ -2147,7 +2141,6 @@ static inline target_long lshift(target_long x, int n) {
   }
 }
 
-// FIXME the only user is test-def.h
 void x86_update_hflags(CPUX86State *env);
 
 #define APIC_DEFAULT_ADDRESS 0xfee00000

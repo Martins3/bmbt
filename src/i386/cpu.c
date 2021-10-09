@@ -4083,28 +4083,27 @@ static Property x86_cpu_properties[] = {
     DEFINE_PROP_END_OF_LIST()};
 #endif
 
-/*
-void device_class_set_parent_realize(DeviceClass *dc, DeviceRealize dev_realize,
-                                     DeviceRealize *parent_realize) {
-  *parent_realize = dc->realize;
-  dc->realize = dev_realize;
-}
-*/
-
 void tcg_x86_init(void) {
-  // originally defined in translate.c
+  // originally defined in translate.c, it's useless in xqm
+}
+
+void cpu_common_realizefn(X86CPU *cpu) {
+  // cpu_common_realizefn is empty:
+  // 1. ignore_memory_transaction_failures is used by ARM
+  // 2. hotplugged is not supported
 }
 
 static void x86_cpu_common_class_init(X86CPUClass *xcc) {
   CPUClass *cc = CPU_CLASS(xcc);
-  // DeviceClass *dc = DEVICE_CLASS(oc);
+#ifdef BMBT
+  DeviceClass *dc = DEVICE_CLASS(oc);
 
-  /*
   device_class_set_parent_realize(dc, x86_cpu_realizefn, &xcc->parent_realize);
   device_class_set_parent_unrealize(dc, x86_cpu_unrealizefn,
                                     &xcc->parent_unrealize);
-  */
-  // dc->props = x86_cpu_properties;
+  dc->props = x86_cpu_properties;
+#endif
+  xcc->parent_realize = cpu_common_realizefn;
 
   xcc->parent_reset = cc->reset;
   cc->reset = x86_cpu_reset;
@@ -4154,7 +4153,6 @@ static void x86_cpu_common_class_init(X86CPUClass *xcc) {
 #endif
   // cc->disas_set_info = x86_disas_set_info;
 
-  // FIXME why we need user_creatable?
   // dc->user_creatable = true;
 }
 
