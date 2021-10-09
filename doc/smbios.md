@@ -83,7 +83,25 @@ struct smbios_30_entry_point {
 ```
 
 ## kernel
-- [ ] 内核是如何使用这些内存的 ?
+- [ ] 内核是如何使用这些内容的 ?
+
+## 问题
+
+在 pc_init1 中
+```c
+    if (pcmc->smbios_defaults) {
+        MachineClass *mc = MACHINE_GET_CLASS(machine);
+        /* These values are guest ABI, do not change */
+        smbios_set_defaults("QEMU", "Standard PC (i440FX + PIIX, 1996)",
+                            mc->name, pcmc->smbios_legacy_mode,
+                            pcmc->smbios_uuid_encoded,
+                            SMBIOS_ENTRY_POINT_21);
+    }
+```
+其最后体现出来的效果是什么啊?
+
+- [ ] 可以随意修改的!
+
 
 ## dmidecode(8)
 dmidecode is a tool for dumping a computer's DMI (some say SMBIOS ) table contents in a human-readable format. This table contains a description of the system's hardware components, as well as other useful pieces of information such as serial numbers and BIOS revision.

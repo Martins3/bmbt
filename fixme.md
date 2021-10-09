@@ -51,3 +51,106 @@
   - [ ] g_assert
   - error_report
 9. pit 和 hpet 需要模拟?
+
+src/hw/core/machine.c:143:  // FIXME this is hard coded, I don't know why MachineClass name this one
+src/hw/core/machine.c:145:  // FIXME compat_props
+src/hw/core/machine.c:159:  // FIXME check it, we don't support nvdimm
+src/hw/core/machine.c:211:    // FIXME I don't know why possible_cpus's length is empty
+src/hw/core/machine.c:230:    // FIXME in x86 types
+src/hw/core/cpu.c:22:  // FIXME call the realize function here
+src/hw/core/cpu.c:92:// FIXME does we need cpu_reset
+src/hw/intc/ioapic.c:226:          // FIXME :linker: timer ???
+src/hw/intc/ioapic.c:402:  // FIXME :linker: timer
+src/hw/i386/fw_cfg.c:29:// FIXME port bios
+src/hw/i386/x86.c:156:// FIXME As for how to boot kernel, it's not clear
+src/hw/i386/x86.c:689:  // FIXME port it
+src/i386/cpu.h:1474:  // FIXME put here randomly, fix it later
+src/i386/cpu.h:1483:  // FIXME put here randomly
+src/i386/cpu.h:1490:  // FIXME feild are put here randomly, we will fix them
+src/i386/cpu.h:1644:  // FIXME it will be removed, no qdev anymore
+src/i386/cpu.h:1685:  // FIXME we will rethink realize at:
+src/i386/cpu.h:2150:// FIXME should be empty, verify it
+src/i386/cpu.h:2166:// FIXME the only user is test-def.h
+src/hw/nvram/fw_cfg.c:950:  // FIXME init the memory region
+src/hw/nvram/fw_cfg.c:955:    // FIXME init the memory region
+src/i386/LATX/x86tomips-options.c:656:        // FIXME
+src/i386/LATX/optimization/flag_reduction.c:7:// FIXME maybe this is bug of original QEMU
+src/i386/LATX/x86tomips-config.c:25:// #include "trace.h" FIXME comment it temporary
+src/i386/LATX/x86tomips-config.c:95:        // FIXME how etb works ?
+src/i386/LATX/x86tomips-config.c:169:// FIXME this is called after tb_find
+src/i386/LATX/x86tomips-config.c:818:// FIXME comment this, vregs defined in CPUX86State ?
+src/i386/LATX/x86tomips-config.c:897:// FIXME comment the code related with signal handler
+src/i386/LATX/x86tomips-config.c:928:// FIXME this is a temporary fix
+src/i386/LATX/x86tomips-config.c:931:// FIXME no more signal anymore
+src/i386/cpu.c:1365:  // FIXME
+src/i386/cpu.c:1370:  // FIXME
+src/i386/cpu.c:1381:  // FIXME
+src/i386/cpu.c:1436:  // FIXME
+src/i386/cpu.c:1574:  // FIXME anchor : maybe we will remove the version system
+src/i386/cpu.c:1578:  // FIXME anchor : maybe we will remove the version system
+src/i386/cpu.c:1584:  // FIXME anchor : maybe we will remove the version system
+src/i386/cpu.c:2047:  // FIXME how to port property?
+src/i386/cpu.c:2055:  // FIXME how to port property?
+src/i386/cpu.c:2059:  // FIXME how to port property?
+src/i386/cpu.c:3038:// FIXME
+src/i386/cpu.c:3586:  // FIXME when will QEMU call unrealizefn?
+src/i386/cpu.c:3756:  // FIXME last three property are never used
+src/i386/cpu.c:3979:// FIXME check this one by one
+src/i386/cpu.c:4153:  // FIXME why we need user_creatable?
+src/i386/cpu.c:4162:  // FIXME when did the newly allocated CPU passed to exec thread ?
+src/tcg/cputlb.c:47:// FIXME just remove the content to avoid error
+src/tcg/cputlb.c:80:// FIXME i don't know why we need time
+src/tcg/cputlb.c:843:  // FIXME remove btmmu related code
+src/tcg/cpu-exec-common.c:38:    // FIXME rethink the code later
+src/tcg/cpu-exec.c:83:  // FIXME why xqm need extra hacking for this?
+src/tcg/cpu-exec.c:196:  // FIXME
+src/tcg/cpu-exec.c:277:  // FIXME deeper understanding how tb expands to second pages
+src/tcg/cpu-exec.c:478:  // FIXME how SyncClocks works
+src/tcg/cpu-exec.c:500:    // FIXME some checks for sigsetjmp bugs, review it later
+src/tcg/cpu-exec.c:538:      // FIXME icount related
+src/tcg/translate-all.c:29:// FIXME copied from /usr/include/x86_64-linux-gnu/bits/mman-linux.h
+src/tcg/translate-all.c:46:// FIXME copied from  util/cacheinfo.c
+src/tcg/translate-all.c:55:// FIXME why xqm take special attention cross page
+src/tcg/translate-all.c:1047:  // FIXME is mips restriction still valid ?
+src/tcg/translate-all.c:1081:  // FIXME
+src/tcg/translate-all.c:2122:  // FIXME we should define this
+src/hw/intc/apic.c:755:// FIXME put msi_nonbroken here temporarily, maybe we never need it
+src/hw/intc/ioapic_common.c:162:  // FIXME call realize functions
+include/qemu/bitmap.h:24:  // FIXME interface
+include/qemu/osdep.h:26:// FIXME defined in util/cacheinfo.c
+include/qemu/osdep.h:41:// FIXME get the page size, that's really easy
+include/qemu/osdep.h:66:// FIXME
+include/qemu/log-for-trace.h:6:// FIXME a fix, review this file later
+include/qemu/config-host.h:161:// FIXME
+include/qemu/qemu-printf.h:5:  // FIXME actually
+include/qemu/atomic.h:4:// FIXME If we want to support multicore
+include/hw/i386/pc.h:41:// FIXME copied from include/hw/acpi/pc-hotplug.h
+include/hw/i386/pc.h:56:  // FIXME init it
+include/hw/i386/pc.h:63:  // FIXME actually, QOM can convert acpi_dev to DeviceState
+include/hw/core/cpu.h:76:// FIXME maybe we have copy too many comments here, remove them later
+include/hw/core/cpu.h:183:  // FIXME currently, this field is only referenced by tb_lookup__cpu_state
+include/hw/core/cpu.h:194:// FIXME clear the comments
+include/hw/core/cpu.h:387:// FIXME initialize cpu_interrupt_handler
+include/hw/core/cpu.h:428:  // FIXME interface
+include/hw/core/cpu.h:458:// FIXME
+include/hw/core/cpu.h:534:// FIXME I don't know why x86 doesn't register the handler
+include/hw/i386/x86.h:43:  bool apic_xrupt_override; // FIXME what does this mean ?
+include/hw/isa/i8259_internal.h:10:  // FIXME can I remove it safely
+include/exec/cpu-all.h:17:// FIXME
+include/exec/cpu-all.h:130:// FIXME prototypes above are autogenerated, why this one copied  manually
+include/exec/cputlb.h:8:void tlb_protect_code(ram_addr_t ram_addr); // FIXME protect code ? understand it
+include/exec/cpu-defs.h:101:// FIXME, if QEMU_BUILD_BUG_ON only used one time, create a simpler one
+include/exec/exec-all.h:163:// FIXME todo we doesn't supported mttcg, so init it as zero
+include/exec/exec-all.h:458:  // FIXME :linker: Please return MemoryRegion instead of MemoryRegionSection
+include/exec/memory.h:40:  // FIXME
+include/exec/memory.h:44:  // FIXME
+include/exec/memory.h:53:  // FIXME port later
+include/exec/memory.h:71:  // FIXME port later
+include/exec/memory.h:89:  // FIXME port later
+include/exec/ram_addr.h:26:  // FIXME add the only RAMBlock to RAMList, check the addr in range and return
+include/sysemu/sysemu.h:11:  // FIXME :linker: need more thinking about how to load guest image
+include/sysemu/replay.h:7:  // FIXME
+include/sysemu/replay.h:11:// FIXME /home/maritns3/core/ld/x86-qemu-mips/build/qapi/qapi-types-misc.h
+include/sysemu/replay.h:24:  // FIXME
+include/sysemu/replay.h:29:  // FIXME
+include/sysemu/replay.h:36:  // FIXME
