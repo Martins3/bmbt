@@ -88,7 +88,7 @@ struct IOAPICCommonState {
   uint64_t irq_count[IOAPIC_NUM_PINS];
   int irq_level[IOAPIC_NUM_PINS];
   int irq_eoi[IOAPIC_NUM_PINS];
-  // QEMUTimer *delayed_ioapic_service_timer; // FIXME what's delayed ?
+  // QEMUTimer *delayed_ioapic_service_timer; // FIXME :linker: what's delayed ?
 };
 #define IOAPIC_COMMON_GET_CLASS(is) is->icc
 

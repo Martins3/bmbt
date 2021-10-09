@@ -4,9 +4,6 @@
 
 static void smp_parse(MachineState *ms) { g_assert_not_reached(); }
 
-// FIXME
-// 1. it's orignally put on numa.h, reference MachineState made header inclusion
-// tricky more survey on numa is needed
 void numa_complete_configuration(MachineState *ms);
 void numa_default_auto_assign_ram(MachineClass *mc, NodeInfo *nodes,
                                   int nb_nodes, ram_addr_t size);
