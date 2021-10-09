@@ -59,7 +59,7 @@ typedef struct PCMachineState {
   /* State for other subsystems/APIs: */
   Notifier machine_done;
 
-  // FIXME actually, QOM can convert acpi_dev to DeviceState
+  // @todo :acpi: actually, QOM can convert acpi_dev to DeviceState
   // So, if we want to port ACPI, change acpi_dev to the real struct
   /* Pointers to devices and objects: */
   HotplugHandler *acpi_dev;
