@@ -50,7 +50,7 @@
     - 最后这个玩意儿只是在 machine_class_init 中通过 machine_set_property 设置，但是这些变量都是写死的
 25. hotplug.h
     - hotplug 的使用位置只有两个地方，pc.c 和 acpi.h，需要 plug 的总是 CPU
-    - hotplug.c 在 qdev_realize 的位置手动显示的调用
+    - hotplug.c 在 qdev_realize 的位置手动显式的调用
     - 为了让 HotplugHandler * 可以装换为 DeviceState 或者是 PCMachineState 之类的，需要让 PCMachineState 内部持有一个 HotplugHandler
     - 然后 HotplugHandler 再持有 HotplugDeviceClass * 并且手动检查
 26. ram_size

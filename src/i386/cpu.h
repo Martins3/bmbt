@@ -1647,7 +1647,6 @@ typedef struct DeviceState {
 } DeviceState;
 
 typedef struct X86CPUModel X86CPUModel;
-typedef struct X86CPU X86CPU;
 
 typedef void (*DeviceRealize)(X86CPU *xcc);
 typedef void (*DeviceUnrealize)(X86CPU *dev);
@@ -1816,7 +1815,11 @@ struct X86CPU {
 };
 #define X86_CPU_GET_CLASS(cpu) cpu->xcc
 
-#define X86_CPU(ptr) container_of(ptr, X86CPU, parent_obj)
+#define X86_CPU(ptr)                                                           \
+  ({                                                                           \
+    const CPUState *tmp = ptr;                                                 \
+    (X86CPU *)tmp;                                                             \
+  })
 
 /* float macros */
 #define FT0 (env->ft0)

@@ -415,7 +415,6 @@ void helper_skinit(CPUX86State *env)
 
 void helper_invlpga(CPUX86State *env, int aflag)
 {
-    // X86CPU *cpu = env_archcpu(env);
     X86CPU *cpu = env_archcpu(env);
 
     target_ulong addr;
