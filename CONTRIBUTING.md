@@ -8,7 +8,7 @@
 2. 如何让 reviewer 愉快的 review 你的代码[^1]
 3. 一个优雅的 commit[^5] 应该是什么样子的
 
-## 使用 git pre-commit
+## 使用 [pre-commit](https://pre-commit.com/) 来进行常规检查
 ```sh
 pre-commit --version
 pre-commit install
@@ -28,6 +28,19 @@ pre-commit 会在进行 commit 之前执行一些脚本做出检查，如果检�
 - separate-doc-code.sh : 代码的修改和文档的修改不在在一个 commit 中提交
 - code-test.sh : 每次提交需要保证通过测试
 - [ ] non-ascii-comment.sh : 不要在代码中携带中文注释，最好的代码是没有注释的，如果需要，那么就使用英文，不过表达不清楚，那么就写成一个 blog
+
+## 使用 [commitlint](https://github.com/conventional-changelog/commitlint) 来检查 commit
+使用 npm 的安装
+```sh
+sudo npm install -g --save-dev @commitlint/{config-conventional,cli}
+sudo npm install -g husky --save-dev
+npx husky install
+npx husky add .husky/commit-msg 'npx --no-install commitlint --edit "$1"'
+```
+然后 commit 的规则为:
+```txt
+type(scope?): subject  #scope is optional; multiple scopes are supported (current delimiter options: "/", "\" and ",")
+```
 
 ## 记录一下疑惑
 - 一般来说，使用 rebase and merge
