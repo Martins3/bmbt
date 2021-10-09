@@ -137,7 +137,7 @@ void machine_class_init(MachineClass *mc) {
 }
 
 void machine_class_base_init(MachineClass *mc) {
-  // FIXME this is hard coded, I don't know why MachineClass name this one
+  // MachineClass::name is used for debug
   mc->name = "pc-i440fx-4.2";
   // FIXME compat_props
   // mc->compat_props = g_ptr_array_new();
@@ -153,7 +153,6 @@ void machine_initfn(MachineState *ms) {
   // ms->mem_merge = true;
   ms->enable_graphics = true;
 
-  // FIXME check it, we don't support nvdimm
   if (mc->nvdimm_supported) {
     g_assert_not_reached();
 #ifdef BMBT
