@@ -2144,8 +2144,6 @@ void x86_cpu_exec_exit(CPUState *cpu);
 
 /* apic.c */
 void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
-void apic_handle_tpr_access_report(struct APICCommonState *d, target_ulong ip,
-                                   TPRAccess access);
 
 // FIXME should be empty, verify it
 /* translate.c */
