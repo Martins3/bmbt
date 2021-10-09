@@ -190,23 +190,7 @@ void machine_initfn(MachineState *ms) {
 // static void machine_finalize(Object *obj) {}
 
 static void machine_numa_finish_cpu_init(MachineState *machine) {
-  int i;
-  bool default_mapping;
-  MachineClass *mc = MACHINE_GET_CLASS(machine);
-  const CPUArchIdList *possible_cpus = mc->possible_cpu_arch_ids(machine);
-
-  assert(machine->numa_state->num_nodes);
-  for (i = 0; i < possible_cpus->len; i++) {
-    if (possible_cpus->cpus[i].props.has_node_id) {
-      break;
-    }
-  }
-  default_mapping = (i == possible_cpus->len);
-
-  for (i = 0; i < possible_cpus->len; i++) {
-    // FIXME I don't know why possible_cpus's length is empty
-    g_assert_not_reached();
-  }
+  g_assert_not_reached();
 }
 
 void machine_run_board_init(MachineState *machine) {
