@@ -18,10 +18,9 @@ CPUState *cpu_by_arch_id(int64_t id) {
 
 bool cpu_exists(int64_t id) { return !!cpu_by_arch_id(id); }
 
-CPUState *cpu_create(const char *typename) {
-  // FIXME call the realize function here
-  CPUState *cpu = NULL;
 #ifdef BMBT
+CPUState *cpu_create(const char *typename) {
+  CPUState *cpu = NULL;
   Error *err = NULL;
   object_property_set_bool(OBJECT(cpu), true, "realized", &err);
   if (err != NULL) {
@@ -29,9 +28,9 @@ CPUState *cpu_create(const char *typename) {
     object_unref(OBJECT(cpu));
     exit(EXIT_FAILURE);
   }
-#endif
   return cpu;
 }
+#endif
 
 bool cpu_paging_enabled(const CPUState *cpu) {
   CPUClass *cc = CPU_GET_CLASS(cpu);
@@ -89,12 +88,14 @@ void cpu_exit(CPUState *cpu) {
   atomic_set(&cpu->icount_decr_ptr->u16.high, -1);
 }
 
-// FIXME does we need cpu_reset
 void cpu_reset(CPUState *cpu) {
   CPUClass *klass = CPU_GET_CLASS(cpu);
 
   if (klass->reset != NULL) {
     (*klass->reset)(cpu);
+  } else {
+    // reset must be registered
+    duck_check(false);
   }
 
   // fuck_trace_guest_cpu_reset(cpu);
@@ -160,7 +161,7 @@ static vaddr cpu_adjust_watchpoint_address(CPUState *cpu, vaddr addr, int len) {
 }
 
 static void generic_handle_interrupt(CPUState *cpu, int mask) {
-    g_assert_not_reached();
+  g_assert_not_reached();
 }
 
 CPUInterruptHandler cpu_interrupt_handler = generic_handle_interrupt;
