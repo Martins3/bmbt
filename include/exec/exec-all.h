@@ -491,7 +491,9 @@ TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
                                    target_ulong cs_base, uint32_t flags,
                                    uint32_t cf_mask);
 
-void page_size_init(void);
+static inline void page_size_init(void) {
+  // [interface 27]
+}
 
 /**
  * iotlb_to_section:
