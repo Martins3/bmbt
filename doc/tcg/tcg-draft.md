@@ -133,7 +133,7 @@ cpu_exec : 的两个调用者
     - tb_lookup__cpu_state :
       - first search the `tb_jmp_cache` stored in `CPUState`
       - then call `tb_htable_lookup` to search all the translated and stored TB.
-    - tb_gen_code : @todo 关注最后这个返回值是怎么组装起来的 ?
+    - tb_gen_code : 在这里初始化了 TranslationBlock
       - `get_page_addr_code` : get the `phys_pc` according to `pc`
         - [ ] 这里会进入到 cputlb.c 中间，如果这里也是需要进行 TLB 翻译的，和 gencode 时候的 TLB 翻译的关系是什么 ?
       - gen_intermediate_code : 在文件夹 target/arm 下面, 这个短短的函数用于选择到底是 arm 还是 arm64 的 TranslatorOps.

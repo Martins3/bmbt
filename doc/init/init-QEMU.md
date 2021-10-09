@@ -14,7 +14,6 @@
 			- x86_cpu_realizefn
 
 ## 初始化 QEMU 大约需要处理的事情
-- [ ] /home/maritns3/core/ld/x86-qemu-mips/hw/i386/pc.c
 - [ ] rtc_set_cpus_count 中和 seabios 的关系需要完全走通
 
 - [ ] 如何降低 include/sysemu/numa.h 的影响
@@ -350,6 +349,9 @@ filtered_features [Field] :1663:22                                              
 ```c
   dc->props = apic_properties_common;
 ```
+
+1. qdev_create : instance_init
+2. qdev_init_nofail : realize
 
 
 [^2]: https://en.wikipedia.org/wiki/Machine-check_exception

@@ -4,6 +4,8 @@
 
 ## 问题
 - [ ] 所以还是使用 e820 来实现探测内存吗? 那么 acpi 是做什么用的?
+- [ ] get_boot_devices_list 的返回结果是 /rom@genroms/linuxboot_dma.bin，通过这种方式直接启动 Linux，如果是从 disk 上启动 guest 的时候，那么其返回为 NULL
+  - 所以，到底用什么方法来加载 guest 的啊
 
 ## 将用户态的依赖彻底移除掉
 - setsigjmp 这种东西在内核态可以使用吗?
