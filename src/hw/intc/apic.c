@@ -212,14 +212,16 @@ static void apic_set_tpr(APICCommonState *s, uint8_t val) {
   }
 }
 
+// used by hvf
+#ifdef BMBT
 int apic_get_highest_priority_irr(APICCommonState *s) {
-  // @todo why will the caller call it with parameter dev== NULL
   if (!s) {
     /* no interrupts */
     return -1;
   }
   return get_highest_priority_int(s->irr);
 }
+#endif
 
 static void apic_sync_vapic(APICCommonState *s, int sync_type) {
   if (!s->vapic_paddr) {
@@ -538,8 +540,9 @@ static uint64_t apic_mem_read(void *opaque, hwaddr addr, unsigned size) {
   }
 
   s = cpu_get_current_apic();
-  // @todo when will cpu_get_current_apic return null
   if (!s) {
+    // cpu_get_current_apic will always return an valid APICCommonState
+    g_assert_not_reached();
     return 0;
   }
 

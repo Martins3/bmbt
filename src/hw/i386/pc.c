@@ -921,8 +921,9 @@ void pc_init_ne2k_isa(ISABus *bus, NICInfo *nd) {
   isa_ne2000_init(bus, ne2000_io[nb_ne2k], ne2000_irq[nb_ne2k], nd);
   nb_ne2k++;
 }
+#endif
 
-DeviceState *cpu_get_current_apic(void) {
+APICCommonState *cpu_get_current_apic(void) {
   if (current_cpu) {
     X86CPU *cpu = X86_CPU(current_cpu);
     return cpu->apic_state;
@@ -931,6 +932,7 @@ DeviceState *cpu_get_current_apic(void) {
   }
 }
 
+#ifdef BMBT
 void pc_acpi_smi_interrupt(void *opaque, int irq, int level) {
   X86CPU *cpu = opaque;
 
