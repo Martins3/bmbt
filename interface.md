@@ -41,7 +41,6 @@
       - 在 pc_init1 中处理了 PCI 相关的地址空间
       - 在 x86_bios_rom_init 处理 bios 相关的空间
     - [ ] 整个 pc_memory_init 实际上被过多的删除了，需要重新 review 一下，而且 pc.ram 之类的东西还是重新在这里添加的
-
 22. pc_system_firmware_init
     - 因为不支持 pflash 所以这个函数被简化为直接调用 x86_bios_rom_init 了
 23. smp_parse
@@ -56,6 +55,11 @@
 26. ram_size
     - 因为 `current_machine->ram_size` == ram_size 的，所以在 fw_cfg_arch_create 直接替换掉
     - [ ] 虽然暂时没有完全移除掉，但是我希望之后彻底移除掉这个 ram_size，通过 `qdev_get_machine()->ram_size` 代替
+27. page_size_init
+    - 初始化的 qemu_host_page_size / qemu_host_page_mask 的两个变量实际上没有作用
+    - [ ] 是不是因为没有移植 cross page 相关的代码，所以暂时无需 host page size 是多少?
+28. check_exception
+    - 如果检测出来 triple fault，那么会导致整个机器重置，这种复杂的情况暂时不是我们能够处理的
 
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
@@ -64,3 +68,9 @@
 - NEED_LATER : 将来应该需要
 - MEM_TODO : 暂时没有移植的，和 MEM 相关的
 - RTC_TODO : 关于 rtc 的代码
+
+
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+npx --no-install commitlint --edit ""
