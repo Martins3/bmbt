@@ -21,8 +21,6 @@
 
 #define TARGET_PAGE_ALIGN(addr) ROUND_UP((addr), TARGET_PAGE_SIZE)
 
-static inline CPUState *env_cpu(CPUArchState *env) { return env->cpu; }
-
 /* same as PROT_xxx */
 #define PAGE_READ 0x0001
 #define PAGE_WRITE 0x0002
@@ -85,6 +83,16 @@ static inline CPUState *env_cpu(CPUArchState *env) { return env->cpu; }
  */
 static inline ArchCPU *env_archcpu(CPUArchState *env) {
   return container_of(env, ArchCPU, env);
+}
+
+/**
+ * env_cpu(env)
+ * @env: The architecture environment
+ *
+ * Return the CPUState associated with the environment.
+ */
+static inline CPUState *env_cpu(CPUArchState *env) {
+  return &env_archcpu(env)->parent_obj;
 }
 
 /**
