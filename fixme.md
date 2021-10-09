@@ -52,18 +52,6 @@
   - error_report
 9. pit 和 hpet 需要模拟?
 
-src/hw/core/machine.c:143:  // FIXME this is hard coded, I don't know why MachineClass name this one
-src/hw/core/machine.c:145:  // FIXME compat_props
-src/hw/core/machine.c:159:  // FIXME check it, we don't support nvdimm
-src/hw/core/machine.c:211:    // FIXME I don't know why possible_cpus's length is empty
-src/hw/core/machine.c:230:    // FIXME in x86 types
-src/hw/core/cpu.c:22:  // FIXME call the realize function here
-src/hw/core/cpu.c:92:// FIXME does we need cpu_reset
-src/hw/intc/ioapic.c:226:          // FIXME :linker: timer ???
-src/hw/intc/ioapic.c:402:  // FIXME :linker: timer
-src/hw/i386/fw_cfg.c:29:// FIXME port bios
-src/hw/i386/x86.c:156:// FIXME As for how to boot kernel, it's not clear
-src/hw/i386/x86.c:689:  // FIXME port it
 src/i386/cpu.h:1474:  // FIXME put here randomly, fix it later
 src/i386/cpu.h:1483:  // FIXME put here randomly
 src/i386/cpu.h:1490:  // FIXME feild are put here randomly, we will fix them
