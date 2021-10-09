@@ -139,7 +139,6 @@ void machine_class_init(MachineClass *mc) {
 void machine_class_base_init(MachineClass *mc) {
   // MachineClass::name is used for debug
   mc->name = "pc-i440fx-4.2";
-  // FIXME compat_props
   // mc->compat_props = g_ptr_array_new();
 }
 
@@ -203,11 +202,12 @@ void machine_run_board_init(MachineState *machine) {
     }
   }
 
+  // PC doesn't check valid_cpu_types
+  duck_check(machine_class->valid_cpu_types == NULL);
   /* If the machine supports the valid_cpu_types check and the user
    * specified a CPU with -cpu check here that the user CPU is supported.
    */
   if (machine_class->valid_cpu_types && machine->cpu_type) {
-    // FIXME in x86 types
     g_assert_not_reached();
   }
 
