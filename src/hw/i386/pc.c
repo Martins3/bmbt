@@ -1512,9 +1512,8 @@ static CPUArchId *pc_find_cpu_slot(MachineState *ms, uint32_t id, int *idx) {
 static void pc_cpu_plug(HotplugHandler *handler, X86CPU *cpu) {
   CPUArchId *found_cpu;
   PCMachineState *pcms = (PCMachineState *)(handler->parent);
-  X86MachineState *x86ms = X86_MACHINE(pcms);
-
   hotplug_check_cast(handler, "PCMachineState");
+  X86MachineState *x86ms = X86_MACHINE(pcms);
 
   if (pcms->acpi_dev) {
     hotplug_handler_plug(pcms->acpi_dev, cpu);
@@ -1600,8 +1599,8 @@ static void pc_cpu_pre_plug(HotplugHandler *hotplug_dev, X86CPU *cpu) {
   // X86CPU *cpu = X86_CPU(dev);
   CPUX86State *env = &cpu->env;
   PCMachineState *pcms = (PCMachineState *)hotplug_dev->parent;
-  MachineState *ms = MACHINE(pcms);
   hotplug_check_cast(hotplug_dev, "PCMachineState");
+  MachineState *ms = MACHINE(pcms);
   X86MachineState *x86ms = X86_MACHINE(pcms);
   unsigned int smp_cores = ms->smp.cores;
   unsigned int smp_threads = ms->smp.threads;
