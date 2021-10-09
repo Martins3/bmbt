@@ -74,16 +74,11 @@ void x86_cpus_init(X86MachineState *x86ms, int default_cpu_version) {
   }
 }
 
-#if BMBT
 CpuInstanceProperties x86_cpu_index_to_props(MachineState *ms,
                                              unsigned cpu_index) {
-  MachineClass *mc = MACHINE_GET_CLASS(ms);
-  const CPUArchIdList *possible_cpus = mc->possible_cpu_arch_ids(ms);
-
-  assert(cpu_index < possible_cpus->len);
-  return possible_cpus->cpus[cpu_index].props;
+  // called by parse_numa_node, but BMBT doesn't support numa
+  g_assert_not_reached();
 }
-#endif
 
 int64_t x86_get_default_cpu_node_id(const MachineState *ms, int idx) {
   X86CPUTopoInfo topo;
@@ -153,7 +148,7 @@ static void x86_nmi(NMIState *n, int cpu_index, Error **errp) {
 }
 #endif
 
-// FIXME As for how to boot kernel, it's not clear
+// @todo As for how to boot kernel, it's not clear yet
 #ifdef BMBT
 static long get_file_size(FILE *f) {
   long where, size;
@@ -686,8 +681,7 @@ void x86_machine_class_init(X86MachineClass *x86mc) {
   // X86MachineClass *x86mc = X86_MACHINE_CLASS(mc);
   // NMIClass *nc = NMI_CLASS(oc);
 
-  // FIXME port it
-  // mc->cpu_index_to_instance_props = x86_cpu_index_to_props;
+  mc->cpu_index_to_instance_props = x86_cpu_index_to_props;
   mc->get_default_cpu_node_id = x86_get_default_cpu_node_id;
   mc->possible_cpu_arch_ids = x86_possible_cpu_arch_ids;
   x86mc->compat_apic_id_mode = false;

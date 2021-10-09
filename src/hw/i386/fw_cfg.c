@@ -26,8 +26,11 @@ const char *fw_cfg_arch_key_name(uint16_t key) {
   return NULL;
 }
 
-// FIXME port bios
-#if TODO_SMBIOS
+void fw_cfg_build_smbios(MachineState *ms, FWCfgState *fw_cfg) {
+  // @todo port smbios later
+}
+
+#if SMBIOS_TODO
 void fw_cfg_build_smbios(MachineState *ms, FWCfgState *fw_cfg) {
   uint8_t *smbios_tables, *smbios_anchor;
   size_t smbios_tables_len, smbios_anchor_len;
