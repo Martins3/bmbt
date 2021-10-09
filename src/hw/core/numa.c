@@ -49,10 +49,7 @@ void numa_complete_configuration(MachineState *ms) {
 
   /* No support for sparse NUMA node IDs yet: */
   for (i = max_numa_nodeid - 1; i >= 0; i--) {
-    /* Report large node IDs first, to make mistakes easier to spot */
-    if (!numa_info[i].present) {
-      g_assert_not_reached();
-    }
+    g_assert_not_reached();
   }
 
   /* This must be always true if all nodes are present: */

@@ -38,7 +38,7 @@ uint32_t sev_get_cbit_position(void) { return 0; }
 uint32_t sev_get_reduced_phys_bits(void) { return 0; }
 char *sev_get_launch_measurement(void) { return NULL; }
 
-// FIXME copied from include/hw/acpi/pc-hotplug.h
+// @todo copied from include/hw/acpi/pc-hotplug.h
 // maybe we will review the cpu hotplug and memory hotplug later
 #define ACPI_MEMORY_HOTPLUG_BASE 0x0a00
 
@@ -53,7 +53,6 @@ typedef struct PCMachineState {
   X86MachineState parent_obj;
   struct PCMachineClass *pcmc;
 
-  // FIXME init it
   /* <public> */
   HotplugHandler hd;
 
@@ -79,6 +78,8 @@ typedef struct PCMachineState {
   bool sata_enabled;
   bool pit_enabled;
 
+  // used by acpi, because numa isn't supported
+  // numa_nodes == 0 && node_mem == NULL
   /* NUMA information: */
   uint64_t numa_nodes;
   uint64_t *node_mem;
