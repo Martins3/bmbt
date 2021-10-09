@@ -2040,7 +2040,7 @@ void pc_machine_class_init(PCMachineClass *pcmc) {
   // hc->unplug_request = pc_machine_device_unplug_request_cb;
   // hc->unplug = pc_machine_device_unplug_cb;
   mc->default_cpu_type = "qemu32";
-  mc->nvdimm_supported = true;
+  mc->nvdimm_supported = false;
   mc->numa_mem_supported = true;
 
 #ifdef BMBT
