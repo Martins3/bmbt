@@ -2132,7 +2132,6 @@ void x86_cpu_exec_exit(CPUState *cpu);
 /* apic.c */
 void cpu_report_tpr_access(CPUX86State *env, TPRAccess access);
 
-// FIXME should be empty, verify it
 /* translate.c */
 void tcg_x86_init(void);
 

@@ -4091,6 +4091,10 @@ void device_class_set_parent_realize(DeviceClass *dc, DeviceRealize dev_realize,
 }
 */
 
+void tcg_x86_init(void) {
+  // originally defined in translate.c
+}
+
 static void x86_cpu_common_class_init(X86CPUClass *xcc) {
   CPUClass *cc = CPU_CLASS(xcc);
   // DeviceClass *dc = DEVICE_CLASS(oc);
