@@ -3,7 +3,7 @@
 1. address_space_stl_notdirty
     - 调用 address_space_stl_notdirty 的时候是在处理 page table, 因为 BMBT 不处理 migration， 只处理 SMC，所以哪里没用
 2.  address_space_translate_for_iotlb
-    - 之后直接返回 MemoryRegion 的
+    - 之后直接返回 MemoryRegionSection 的
 3.  memory_access_is_direct
 4.  memory_region_get_ram_ptr
     - 没有令人窒息的 alias 之类的，直接返回 qemu_map_ram_ptr 就可以了
@@ -60,7 +60,7 @@
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
 
-- NEED_LATER : 将来应该需要
 - BMBT : 一定不需要，应该在每一个 BMBT 跟上解释为什么不需要这个东西
+- NEED_LATER : 将来应该需要
 - MEM_TODO : 暂时没有移植的，和 MEM 相关的
 - RTC_TODO : 关于 rtc 的代码
