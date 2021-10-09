@@ -170,7 +170,6 @@ PCMachineState *machine_init() {
   machine_run_board_init(current_machine);
 
   // qdev_machine_creation_done();
-  // FIXME all qdev::reset will be called, e.g., fw_cfg_reset
   qemu_register_reset(qbus_reset_all_fn, NULL);
   qemu_run_machine_init_done_notifiers();
 
