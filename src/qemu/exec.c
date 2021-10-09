@@ -200,10 +200,11 @@ void cpu_single_step(CPUState *cpu, int enabled) {
 }
 #endif
 
-// FIXME trace it
+#ifdef BMBT
 uintptr_t qemu_host_page_size;
 intptr_t qemu_host_page_mask;
 
+// [interface 27]
 void page_size_init(void) {
   /* NOTE: we can always suppose that qemu_host_page_size >=
      TARGET_PAGE_SIZE */
@@ -215,6 +216,7 @@ void page_size_init(void) {
   }
   qemu_host_page_mask = -(intptr_t)qemu_host_page_size;
 }
+#endif
 
 MemoryRegion *iotlb_to_section(CPUState *cpu, hwaddr index, MemTxAttrs attrs) {
   // [interface 6]
