@@ -1354,14 +1354,10 @@ typedef struct CPUCaches {
 } CPUCaches;
 
 typedef struct CPUX86State {
-  CPUState *cpu;
 #if defined(CONFIG_X86toMIPS) || defined(CONFIG_LATX)
   ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
   // ldq,only 10bits offset
 #endif
-  ZMMReg xmm_t0;
-  MMXReg mmx_t0;
-
 #ifdef CONFIG_LATX
   /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
   uint64_t vregs[6];
@@ -1369,7 +1365,7 @@ typedef struct CPUX86State {
   uint64_t mips_iregs[32];
   uint32_t xtm_fpu;
 #endif
-
+  /* standard registers */
   target_ulong regs[CPU_NB_REGS];
   target_ulong eip;
   target_ulong eflags; /* eflags register. During CPU emulation, CC
@@ -1386,29 +1382,24 @@ typedef struct CPUX86State {
                        are known at translation time. */
   uint32_t hflags2; /* various other flags, see HF2_xxx constants. */
 
-  /* FPU state */
-  unsigned int fpstt; /* top of stack index */
-  uint16_t fpus;
-  uint16_t fpuc;
-  uint8_t fptags[8]; /* 0 = valid, 1 = empty */
-  FPReg fpregs[8];
-
-  /* emulator internal variables */
-  float_status fp_status;
-  floatx80 ft0;
-
-  /* exception/interrupt handling */
-  int error_code;
-  int exception_is_int;
-  target_ulong exception_next_eip;
-  target_ulong dr[8]; /* debug registers; note dr4 and dr5 are unused */
-  union {
-    struct CPUBreakpoint *cpu_breakpoint[4];
-    struct CPUWatchpoint *cpu_watchpoint[4];
-  };                 /* break/watchpoints for dr[0..3] */
-  int old_exception; /* exception in flight */
-
+#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
   void *cpt_ptr; /* Point to Code Page Table */
+#if defined(CONFIG_XTM_PROFILE)
+  struct {
+    struct {
+      /* Flag for next Jmp Cachel Lookup */
+      uint8_t is_jmpdr;
+      uint8_t is_jmpin;
+      uint8_t is_sys_eob;
+      uint8_t is_excp;
+    } jc;
+    struct {
+      uint8_t is_mov;
+      uint8_t is_pop;
+    } tbf;
+  } xtm_pf_data;
+#endif /* XTM PROFILE */
+#endif
 
   /* segments */
   SegmentCache segs[6]; /* selector values */
@@ -1418,22 +1409,68 @@ typedef struct CPUX86State {
   SegmentCache idt; /* only base and limit are used */
 
   target_ulong cr[5]; /* NOTE: cr1 is unused */
+  int32_t a20_mask;
 
   BNDReg bnd_regs[4];
   BNDCSReg bndcs_regs;
   uint64_t msr_bndcfgs;
   uint64_t efer;
 
-  uint64_t xcr0;
+  /* Beginning of state preserved by INIT (dummy marker).  */
+  struct {
+  } start_init_save;
 
-  uint32_t mxcsr;
+  /* FPU state */
+  unsigned int fpstt; /* top of stack index */
+  uint16_t fpus;
+  uint16_t fpuc;
+  uint8_t fptags[8]; /* 0 = valid, 1 = empty */
+  FPReg fpregs[8];
+  /* KVM-only so far */
+  uint16_t fpop;
+  uint64_t fpip;
+  uint64_t fpdp;
+
+  /* emulator internal variables */
+  float_status fp_status;
+  floatx80 ft0;
+
+  float_status mmx_status; /* for 3DNow! float ops */
   float_status sse_status;
+  uint32_t mxcsr;
+#ifndef CONFIG_X86toMIPS
+  ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
+#endif
+  ZMMReg xmm_t0;
+  MMXReg mmx_t0;
 
-  uint32_t pkru;
+  XMMReg ymmh_regs[CPU_NB_REGS];
 
-  uint64_t pat;
-  uint32_t smbase;
-  uint64_t msr_smi_count;
+  uint64_t opmask_regs[NB_OPMASK_REGS];
+  YMMReg zmmh_regs[CPU_NB_REGS];
+  ZMMReg hi16_zmm_regs[CPU_NB_REGS];
+
+  /* sysenter registers */
+  uint32_t sysenter_cs;
+  target_ulong sysenter_esp;
+  target_ulong sysenter_eip;
+  uint64_t star;
+
+  uint64_t vm_hsave;
+
+#ifdef TARGET_X86_64
+  target_ulong lstar;
+  target_ulong cstar;
+  target_ulong fmask;
+  target_ulong kernelgsbase;
+#endif
+
+  uint64_t tsc;
+  uint64_t tsc_adjust;
+  uint64_t tsc_deadline;
+  uint64_t tsc_aux;
+
+  uint64_t xcr0;
 
   uint64_t mcg_status;
   uint64_t msr_ia32_misc_enable;
@@ -1447,6 +1484,66 @@ typedef struct CPUX86State {
   uint64_t msr_gp_counters[MAX_GP_COUNTERS];
   uint64_t msr_gp_evtsel[MAX_GP_COUNTERS];
 
+  uint64_t pat;
+  uint32_t smbase;
+  uint64_t msr_smi_count;
+
+  uint32_t pkru;
+  uint32_t tsx_ctrl;
+
+  uint64_t spec_ctrl;
+  uint64_t virt_ssbd;
+
+  /* End of state preserved by INIT (dummy marker).  */
+  struct {
+  } end_init_save;
+
+  uint64_t system_time_msr;
+  uint64_t wall_clock_msr;
+  uint64_t steal_time_msr;
+  uint64_t async_pf_en_msr;
+  uint64_t pv_eoi_en_msr;
+  uint64_t poll_control_msr;
+
+  /* Partition-wide HV MSRs, will be updated only on the first vcpu */
+  uint64_t msr_hv_hypercall;
+  uint64_t msr_hv_guest_os_id;
+  uint64_t msr_hv_tsc;
+
+#ifdef BMBT
+  /* Per-VCPU HV MSRs */
+  uint64_t msr_hv_vapic;
+  uint64_t msr_hv_crash_params[HV_CRASH_PARAMS];
+  uint64_t msr_hv_runtime;
+  uint64_t msr_hv_synic_control;
+  uint64_t msr_hv_synic_evt_page;
+  uint64_t msr_hv_synic_msg_page;
+  uint64_t msr_hv_synic_sint[HV_SINT_COUNT];
+  uint64_t msr_hv_stimer_config[HV_STIMER_COUNT];
+  uint64_t msr_hv_stimer_count[HV_STIMER_COUNT];
+  uint64_t msr_hv_reenlightenment_control;
+  uint64_t msr_hv_tsc_emulation_control;
+  uint64_t msr_hv_tsc_emulation_status;
+#endif
+
+  uint64_t msr_rtit_ctrl;
+  uint64_t msr_rtit_status;
+  uint64_t msr_rtit_output_base;
+  uint64_t msr_rtit_output_mask;
+  uint64_t msr_rtit_cr3_match;
+  uint64_t msr_rtit_addrs[MAX_RTIT_ADDRS];
+
+  /* exception/interrupt handling */
+  int error_code;
+  int exception_is_int;
+  target_ulong exception_next_eip;
+  target_ulong dr[8]; /* debug registers; note dr4 and dr5 are unused */
+  union {
+    struct CPUBreakpoint *cpu_breakpoint[4];
+    struct CPUWatchpoint *cpu_watchpoint[4];
+  };                 /* break/watchpoints for dr[0..3] */
+  int old_exception; /* exception in flight */
+
   uint64_t vm_vmcb;
   uint64_t tsc_offset;
   uint64_t intercept;
@@ -1459,35 +1556,16 @@ typedef struct CPUX86State {
   uint32_t nested_pg_mode;
   uint8_t v_tpr;
 
+  /* KVM states, automatically cleared on reset */
+  uint8_t nmi_injected;
+  uint8_t nmi_pending;
+
   uintptr_t retaddr;
 
-  uint64_t vm_hsave;
-
-  /* sysenter registers */
-  uint32_t sysenter_cs;
-  target_ulong sysenter_esp;
-  target_ulong sysenter_eip;
-  uint64_t star;
-
-  int32_t a20_mask;
-
-  // FIXME put here randomly, fix it later
-  /* Beginning of state preserved by INIT (dummy marker).  */
-  struct {
-  } start_init_save;
-
-  /* End of state preserved by INIT (dummy marker).  */
-  struct {
-  } end_init_save;
-
-  // FIXME put here randomly
   /* Fields up to this point are cleared by a CPU reset */
   struct {
   } end_reset_fields;
 
-  uint64_t tsc_aux;
-
-  // FIXME feild are put here randomly, we will fix them
   /* Fields after this point are preserved across CPU reset. */
 
   /* processor features (e.g. for CPUID insn) */
@@ -1514,10 +1592,6 @@ typedef struct CPUX86State {
    * with old QEMU versions.
    */
   CPUCaches cache_info_cpuid2, cache_info_cpuid4, cache_info_amd;
-
-  /* KVM states, automatically cleared on reset */
-  uint8_t nmi_injected;
-  uint8_t nmi_pending;
 
   /* MTRRs */
   uint64_t mtrr_fixed[11];
@@ -1563,10 +1637,11 @@ typedef struct CPUX86State {
   uint64_t xss;
   uint32_t umwait;
 
-  // TPRAccess tpr_access_type;
+#ifdef BMBT
+  TPRAccess tpr_access_type;
+#endif
 
   unsigned nr_dies;
-
 #ifdef CONFIG_X86toMIPS
 #ifndef CONFIG_LATX
   /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
@@ -1626,10 +1701,10 @@ typedef struct CPUX86State {
     int is_int_inst;
     int is_top_int_inst; /* for nested interrupt */
   } xtm_flags;
-#endif
 
 #if defined(CONFIG_XTM_TEST)
   int exit_test;
+#endif
 #endif
 } CPUX86State;
 
