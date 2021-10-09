@@ -1,4 +1,5 @@
 # smbios
+- [ ] 似乎是 fw_cfg_build_smbios 制作出来一个文件 然后通过 fw_cfg 传递给 seabios 使用的吧
 
 ## seabios
 在 seabios 的那一侧:
@@ -100,7 +101,7 @@ struct smbios_30_entry_point {
 ```
 其最后体现出来的效果是什么啊?
 
-- [ ] 可以随意修改的!
+- 在 seabios 中间如何使用不知道，但是
 
 
 ## dmidecode(8)

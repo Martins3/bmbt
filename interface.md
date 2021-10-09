@@ -68,6 +68,7 @@
 - NEED_LATER : 将来应该需要
 - MEM_TODO : 暂时没有移植的，和 MEM 相关的
 - RTC_TODO : 关于 rtc 的代码
+- SMBIOS_TODO :
 
 
 #!/bin/sh

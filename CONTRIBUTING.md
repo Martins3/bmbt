@@ -29,6 +29,25 @@ pre-commit 会在进行 commit 之前执行一些脚本做出检查，如果检�
 - code-test.sh : 每次提交需要保证通过测试
 - [ ] non-ascii-comment.sh : 不要在代码中携带中文注释，最好的代码是没有注释的，如果需要，那么就使用英文，不过表达不清楚，那么就写成一个 blog
 
+这是正常的 commit 之前的 log，如果有检查不过，那么就会提前 exit
+```c
+[WARNING] Unstaged files detected.
+[INFO] Stashing unstaged files to /home/maritns3/.cache/pre-commit/patch1633784307-412875.
+Trim Trailing Whitespace.................................................Passed
+Fix End of Files.........................................................Passed
+Check Yaml...........................................(no files to check)Skipped
+Check for added large files..............................................Passed
+Check for merge conflicts................................................Passed
+Don't commit to branch...................................................Passed
+format code..............................................................Passed
+lint-md..................................................................Passed
+code test................................................................Passed
+separate-doc-code........................................................Passed
+[INFO] Restored changes from /home/maritns3/.cache/pre-commit/patch1633784307-412875.
+[dev 589366f] refactor(cpu): cpu_create is useless, remove it
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+```
+
 ## 使用 [commitlint](https://github.com/conventional-changelog/commitlint) 来检查 commit
 使用 npm 的安装
 ```sh
