@@ -66,11 +66,6 @@ void apic_enable_vapic(APICCommonState *s, hwaddr paddr) {
   info->vapic_base_update(s);
 }
 
-void apic_handle_tpr_access_report(APICCommonState *s, target_ulong ip,
-                                   TPRAccess access) {
-  vapic_report_tpr_access(s->vapic, CPU(s->cpu), ip, access);
-}
-
 void apic_report_irq_delivered(int delivered) {
   apic_irq_delivered += delivered;
 
