@@ -44,6 +44,7 @@ struct HotplugHandler {
   char *parent_type;
 };
 
+// [interface 25]
 static inline void hotplug_check_cast(HotplugHandler *hd, char *type) {
   if (strcmp(hd->parent_type, type)) {
     exit(1);

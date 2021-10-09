@@ -36,7 +36,7 @@ void x86_cpu_new(X86MachineState *x86ms, int64_t apic_id) {
   X86CPU *cpu = QOM_cpu_init();
   PCMachineState *pcms = PC_MACHINE(X86_TO_MACHINE(x86ms));
 
-  env = &X86_CPU(cpu)->env;
+  env = &cpu->env;
   env->nr_dies = x86ms->smp_dies;
 
 #ifdef BMBT
