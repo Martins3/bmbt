@@ -7,12 +7,12 @@
 void qemu_add_machine_init_done_notifier(Notifier *notify);
 void qemu_remove_machine_init_done_notifier(Notifier *notify);
 
-// @todo boot devices
-// void add_boot_device_path(int32_t bootindex, DeviceState *dev, const char
-// *suffix);
-char *get_boot_devices_list(size_t *size);
+char *get_boot_devices_list(size_t *size) {
+  // FIXME :linker: need more thinking about how to load guest image
+  return NULL;
+}
 
-char *get_boot_devices_lchs_list(size_t *size);
+char *get_boot_devices_lchs_list(size_t *size) { return NULL; }
 
 extern int boot_menu;
 

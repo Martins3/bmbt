@@ -149,8 +149,8 @@ struct APICCommonState {
   /*< public >*/
 
   APICCommonClass *info;
-  // @todo @mem
-  // MemoryRegion io_memory;
+
+  MemoryRegion io_memory;
   X86CPU *cpu;
   uint32_t apicbase;
   uint8_t id; /* legacy APIC ID */

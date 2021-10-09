@@ -3,7 +3,6 @@
 #include "../../exec/cpu-all.h"
 #include "apic_internal.h"
 
-// @todo why they are useless?
 // void apic_deliver_irq(uint8_t dest, uint8_t dest_mode, uint8_t delivery_mode, uint8_t vector_num, uint8_t trigger_mode);
 int apic_accept_pic_intr(APICCommonState *s);
 void apic_deliver_pic_intr(APICCommonState *s, int level);
