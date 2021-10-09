@@ -41,6 +41,10 @@ npx husky add .husky/commit-msg 'npx --no-install commitlint --edit "$1"'
 ```txt
 type(scope?): subject  #scope is optional; multiple scopes are supported (current delimiter options: "/", "\" and ",")
 ```
+规则具体含义参考[这里](https://github.com/conventional-changelog/commitlint/blob/master/%40commitlint/config-conventional/index.js)
+
+husky 有点烦人的地方在于其会修改 `git config core.hooksPath`[^6] 的路径为 `.husky`，这会导致 .git/hooks/pre-commit 失效
+暂时的方法将 `.git/hooks/pre-commit` 拷贝到 `.husky` 中
 
 ## 记录一下疑惑
 - 一般来说，使用 rebase and merge
@@ -51,3 +55,4 @@ type(scope?): subject  #scope is optional; multiple scopes are supported (curren
 [^3]: https://pre-commit.com/
 [^4]: https://stackoverflow.com/questions/5667884/how-to-squash-commits-in-git-after-they-have-been-pushed
 [^5]: https://dhwthompson.com/2019/my-favourite-git-commit
+[^6]: https://stackoverflow.com/questions/56068823/if-we-change-git-config-core-hookspath-how-to-revert-back-to-default
