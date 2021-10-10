@@ -29,13 +29,6 @@ int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
 // defined in accel/tcg/cpu-exec-common.c, which is simple file
 bool tcg_allowed;
 
-// FIXME copied from  util/cacheinfo.c
-// why I should take care of icache size ?
-int qemu_icache_linesize = 0;
-int qemu_icache_linesize_log;
-int qemu_dcache_linesize = 0;
-int qemu_dcache_linesize_log;
-
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
 #include "../i386/LATX/x86tomips-profile-sys.h"
 // FIXME why xqm take special attention cross page
