@@ -23,6 +23,32 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+/* -icount align implementation. */
+
+typedef struct SyncClocks {
+  int64_t diff_clk;
+  int64_t last_cpu_icount;
+  int64_t realtime_clock;
+} SyncClocks;
+
+int icount_align_option;
+
+static void align_clocks(SyncClocks *sc, CPUState *cpu) {
+  int64_t cpu_icount;
+
+  if (!icount_align_option) {
+    return;
+  }
+  g_assert_not_reached();
+}
+
+static void init_delay_params(SyncClocks *sc, CPUState *cpu) {
+  if (!icount_align_option) {
+    return;
+  }
+  g_assert_not_reached();
+}
+
 target_ulong breakpoint_addrx = 0;
 int breakpoint_hit_count = 0;
 int breakpoint_ignore_count = 0;
@@ -80,7 +106,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
     }
   }
 
-  // FIXME why xqm need extra hacking for this?
   ret = tcg_qemu_tb_exec(env, tb_ptr);
 #ifdef CONFIG_X86toMIPS
 #ifndef CONFIG_SOFTMMU
@@ -274,7 +299,6 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
   }
 
 #ifndef CONFIG_USER_ONLY
-  // FIXME deeper understanding how tb expands to second pages
   /* We don't take care of direct jumps when address mapping changes in
    * system emulation. So it's not safe to make a direct jump to a TB
    * spanning two pages because the mapping for the second page can change.
@@ -471,12 +495,9 @@ static inline bool cpu_handle_halt(CPUState *cpu) {
 }
 
 int cpu_exec(CPUState *cpu) {
-  int ret;
-
   CPUClass *cc = CPU_GET_CLASS(cpu);
-
-  // FIXME how SyncClocks works
-  // SyncClocks sc = { 0 };
+  int ret;
+  SyncClocks sc = {0};
 
   /* replay_interrupt may need current_cpu */
   current_cpu = cpu;
@@ -494,11 +515,11 @@ int cpu_exec(CPUState *cpu) {
    * what we have to do is sleep until it is 0. As for the
    * advance/delay we gain here, we try to fix it next time.
    */
-  // init_delay_params(&sc, cpu);
+  init_delay_params(&sc, cpu);
 
   if (sigsetjmp(cpu->jmp_env, 0) != 0) {
-    // FIXME some checks for sigsetjmp bugs, review it later
-
+    g_assert(cpu == current_cpu);
+    g_assert(cc == CPU_GET_CLASS(cpu));
     if (qemu_mutex_iothread_locked()) {
       qemu_mutex_unlock_iothread();
     }
@@ -535,8 +556,7 @@ int cpu_exec(CPUState *cpu) {
 
       /* Try to align the host and virtual clocks
          if the guest is in advance */
-      // FIXME icount related
-      // align_clocks(&sc, cpu);
+      align_clocks(&sc, cpu);
     }
   }
 
