@@ -118,7 +118,7 @@ static int ioapic_dispatch_post_load(void *opaque, int version_id) {
 }
 #endif
 
-static void ioapic_common_realize(IOAPICCommonState *s) {
+void ioapic_common_realize(IOAPICCommonState *s) {
   IOAPICCommonClass *info;
 
   if (ioapic_no >= MAX_IOAPICS) {
@@ -159,7 +159,6 @@ static const VMStateDescription vmstate_ioapic_common = {
 #endif
 
 void ioapic_common_class_init(IOAPICCommonClass *c) {
-  // FIXME call realize functions
 #ifdef BMBT
   DeviceClass *dc = DEVICE_CLASS(klass);
   InterruptStatsProviderClass *ic = INTERRUPT_STATS_PROVIDER_CLASS(klass);
