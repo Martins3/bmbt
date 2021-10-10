@@ -12,6 +12,7 @@
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/error-report.h"
 #include "../../include/qemu/host-utils.h"
+#include "../../include/qemu/log.h"
 #include "../../include/types.h"
 #include "../i386/cpu.h"
 #include "tcg.h"
@@ -44,9 +45,13 @@
 #define DEBUG_TLB_LOG_GATE 0
 #endif
 
-// FIXME just remove the content to avoid error
 #define tlb_debug(fmt, ...)                                                    \
   do {                                                                         \
+    if (DEBUG_TLB_LOG_GATE) {                                                  \
+      qemu_log_mask(CPU_LOG_MMU, "%s: " fmt, __func__, ##__VA_ARGS__);         \
+    } else if (DEBUG_TLB_GATE) {                                               \
+      fprintf(stderr, "%s: " fmt, __func__, ##__VA_ARGS__);                    \
+    }                                                                          \
   } while (0)
 
 #define assert_cpu_is_self(cpu)                                                \
@@ -77,8 +82,10 @@ static void tlb_window_reset(CPUTLBDesc *desc, int64_t ns, size_t max_entries) {
   desc->window_max_entries = max_entries;
 }
 
-// FIXME i don't know why we need time
-int64_t get_clock_realtime(void);
+int64_t get_clock_realtime(void) {
+  // @todo
+  return 0;
+}
 
 static void tlb_dyn_init(CPUArchState *env) {
   int i;
@@ -840,17 +847,20 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
     }
   }
 
-  // FIXME remove btmmu related code
-#if 0 // def CONFIG_BTMMU
-    if (btmmu_enabled()) {
-        if ((memory_region_is_ram(section->mr) || memory_region_is_romd(section->mr))) {
-            if (tn.addr_write != vaddr_page) prot &= ~PROT_WRITE;
-            if (tn.addr_read != vaddr_page) prot &= ~PROT_READ;
-            if (prot & PROT_READ) {
-                btmmu_map_page(cpu, vaddr_page, addend, mmu_idx, prot & PROT_WRITE ? 1 : 0);
-            }
-        }
+#ifdef CONFIG_BTMMU
+  if (btmmu_enabled()) {
+    if ((memory_region_is_ram(section->mr) ||
+         memory_region_is_romd(section->mr))) {
+      if (tn.addr_write != vaddr_page)
+        prot &= ~PROT_WRITE;
+      if (tn.addr_read != vaddr_page)
+        prot &= ~PROT_READ;
+      if (prot & PROT_READ) {
+        btmmu_map_page(cpu, vaddr_page, addend, mmu_idx,
+                       prot & PROT_WRITE ? 1 : 0);
+      }
     }
+  }
 #endif
 
   copy_tlb_helper_locked(te, &tn);
