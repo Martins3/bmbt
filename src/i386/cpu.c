@@ -1362,12 +1362,12 @@ void host_vendor_fms(char *vendor, int *family, int *model, int *stepping) {
  * Caller is responsible for freeing the returned string.
  */
 static char *x86_cpu_type_name(const char *model_name) {
-  // FIXME
+  g_assert_not_reached();
   return NULL;
 }
 
 static X86CPU *x86_cpu_class_by_name(const char *cpu_model) {
-  // FIXME
+  g_assert_not_reached();
   return NULL;
 }
 
@@ -1378,7 +1378,7 @@ static char *x86_cpu_class_get_model_name(X86CPUClass *cc) {
   return g_strndup(class_name,
                      strlen(class_name) - strlen(X86_CPU_TYPE_SUFFIX));
   */
-  // FIXME
+  g_assert_not_reached();
   return NULL;
 }
 
@@ -1431,9 +1431,7 @@ struct X86CPUModel {
 /* Get full model name for CPU version */
 static char *x86_cpu_versioned_model_name(X86CPUDefinition *cpudef,
                                           X86CPUVersion version) {
-  // assert(version > 0);
-  // return g_strdup_printf("%s-v%d", cpudef->name, (int)version);
-  // FIXME
+  g_assert_not_reached();
   return NULL;
 }
 
@@ -1571,17 +1569,17 @@ static PropValue tcg_default_props[] = {
 X86CPUVersion default_cpu_version = 1;
 
 void x86_cpu_set_default_version(X86CPUVersion version) {
-  // FIXME anchor : maybe we will remove the version system
+  g_assert_not_reached();
 }
 
 static X86CPUVersion x86_cpu_model_last_version(const X86CPUModel *model) {
-  // FIXME anchor : maybe we will remove the version system
+  g_assert_not_reached();
   return default_cpu_version;
 }
 
 /* Return the actual version being used for a specific CPU model */
 static X86CPUVersion x86_cpu_model_resolve_version(const X86CPUModel *model) {
-  // FIXME anchor : maybe we will remove the version system
+  g_assert_not_reached();
   return default_cpu_version;
 }
 
@@ -2044,7 +2042,7 @@ static gint compare_string(gconstpointer a, gconstpointer b) { return 1; }
 /* Parse "+feature,-feature,feature=foo" CPU feature string
  */
 static void x86_cpu_parse_featurestr(const char *typename, char *features) {
-  // FIXME how to port property?
+  g_assert_not_reached();
 }
 
 static void x86_cpu_expand_features(X86CPU *cpu);
@@ -2052,12 +2050,10 @@ static void x86_cpu_filter_features(X86CPU *cpu, bool verbose);
 
 /* Build a list with the name of all features on a feature word array */
 static void x86_cpu_list_feature_names(FeatureWordArray features) {
-  // FIXME how to port property?
+  g_assert_not_reached();
 }
 
-static void x86_cpu_get_unavailable_features() {
-  // FIXME how to port property?
-}
+static void x86_cpu_get_unavailable_features() { g_assert_not_reached(); }
 
 // used by qmp
 #ifdef BMBT
@@ -3035,9 +3031,7 @@ static void x86_cpu_apic_realize(X86CPU *cpu) {
 }
 
 static void x86_cpu_machine_done(Notifier *n, void *unused) {
-// FIXME
-// review the code here if memmory finished
-#ifdef NEED_LATER
+#ifdef MEM_TODO
   X86CPU *cpu = container_of(n, X86CPU, machine_done);
   MemoryRegion *smram =
       (MemoryRegion *)object_resolve_path("/machine/smram", NULL);
@@ -3476,11 +3470,12 @@ void x86_cpu_realizefn(X86CPU *cpu) {
   /* Cache information initialization */
   if (!cpu->legacy_cache) {
     if (!xcc->model || !xcc->model->cpudef->cache_info) {
-      char *name = x86_cpu_class_get_model_name(xcc);
-      // error_setg(errp, "CPU model '%s' doesn't support legacy-cache=off",
-      // name);
       g_assert_not_reached();
+#ifdef BMBT
+      char *name = x86_cpu_class_get_model_name(xcc);
+      error_setg(errp, "CPU model '%s' doesn't support legacy-cache=off", name);
       g_free(name);
+#endif
       return;
     }
     env->cache_info_cpuid2 = env->cache_info_cpuid4 = env->cache_info_amd =
@@ -3583,7 +3578,7 @@ out:
 }
 
 static void x86_cpu_unrealizefn(X86CPU *cpu) {
-  // FIXME when will QEMU call unrealizefn?
+  g_assert_not_reached();
 #if BMBT
   X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
 
@@ -3753,7 +3748,8 @@ static void x86_cpu_initfn(X86CPU *cpu) {
   env->nr_dies = 1;
   cpu_set_cpustate_pointers(cpu);
 
-  // FIXME last three property are never used
+  // In x86_cpu_load_model, first five properties are accessed directly.
+  // Last three properties are useless
 #ifdef BMBT
   object_property_add(obj, "family", "int", x86_cpuid_version_get_family,
                       x86_cpuid_version_set_family, NULL, NULL, NULL);
