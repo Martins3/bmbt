@@ -1373,6 +1373,8 @@ void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
   d = SYS_BUS_DEVICE(dev);
 #endif
   IOAPICCommonState *s = QOM_ioapic_init();
+  ioapic_common_realize(s);
+
 #ifdef MEM_TODO
   // sysbus_mmio_map(d, 0, IO_APIC_DEFAULT_ADDRESS);
 #endif

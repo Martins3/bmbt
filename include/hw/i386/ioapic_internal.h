@@ -96,5 +96,6 @@ struct IOAPICCommonState {
 IOAPICCommonState *QOM_ioapic_init();
 void ioapic_common_class_init(IOAPICCommonClass *c);
 void ioapic_reset_common(IOAPICCommonState *s);
+void ioapic_common_realize(IOAPICCommonState *s);
 
 #endif /* end of include guard: IOAPIC_INTERNAL_H_NKHBSHQ4 */
