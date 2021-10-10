@@ -179,6 +179,9 @@ PCMachineState *machine_init() {
 }
 
 void qemu_init() {
+  init_real_host_page_size();
+  init_cache_info();
+
   machine_init();
   tcg_init();
 }
