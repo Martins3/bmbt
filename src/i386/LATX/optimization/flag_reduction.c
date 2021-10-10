@@ -4,9 +4,7 @@
 #include "../translator/translate.h"
 #include "../include/flag_usedef.h"
 
-// FIXME maybe this is bug of original QEMU
-// this is function/file is used by the usermode
-#if 0
+#if BMBT
 uint8 pending_use_of_succ(ETB* etb, int max_depth)
 {
     if((!etb->succ[0] && !etb->succ[1]) || max_depth==0)
