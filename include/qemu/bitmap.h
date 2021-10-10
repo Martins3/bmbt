@@ -20,9 +20,7 @@ static inline unsigned long *bitmap_new(long nbits) {
   return ptr;
 }
 
-static inline void bitmap_set(unsigned long *map, long i, long len) {
-  // FIXME interface
-}
+void bitmap_set(unsigned long *map, long i, long len);
 
 #define DECLARE_BITMAP(name, bits) unsigned long name[BITS_TO_LONGS(bits)]
 
