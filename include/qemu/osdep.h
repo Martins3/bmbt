@@ -64,7 +64,6 @@ void init_cache_info(void);
 #define QEMU_ALIGN_PTR_DOWN(p, n)                                              \
   ((typeof(p))QEMU_ALIGN_DOWN((uintptr_t)(p), (n)))
 
-// FIXME
 int qemu_mprotect_none(void *addr, size_t size);
 void *qemu_memalign(size_t alignment, size_t size);
 
