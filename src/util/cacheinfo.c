@@ -47,7 +47,7 @@ static void fallback_cache_info(int *isize, int *dsize) {
   }
 }
 
-static void init_cache_info(void) {
+void init_cache_info(void) {
   int isize = 0, dsize = 0;
 
   sys_cache_info(&isize, &dsize);
