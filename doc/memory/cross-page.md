@@ -1,13 +1,12 @@
 # cross page check
 当我们分析 cross page 的时候，应该是一个 guest 的一个 tb 正好在两个 page 上吧
 
-- [ ] 所以，挑战是什么 ?
-- [ ] 为什么 LATX 需要特殊处理这一个事情啊 ?
 - [ ] 在 core part 的地方已经处理过 cross page 了吧
+  - 为什么 LATX 需要特殊处理这一个事情啊 ?
+
   - TranslationBlock::page_next
-  - [ ] 顺便问一下，PageDesc 是用于存放 x86 的还是 la 的指令的
-- [ ] tb_jmp_cache 的工作方式是什么 ?
-  - [ ] 查询的过程，是两级查询过程的
+  - [x] 顺便问一下，PageDesc 是用于存放 x86 的还是 la 的指令的
+    - 因为 PageDesc 是用于 SMC 的，在于根据 ram_addr 找到所有的 TranslationBlock，所以是 la 指令的
 
 ```c
   /* first and second physical page containing code. The lower bit
@@ -24,7 +23,6 @@
 - src/i386/LATX/translator/cross-page-check.c
 - src/i386/LATX/include/cross-page-check.h
 
-
 ## 分析一下 cross-page-check.h
 
 - do_tb_flush
@@ -38,3 +36,17 @@
 
 - tb_jmp_cache_clear_page
   - *xtm_cpt_flush_page*
+
+## 资料收集
+tb_find 中的注释
+- 因为我们使用虚拟地址来进行直接跳转的时候，如果一个 x86 tb 是本身是 cross page 的
+那么其他的 tb 不能直接跳转到这里，也就是不能调用 tb_find 来进行跳转
+- [ ] 那么间接跳转是怎么操作的
+- [ ] 为什么 x86 tb 在两个 page 上的时候会出现问题
+
+```c
+  /* We don't take care of direct jumps when address mapping changes in
+   * system emulation. So it's not safe to make a direct jump to a TB
+   * spanning two pages because the mapping for the second page can change.
+   */
+```

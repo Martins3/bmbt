@@ -34,6 +34,7 @@
     1. tlb_debug
     2. do_tb_flush 中间又是直接使用 printf 的
     7. qemu_log_mask_and_addr : 和 qemu_log_mask 的区别在于只有在地址范围内才会打印日志
+    - [ ] 现在整个 log 体系变的非常的鬼畜，因为开始的懒得移植，后来有准备移植了，现在就是既搞不清楚整个 log 的设计，也没有想清楚怎么移植到裸机环境中
 6. 处理一下满天飞羽的各种 type 定义
     1. ExtraBlock 是 LATX 中特殊需求的，其中 `_top_in` 的类型是 int8, 而 int8 又是定义在 src/i386/LATX/include/types.h 中间了，着很难受啊
     2. HOST_LONG_BITS 和 TARGET_LONG_BITS 的定义位置
@@ -52,44 +53,6 @@
   - error_report
 9. pit 和 hpet 需要模拟?
 
-src/i386/cpu.h:1474:  // FIXME put here randomly, fix it later
-src/i386/cpu.h:1483:  // FIXME put here randomly
-src/i386/cpu.h:1490:  // FIXME feild are put here randomly, we will fix them
-src/i386/cpu.h:1644:  // FIXME it will be removed, no qdev anymore
-src/i386/cpu.h:1685:  // FIXME we will rethink realize at:
-src/i386/cpu.h:2150:// FIXME should be empty, verify it
-src/i386/cpu.h:2166:// FIXME the only user is test-def.h
-src/hw/nvram/fw_cfg.c:950:  // FIXME init the memory region
-src/hw/nvram/fw_cfg.c:955:    // FIXME init the memory region
-src/i386/LATX/x86tomips-options.c:656:        // FIXME
-src/i386/LATX/optimization/flag_reduction.c:7:// FIXME maybe this is bug of original QEMU
-src/i386/LATX/x86tomips-config.c:25:// #include "trace.h" FIXME comment it temporary
-src/i386/LATX/x86tomips-config.c:95:        // FIXME how etb works ?
-src/i386/LATX/x86tomips-config.c:169:// FIXME this is called after tb_find
-src/i386/LATX/x86tomips-config.c:818:// FIXME comment this, vregs defined in CPUX86State ?
-src/i386/LATX/x86tomips-config.c:897:// FIXME comment the code related with signal handler
-src/i386/LATX/x86tomips-config.c:928:// FIXME this is a temporary fix
-src/i386/LATX/x86tomips-config.c:931:// FIXME no more signal anymore
-src/i386/cpu.c:1365:  // FIXME
-src/i386/cpu.c:1370:  // FIXME
-src/i386/cpu.c:1381:  // FIXME
-src/i386/cpu.c:1436:  // FIXME
-src/i386/cpu.c:1574:  // FIXME anchor : maybe we will remove the version system
-src/i386/cpu.c:1578:  // FIXME anchor : maybe we will remove the version system
-src/i386/cpu.c:1584:  // FIXME anchor : maybe we will remove the version system
-src/i386/cpu.c:2047:  // FIXME how to port property?
-src/i386/cpu.c:2055:  // FIXME how to port property?
-src/i386/cpu.c:2059:  // FIXME how to port property?
-src/i386/cpu.c:3038:// FIXME
-src/i386/cpu.c:3586:  // FIXME when will QEMU call unrealizefn?
-src/i386/cpu.c:3756:  // FIXME last three property are never used
-src/i386/cpu.c:3979:// FIXME check this one by one
-src/i386/cpu.c:4153:  // FIXME why we need user_creatable?
-src/i386/cpu.c:4162:  // FIXME when did the newly allocated CPU passed to exec thread ?
-src/tcg/cputlb.c:47:// FIXME just remove the content to avoid error
-src/tcg/cputlb.c:80:// FIXME i don't know why we need time
-src/tcg/cputlb.c:843:  // FIXME remove btmmu related code
-src/tcg/cpu-exec-common.c:38:    // FIXME rethink the code later
 src/tcg/cpu-exec.c:83:  // FIXME why xqm need extra hacking for this?
 src/tcg/cpu-exec.c:196:  // FIXME
 src/tcg/cpu-exec.c:277:  // FIXME deeper understanding how tb expands to second pages
