@@ -17,9 +17,9 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../include/exec/exec-all.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/osdep.h"
-#include "../../include/exec/exec-all.h"
 
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
 #include "../../src/i386/LATX/x86tomips-config.h"
@@ -34,35 +34,34 @@ void cpu_loop_exit_noexc(CPUState *cpu) {
 }
 
 #if defined(CONFIG_SOFTMMU)
+#ifdef BMBT
 void cpu_reloading_memory_map(void) {
-    // FIXME rethink the code later
-#if 0
-    if (qemu_in_vcpu_thread() && current_cpu->running) {
-        /* The guest can in theory prolong the RCU critical section as long
-         * as it feels like. The major problem with this is that because it
-         * can do multiple reconfigurations of the memory map within the
-         * critical section, we could potentially accumulate an unbounded
-         * collection of memory data structures awaiting reclamation.
-         *
-         * Because the only thing we're currently protecting with RCU is the
-         * memory data structures, it's sufficient to break the critical section
-         * in this callback, which we know will get called every time the
-         * memory map is rearranged.
-         *
-         * (If we add anything else in the system that uses RCU to protect
-         * its data structures, we will need to implement some other mechanism
-         * to force TCG CPUs to exit the critical section, at which point this
-         * part of this callback might become unnecessary.)
-         *
-         * This pair matches cpu_exec's rcu_read_lock()/rcu_read_unlock(), which
-         * only protects cpu->as->dispatch. Since we know our caller is about
-         * to reload it, it's safe to split the critical section.
-         */
-        rcu_read_unlock();
-        rcu_read_lock();
-    }
-#endif
+  if (qemu_in_vcpu_thread() && current_cpu->running) {
+    /* The guest can in theory prolong the RCU critical section as long
+     * as it feels like. The major problem with this is that because it
+     * can do multiple reconfigurations of the memory map within the
+     * critical section, we could potentially accumulate an unbounded
+     * collection of memory data structures awaiting reclamation.
+     *
+     * Because the only thing we're currently protecting with RCU is the
+     * memory data structures, it's sufficient to break the critical section
+     * in this callback, which we know will get called every time the
+     * memory map is rearranged.
+     *
+     * (If we add anything else in the system that uses RCU to protect
+     * its data structures, we will need to implement some other mechanism
+     * to force TCG CPUs to exit the critical section, at which point this
+     * part of this callback might become unnecessary.)
+     *
+     * This pair matches cpu_exec's rcu_read_lock()/rcu_read_unlock(), which
+     * only protects cpu->as->dispatch. Since we know our caller is about
+     * to reload it, it's safe to split the critical section.
+     */
+    rcu_read_unlock();
+    rcu_read_lock();
+  }
 }
+#endif
 #endif
 
 void cpu_loop_exit(CPUState *cpu) {
