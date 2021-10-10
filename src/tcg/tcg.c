@@ -382,6 +382,37 @@ retry:
   return tb;
 }
 
+/*LoongArch for B and BL insn*/
+static int32_t encode_uj(LoongarchInsn opc, uint32_t imm) {
+  int32_t insn = 0;
+  int32_t offset = 0;
+
+  tcg_debug_assert((imm & 3) == 0);
+
+  insn |= (opc << 26);
+  offset |= ((imm >> 2) & 0xFFFF) << 10;
+  offset |= ((imm >> 2) & 0x3FF0000) >> 16;
+  insn |= offset;
+
+  return insn;
+}
+
+void tb_target_set_jmp_target(uintptr_t tc_ptr, uintptr_t jmp_addr,
+                              uintptr_t addr) {
+  ptrdiff_t offset = addr - jmp_addr;
+  tcg_insn_unit insn;
+  if (offset == sextract64(offset, 0, 28)) {
+    insn = encode_uj(OPC_B, offset & 0xFFFFFFF);
+  } else {
+    tcg_debug_assert(0);
+  }
+  /*
+   * Update insn with new address.
+   */
+  atomic_set((uint32_t *)jmp_addr, insn);
+  flush_icache_range(jmp_addr, jmp_addr + 4);
+}
+
 void tcg_tb_insert(TranslationBlock *tb) {
   struct tcg_region_tree *rt = tc_ptr_to_region_tree(tb->tc.ptr);
 

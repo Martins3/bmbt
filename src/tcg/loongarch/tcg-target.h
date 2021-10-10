@@ -192,4 +192,6 @@ static inline void flush_icache_range(uintptr_t start, uintptr_t stop)
     __builtin___clear_cache((char *)start, (char *)stop);
 }
 
+void tb_target_set_jmp_target(uintptr_t, uintptr_t, uintptr_t);
+
 #endif
