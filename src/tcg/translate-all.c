@@ -30,9 +30,8 @@ int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
 bool tcg_allowed;
 
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-#include "../i386/LATX/x86tomips-profile-sys.h"
-// FIXME why xqm take special attention cross page
 #include "../i386/LATX/include/cross-page-check.h"
+#include "../i386/LATX/x86tomips-profile-sys.h"
 extern uint64_t cam_clear_key_func;
 #ifndef _XTM_TBLOOKUP_OPT_
 #define _XTM_TBLOOKUP_OPT_
@@ -1023,7 +1022,6 @@ static inline void *alloc_code_gen_buffer(void) {
   if (buf == MAP_FAILED) {
     return NULL;
   }
-  // FIXME is mips restriction still valid ?
 #ifdef __mips__
   if (cross_256mb(buf, size)) {
     /* Try again, with the original still mapped, to avoid re-acquiring
@@ -1057,7 +1055,6 @@ static inline void *alloc_code_gen_buffer(void) {
 #endif
 
   /* Request large pages for the buffer.  */
-  // FIXME
   // qemu_madvise(buf, size, QEMU_MADV_HUGEPAGE);
 
   return buf;
@@ -2080,61 +2077,8 @@ void tb_check_watchpoint(CPUState *cpu, uintptr_t retaddr) {
  * Called by softmmu_template.h, with iothread mutex not held.
  */
 void cpu_io_recompile(CPUState *cpu, uintptr_t retaddr) {
-#if defined(TARGET_MIPS) || defined(TARGET_SH4)
-  CPUArchState *env = cpu->env_ptr;
-#endif
-  TranslationBlock *tb;
-  uint32_t n;
-
-  tb = tcg_tb_lookup(retaddr);
-  if (!tb) {
-    cpu_abort(cpu, "cpu_io_recompile: could not find TB for pc=%p",
-              (void *)retaddr);
-  }
-  cpu_restore_state_from_tb(cpu, tb, retaddr, true);
-
-  /* On MIPS and SH, delay slot instructions can only be restarted if
-     they were already the first instruction in the TB.  If this is not
-     the first instruction in a TB then re-execute the preceding
-     branch.  */
-  n = 1;
-  // FIXME we should define this
-#if defined(TARGET_MIPS)
-  if ((env->hflags & MIPS_HFLAG_BMASK) != 0 && env->active_tc.PC != tb->pc) {
-    env->active_tc.PC -= (env->hflags & MIPS_HFLAG_B16 ? 2 : 4);
-    cpu_neg(cpu)->icount_decr.u16.low++;
-    env->hflags &= ~MIPS_HFLAG_BMASK;
-    n = 2;
-  }
-#elif defined(TARGET_SH4)
-  if ((env->flags & ((DELAY_SLOT | DELAY_SLOT_CONDITIONAL))) != 0 &&
-      env->pc != tb->pc) {
-    env->pc -= 2;
-    cpu_neg(cpu)->icount_decr.u16.low++;
-    env->flags &= ~(DELAY_SLOT | DELAY_SLOT_CONDITIONAL);
-    n = 2;
-  }
-#endif
-
-  /* Generate a new TB executing the I/O insn.  */
-  cpu->cflags_next_tb = curr_cflags() | CF_LAST_IO | n;
-
-  if (tb_cflags(tb) & CF_NOCACHE) {
-    if (tb->orig_tb) {
-      /* Invalidate original TB if this TB was generated in
-       * cpu_exec_nocache() */
-      tb_phys_invalidate(tb->orig_tb, -1);
-    }
-    tcg_tb_remove(tb);
-  }
-
-  /* TODO: If env->pc != tb->pc (i.e. the faulting instruction was not
-   * the first in the TB) then we end up generating a whole new TB and
-   *  repeating the fault, which is horribly inefficient.
-   *  Better would be to execute just this insn uncached, or generate a
-   *  second new TB.
-   */
-  cpu_loop_exit_noexc(cpu);
+  // reached here when cpu->can_do_io == false, but we don't support icount yet
+  g_assert_not_reached();
 }
 
 static void tb_jmp_cache_clear_page(CPUState *cpu, target_ulong page_addr) {
