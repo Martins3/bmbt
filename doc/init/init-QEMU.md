@@ -23,6 +23,7 @@
 - [ ] PCMachineClass 中为什么需要将 smm 和 vmport 单独分析出来
 
 - [ ] tcg_init_ctx 应该是自动被初始化好了，但是 review tcg.c 中相关的代码吧
+
 ## 几个关键的结构体功能和移植差异说明
 
 | struct      | explaination                                                                            |
@@ -41,6 +42,18 @@ huxueshi:qdev_device_add isa-debugcon
 huxueshi:qdev_device_add nvme
 huxueshi:qdev_device_add virtio-9p-pci
 ```
+
+- 来理解一下 do_cpu_init 中的逻辑:
+
+其实整个 CPUX86State 是被划分为三个部分的:
+```c
+struct {} start_init_save;
+struct {} end_init_save;
+struct {} end_reset_fields;
+```
+在调用 cpu_reset 的时候，end_reset_fields 上面的字段会被全部初始化为 0 的。
+start_init_save 和 end_reset_fields 根据 intel 手册，这些需要被避免，所以特定做了一个保存。
+
 
 ## 整体
 启动，总体划分三个部分：
