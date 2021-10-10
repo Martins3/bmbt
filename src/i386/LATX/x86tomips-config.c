@@ -22,8 +22,7 @@
 void xtm_tb_unlink(TranslationBlock *ctb);
 void xtm_tb_relink(TranslationBlock *utb);
 
-// #include "trace.h" FIXME comment it temporary
-// it cause scrpit/change-latx-header.py
+// #include "trace.h"
 int whether_print_cpu_info(int cpu_index)
 {
     return option_cpusinfo & (1<<cpu_index);
@@ -92,7 +91,6 @@ int target_x86_to_mips_host(
 #endif
 
     if (!option_lsfpu) {
-        // FIXME how etb works ?
         etb_check_top_in(tb->extra_tb, env->fpstt);
     }
 
@@ -166,9 +164,6 @@ ADDR cpu_get_guest_base(void) { lsassert(0); return 0; }
 ADDR cpu_get_guest_base(void) { return guest_base; }
 #endif
 
-// FIXME this is called after tb_find
-// x86tomips-config.c is a wired name
-// maybe changed to xqm-hacking.c, our extra hacking for qemu
 void trace_tb_execution(CPUState *cpu, TranslationBlock *tb)
 {
     if (!xtm_trace_enabled()) return;
@@ -815,7 +810,6 @@ void x86_to_mips_tb_set_jmp_target(TranslationBlock *tb, int n,
 
 #ifdef CONFIG_SOFTMMU
 
-// FIXME comment this, vregs defined in CPUX86State ?
 /* This is used in target/i386/fpu_helper.c */
 int xtm_get_top_bias_from_env(CPUX86State *env) { return (int)env->vregs[3]; }
 
@@ -894,9 +888,7 @@ void xtm_interrupt_signal_handler(
 {
     if (!xtm_sigint_opt()) return;
 
-// FIXME comment the code related with signal handler
-// maybe we have a better way to handling this
-#if 0
+#if BMBT
     ucontext_t *uc = ctx;
 
 #if defined(CONFIG_LATX)
@@ -925,14 +917,10 @@ void xtm_interrupt_signal_handler(
 #endif
 }
 
-// FIXME this is a temporary fix
-#include "../../tcg/tcg.h"
-
-// FIXME no more signal anymore
 void x86_to_mips_init_thread_signal(CPUState *cpu)
 {
     if (!xtm_sigint_opt()) return;
-
+#ifdef BMBT
     /* 1. unblock the signal for vCPU thread */
     sigset_t set, oldset;
     sigemptyset(&set);
@@ -971,6 +959,7 @@ void x86_to_mips_init_thread_signal(CPUState *cpu)
     fprintf(stderr, "[Signal] monitor code buffer %llx to %llx\n",
             (unsigned long long)code_buffer_lo,
             (unsigned long long)code_buffer_hi);
+#endif
 }
 
 #else /* CONFIG_SOFTMMU */
