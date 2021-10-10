@@ -83,7 +83,7 @@ static void tlb_window_reset(CPUTLBDesc *desc, int64_t ns, size_t max_entries) {
 }
 
 int64_t get_clock_realtime(void) {
-  // @todo
+  // @todo timer
   return 0;
 }
 
