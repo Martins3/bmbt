@@ -64,7 +64,12 @@
     - 在原本的 QEMU 中，划分出来了 qemu-printf.c qemu/log.h exec/log.h
     - 现在将所有的 .c 都合并到 log.c 中
     - qemu/log.h exec/log.h 两个合并到 qemu/log.h 中
-
+30. target/i386/X86toMIPS/tests/run_one_tb.c
+    - 虽然暂时打开了 CONFIG_XTM_TEST，但是实际上 run_one_tb.c 等用户没有移植进来
+31. include/qemu/atomic.h
+    - 当前只是支持单核，所有的 atomic 操作都是简化的
+32. cpu_interrupt
+    - 原来通过 cpu_interrupt_handler 全局变量赋值的设计过于鬼畜和充满误导性，让其直接调用 tcg_handle_interrupt
 
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
