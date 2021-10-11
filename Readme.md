@@ -4,11 +4,7 @@
     <img src ="https://github.com/martins3/BMBT/actions/workflows/compiler-check.yml/badge.svg?branch=dev">
     <img src = "https://github.com/martins3/BMBT/actions/workflows/lint-md.yml/badge.svg?branch=dev">
   </p>
-  <p align="center">
-    <img src="./front.jpeg"/>
-  </p>
 </p>
-
 
 ## 报告
 - [裸金属二进制翻译器](https://martins3.github.io/ppt/repo/2021-8-24/index.html)

@@ -1,5 +1,7 @@
 # Doc for newbie
 
+当前的整个工作都是基于: 895fdf6776076c7cbb6b18c6703a40c4e03a084e 进行的
+
 ## 复现 xqm 的工作
 - [ ] 编译内核
 
@@ -13,7 +15,7 @@ mkdir build
 ```
 
 - 运行参数
-```plain
+```sh
 #!/bin/bash
 
 /home/loongson/ld/x86-qemu-mips/build/i386-softmmu/qemu-system-i386 -hda ~/xqm_images/ubuntu10s.test.img.full -xtm select,tblink,lbt -kernel ~/xqm_images/vmlinuz-2.6.32 -append "console=ttyS0 root=/dev/sda1 ro init=/bin/bash tsc=reliable rw" --nographic \

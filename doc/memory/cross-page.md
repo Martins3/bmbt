@@ -1,4 +1,9 @@
 # cross page check
+- [ ] 在 translate-all.h 中间，为什么反而需要 references
+```c
+#include "../i386/LATX/include/cross-page-check.h"
+```
+
 当我们分析 cross page 的时候，应该是一个 guest 的一个 tb 正好在两个 page 上吧
 
 - [ ] 在 core part 的地方已经处理过 cross page 了吧
