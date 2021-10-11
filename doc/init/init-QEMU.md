@@ -366,5 +366,14 @@ filtered_features [Field] :1663:22                                              
 1. qdev_create : instance_init
 2. qdev_init_nofail : realize
 
+# qemu log
+log 的功能主要是 log.c 中实现的
+- 可以导入到一个文件中间
+- dfilter : 只是输出某一个方位的 log 出来
+    - QEMU_OPTION_DFILTER / qemu_log_in_addr_range / qemu_set_dfilter_ranges 使用
+- qemu_log_items : 用于选择到底 log 那些内容，不是划分等级的，而是通过 mask 来确定 log 哪一个部分
+
+
+- 在各个文件中，还存在一些本地的 DEBUG 选项，那些都是纯粹的手动打开的，比如 DEBUG_TLB
 
 [^2]: https://en.wikipedia.org/wiki/Machine-check_exception
