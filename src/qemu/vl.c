@@ -1,5 +1,6 @@
 #include "../../include/hw/i386/pc.h"
 #include "../../include/qemu/error-report.h"
+#include "../../include/qemu/log.h"
 #include "../../include/qemu/notify.h"
 #include "../../include/qemu/units.h"
 #include "../../include/qemu/uuid.h"
@@ -181,6 +182,7 @@ PCMachineState *machine_init() {
 void qemu_init() {
   init_real_host_page_size();
   init_cache_info();
+  qemu_set_log(0);
 
   machine_init();
   tcg_init();

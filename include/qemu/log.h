@@ -3,6 +3,7 @@
 
 #include "../hw/core/cpu.h"
 #include "log-for-trace.h"
+#include <stdarg.h>
 
 bool qemu_log_in_addr_range(uint64_t addr);
 
@@ -59,5 +60,7 @@ static inline void log_cpu_state_mask(int mask, CPUState *cpu, int flags) {
     log_cpu_state(cpu, flags);
   }
 }
+
+void qemu_set_log(int log_flags);
 
 #endif /* end of include guard: LOG_H_DLREVUT7 */

@@ -664,4 +664,18 @@ void cpu_list_add(CPUState *cpu);
 
 // originally put into cpu-common.h, put here because of header cycle dependence
 void tcg_flush_softmmu_tlb(CPUState *cs);
+
+static inline void cpu_synchronize_state(CPUState *cpu) {
+  // tcg doesn't need synchronization
+}
+
+/**
+ * cpu_dump_state:
+ * @cpu: The CPU whose state is to be dumped.
+ * @f: If non-null, dump to this stream, else to current print sink.
+ *
+ * Dumps CPU state.
+ */
+void cpu_dump_state(CPUState *cpu, FILE *f, int flags);
+
 #endif /* end of include guard: CPU_H_5RAXENPS */
