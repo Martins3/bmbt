@@ -6,7 +6,6 @@
 #include "../../include/hw/i386/apic.h"
 #include "../../include/hw/i386/pc.h"
 #include "../../include/qemu/bswap.h"
-#include "../../include/qemu/log-for-trace.h"
 #include "../../include/qemu/log.h"
 #include "LATX/x86tomips-config.h"
 #include "cpu.h"

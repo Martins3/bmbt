@@ -9,7 +9,7 @@
 #include "../../include/hw/i386/topology.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/error-report.h"
-#include "../../include/qemu/log-for-trace.h"
+#include "../../include/qemu/log.h"
 #include "../../include/qemu/units.h"
 #include "../../include/sysemu/reset.h"
 
