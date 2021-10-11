@@ -2087,6 +2087,8 @@ void x86_cpu_do_interrupt(CPUState *cpu);
 bool x86_cpu_exec_interrupt(CPUState *cpu, int int_req);
 int x86_cpu_pending_interrupt(CPUState *cs, int interrupt_request);
 
+void x86_cpu_dump_state(CPUState *cs, FILE *f, int flags);
+
 /* this function must always be used to load data in the segment
    cache: it synchronizes the hflags with the segment cache values */
 static inline void cpu_x86_load_seg_cache(CPUX86State *env, int seg_reg,
@@ -2236,6 +2238,7 @@ int cpu_get_pic_interrupt(CPUX86State *s);
 /* MSDOS compatibility mode FPU exception support */
 void x86_register_ferr_irq(qemu_irq irq);
 void cpu_set_ignne(void);
+
 
 typedef int X86CPUVersion;
 
