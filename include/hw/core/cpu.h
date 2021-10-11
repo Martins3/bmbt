@@ -428,9 +428,7 @@ enum CPUDumpFlags {
  */
 void cpu_reset(CPUState *cpu);
 
-typedef void (*CPUInterruptHandler)(CPUState *, int);
-extern CPUInterruptHandler cpu_interrupt_handler;
-
+void tcg_handle_interrupt(CPUState *cpu, int mask);
 /**
  * cpu_interrupt:
  * @cpu: The CPU to set an interrupt on.
@@ -439,7 +437,8 @@ extern CPUInterruptHandler cpu_interrupt_handler;
  * Invokes the interrupt handler.
  */
 static inline void cpu_interrupt(CPUState *cpu, int mask) {
-  cpu_interrupt_handler(cpu, mask);
+  // [interface 32]
+  tcg_handle_interrupt(cpu, mask);
 }
 
 void QEMU_NORETURN cpu_abort(CPUState *cpu, const char *fmt, ...)

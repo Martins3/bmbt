@@ -9,7 +9,7 @@ extern int xtm_sigint_opt(void);
 unsigned long tcg_tb_size;
 
 /* mask must never be zero, except for A20 change call */
-static void tcg_handle_interrupt(CPUState *cpu, int mask) {
+void tcg_handle_interrupt(CPUState *cpu, int mask) {
   int old_mask;
   g_assert(qemu_mutex_iothread_locked());
 
@@ -41,6 +41,5 @@ static void tcg_handle_interrupt(CPUState *cpu, int mask) {
 
 int tcg_init() {
   tcg_exec_init(tcg_tb_size * 1024 * 1024);
-  cpu_interrupt_handler = tcg_handle_interrupt;
   return 0;
 }
