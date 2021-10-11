@@ -73,7 +73,6 @@ typedef union {
   } u16;
 } IcountDecr;
 
-// FIXME maybe we have copy too many comments here, remove them later
 /**
  * CPUState:
  * @cpu_index: CPU index (informative).
@@ -132,26 +131,56 @@ typedef union {
  */
 typedef struct CPUState {
   struct CPUClass *cc;
+
+  /*< private >*/
+  // DeviceState parent_obj;
+  /*< public >*/
+
   int nr_cores;
   int nr_threads;
 
+  struct QemuThread *thread;
+#ifdef _WIN32
+  HANDLE hThread;
+#endif
+  int thread_id;
+  bool running, has_waiter;
+  struct QemuCond *halt_cond;
+  bool thread_kicked;
   bool created;
-
+  bool stop;
+  bool stopped;
+  bool unplug;
+  bool crash_occurred;
+  bool exit_request;
+  bool in_exclusive_context;
+  uint32_t cflags_next_tb;
+  /* updates protected by BQL */
+  uint32_t interrupt_request;
+  int singlestep_enabled;
+  int64_t icount_budget;
+  int64_t icount_extra;
+  uint64_t random_seed;
   sigjmp_buf jmp_env;
-  u32 cflags_next_tb;
+
+  QemuMutex work_mutex;
+  struct qemu_work_item *queued_work_first, *queued_work_last;
+
+  CPUAddressSpace *cpu_ases;
+  int num_ases;
+  AddressSpace *as;
+  MemoryRegion *memory;
 
   void *env_ptr; /* CPUArchState */
-
   IcountDecr *icount_decr_ptr;
 
-  int singlestep_enabled;
+  /* Accessed in parallel; all accesses must be atomic */
+  struct TranslationBlock *tb_jmp_cache[TB_JMP_CACHE_SIZE];
 
-  /* Move common fields from CPUArchState here. */
-  int cpu_index;
-  int cluster_index;
-  uint32_t halted;
-  uint32_t can_do_io;
-  int32_t exception_index;
+  struct GDBRegisterState *gdb_regs;
+  int gdb_num_regs;
+  int gdb_num_g_regs;
+  QTAILQ_ENTRY(CPUState) node;
 
   /* ice debug support */
   QTAILQ_HEAD(, CPUBreakpoint) breakpoints;
@@ -159,39 +188,54 @@ typedef struct CPUState {
   QTAILQ_HEAD(, CPUWatchpoint) watchpoints;
   CPUWatchpoint *watchpoint_hit;
 
-  struct qemu_work_item *queued_work_first, *queued_work_last;
-
-  QTAILQ_ENTRY(CPUState) node;
-
-  uint32_t interrupt_request;
+  void *opaque;
 
   /* In order to avoid passing too many arguments to the MMIO helpers,
    * we store some rarely used information in the CPU context.
    */
   uintptr_t mem_io_pc;
 
-  /* Accessed in parallel; all accesses must be atomic */
-  struct TranslationBlock *tb_jmp_cache[TB_JMP_CACHE_SIZE];
+  int kvm_fd;
+  struct KVMState *kvm_state;
+  struct kvm_run *kvm_run;
 
-  int64_t icount_budget;
-  int64_t icount_extra;
-
-  bool exit_request;
-
-  bool in_exclusive_context;
-
-  // FIXME currently, this field is only referenced by tb_lookup__cpu_state
+  /* Used for events with 'vcpu' and *without* the 'disabled' properties */
+  DECLARE_BITMAP(trace_dstate_delayed, CPU_TRACE_DSTATE_MAX_EVENTS);
   DECLARE_BITMAP(trace_dstate, CPU_TRACE_DSTATE_MAX_EVENTS);
 
-  struct CPUAddressSpace *cpu_ases;
-  int num_ases;
-  QemuThread *thread;
-  int thread_id;
+#ifdef BMBT
+  DECLARE_BITMAP(plugin_mask, QEMU_PLUGIN_EV_MAX);
 
-  QemuMutex work_mutex;
+  GArray *plugin_mem_cbs;
+#endif
+
+  /* TODO Move common fields from CPUArchState here. */
+  int cpu_index;
+  int cluster_index;
+  uint32_t halted;
+  uint32_t can_do_io;
+  int32_t exception_index;
+
+  /* shared by kvm, hax and hvf */
+  bool vcpu_dirty;
+
+  /* Used to keep track of an outstanding cpu throttle thread for migration
+   * autoconverge
+   */
+  bool throttle_thread_scheduled;
+
+  bool ignore_memory_transaction_failures;
+
+  struct hax_vcpu_state *hax_vcpu;
+
+  int hvf_fd;
+
+#ifdef BMBT
+  /* track IOMMUs whose translations we've cached in the TCG TLB */
+  GArray *iommu_notifiers;
+#endif
 } CPUState;
 
-// FIXME clear the comments
 /**
  * CPUClass:
  * @class_by_name: Callback to map -cpu command line model name to an
@@ -384,8 +428,6 @@ enum CPUDumpFlags {
  */
 void cpu_reset(CPUState *cpu);
 
-// FIXME initialize cpu_interrupt_handler
-// surely, we can simplify it.
 typedef void (*CPUInterruptHandler)(CPUState *, int);
 extern CPUInterruptHandler cpu_interrupt_handler;
 
@@ -531,14 +573,10 @@ static inline bool cpu_has_work(CPUState *cpu) {
 void async_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
                       run_on_cpu_data data);
 
-// FIXME I don't know why x86 doesn't register the handler
-// maybe it never been called
 static inline void cpu_unaligned_access(CPUState *cpu, vaddr addr,
                                         MMUAccessType access_type, int mmu_idx,
                                         uintptr_t retaddr) {
-  CPUClass *cc = CPU_GET_CLASS(cpu);
-
-  cc->do_unaligned_access(cpu, addr, access_type, mmu_idx, retaddr);
+  g_assert_not_reached();
 }
 
 #define qemu_tcg_mttcg_enabled() (0)

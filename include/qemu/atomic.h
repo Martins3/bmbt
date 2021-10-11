@@ -1,10 +1,6 @@
 #ifndef ATOMIC_H_VE645TXJ
 #define ATOMIC_H_VE645TXJ
-
-// FIXME If we want to support multicore
-// this file has to be redesigned
-// currently, it's only stub for static linter
-// Add a non-atominc version is enough and necessary
+// [interface 31]
 
 /* The variable that receives the old value of an atomically-accessed
  * variable must be non-qualified, because atomic builtins return values

@@ -42,7 +42,7 @@ static inline void qemu_mutex_unlock(QemuMutex *mutex) {
   mutex->lock = false;
 }
 
-typedef struct {
+typedef struct QemuThread {
   int thread;
 } QemuThread;
 
