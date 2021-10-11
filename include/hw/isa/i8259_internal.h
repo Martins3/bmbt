@@ -7,7 +7,6 @@
 
 typedef struct PICCommonState PICCommonState;
 typedef struct PICCommonClass {
-  // FIXME can I remove it safely
 #ifdef BMBT
   ISADeviceClass parent_class;
 

@@ -14,9 +14,10 @@
 #define TARGET_PAGE_BITS_MIN TARGET_PAGE_BITS
 #define TARGET_PAGE_SIZE (1 << TARGET_PAGE_BITS)
 
-// FIXME
+// To make ccls happy, change the syntax.
+// If we want to support 64bit, it may doesn't work
 // https://stackoverflow.com/questions/40508958/shifting-a-negative-signed-value-is-undefined
-// shifting a negative signed value is undefined
+// #define TARGET_PAGE_MASK   ((target_long)-1 << TARGET_PAGE_BITS)
 #define TARGET_PAGE_MASK ((-1u) << TARGET_PAGE_BITS)
 
 #define TARGET_PAGE_ALIGN(addr) ROUND_UP((addr), TARGET_PAGE_SIZE)
@@ -184,6 +185,7 @@ static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
  * @tlb_addr: TLB entry address (a CPUTLBEntry addr_read/write/code value)
  */
 static inline bool tlb_hit_page(target_ulong tlb_addr, target_ulong addr) {
+  duck_check(TARGET_PAGE_MASK == 0xfffff000LL);
   return addr == (tlb_addr & (TARGET_PAGE_MASK | TLB_INVALID_MASK));
 }
 
@@ -194,6 +196,7 @@ static inline bool tlb_hit_page(target_ulong tlb_addr, target_ulong addr) {
  * @tlb_addr: TLB entry address (a CPUTLBEntry addr_read/write/code value)
  */
 static inline bool tlb_hit(target_ulong tlb_addr, target_ulong addr) {
+  duck_check(TARGET_PAGE_MASK == 0xfffff000LL);
   return tlb_hit_page(tlb_addr, addr & TARGET_PAGE_MASK);
 }
 #endif
