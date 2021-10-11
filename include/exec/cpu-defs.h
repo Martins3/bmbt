@@ -98,8 +98,7 @@ typedef struct CPUTLBEntry {
   };
 } CPUTLBEntry;
 
-// FIXME, if QEMU_BUILD_BUG_ON only used one time, create a simpler one
-// QEMU_BUILD_BUG_ON(sizeof(CPUTLBEntry) != (1 << CPU_TLB_ENTRY_BITS));
+QEMU_BUILD_BUG_ON(sizeof(CPUTLBEntry) != (1 << CPU_TLB_ENTRY_BITS));
 
 /* The IOTLB is not accessed directly inline by generated TCG code,
  * so the CPUIOTLBEntry layout is not as critical as that of the

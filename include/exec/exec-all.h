@@ -160,7 +160,6 @@ typedef struct TranslationBlock {
   uintptr_t page_next[2];
 } TranslationBlock;
 
-// FIXME todo we doesn't supported mttcg, so init it as zero
 extern bool parallel_cpus;
 
 /* current cflags for hashing/comparison */
