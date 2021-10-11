@@ -1,5 +1,5 @@
-#include "../../include/qemu/bswap.h"
-#include "../../include/types.h"
+#include "../../../include/qemu/bswap.h"
+#include "../../../include/types.h"
 /*
  * QEMU BIOS e820 routines
  *

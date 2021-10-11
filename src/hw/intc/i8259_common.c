@@ -1,7 +1,7 @@
-#include "../../include/exec/hwaddr.h"
-#include "../../include/hw/irq.h"
-#include "../../include/hw/isa/i8259_internal.h"
-#include "../../include/qemu/log.h"
+#include "../../../include/exec/hwaddr.h"
+#include "../../../include/hw/irq.h"
+#include "../../../include/hw/isa/i8259_internal.h"
+#include "../../../include/qemu/log.h"
 
 static int irq_level[16];
 static uint64_t irq_count[16];

@@ -1,4 +1,4 @@
-#include "../../include/hw/irq.h"
+#include "../../../include/hw/irq.h"
 #include "../../tcg/glib_stub.h"
 
 struct IRQState {

@@ -21,7 +21,7 @@
  */
 #include "../../exec/hwaddr.h"
 #include "../../qemu/timer.h"
-#include "../../src/i386/cpu.h"
+#include "../../../src/i386/cpu.h"
 #include "../../types.h"
 #include "../pci/msi.h"
 

@@ -1,7 +1,7 @@
 #ifndef X86_H_L9VT3E8K
 #define X86_H_L9VT3E8K
 
-#include "../../src/hw/i386/fw_cfg.h"
+#include "../../../src/hw/i386/fw_cfg.h"
 #include "../boards.h"
 #include "../irq.h"
 #include "../nvram/fw_cfg.h"

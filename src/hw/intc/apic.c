@@ -1,10 +1,10 @@
-#include "../../include/hw/i386/apic.h"
-#include "../../include/hw/i386/apic-msidef.h"
-#include "../../include/hw/i386/apic_internal.h"
-#include "../../include/hw/i386/ioapic.h"
-#include "../../include/hw/isa/i8259.h"
-#include "../../include/qemu/atomic.h"
-#include "../../include/qemu/error-report.h"
+#include "../../../include/hw/i386/apic.h"
+#include "../../../include/hw/i386/apic-msidef.h"
+#include "../../../include/hw/i386/apic_internal.h"
+#include "../../../include/hw/i386/ioapic.h"
+#include "../../../include/hw/isa/i8259.h"
+#include "../../../include/qemu/atomic.h"
+#include "../../../include/qemu/error-report.h"
 #include <string.h>
 
 #define MAX_APICS 255
