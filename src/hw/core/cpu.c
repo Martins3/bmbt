@@ -3,8 +3,6 @@
 #include "../../../include/qemu/main-loop.h"
 #include "../../../include/sysemu/tcg.h"
 
-CPUInterruptHandler cpu_interrupt_handler;
-
 CPUState *cpu_by_arch_id(int64_t id) {
   CPUState *cpu;
 
@@ -191,12 +189,6 @@ static int64_t cpu_common_get_arch_id(CPUState *cpu) { return cpu->cpu_index; }
 static vaddr cpu_adjust_watchpoint_address(CPUState *cpu, vaddr addr, int len) {
   return addr;
 }
-
-static void generic_handle_interrupt(CPUState *cpu, int mask) {
-  g_assert_not_reached();
-}
-
-CPUInterruptHandler cpu_interrupt_handler = generic_handle_interrupt;
 
 void cpu_class_init(CPUClass *k) {
   // k->parse_features = cpu_common_parse_features;
