@@ -1,10 +1,11 @@
 #include "../../include/hw/i386/pc.h"
 #include "../../include/qemu/error-report.h"
 #include "../../include/qemu/log.h"
+#include "../../include/qemu/main-loop.h"
 #include "../../include/qemu/notify.h"
 #include "../../include/qemu/units.h"
 #include "../../include/qemu/uuid.h"
-#include "../../include/qemu/main-loop.h"
+#include "../../include/sysemu/replay.h"
 #include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/tcg.h"
 
@@ -15,6 +16,7 @@
  */
 QemuUUID qemu_uuid;
 ram_addr_t ram_size;
+ReplayMode replay_mode = REPLAY_MODE_NONE;
 
 bool machine_init_done;
 
