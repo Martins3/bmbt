@@ -60,6 +60,11 @@
     - [ ] 是不是因为没有移植 cross page 相关的代码，所以暂时无需 host page size 是多少?
 28. check_exception
     - 如果检测出来 triple fault，那么会导致整个机器重置，这种复杂的情况暂时不是我们能够处理的
+29. log.c / log.h
+    - 在原本的 QEMU 中，划分出来了 qemu-printf.c qemu/log.h exec/log.h
+    - 现在将所有的 .c 都合并到 log.c 中
+    - qemu/log.h exec/log.h 两个合并到 qemu/log.h 中
+
 
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
