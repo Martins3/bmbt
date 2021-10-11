@@ -52,7 +52,15 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info dependency_files=$(dependency_files))
 # $(info $(BASE_DIR))
 
-all: $(kernel)
+all: check-and-reinit-submodules $(kernel)
+
+# https://stackoverflow.com/questions/52337010/automatic-initialization-and-update-of-submodules-in-makefile
+.PHONY: check-and-reinit-submodules
+check-and-reinit-submodules:
+	@if git submodule status | egrep -q '^[-]|^[+]' ; then \
+            echo "INFO: Need to reinitialize git submodules"; \
+            git submodule update --init; \
+	fi
 
 -include $(dependency_files)
 
