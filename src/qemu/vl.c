@@ -4,6 +4,7 @@
 #include "../../include/qemu/notify.h"
 #include "../../include/qemu/units.h"
 #include "../../include/qemu/uuid.h"
+#include "../../include/qemu/main-loop.h"
 #include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/tcg.h"
 

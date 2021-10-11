@@ -55,7 +55,7 @@ static inline int qemu_get_thread_id(void) {
   return 0x4567;
 }
 
-typedef struct {
+typedef struct QemuCond {
 } QemuCond;
 
 /*

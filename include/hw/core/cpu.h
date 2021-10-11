@@ -464,10 +464,8 @@ typedef union {
 
 typedef void (*run_on_cpu_func)(CPUState *cpu, run_on_cpu_data data);
 
-static inline void async_safe_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
-                                         run_on_cpu_data data) {
-  // FIXME interface
-}
+void async_safe_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
+                           run_on_cpu_data data);
 
 typedef struct CPUWatchpoint CPUWatchpoint;
 
@@ -626,6 +624,14 @@ static inline hwaddr cpu_get_phys_page_attrs_debug(CPUState *cpu, vaddr addr,
 bool qemu_cpu_is_self(CPUState *cpu) { return true; }
 
 /**
+ * qemu_cpu_kick:
+ * @cpu: The vCPU to kick.
+ *
+ * Kicks @cpu's thread.
+ */
+void qemu_cpu_kick(CPUState *cpu);
+
+/**
  * cpu_exec_start:
  * @cpu: The CPU for the current thread.
  *
@@ -666,6 +672,8 @@ void process_queued_cpu_work(CPUState *cpu);
 static inline void start_exclusive(void) {
   // [interface 15]
 }
+
+void cpu_exit(CPUState *cpu);
 
 /**
  * end_exclusive:
