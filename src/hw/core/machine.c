@@ -1,6 +1,6 @@
-#include "../../include/hw/boards.h"
-#include "../../include/qemu/units.h"
-#include "../../include/sysemu/numa.h"
+#include "../../../include/hw/boards.h"
+#include "../../../include/qemu/units.h"
+#include "../../../include/sysemu/numa.h"
 
 static void smp_parse(MachineState *ms) { g_assert_not_reached(); }
 

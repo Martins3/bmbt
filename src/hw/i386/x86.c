@@ -1,6 +1,6 @@
 #include "../../i386/cpu.h"
-#include "../../include/hw/i386/pc.h"
-#include "../../include/hw/i386/topology.h"
+#include "../../../include/hw/i386/pc.h"
+#include "../../../include/hw/i386/topology.h"
 
 #define BIOS_FILENAME "bios.bin"
 

@@ -1,9 +1,9 @@
-#include "../../include/hw/nvram/fw_cfg.h"
-#include "../../include/hw/i386/pc.h"
-#include "../../include/qemu/bitops.h"
-#include "../../include/qemu/cutils.h"
-#include "../../include/qemu/error-report.h"
-#include "../../include/sysemu/reset.h"
+#include "../../../include/hw/nvram/fw_cfg.h"
+#include "../../../include/hw/i386/pc.h"
+#include "../../../include/qemu/bitops.h"
+#include "../../../include/qemu/cutils.h"
+#include "../../../include/qemu/error-report.h"
+#include "../../../include/sysemu/reset.h"
 #include "../../tcg/glib_stub.h"
 #include <assert.h>
 #include <string.h>

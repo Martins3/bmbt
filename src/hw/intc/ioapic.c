@@ -1,13 +1,13 @@
 // #include "../../i386/cpu.h"
-#include "../../include/exec/cpu-all.h"
-#include "../../include/hw/boards.h"
-#include "../../include/hw/i386/apic-msidef.h"
-#include "../../include/hw/i386/ioapic_internal.h"
-#include "../../include/hw/i386/pc.h"
-#include "../../include/hw/isa/i8259.h"
-#include "../../include/qemu/error-report.h"
-#include "../../include/qemu/notify.h"
-#include "../../include/sysemu/sysemu.h"
+#include "../../../include/exec/cpu-all.h"
+#include "../../../include/hw/boards.h"
+#include "../../../include/hw/i386/apic-msidef.h"
+#include "../../../include/hw/i386/ioapic_internal.h"
+#include "../../../include/hw/i386/pc.h"
+#include "../../../include/hw/isa/i8259.h"
+#include "../../../include/qemu/error-report.h"
+#include "../../../include/qemu/notify.h"
+#include "../../../include/sysemu/sysemu.h"
 
 #include <string.h>
 

@@ -1,4 +1,4 @@
-#include "../../include/hw/nvram/fw_cfg.h"
+#include "../../../include/hw/nvram/fw_cfg.h"
 
 static FWCfgState *fw_cfg;
 

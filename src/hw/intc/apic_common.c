@@ -1,4 +1,4 @@
-#include "../../include/hw/i386/apic.h"
+#include "../../../include/hw/i386/apic.h"
 #include <string.h>
 
 static int apic_irq_delivered;

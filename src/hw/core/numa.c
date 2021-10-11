@@ -1,5 +1,5 @@
-#include "../../include/sysemu/numa.h"
-#include "../../include/hw/boards.h"
+#include "../../../include/sysemu/numa.h"
+#include "../../../include/hw/boards.h"
 
 void numa_cpu_pre_plug(const struct CPUArchId *slot, struct X86CPU *cpu) {
   int node_id = cpu->node_id;
