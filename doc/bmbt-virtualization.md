@@ -118,11 +118,13 @@ setup_arch()
 | -- cpu_report(); // 打印一些初始化后CPU的信息
 |
 | -- arch_mem_init(); // 主要是初始化设备树和bootmem
-|	} -- plat_mem_setup(); // detects the memory configuration and
+|	| -- plat_mem_setup(); // detects the memory configuration and
 |						   // will record detected memory areas using add_memory_region.
+|			| -- early_init_dt_scan_memory(); // 早期读取bios传入的信息，最终通过memblock_add()挂载
 |	| -- early_init_dt_scan(); // 早期初始化设备树
 |	| -- dt_bootmem_init(); // 建立boot_mem_map内存映射图，boot_mem_map主要给BootMem内存分配器用，只包含系统内存
-|							// 这里不是初始化bootmem的地方，而只是确定其上下界，然后通过memblock_add_range()将其挂载
+|							// 这里不是初始化bootmem的地方，而只是确定其上下界，
+|							// 然后通过memblock_add_range()（核心函数）将其挂载
 |	| -- device_tree_init(); // 用bios传递的信息初始化设备树节点
 |		| -- unflatten_and_copy_device_tree();
 |			| -- early_init_dt_alloc_memory_arch(); // 先在初始化好的bootmem中分配物理空间
@@ -274,12 +276,13 @@ void __init prom_init_env(void)
 }
 ```
 
-这个函数本来以为只是解析 bios 传入的参数，但后来看 bootmem 的过程中发现，bootmem 用的是 memblock 实现的，不是之前的位图，所以对这个函数进一步分析。
+这个函数本来以为只是解析 bios 传入的参数，但后来看 bootmem 的过程中发现，bootmem 用的是 memblock 实现的，不是之前的位图，所以对这个函数[详细分析](https://github.com/UtopianFuture/UtopianFuture.github.io/blob/master/kernel/Analysis%20memblock_add_range().md)。
 
 重要的数据结构：
 
 ```plain
 // 这个应该就是bootmem的数据结构，书上说是用位图的方式，但这里改用mem_start和mem_size表示内存空间
+// 这个是BIOS内存分布图，记录了包括NUMA节点和多种类型在内的内存信息。
 struct loongsonlist_mem_map {
 	struct	_extention_list_hdr header;	/*{"M", "E", "M"}*/
 	u8	map_count;
@@ -318,6 +321,8 @@ void __init memblock_and_maxpfn_init(void)
 }
 ```
 
+memblock_add_range()就是 bootmem 的 allocator，初始化过程中，所有的内存挂载，物理页的 reserved，都是通过这个函数进行。
+
 ```plain
 /**
  * memblock_add_range - add new memblock region
@@ -341,15 +346,15 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 {
 	bool insert = false;
 	phys_addr_t obase = base;
-	phys_addr_t end = base + memblock_cap_size(base, &size);
+	phys_addr_t end = base + memblock_cap_size(base, &size); // 防止溢出
 	int idx, nr_new;
-	struct memblock_region *rgn;
+	struct memblock_region *rgn; // 每个memblock_region表示一块内存，而不再是一页一页的表示
 
 	if (!size)
 		return 0;
 
 	/* special case for empty array */
-	if (type->regions[0].size == 0) {
+	if (type->regions[0].size == 0) { // 该种type的第一个region
 		WARN_ON(type->cnt != 1 || type->total_size);
 		type->regions[0].base = base;
 		type->regions[0].size = size;
@@ -369,11 +374,11 @@ repeat:
 
 	for_each_memblock_type(idx, type, rgn) {
 		phys_addr_t rbase = rgn->base;
-		phys_addr_t rend = rbase + rgn->size;
+		phys_addr_t rend = rbase + rgn->size; // 内存从低往高增长
 
-		if (rbase >= end)
+		if (rbase >= end) // overlap，直接跳转到if(!insert)
 			break;
-		if (rend <= base)
+		if (rend <= base) // 该region的end < base，也就是说会出现碎片，尝试存储在下一个region
 			continue;
 		/*
 		 * @rgn overlaps.  If it separates the lower part of new
@@ -421,8 +426,6 @@ repeat:
 	}
 }
 ```
-
-
 
 ###### 1.1.3 prom_init()
 
