@@ -30,7 +30,7 @@ int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
 bool tcg_allowed;
 
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-#include "../i386/LATX/include/cross-page-check.h"
+// #include "../i386/LATX/include/cross-page-check.h"
 #include "../i386/LATX/x86tomips-profile-sys.h"
 extern uint64_t cam_clear_key_func;
 #ifndef _XTM_TBLOOKUP_OPT_

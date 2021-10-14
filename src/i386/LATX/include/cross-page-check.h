@@ -1,6 +1,7 @@
 #ifndef _XTM_CROSS_PAGE_CHECK_H_
 #define _XTM_CROSS_PAGE_CHECK_H_
 
+#include "types.h"
 /* code page table */
 
 #define CODE_PAGE_TABLE_BITS 10

@@ -9,7 +9,7 @@
 #ifdef CONFIG_XTM_PROFILE
 #include "x86tomips-profile-sys.h"
 #endif
-#include "../../src/i386/LATX/include/cross-page-check.h"
+// #include "../../src/i386/LATX/include/cross-page-check.h"
 #endif
 
 static inline TranslationBlock *tb_lookup__cpu_state(CPUState *cpu,
