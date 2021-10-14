@@ -494,9 +494,6 @@ static inline bool cpu_in_exclusive_context(const CPUState *cpu) {
   return cpu->in_exclusive_context;
 }
 
-// FIXME
-// 1. maybe we should ask Niugene about why we need the function of LATX
-// 2. maybe list all the similar situation where general engine need LATX
 #ifdef CONFIG_X86toMIPS
 #ifndef _X86toMIPS_PROFILE_SYS_H_
 extern void xtm_pf_inc_jc_clear(void *cpu);
