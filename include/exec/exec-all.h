@@ -1,6 +1,6 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
-#include "../../src/i386/LATX/include/types.h" // for int8, stupid
+#include "../../src/i386/LATX/include/types.h" // for int8
 #include "../../src/i386/cpu.h"
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
