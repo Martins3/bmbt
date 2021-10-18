@@ -13,6 +13,70 @@
     - [ ] 对应的检查代码在哪里? 根本没有看到啊
     - 在 tr_gen_tb_start 生成了 icount 的检查代码，那个并不是 interrupt 的检查机制。
 
+- tb_gen_code
+  - get_page_addr_code : 将虚拟地址的 pc 装换为物理地址 phys_pc
+    - get_page_addr_code_hostp
+      - 如果命中，就是 TLB 的翻译 `p = (void *)((uintptr_t)addr + entry->addend);` : 注意这里获取的 host virtual addr
+      - qemu_ram_addr_from_host_nofail : 将 host virtual addr 转换为 ram_addr
+  - tb_link_page
+    - tb_page_add
+      - tlb_protect_code
+
+```c
+/*
+ * Translation Cache-related fields of a TB.
+ * This struct exists just for convenience; we keep track of TB's in a binary
+ * search tree, and the only fields needed to compare TB's in the tree are
+ * @ptr and @size.
+ * Note: the address of search data can be obtained by adding @size to @ptr.
+ */
+struct tb_tc {
+  void *ptr; /* pointer to the translated code */
+  size_t size;
+};
+```
+- ptr : 表示 la 指令的开始位置，这是 host virtual address
+- [ ]  size : 应该是
+
+## tb link
+就是通过下面的几个变量来实现 tb link 的了
+```c
+    /* The following data are used to directly call another TB from
+     * the code of this one. This can be done either by emitting direct or
+     * indirect native jump instructions. These jumps are reset so that the TB
+     * just continues its execution. The TB can be linked to another one by
+     * setting one of the jump targets (or patching the jump instruction). Only
+     * two of such jumps are supported.
+     */
+    uint16_t jmp_reset_offset[2]; /* offset of original jump target */
+#define TB_JMP_RESET_OFFSET_INVALID 0xffff /* indicates no jump generated */
+    uintptr_t jmp_target_arg[2];  /* target address or offset */
+```
+
+```c
+  /*
+   * Each TB has a NULL-terminated list (jmp_list_head) of incoming jumps.
+   * Each TB can have two outgoing jumps, and therefore can participate
+   * in two lists. The list entries are kept in jmp_list_next[2]. The least
+   * significant bit (LSB) of the pointers in these lists is used to encode
+   * which of the two list entries is to be used in the pointed TB.
+   *
+   * List traversals are protected by jmp_lock. The destination TB of each
+   * outgoing jump is kept in jmp_dest[] so that the appropriate jmp_lock
+   * can be acquired from any origin TB.
+   *
+   * jmp_dest[] are tagged pointers as well. The LSB is set when the TB is
+   * being invalidated, so that no further outgoing jumps from it can be set.
+   *
+   * jmp_lock also protects the CF_INVALID cflag; a jump must not be chained
+   * to a destination TB that has CF_INVALID set.
+   */
+  uintptr_t jmp_list_head;
+  uintptr_t jmp_list_next[2];
+  uintptr_t jmp_dest[2];
+```
+
+
 ## 总体的执行流程
 
 - qemu_tcg_rr_cpu_thread_fn
