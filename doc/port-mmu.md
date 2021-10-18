@@ -1,5 +1,66 @@
 # softmmu 和 memory model 的移植的设计
 
+## 设计
+AddressSpace 中增加两个函数?
+
+1. segments 直接初始化为固定大小的数组
+2. 所有的 MemoryRegion 在按照顺序排放
+3. 使用二分查找来找到 MemoryRegion
+4. 以后增加一个 mru 的 cache 维持生活这个样子的
+
+- 对于 SMM 的处理，首先判断是否命中 SMM 空间
+  - 常规路径
+  - 查看是否是 SMM 的那个 MemoryRegion 的，如果是，再看 attrs 的结果
+
+- 对于 0xfffff 下面的那些 memory region 都是直接静态的定义下来的
+
+## 需求分析
+- [ ] 原本的 QEMU 初始化 memory 的函数全部都列举出来
+  - [ ] x86_bios_rom_init : 进行 bios 相关的初始 *完全没有移植*
+    - [ ] rom_add_file_fixed : 如何和 pc.bios 联系起来的
+  - [ ] pc_memory_init : 将其重新 copy 将不需要的部分适应 BMBT 包围起来
+  - 很多函数都在被过于快速的删除了
+
+- 修改那些位置是需要进行 tcg_commit 的
+  - 修改 AddressSpace::segments 的时候，也就是 io_add_memory_region 和 mem_add_memory_region
+  - smm / pam 修改映射关系的时候，对应原来的代码  memory_region_set_enabled 会调用 memory_region_transaction_commit 的情况啊!
+
+## address_space_translate_for_iotlb 和 address_space_translate 的关系
+
+- address_space_translate
+  - address_space_to_flatview : 获取 Flatview
+  - flatview_translate : 返回 MemoryRegionSection
+    - flatview_do_translation
+      - flatview_to_dispatch : 从 Flatview 获取 dispatch
+        - address_space_translate_internal
+    - 从 MemoryRegionSection 获取 mr
+
+- address_space_translate_for_iotlb
+  - `atomic_rcu_read(&cpu->cpu_ases[asidx].memory_dispatch)` : 直接获取 dispatch
+  - address_space_translate_internal
+
+| function                          | para                                            | res                       |
+|-----------------------------------|-------------------------------------------------|---------------------------|
+| address_space_translate_for_iotlb | [cpu asidx](获取地址) addr [attrs prot](没用的) | MemoryRegionSection, xlat |
+| address_space_translate           | as addr is_write attrs ()                       | MemoryRegion, xlat, len   |
+| address_space_translate_internal  | d, addr, resolve_subpage                        | xlat, plen                |
+
+
+
+
+- [x] attrs 有用?
+- [x] address_space_translate 返回 len : 在 read continue 中使用的
+  - 只有 ram 的时候会遇到
+  - 因为访问的时候可能越过 MemoryRegion 的范围
+  - 估计当前的项目中不会遇到，增加上 duck_check 的方法
+  - mmio 中也是需要考虑 size 的问题: 会使用 prepare_mmio_access 计算
+  - 注释中也是如此说明的
+    - [x] 注释说，When such registers exist (e.g. I/O ports 0xcf8 and 0xcf9 on most PC chipsets), MMIO regions overlap wildly.
+
+- [ ] address_space_rw : 是不是只有 dma 的位置在使用?
+  - [ ] 重新看看访存辅助函数集合 ?
+  - [ ] 所以到底如何处理 flatview_write_continue，其中只有 ram 的访问吗?
+
 ## [ ] 到底那些地方可以简化
 - 因为描述的空间是固定的，所以我猜测可以简化设计，没有必要创建出来 MemoryRegion，但是可以保留出来 FlatRange
 - 因为 IO 空间和 mmio 空间的数量有限，暂时可以直接一个数组循环来遍历这些 FlatRange 的

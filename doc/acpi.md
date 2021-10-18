@@ -32,3 +32,49 @@
 #12 0x000055555582b4bd in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at ../softmmu/main.c:49
 ```
 原来是通过 isa 总线将描述信息添加进去的。
+
+应该是，acpi 必须在运行时才可以构建好, 而且是通过 copy of table in RAM 来 patched
+```c
+typedef struct AcpiBuildState {
+    /* Copy of table in RAM (for patching). */
+    MemoryRegion *table_mr;
+    /* Is table patched? */
+    uint8_t patched;
+    void *rsdp;
+    MemoryRegion *rsdp_mr;
+    MemoryRegion *linker_mr;
+} AcpiBuildState;
+```
+
+
+## 从 NVDIMM 到 Bios Linker
+https://richardweiyang-2.gitbook.io/understanding_qemu/00-qmeu_bios_guest/03-seabios
+
+https://richardweiyang-2.gitbook.io/understanding_qemu/00-devices/00-an_example/05-nvdimm
+> 似乎，连 acpi 的函数和构建地址空间
+
+从 romfile_loader_execute 看，etc/table-loader 中就是装载各种 table 的东西
+
+etc/table-loader
+
+- build_rsdt : 指向其他的 table 的，之所以需要 linker，好像是因为将 table 放到哪里，只是知道相对偏移，而不知道绝对偏移，
+所以需要 linker 将绝对值计算出来。
+
+- checksum 需要让 guest 计算的原因:
+  - 因为 checksum 中间包含了 linker 正确计算出来的指针，只有被修正之后的指针才能计算出来正确的 checksum
+
+DSDT address to be filled by Guest linker at runtime
+
+- [x] 为什么 microvm 的 table 就不会动态修改? (猜测是一些东西写死了吧, 不需要 linker 吧)
+
+除了 TMPLOG ，其余的三个都是和 acpi_build_update 关联起来的:
+```c
+#define ACPI_BUILD_TABLE_FILE "etc/acpi/tables"
+#define ACPI_BUILD_RSDP_FILE "etc/acpi/rsdp"
+#define ACPI_BUILD_TPMLOG_FILE "etc/tpm/log"
+#define ACPI_BUILD_LOADER_FILE "etc/table-loader"
+```
+
+- bios_linker_loader_alloc : ask guest to load file into guest memory.
+  - romfile_loader_allocate 实际上加载的两个文件为 etc/acpi/rsdp 和 etc/acpi/tables
+  - 应该是首先传递进去的是  etc/table-loader, 然后靠这个将 etc/acpi/rsdp 和 etc/acpi/tables 传递进去

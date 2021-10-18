@@ -1,6 +1,13 @@
 # smbios
 - [ ] 似乎是 fw_cfg_build_smbios 制作出来一个文件 然后通过 fw_cfg 传递给 seabios 使用的吧
 
+https://gist.github.com/smoser/290f74c256c89cb3f3bd434a27b9f64c
+
+- fw_cfg_build_smbios
+  - 然后就是各种构建 smbios 了
+  - [ ] 无法理解的是，为什么需要 anchor 啊
+    - [ ] smbios 也是有 anchor 的吗?
+
 ## seabios
 在 seabios 的那一侧:
 ```c

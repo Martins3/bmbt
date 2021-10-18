@@ -1,13 +1,4 @@
 ## 主要需要分析的问题
-5. 关键的接口和重构
-
-| TODO                       | 描述                                                                                                                                                                                           |
-|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| apic                       | include/hw/i386/apic.h 中定义了一些列的函数，具体的还没有分析，但是 原来的 QEMU 中间                                                                                                           |
-| 多核                       | 现在为了代码的方便执行，也没有太搞清楚其中的作用，在 cputlb.c 的 async_run_on_cpu 以及各种 atomic 函数，qemu_spin_lock, 以及 RCU. 现在的操作是，先将接口保存下来，之后需要支持多核，有一个参考 |
-| icount / record replay     | 没有 record replay 是不是很难调试，使用 record replay 会不会很难集成                                                                                                                           |
-| trace                      |                                                                                                                                                                                                |
-| 存在好几个数据结构需要重构 |qht.h 和 glib 的 qtree                                                                                                                                                                |
 
 2. apic
     1. DeviceState 中定义为空
@@ -44,16 +35,3 @@
   - [ ] g_assert
   - [ ] error_report
 9. pit 和 hpet 需要模拟?
-
-include/exec/memory.h:40:  // FIXME
-include/exec/memory.h:44:  // FIXME
-include/exec/memory.h:53:  // FIXME port later
-include/exec/memory.h:71:  // FIXME port later
-include/exec/memory.h:89:  // FIXME port later
-include/exec/ram_addr.h:26:  // FIXME add the only RAMBlock to RAMList, check the addr in range and return
-
-include/sysemu/replay.h:7:  // FIXME
-include/sysemu/replay.h:11:// FIXME /home/maritns3/core/ld/x86-qemu-mips/build/qapi/qapi-types-misc.h
-include/sysemu/replay.h:24:  // FIXME
-include/sysemu/replay.h:29:  // FIXME
-include/sysemu/replay.h:36:  // FIXME

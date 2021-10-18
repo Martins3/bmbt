@@ -20,6 +20,7 @@
 
 - pci_device_tbl : 中间还有更多的设备，注册了各种 dvices 的初始化 hook 函数
 
+- [ ] 初始化路径图从 /home/maritns3/core/vn/docs/qemu/fw_cfg.md 的 seabios 哪一个 section 更新一下
 ## 决策
 虽然具体内容不是也很清楚，但是没有一个 MMIO，找到对应的位置就差不多了
 
@@ -99,7 +100,8 @@ This code calls romlayout.S:entry_post() which then calls post.c:handle_post() i
             - bda_init :pear:
             - boot_init
               - romfile_loadint("etc/boot-fail-wait", 60*1000) : 在 fw_cfg_common_realize => fw_cfg_reboot, 从而在 QEMU 的命令行参数可以控制 seabios 的运行
-              - loadBootOrder / loadBiosGeometry : 这两个文件应该是没有的
+              - loadBootOrder : 初始化 Bootorder
+              - loadBiosGeometry
             - [ ] bios32_init : 和 pcibios 相关的
             - [ ] pmm_init : 和 bios32_init 类似
             - [ ] pnp_init : 和 bios32_init 类似
@@ -169,7 +171,12 @@ This code calls romlayout.S:entry_post() which then calls post.c:handle_post() i
           - [ ] interactive_bootmenu
           - wait_threads
           - make_bios_readonly
-          - startBoot : 终于到了启动的位置了，可以结束了
+            - startBoot
+              - call16_int(0x19, &br)
+                - handle_19
+                  - do_boot
+                    - boot_rom
+                      - call_boot_entry
 
 ## 结论
 
