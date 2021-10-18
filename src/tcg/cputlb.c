@@ -25,14 +25,6 @@
 #include <stdlib.h> // for abort
 #include <string.h>
 
-#define DIRTY_MEMORY_VGA 0
-#define DIRTY_MEMORY_CODE 1
-#define DIRTY_MEMORY_MIGRATION 2
-#define DIRTY_MEMORY_NUM 3 /* num of dirty bits */
-
-#define DIRTY_CLIENTS_ALL ((1 << DIRTY_MEMORY_NUM) - 1)
-#define DIRTY_CLIENTS_NOCODE (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
-
 #ifdef DEBUG_TLB
 #define DEBUG_TLB_GATE 1
 #ifdef DEBUG_TLB_LOG

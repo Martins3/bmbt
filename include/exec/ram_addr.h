@@ -157,4 +157,7 @@ static inline void *ramblock_ptr(RAMBlock *block, ram_addr_t offset) {
   return (char *)block->host + offset;
 }
 
+#define DIRTY_CLIENTS_ALL ((1 << DIRTY_MEMORY_NUM) - 1)
+#define DIRTY_CLIENTS_NOCODE (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
+
 #endif /* end of include guard: RAM_ADDR_H_ACNMERX5 */
