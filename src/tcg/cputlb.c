@@ -901,7 +901,9 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
 
   mr = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
   mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
+#ifdef BMBT
   cpu->mem_io_pc = retaddr;
+#endif
   if (!cpu->can_do_io) {
     cpu_io_recompile(cpu, retaddr);
   }
@@ -936,7 +938,9 @@ static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, int mmu_idx,
   if (!cpu->can_do_io) {
     cpu_io_recompile(cpu, retaddr);
   }
+#ifdef BMBT
   cpu->mem_io_pc = retaddr;
+#endif
 
   if (!qemu_mutex_iothread_locked()) {
     qemu_mutex_lock_iothread();
