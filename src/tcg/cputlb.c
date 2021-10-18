@@ -868,15 +868,6 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
   qemu_spin_unlock(&tlb->c.lock);
 }
 
-/* Add a new TLB entry, but without specifying the memory
- * transaction attributes to be used.
- */
-void tlb_set_page(CPUState *cpu, target_ulong vaddr, hwaddr paddr, int prot,
-                  int mmu_idx, target_ulong size) {
-  tlb_set_page_with_attrs(cpu, vaddr, paddr, MEMTXATTRS_UNSPECIFIED, prot,
-                          mmu_idx, size);
-}
-
 static inline ram_addr_t qemu_ram_addr_from_host_nofail(void *ptr) {
   ram_addr_t ram_addr;
 

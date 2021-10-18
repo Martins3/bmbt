@@ -354,14 +354,6 @@ void tlb_flush_by_mmuidx_all_cpus_synced(CPUState *cpu, uint16_t idxmap);
 void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
                              MemTxAttrs attrs, int prot, int mmu_idx,
                              target_ulong size);
-/* tlb_set_page:
- *
- * This function is equivalent to calling tlb_set_page_with_attrs()
- * with an @attrs argument of MEMTXATTRS_UNSPECIFIED. It's provided
- * as a convenience for CPUs which don't use memory transaction attributes.
- */
-void tlb_set_page(CPUState *cpu, target_ulong vaddr, hwaddr paddr, int prot,
-                  int mmu_idx, target_ulong size);
 
 /* The true return address will often point to a host insn that is part of
    the next translated guest insn.  Adjust the address backward to point to
