@@ -190,10 +190,12 @@ typedef struct CPUState {
 
   void *opaque;
 
+#ifdef BMBT
   /* In order to avoid passing too many arguments to the MMIO helpers,
    * we store some rarely used information in the CPU context.
    */
   uintptr_t mem_io_pc;
+#endif
 
   int kvm_fd;
   struct KVMState *kvm_state;
