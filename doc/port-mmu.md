@@ -1,7 +1,12 @@
 # softmmu 和 memory model 的移植的设计
 
 ## 设计
-AddressSpace 中增加两个函数?
+- CPUAddressSpace 需要创建出来两个 AddressSpace 来
+  - 但是 AddressSpace 共同的持有
+  - 将两个 AddressSpace 和 smram smram_region 共同合作的，来确定 vag-low 还是 ram
+
+- 需要 MemoryRegion，但是不需要 MemoryRegionSection，因为 MemoryRegion 中间不会被划分，MemoryRegion 就是最小的对象
+- 一个 MemoryRegion 关联一个 RAMBlock，MemoryRegion 和 RAMBlock 的大小完全相同
 
 1. segments 直接初始化为固定大小的数组
 2. 所有的 MemoryRegion 在按照顺序排放
@@ -14,19 +19,34 @@ AddressSpace 中增加两个函数?
 
 - 对于 0xfffff 下面的那些 memory region 都是直接静态的定义下来的
 
-## 需求分析
-- [ ] 原本的 QEMU 初始化 memory 的函数全部都列举出来
-  - [ ] x86_bios_rom_init : 进行 bios 相关的初始 *完全没有移植*
-    - [ ] rom_add_file_fixed : 如何和 pc.bios 联系起来的
-  - [ ] pc_memory_init : 将其重新 copy 将不需要的部分适应 BMBT 包围起来
-  - 很多函数都在被过于快速的删除了
-
 - 修改那些位置是需要进行 tcg_commit 的
   - 修改 AddressSpace::segments 的时候，也就是 io_add_memory_region 和 mem_add_memory_region
   - smm / pam 修改映射关系的时候，对应原来的代码  memory_region_set_enabled 会调用 memory_region_transaction_commit 的情况啊!
 
-## address_space_translate_for_iotlb 和 address_space_translate 的关系
+## TODO
+- [ ] cpu_ases 的初始化
+- [ ] qemu_get_ram_block 是 next 的唯一使用者，那么似乎就可以删除掉了
 
+- [ ] 确认一下 : SMM 状态的转换会删除掉所有的 TLB，不然 iotlb_to_section 还在使用第一次 TLB miss 注册的 attrs
+
+## 重写的函数接口
+| function                          | 作用                                                                                                          |
+|-----------------------------------|---------------------------------------------------------------------------------------------------------------|
+| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                               |
+| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了        |
+| qemu_map_ram_ptr                  | 这是一个神仙设计的接口，如果参数 ram_block 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |
+| cpu_addressspace                  |                                                                                                               |
+| iotlb_to_section                  |                                                                                                               |
+
+#### 真的需要移除掉 iotlb 机制吗
+而 IOTLB 的 MMIO 移除掉，让 io_readx 和 io_writex 中直接走 memory region translate 的操作
+
+需要修改的内容，将其尽可能变为空的:
+- memory_region_section_get_iotlb
+- address_space_translate_for_iotlb : 只是进行 RAM 装换就好了，那么这些就是
+- iotlb_to_section : 为什么需要参数 attrs ?
+
+#### address_space_translate_for_iotlb 和 address_space_translate 的关系
 - address_space_translate
   - address_space_to_flatview : 获取 Flatview
   - flatview_translate : 返回 MemoryRegionSection
@@ -46,45 +66,11 @@ AddressSpace 中增加两个函数?
 | address_space_translate_internal  | d, addr, resolve_subpage                        | xlat, plen                |
 
 
+## 到底那些地方可以简化
+- stl_le_phys 族的函数只是需要这一个
 
-
-- [x] attrs 有用?
-- [x] address_space_translate 返回 len : 在 read continue 中使用的
-  - 只有 ram 的时候会遇到
-  - 因为访问的时候可能越过 MemoryRegion 的范围
-  - 估计当前的项目中不会遇到，增加上 duck_check 的方法
-  - mmio 中也是需要考虑 size 的问题: 会使用 prepare_mmio_access 计算
-  - 注释中也是如此说明的
-    - [x] 注释说，When such registers exist (e.g. I/O ports 0xcf8 and 0xcf9 on most PC chipsets), MMIO regions overlap wildly.
-
-- [ ] address_space_rw : 是不是只有 dma 的位置在使用?
-  - [ ] 重新看看访存辅助函数集合 ?
-  - [ ] 所以到底如何处理 flatview_write_continue，其中只有 ram 的访问吗?
-
-## [ ] 到底那些地方可以简化
-- 因为描述的空间是固定的，所以我猜测可以简化设计，没有必要创建出来 MemoryRegion，但是可以保留出来 FlatRange
-- 因为 IO 空间和 mmio 空间的数量有限，暂时可以直接一个数组循环来遍历这些 FlatRange 的
-- 为了处理各种 device 的情况，制作出来了 stl_le_phys 之类的函数，这是没有必要的
 - memory_ldst.h 无需考虑 `#define SUFFIX                   _cached_slow`, 那是给 virtio 使用的
 - 几乎无需处理 endianness 的问题
-- 对于 PAM 和 SMM 我们存在更加深入的观察，这让 render_memory_region 之类的复杂操作毫无意义
-  - 没有必要采用 AddressSpace 的概念
-
-- [ ] 猜测一下需要处理的接口
-    - address_space_translate : 将这些全部使用 segment RB tree 管理
-    - CPUAddressSpace : 在 smm 中间发生替换的时候
-      - 进入到 SMM 的时候
-    - 处理 RAMBlock 的
-        - qemu_map_ram_ptr
-        - RAMList 的相关的 dirty memory 的记录
-        - 将其 clean 以及清理出来的
-    - IO 空间和 memory 的空间需要区分。
-        - SMM 空间也是可以区分的
-    - 各种 invalidate 的接口
-        - 比如 invalidate_and_set_dirty, 实际上，dirty_log_mask 之类的设计可以简化很多的
-
-
-- 无论如何，RAM 在 host 上的具体地址都是需要进行装换的，所以，RAMBlock::host 是需要的
 
 1. 一个 CPUAddressSpace 持有一个 AddressSpace
 2. 在 AddressSpace 中持有一个数组(因为 iotlb_to_section 需要的)
@@ -94,6 +80,7 @@ AddressSpace 中增加两个函数?
   - 对于 1M 直接判断，然后就是 RAM 或者 PCI 了，而 IO 和 memory 早就可以区分
   - 如果 PAM 打开，不需要存在一棵树的
 
+## 处理 SMM
 在 1M 的 MemoryRegion 直接创建出来，分配到数组中:
 ```c
 /*
@@ -120,160 +107,3 @@ AddressSpace 中增加两个函数?
 ```
 1. 如果是 SMM，将这个空间替换掉
 2. PAM 每一个寄存器分别对应一个，当进行修改的时候，直接修改对应的属性啊
-
-address_space_translate_internal 中，计算了一个关键的返回值 xlat, 表示在 MemoryRegion 中的偏移。
-因为取消掉了 MemoryRegion 的操作，所以，实际上，需要
-
-
-## 需要保留的接口
-实际上，为了防止和原来的设计出现巨大的差异，需要保留的接口:
-- address_space_stb -> 所以我们需要 AddressSpace 的
-
-
-## 每一个函数移植方案
-| function                          | 作用                                                                                                          | 方案 |
-|-----------------------------------|---------------------------------------------------------------------------------------------------------------|------|
-| address_space_translate_for_iotlb | 根据 addr 得到 memory region 的                                                                               |      |
-| memory_region_section_get_iotlb   | 计算出来当前的 section 是 AddressSpaceDispatch 中的第几个 section, 之后就可以通过 addr 获取 section 了        |      |
-| qemu_map_ram_ptr                  | 这是一个神仙设计的接口，如果参数 ram_block 的接口为 NULL, 那么 addr 是 ram addr， 如果不是，那么是 ram 内偏移 |      |
-| cpu_addressspace                  |                                                                                                               |      |
-
-flush 的函数的异步运行其实可以好好简化一下。
-
-实际上整个 ram_addr.h 都是处理 dirty page 的问题，而至于 RAMBlock 的概念具体如何设计，
-需要等到之后在处理。
-
-## ram_addr.h
-- cpu_physical_memory_test_and_clear_dirty : clear dirty，但是这个一个宽接口，在 BMBT 修改为 cpu_physical_memory_clear_dirty，无需向上汇报是否存在 dirty 的问题，那是给 RAMList 使用的
-- 实际上，cpu_physical_memory_is_clean 因为现在只有一个 client，所以应该可以被很容易的修改了
-
-## memory.h
-- address_space_translate
-- memory_region_dispatch_write / memory_region_dispatch_read
-
-- 需要 MemoryRegion，但是不需要 MemoryRegionSection，因为 MemoryRegion 中间不会被划分，MemoryRegion 就是最小的对象
-
-
-## 移植差异性的记录
-### memory_ldst.h
-`#include "exec/memory_ldst.inc.h"` defined four times
-
-```c
-// cpu-all.h
-#define SUFFIX
-#define ARG1         as
-#define ARG1_DECL    AddressSpace *as
-#define TARGET_ENDIANNESS
-#include "exec/memory_ldst.inc.h"
-
-#define SUFFIX       _cached_slow
-#define ARG1         cache
-#define ARG1_DECL    MemoryRegionCache *cache
-#define TARGET_ENDIANNESS
-#include "exec/memory_ldst.inc.h"
-```
-
-```c
-// memory.h
-#define SUFFIX
-#define ARG1         as
-#define ARG1_DECL    AddressSpace *as
-#include "exec/memory_ldst.inc.h"
-
-#define SUFFIX       _cached_slow
-#define ARG1         cache
-#define ARG1_DECL    MemoryRegionCache *cache
-#include "exec/memory_ldst.inc.h"
-```
-but `memory_ldst.inc.c` only two times, both of them defined in exec.c
-```c
-#define ARG1_DECL                AddressSpace *as
-#define ARG1                     as
-#define SUFFIX
-#define TRANSLATE(...)           address_space_translate(as, __VA_ARGS__)
-#define RCU_READ_LOCK(...)       rcu_read_lock()
-#define RCU_READ_UNLOCK(...)     rcu_read_unlock() #include "memory_ldst.inc.c"
-```
-```c
-#define ARG1_DECL                MemoryRegionCache *cache
-#define ARG1                     cache
-#define SUFFIX                   _cached_slow
-#define TRANSLATE(...)           address_space_translate_cached(cache, __VA_ARGS__)
-#define RCU_READ_LOCK()          ((void)0)
-#define RCU_READ_UNLOCK()        ((void)0)
-#include "memory_ldst.inc.c"
-```
-memory_ldst.inc.h 已经被简化到 cpu-all.h 中间了，memory_ldst.inc.c 已经被简化为 memory_ldst.c 了
-因为 cache_slow 版本(只有 virtio 在使用)，也不需要 endianness 版本(主要是设备在使用)
-
-### cpu-ldst.h
-类似于 cpu_ldq_data_ra 之类的, 目前就是照抄的
-希望可以修改为 v6.0 的形式
-
-### atomic_template.h
-atomic_template.h 被 cputlb.c include 了 8 次，四种数据大小 * 两种调用接口
-
-```c
-/* First set of helpers allows passing in of OI and RETADDR.  This makes
-   them callable from other helpers.  */
-
-/* Second set of helpers are directly callable from TCG as helpers.  */
-```
-
-
-```c
-// first set 生成的代码
-uint32_t helper_atomic_fetch_addl_le_mmu
-uint32_t helper_atomic_fetch_andl_le_mmu
-uint32_t helper_atomic_fetch_orl_le_mmu
-uint32_t helper_atomic_fetch_xorl_le_mmu
-uint32_t helper_atomic_add_fetchl_le_mmu
-uint32_t helper_atomic_and_fetchl_le_mmu
-uint32_t helper_atomic_or_fetchl_le_mmu
-uint32_t helper_atomic_xor_fetchl_le_mmu
-
-// second set 生成的函数
-uint32_t helper_atomic_fetch_addl_le
-uint32_t helper_atomic_fetch_andl_le
-uint32_t helper_atomic_fetch_orl_le
-uint32_t helper_atomic_fetch_xorl_le
-uint32_t helper_atomic_add_fetchl_le
-uint32_t helper_atomic_and_fetchl_le
-uint32_t helper_atomic_or_fetchl_le
-uint32_t helper_atomic_xor_fetchl_le
-```
-
-两个具体的差别如下，这是两种调用的方法:
-```diff
--uint32_t helper_atomic_cmpxchgl_le(CPUArchState *env, target_ulong addr,
--                              uint32_t cmpv, uint32_t newv , TCGMemOpIdx oi)
-+# 81 "a.c"
-+uint32_t helper_atomic_cmpxchgl_le_mmu(CPUArchState *env, target_ulong addr,
-+                              uint32_t cmpv, uint32_t newv , TCGMemOpIdx oi, uintptr_t retaddr)
- {
-     ;
--    uint32_t *haddr = atomic_mmu_lookup(env, addr, oi, GETPC());
-+    uint32_t *haddr = atomic_mmu_lookup(env, addr, oi, retaddr);
-     uint32_t ret;
-     uint16_t info = trace_mem_build_info_no_se_le(2, false,
-                                                            get_mmuidx(oi));
-@@ -25,12 +25,12 @@ uint32_t helper_atomic_cmpxchgl_le(CPUArchState *env, target_ulong addr,
-     atomic_trace_rmw_post(env, addr, info);
-     return ret;
- }
-```
-
-但是，构造出来的这么多函数，目前使用者只有 helper_atomic_cmpxchgq_le_mmu
-
-# include/exec/memory_ldst_phys.inc.h
-因为目前只有一个用户: stl_le_phys
-
-所以只是在 cpu-all.h 中间增加了下面两个函数，其余利用上 memory_ldst.inc.c 的内容
-```c
-extern void address_space_stl_le(AddressSpace *as, hwaddr addr, uint32_t val,
-                                 MemTxAttrs attrs, MemTxResult *result);
-
-static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
-  address_space_stl_le(as, addr, val, MEMTXATTRS_UNSPECIFIED, NULL);
-}
-```
