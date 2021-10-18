@@ -168,7 +168,9 @@ typedef struct CPUState {
 
   CPUAddressSpace *cpu_ases;
   int num_ases;
+#ifdef BMBT
   AddressSpace *as;
+#endif
   MemoryRegion *memory;
 
   void *env_ptr; /* CPUArchState */
