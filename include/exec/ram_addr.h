@@ -10,6 +10,7 @@
 #include <assert.h>
 
 typedef struct RAMBlock {
+  QLIST_ENTRY(RAMBlock) next;
   uint8_t *host;
   ram_addr_t offset; // is zero
   ram_addr_t length; // size of ram
@@ -17,16 +18,18 @@ typedef struct RAMBlock {
 
 typedef struct RAMList {
   DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
+
+  /* RCU-enabled, writes protected by the ramlist lock. */
+  QLIST_HEAD(, RAMBlock) blocks;
   RAMBlock *mru_block; // [interface 10]
 } RAMList;
 extern RAMList ram_list;
 
-/* Called from RCU critical section */
-static RAMBlock *qemu_get_ram_block(ram_addr_t addr) {
-  // FIXME add the only RAMBlock to RAMList, check the addr in range and return
-  // the RAMBlock
-  return NULL;
-}
+/* Should be holding either ram_list.mutex, or the RCU lock. */
+#define INTERNAL_RAMBLOCK_FOREACH(block)                                       \
+  QLIST_FOREACH(block, &ram_list.blocks, next)
+/* Never use the INTERNAL_ version except for defining other macros */
+#define RAMBLOCK_FOREACH(block) INTERNAL_RAMBLOCK_FOREACH(block)
 
 bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
                                               ram_addr_t length,

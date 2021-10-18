@@ -17,6 +17,44 @@ int use_icount;
    cpu_exec() */
 CPUState *current_cpu;
 
+/* Called from RCU critical section */
+static RAMBlock *qemu_get_ram_block(ram_addr_t addr) {
+  RAMBlock *block;
+
+  block = atomic_rcu_read(&ram_list.mru_block);
+  if (block && addr - block->offset < block->length) {
+    return block;
+  }
+  RAMBLOCK_FOREACH(block) {
+    if (addr - block->offset < block->length) {
+      goto found;
+    }
+  }
+
+  fprintf(stderr, "Bad ram offset %" PRIx64 "\n", (uint64_t)addr);
+  abort();
+
+found:
+  /* It is safe to write mru_block outside the iothread lock.  This
+   * is what happens:
+   *
+   *     mru_block = xxx
+   *     rcu_read_unlock()
+   *                                        xxx removed from list
+   *                  rcu_read_lock()
+   *                  read mru_block
+   *                                        mru_block = NULL;
+   *                                        call_rcu(reclaim_ramblock, xxx);
+   *                  rcu_read_unlock()
+   *
+   * atomic_rcu_set is not needed here.  The block was already published
+   * when it was placed into the list.  Here we're just making an extra
+   * copy of the pointer.
+   */
+  ram_list.mru_block = block;
+  return block;
+}
+
 static void breakpoint_invalidate(CPUState *cpu, target_ulong pc) {
   MemTxAttrs attrs;
   hwaddr phys = cpu_get_phys_page_attrs_debug(cpu, pc, &attrs);
@@ -329,6 +367,18 @@ RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
                                    ram_addr_t *offset) {
   RAMBlock *block;
   uint8_t *host = ptr;
+#ifdef BMBT
+  if (xen_enabled()) {
+    ram_addr_t ram_addr;
+    RCU_READ_LOCK_GUARD();
+    ram_addr = xen_ram_addr_from_mapcache(ptr);
+    block = qemu_get_ram_block(ram_addr);
+    if (block) {
+      *offset = ram_addr - block->offset;
+    }
+    return block;
+  }
+#endif
 
   RCU_READ_LOCK_GUARD();
   block = atomic_rcu_read(&ram_list.mru_block);
@@ -336,7 +386,18 @@ RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
     goto found;
   }
 
-  g_assert_not_reached();
+  RAMBLOCK_FOREACH(block) {
+    /* This case append when the block is not mapped. */
+    if (block->host == NULL) {
+      continue;
+    }
+    if (host - block->host < block->length) {
+      goto found;
+    }
+  }
+
+  return NULL;
+
 found:
   *offset = (host - block->host);
   if (round_offset) {
