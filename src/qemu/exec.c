@@ -4,6 +4,8 @@
 #include "../../include/exec/ram_addr.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/error-report.h"
+#include "../tcg/translate-all.h"
+
 #include <errno.h>
 
 /* 0 = Do not count executed instructions.
@@ -354,6 +356,36 @@ ram_addr_t qemu_ram_addr_from_host(void *ptr) {
 
   return block->offset + offset;
 }
+
+#if defined(CONFIG_USER_ONLY)
+void tb_invalidate_phys_addr(target_ulong addr) {
+  mmap_lock();
+  tb_invalidate_phys_page_range(addr, addr + 1);
+  mmap_unlock();
+}
+
+static void breakpoint_invalidate(CPUState *cpu, target_ulong pc) {
+  tb_invalidate_phys_addr(pc);
+}
+#else
+void tb_invalidate_phys_addr(AddressSpace *as, hwaddr addr, MemTxAttrs attrs) {
+  ram_addr_t ram_addr;
+  MemoryRegion *mr;
+  hwaddr l = 1;
+
+  if (!tcg_enabled()) {
+    return;
+  }
+
+  RCU_READ_LOCK_GUARD();
+  mr = address_space_translate(as, addr, &addr, &l, false, attrs);
+  if (!(memory_region_is_ram(mr))) {
+    return;
+  }
+  ram_addr = memory_region_get_ram_addr(mr) + addr;
+  tb_invalidate_phys_page_range(ram_addr, ram_addr + 1);
+}
+#endif
 
 void cpu_exec_initfn(CPUState *cpu) {
   // cpu->as = NULL;
