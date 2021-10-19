@@ -188,6 +188,7 @@ void qemu_init() {
   qemu_init_cpu_list();
 
   qemu_mutex_lock_iothread();
+  tcg_init();
 
   init_real_host_page_size();
   init_cache_info();
@@ -195,7 +196,6 @@ void qemu_init() {
   qemu_set_log(0);
 
   machine_init();
-  tcg_init();
 
   resume_all_vcpus();
 
