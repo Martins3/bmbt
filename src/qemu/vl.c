@@ -5,6 +5,7 @@
 #include "../../include/qemu/notify.h"
 #include "../../include/qemu/units.h"
 #include "../../include/qemu/uuid.h"
+#include "../../include/sysemu/cpus.h"
 #include "../../include/sysemu/replay.h"
 #include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/tcg.h"
@@ -183,10 +184,22 @@ PCMachineState *machine_init() {
 }
 
 void qemu_init() {
+  qemu_init_cpu_loop();
+  qemu_init_cpu_list();
+
+  qemu_mutex_lock_iothread();
+
   init_real_host_page_size();
   init_cache_info();
+
   qemu_set_log(0);
 
   machine_init();
   tcg_init();
+
+  resume_all_vcpus();
+
+  qemu_mutex_unlock_iothread();
+  duck_check(current_cpu == first_cpu);
+  qemu_tcg_rr_cpu_thread_fn(current_cpu);
 }

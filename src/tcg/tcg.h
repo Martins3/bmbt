@@ -363,6 +363,7 @@ static inline size_t tcg_current_code_size(TCGContext *s) {
 
 size_t tcg_nb_tbs(void);
 
+void tcg_region_init(void);
 void tcg_region_reset_all(void);
 
 void tcg_context_init(TCGContext *s);
