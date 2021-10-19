@@ -66,7 +66,7 @@
 #define duck_check(x)                                                          \
   {                                                                            \
     if (!(x)) {                                                                \
-      g_assert_not_reached()                                                   \
+      assert(false);                                                           \
     }                                                                          \
   }
 
