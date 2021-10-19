@@ -449,13 +449,15 @@ void tb_invalidate_phys_addr(AddressSpace *as, hwaddr addr, MemTxAttrs attrs) {
 #endif
 
 void cpu_exec_initfn(CPUState *cpu) {
-  // cpu->as = NULL;
+#ifdef BMBT
+  cpu->as = NULL;
   cpu->num_ases = 0;
 
 #ifndef CONFIG_USER_ONLY
   cpu->thread_id = qemu_get_thread_id();
-  // cpu->memory = system_memory;
-  // object_ref(OBJECT(cpu->memory));
+  cpu->memory = system_memory;
+  object_ref(OBJECT(cpu->memory));
+#endif
 #endif
 }
 

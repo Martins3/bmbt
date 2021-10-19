@@ -1,6 +1,6 @@
+#include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/main-loop.h"
 #include "../../include/qemu/rcu.h"
-#include "../../include/hw/core/cpu.h"
 
 struct qemu_work_item {
   struct qemu_work_item *next;
@@ -9,10 +9,24 @@ struct qemu_work_item {
   bool free, exclusive, done;
 };
 
+// [interface 33]
 static QemuCond qemu_work_cond;
 static QemuMutex qemu_cpu_list_lock;
 
 CPUTailQ cpus = QTAILQ_HEAD_INITIALIZER(cpus);
+
+void qemu_init_cpu_list(void) {
+#ifdef BMBT
+  /* This is needed because qemu_init_cpu_list is also called by the
+   * child process in a fork.  */
+  pending_cpus = 0;
+
+  qemu_mutex_init(&qemu_cpu_list_lock);
+  qemu_cond_init(&exclusive_cond);
+  qemu_cond_init(&exclusive_resume);
+#endif
+  qemu_cond_init(&qemu_work_cond);
+}
 
 void process_queued_cpu_work(CPUState *cpu) {
   struct qemu_work_item *wi;
