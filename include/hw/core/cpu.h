@@ -143,7 +143,9 @@ typedef struct CPUState {
 #ifdef _WIN32
   HANDLE hThread;
 #endif
+#ifdef BMBT
   int thread_id;
+#endif
   bool running, has_waiter;
   struct QemuCond *halt_cond;
   bool thread_kicked;
@@ -170,8 +172,8 @@ typedef struct CPUState {
   int num_ases;
 #ifdef BMBT
   AddressSpace *as;
-#endif
   MemoryRegion *memory;
+#endif
 
   void *env_ptr; /* CPUArchState */
   IcountDecr *icount_decr_ptr;

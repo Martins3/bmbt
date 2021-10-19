@@ -21,10 +21,10 @@ void qemu_init_cpu_list(void) {
    * child process in a fork.  */
   pending_cpus = 0;
 
-  qemu_mutex_init(&qemu_cpu_list_lock);
   qemu_cond_init(&exclusive_cond);
   qemu_cond_init(&exclusive_resume);
 #endif
+  qemu_mutex_init(&qemu_cpu_list_lock);
   qemu_cond_init(&qemu_work_cond);
 }
 

@@ -91,6 +91,9 @@ static inline void qemu_cond_wait(QemuCond *cond, QemuMutex *mutex) {
 }
 
 #define QEMU_LOCK_GUARD(x)                                                     \
-  {}
+  {                                                                            \
+    qemu_mutex_lock(x);                                                        \
+    qemu_mutex_unlock(x);                                                      \
+  }
 
 #endif /* end of include guard: THREAD_H_P9X05SBE */
