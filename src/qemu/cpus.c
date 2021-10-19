@@ -9,11 +9,6 @@
 static bool iothread_locked = false;
 static QemuMutex qemu_global_mutex;
 
-/* cpu creation */
-static QemuCond qemu_cpu_cond;
-/* system init */
-static QemuCond qemu_pause_cond;
-
 bool qemu_mutex_iothread_locked(void) { return iothread_locked; }
 
 static void start_tcg_kick_timer(void) {
@@ -163,10 +158,10 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
   qemu_mutex_lock_iothread();
   qemu_thread_get_self(cpu->thread);
 
-  cpu->thread_id = qemu_get_thread_id();
+  // cpu->thread_id = qemu_get_thread_id();
   cpu->created = true;
   cpu->can_do_io = 1;
-  qemu_cond_signal(&qemu_cpu_cond);
+  // qemu_cond_signal(&qemu_cpu_cond);
   // qemu_guest_random_seed_thread_part2(cpu->random_seed);
 
 #ifdef CONFIG_X86toMIPS
@@ -425,8 +420,8 @@ void qemu_init_vcpu(CPUState *cpu) {
 
 void qemu_init_cpu_loop(void) {
   // qemu_init_sigbus();
-  qemu_cond_init(&qemu_cpu_cond);
-  qemu_cond_init(&qemu_pause_cond);
+  // qemu_cond_init(&qemu_cpu_cond);
+  // qemu_cond_init(&qemu_pause_cond);
   qemu_mutex_init(&qemu_global_mutex);
   // qemu_thread_get_self(&io_thread);
 }
