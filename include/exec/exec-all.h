@@ -441,14 +441,10 @@ void tlb_set_dirty(CPUState *cpu, target_ulong vaddr);
 /* exec.c */
 void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr);
 
-static inline MemoryRegion *
-address_space_translate_for_iotlb(CPUState *cpu, int asidx, hwaddr addr,
-                                  hwaddr *xlat, hwaddr *plen, MemTxAttrs attrs,
-                                  int *prot) {
-  // [interface 2]
-  // FIXME :linker: Please return MemoryRegion instead of MemoryRegionSection
-  return NULL;
-}
+MemoryRegion *address_space_translate_for_iotlb(CPUState *cpu, int asidx,
+                                                hwaddr addr, hwaddr *xlat,
+                                                hwaddr *plen, MemTxAttrs attrs,
+                                                int *prot);
 
 static inline hwaddr memory_region_section_get_iotlb(CPUState *cpu,
                                                      MemoryRegion *section) {
