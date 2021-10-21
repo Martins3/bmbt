@@ -17,6 +17,8 @@ static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
                                  MemoryRegion *mr, hwaddr offset) {
   duck_check(mr_initialized(mr));
 
+  tcg_commit();
+
   mr->offset = offset;
   struct Gap {
     uint64_t left;

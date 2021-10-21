@@ -240,5 +240,6 @@ static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write) {
 }
 
 void memory_map_init(hwaddr size);
+void tcg_commit();
 
 #endif /* end of include guard: MEMORY_H_E0UHP2JS */

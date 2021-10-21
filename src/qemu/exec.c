@@ -538,3 +538,24 @@ void cpu_address_space_init(CPUState *cpu, int asidx, const char *prefix) {
   }
 #endif
 }
+
+void tcg_commit() {
+#ifdef BMBT
+  CPUAddressSpace *cpuas;
+  AddressSpaceDispatch *d;
+
+  assert(tcg_enabled());
+  /* since each CPU stores ram addresses in its TLB cache, we must
+     reset the modified entries */
+  cpuas = container_of(listener, CPUAddressSpace, tcg_as_listener);
+  cpu_reloading_memory_map();
+  /* The CPU and TLB are protected by the iothread lock.
+   * We reload the dispatch pointer now because cpu_reloading_memory_map()
+   * may have split the RCU critical section.
+   */
+  d = address_space_to_dispatch(cpuas->as);
+  atomic_rcu_set(&cpuas->memory_dispatch, d);
+#endif
+  if (first_cpu != NULL)
+    tlb_flush(first_cpu);
+}
