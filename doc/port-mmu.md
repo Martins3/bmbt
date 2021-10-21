@@ -24,23 +24,11 @@
   - smm / pam 修改映射关系的时候，对应原来的代码  memory_region_set_enabled 会调用 memory_region_transaction_commit 的情况啊!
 
 ## TODO
-- [ ] 处理一下各个 submodule 订阅注册 memory region 的时间
+- [ ] 处理一下各个 submodule 注册 memory region，比如 fw_cfg
 
 - [ ] 确认一下 : SMM 状态的转换会删除掉所有的 TLB，不然 iotlb_to_section 还在使用第一次 TLB miss 注册的 attrs
 - [ ] 现在将很多 MemoryRegion 都切碎了，可能在原来的 QEMU 中是没有越界的，但是现在出现了越界
   - 只要在 MemoryRegion generated topology 不要让其
-
-- [ ] tcg_commit 没有添加进去啊
-
-- MemoryRegionOps
-   - [ ] endianness 的使用
-   - [ ] valid 和 impl 中间的每一项
-   - [x] 分析一下 memory_region_access_valid 中为什么调用 accpet 这个 hook
-
-- iotlb 的几个函数以及牵连使用的 io_readx 和 io_writex
-  - memory_region_section_get_iotlb
-  - address_space_translate_for_iotlb : 只是进行 RAM 装换就好了，那么这些就是
-  - iotlb_to_section : 为什么需要参数 attrs ?
 
 ## 重写的函数接口
 | function                          | 作用                                                                                                          |
