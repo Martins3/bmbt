@@ -1,6 +1,7 @@
 #ifndef BSWAP_H_POC0IZMR
 #define BSWAP_H_POC0IZMR
 
+#include "../../src/tcg/glib_stub.h"
 #include "../fpu/softfloat-types.h"
 #include "../types.h"
 
@@ -384,5 +385,46 @@ CPU_CONVERT(be, 64, uint64_t)
 CPU_CONVERT(le, 16, uint16_t)
 CPU_CONVERT(le, 32, uint32_t)
 CPU_CONVERT(le, 64, uint64_t)
+
+/* Store v to p as a sz byte value in host order */
+#define DO_STN_LDN_P(END)                                                      \
+  static inline void stn_##END##_p(void *ptr, int sz, uint64_t v) {            \
+    switch (sz) {                                                              \
+    case 1:                                                                    \
+      stb_p(ptr, v);                                                           \
+      break;                                                                   \
+    case 2:                                                                    \
+      stw_##END##_p(ptr, v);                                                   \
+      break;                                                                   \
+    case 4:                                                                    \
+      stl_##END##_p(ptr, v);                                                   \
+      break;                                                                   \
+    case 8:                                                                    \
+      stq_##END##_p(ptr, v);                                                   \
+      break;                                                                   \
+    default:                                                                   \
+      g_assert_not_reached();                                                  \
+    }                                                                          \
+  }                                                                            \
+  static inline uint64_t ldn_##END##_p(const void *ptr, int sz) {              \
+    switch (sz) {                                                              \
+    case 1:                                                                    \
+      return ldub_p(ptr);                                                      \
+    case 2:                                                                    \
+      return lduw_##END##_p(ptr);                                              \
+    case 4:                                                                    \
+      return (uint32_t)ldl_##END##_p(ptr);                                     \
+    case 8:                                                                    \
+      return ldq_##END##_p(ptr);                                               \
+    default:                                                                   \
+      g_assert_not_reached();                                                  \
+    }                                                                          \
+  }
+
+DO_STN_LDN_P(he)
+DO_STN_LDN_P(le)
+DO_STN_LDN_P(be)
+
+#undef DO_STN_LDN_P
 
 #endif /* end of include guard: BSWAP_H_POC0IZMR */
