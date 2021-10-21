@@ -35,6 +35,17 @@ static inline uint64_t pow2ceil(uint64_t value) {
 }
 
 /**
+ * Return @value rounded down to the nearest power of two or zero.
+ */
+static inline uint64_t pow2floor(uint64_t value) {
+  if (!value) {
+    /* Avoid undefined shift by 64 */
+    return 0;
+  }
+  return 0x8000000000000000ull >> clz64(value);
+}
+
+/**
  * ctz32 - count trailing zeros in a 32-bit value.
  * @val: The value to search
  *
