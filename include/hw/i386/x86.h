@@ -54,7 +54,6 @@ typedef struct {
 
 #define X86_MACHINE_GET_CLASS(x86ms) x86ms->x86mc
 
-void x86_bios_rom_init(MemoryRegion *rom_memory, bool isapc_ram_fw);
 void x86_cpus_init(X86MachineState *pcms, int default_cpu_version);
 
 void x86_machine_class_init(X86MachineClass *x86mc);

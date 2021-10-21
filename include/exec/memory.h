@@ -2,34 +2,46 @@
 #define MEMORY_H_E0UHP2JS
 
 #include "../../src/tcg/glib_stub.h"
+#include "../hw/pci-host/pam.h"
 #include "cpu-common.h"
 #include "hwaddr.h"
 #include "memattrs.h"
 #include "memop.h"
+#include <assert.h>
 
-// #include "ram_addr.h"
+#define MAX_SEGMENTS_IN_AS 100
 
 struct AddressSpace;
 struct RAMBlock;
+struct MemoryRegionOps;
 
 typedef struct MemoryRegion {
-  bool readonly;
   // BMBT: In QEMU ram_block != NULL doesn't mean ram == true
   // see memory_region_init_rom_device_nomigrate, but BMBT is simplified
   bool ram;
-
+  bool readonly;
   struct RAMBlock *ram_block;
 
-  hwaddr offset_in_ram_block;
-  struct AddressSpace *as; // memory region is shared between AddressSpace
+  const struct MemoryRegionOps *ops;
+  // FIXME add more checks with opage ?
+  void *opaque;
+
+  hwaddr offset;
+  uint64_t size;
+  const char *name;
 } MemoryRegion;
 
-typedef struct PioRegion {
-} PioRegion;
+typedef struct {
+  MemoryRegion *segments[MAX_SEGMENTS_IN_AS];
+  int segment_num;
+  MemoryRegion *special_mr;
+} AddressSpaceDispatch;
 
 typedef struct AddressSpace {
-  // [interface 8]
-  MemoryRegion *segments;
+  AddressSpaceDispatch *dispatch;
+  bool smm;
+  MemoryRegion *(*mr_look_up)(struct AddressSpace *as, hwaddr offset,
+                              hwaddr *xlat, hwaddr *plen);
 } AddressSpace;
 
 // move include/exec/address-spaces.h code here
@@ -37,13 +49,69 @@ extern AddressSpace address_space_io;
 extern AddressSpace address_space_memory;
 extern AddressSpace address_space_smm_memory;
 
-static inline void io_add_memory_region(hwaddr offset, MemoryRegion *mr) {
-  // FIXME
+// @todo call these two functions
+static inline void io_set_special_mr(MemoryRegion *mr) {
+  address_space_io.dispatch->special_mr = mr;
 }
 
-static inline void mem_add_memory_region(hwaddr offset, MemoryRegion *mr) {
-  // FIXME
+static inline void mem_set_special_mr(MemoryRegion *mr) {
+  address_space_memory.dispatch->special_mr = mr;
 }
+
+/*
+ * Memory region callbacks
+ */
+typedef struct MemoryRegionOps {
+  /* Read from the memory region. @addr is relative to @mr; @size is
+   * in bytes. */
+  uint64_t (*read)(void *opaque, hwaddr addr, unsigned size);
+  /* Write to the memory region. @addr is relative to @mr; @size is
+   * in bytes. */
+  void (*write)(void *opaque, hwaddr addr, uint64_t data, unsigned size);
+
+  enum device_endian endianness;
+  /* Guest-visible constraints: */
+  struct {
+    /* If nonzero, specify bounds on access sizes beyond which a machine
+     * check is thrown.
+     */
+    unsigned min_access_size;
+    unsigned max_access_size;
+    /* If true, unaligned accesses are supported.  Otherwise unaligned
+     * accesses throw machine checks.
+     */
+    bool unaligned;
+    /*
+     * If present, and returns #false, the transaction is not accepted
+     * by the device (and results in machine dependent behaviour such
+     * as a machine check exception).
+     */
+    bool (*accepts)(void *opaque, hwaddr addr, unsigned size, bool is_write,
+                    MemTxAttrs attrs);
+  } valid;
+  /* Internal implementation constraints: */
+  struct {
+    /* If nonzero, specifies the minimum size implemented.  Smaller sizes
+     * will be rounded upwards and a partial result will be returned.
+     */
+    unsigned min_access_size;
+    /* If nonzero, specifies the maximum size implemented.  Larger sizes
+     * will be done as a series of accesses with smaller sizes.
+     */
+    unsigned max_access_size;
+    /* If true, unaligned accesses are supported.  Otherwise all accesses
+     * are converted to (possibly multiple) naturally aligned accesses.
+     */
+    bool unaligned;
+  } impl;
+} MemoryRegionOps;
+
+void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
+                           void *opaque, const char *name, uint64_t size);
+
+void io_add_memory_region(hwaddr offset, MemoryRegion *mr);
+
+void mem_add_memory_region(hwaddr offset, MemoryRegion *mr);
 
 #define RAM_ADDR_INVALID (~(ram_addr_t)0)
 
@@ -170,5 +238,7 @@ static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write) {
     return memory_region_is_ram(mr);
   }
 }
+
+void memory_map_init(hwaddr size);
 
 #endif /* end of include guard: MEMORY_H_E0UHP2JS */

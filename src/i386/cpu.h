@@ -1856,7 +1856,7 @@ struct X86CPU {
   /* in order to simplify APIC support, we leave this pointer to the
      user */
   struct APICCommonState *apic_state;
-  struct MemoryRegion *cpu_as_root, *cpu_as_mem, *smram;
+  // struct MemoryRegion *cpu_as_root, *cpu_as_mem, *smram;
   // Notifier machine_done;
 
   struct kvm_msrs *kvm_msr_buf;
