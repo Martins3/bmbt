@@ -35,6 +35,7 @@ typedef struct AddressSpace {
 // move include/exec/address-spaces.h code here
 extern AddressSpace address_space_io;
 extern AddressSpace address_space_memory;
+extern AddressSpace address_space_smm_memory;
 
 static inline void io_add_memory_region(hwaddr offset, MemoryRegion *mr) {
   // FIXME

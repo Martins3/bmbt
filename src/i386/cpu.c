@@ -3538,6 +3538,9 @@ void x86_cpu_realizefn(X86CPU *cpu) {
     cpu->machine_done.notify = x86_cpu_machine_done;
     qemu_add_machine_init_done_notifier(&cpu->machine_done);
 #endif
+    cs->num_ases = 2;
+    cpu_address_space_init(cs, 0, "cpu-memory");
+    cpu_address_space_init(cs, 1, "cpu-smm");
   }
 #endif
 
