@@ -60,6 +60,14 @@
 33. run_on_cpu
     - run_on_cpu 需要需要等待到 vCPU 将 hook 指向完成之后才会继续，其用户在 BMBT 模式下都消失了，这个函数直接被移除掉了
     - 但是 qemu_work_cond 暂时保留下来
+34. iotlb
+    - QEMU 本身存在 subpage 这让将 IO 访问也放到 TLB 中，但是现在 subpage 机制取消掉了，所以无法继续使用 TOTLB 机制了
+    - 删除 memory_region_section_get_iotlb
+    - 删除 iotlb_to_section
+    - 向 iotlb 中本来装入的是 physical section number, 现在装入的是 magic
+    - 原本 io 的 CPUTLBEntry::addend 装入的是 0，现在需要装入 paddr
+    - io_readx 和 io_writex 从 CPUTLBEntry::addend 装入的 paddr 重新 address_space_translate
+    - 在 address_space_translate_for_iotlb 中，如果是 ram，那么返回一个 iotlb_mr 就可以了
 
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
