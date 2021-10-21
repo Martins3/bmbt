@@ -10,26 +10,55 @@
 #include <assert.h>
 
 typedef struct RAMBlock {
-  QLIST_ENTRY(RAMBlock) next;
   uint8_t *host;
-  ram_addr_t offset; // is zero
-  ram_addr_t length; // size of ram
+  ram_addr_t offset;     // offset in ram list
+  ram_addr_t max_length; // same with MemoryRegion::size
+  MemoryRegion *mr;
 } RAMBlock;
+
+// pc.ram low
+#define PC_LOW_RAM_INDEX 0
+// smram
+#define SMRAM_INDEX 1
+// pam
+#define PAM_INDEX 2
+
+#define PAM_EXPAN_INDEX PAM_INDEX
+#define PAM_EXPAN_NUM 8
+
+#define PAM_EXBIOS_INDEX (PAM_EXPAN_INDEX + PAM_EXPAN_NUM)
+#define PAM_EXBIOS_NUM 4
+
+#define PAM_BIOS_INDEX (PAM_EXBIOS_INDEX + PAM_EXBIOS_NUM)
+#define PAM_BIOS_NUM 1
+#define PAM_NUM (PAM_EXPAN_NUM + PAM_EXBIOS_NUM + PAM_BIOS_NUM)
+// pc.ram
+#define PC_RAM_INDEX (PAM_INDEX + PAM_NUM)
+// pc.bios
+#define PC_BIOS_INDEX (PC_RAM_INDEX + 1)
+
+#define RAM_BLOCK_NUM (PC_BIOS_INDEX + 1)
+#define BIOS_MEM_SIZE (PAM_BIOS_END + 1)
+
+#define BIOS_FILE_SIZE (256 * KiB)
 
 typedef struct RAMList {
   DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
 
   /* RCU-enabled, writes protected by the ramlist lock. */
-  QLIST_HEAD(, RAMBlock) blocks;
-  RAMBlock *mru_block; // [interface 10]
+  struct {
+    RAMBlock block;
+    MemoryRegion mr;
+  } blocks[RAM_BLOCK_NUM];
+  RAMBlock *mru_block;
 } RAMList;
+
 extern RAMList ram_list;
 
-/* Should be holding either ram_list.mutex, or the RCU lock. */
-#define INTERNAL_RAMBLOCK_FOREACH(block)                                       \
-  QLIST_FOREACH(block, &ram_list.blocks, next)
-/* Never use the INTERNAL_ version except for defining other macros */
-#define RAMBLOCK_FOREACH(block) INTERNAL_RAMBLOCK_FOREACH(block)
+#define RAMBLOCK_FOREACH(block)                                                \
+  int __i;                                                                     \
+  for (__i = 0, block = &ram_list.blocks[__i].block; __i < RAM_BLOCK_NUM;      \
+       __i = __i + 1, block = &ram_list.blocks[__i].block)
 
 bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
                                               ram_addr_t length,
@@ -161,7 +190,7 @@ static inline bool cpu_physical_memory_is_clean(ram_addr_t addr) {
 }
 
 static inline bool offset_in_ramblock(RAMBlock *b, ram_addr_t offset) {
-  return (b && b->host && offset < b->length) ? true : false;
+  return (b && b->host && offset < b->max_length) ? true : false;
 }
 
 static inline void *ramblock_ptr(RAMBlock *block, ram_addr_t offset) {

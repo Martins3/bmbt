@@ -17,16 +17,22 @@ int use_icount;
    cpu_exec() */
 CPUState *current_cpu;
 
+RAMList ram_list;
+
+AddressSpace address_space_io;
+AddressSpace address_space_memory;
+AddressSpace address_space_smm_memory;
+
 /* Called from RCU critical section */
 static RAMBlock *qemu_get_ram_block(ram_addr_t addr) {
   RAMBlock *block;
 
   block = atomic_rcu_read(&ram_list.mru_block);
-  if (block && addr - block->offset < block->length) {
+  if (block && addr - block->offset < block->max_length) {
     return block;
   }
   RAMBLOCK_FOREACH(block) {
-    if (addr - block->offset < block->length) {
+    if (addr - block->offset < block->max_length) {
       goto found;
     }
   }
@@ -60,6 +66,7 @@ static void breakpoint_invalidate(CPUState *cpu, target_ulong pc) {
   hwaddr phys = cpu_get_phys_page_attrs_debug(cpu, pc, &attrs);
   int asidx = cpu_asidx_from_attrs(cpu, attrs);
   if (phys != -1) {
+    duck_check(asidx == 0);
     /* Locks grabbed by tb_invalidate_phys_addr */
     tb_invalidate_phys_addr(cpu->cpu_ases[asidx].as,
                             phys | (pc & ~TARGET_PAGE_MASK), attrs);
@@ -259,12 +266,7 @@ void page_size_init(void) {
 #endif
 
 MemoryRegion *iotlb_to_section(CPUState *cpu, hwaddr index, MemTxAttrs attrs) {
-  // [interface 6]
-  int asidx = cpu_asidx_from_attrs(cpu, attrs);
-  CPUAddressSpace *cpuas = &cpu->cpu_ases[asidx];
-  // AddressSpaceDispatch *d = atomic_rcu_read(&cpuas->memory_dispatch);
-  MemoryRegion *sections = cpuas->as->segments;
-  return &sections[index & ~TARGET_PAGE_MASK];
+  g_assert_not_reached();
 }
 
 /* Return a host pointer to ram allocated with qemu_ram_alloc.
@@ -275,10 +277,7 @@ MemoryRegion *iotlb_to_section(CPUState *cpu, hwaddr index, MemTxAttrs attrs) {
  * Called within RCU critical section.
  */
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr) {
-  // [interface 5]
-  if (ram_block == NULL) {
-    g_assert_not_reached();
-  }
+  duck_check(ram_block != NULL);
 
   return ramblock_ptr(ram_block, addr);
 }
@@ -323,7 +322,7 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
     ramblock = qemu_get_ram_block(start);
     /* Range sanity check on the ramblock */
     assert(start >= ramblock->offset &&
-           start + length <= ramblock->offset + ramblock->length);
+           start + length <= ramblock->offset + ramblock->max_length);
 
     while (page < end) {
       unsigned long idx = page / DIRTY_MEMORY_BLOCK_SIZE;
@@ -383,7 +382,7 @@ RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
 
   RCU_READ_LOCK_GUARD();
   block = atomic_rcu_read(&ram_list.mru_block);
-  if (block && block->host && host - block->host < block->length) {
+  if (block && block->host && host - block->host < block->max_length) {
     goto found;
   }
 
@@ -392,7 +391,7 @@ RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
     if (block->host == NULL) {
       continue;
     }
-    if (host - block->host < block->length) {
+    if (host - block->host < block->max_length) {
       goto found;
     }
   }

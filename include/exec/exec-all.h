@@ -448,7 +448,8 @@ MemoryRegion *address_space_translate_for_iotlb(CPUState *cpu, int asidx,
 
 static inline hwaddr memory_region_section_get_iotlb(CPUState *cpu,
                                                      MemoryRegion *section) {
-  return section - section->as->segments;
+  g_assert_not_reached(); // this is not the correct implementation
+  return 0;
 }
 #endif
 
