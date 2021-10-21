@@ -62,7 +62,7 @@ gpointer g_try_malloc0(int n_bytes);
 #define g_new0(struct_type, n_structs) (struct_type *)NULL
 #define g_renew(struct_type, mem, n_structs) (struct_type *)NULL
 
-#define g_malloc(size) NULL
+#define g_malloc(size) (void *)(size)
 
 #undef MAX
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
