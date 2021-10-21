@@ -15,6 +15,10 @@
 - i386/translate.c 几乎被全部移除掉了，除了
     - tcg_x86_init : 其中也不存在内容
     - restore_state_to_opc
+- RAM_BLOCK_NUM:
+  - 对于 ram bloc 已经是写死的了，或者说，一定不支持 above_4g_mem
+- `__cpu_ases`: 直接静态分配的，所以目前仅仅支持一个 CPU
+- 当前可以保证 first_cpu == current_cpu
 
 ##  memory 移植差异性的记录
 ### memory_ldst.h

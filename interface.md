@@ -1,18 +1,10 @@
 # Interface
-
 1. address_space_stl_notdirty
     - 调用 address_space_stl_notdirty 的时候是在处理 page table, 因为 BMBT 不处理 migration， 只处理 SMC，所以哪里没用
-2.  address_space_translate_for_iotlb
-    - 之后直接返回 MemoryRegionSection 的
 3.  memory_access_is_direct
 4.  memory_region_get_ram_ptr
     - 没有令人窒息的 alias 之类的，直接返回 qemu_map_ram_ptr 就可以了
-5.  qemu_map_ram_ptr
-    - 只是一个非常阴间的函数，addr 可以是 RAM 内偏移，也同时可以是 ram_addr, 但是 BMBT 中其调用者可以保证一定是 ram 内偏移
-6.  iotlb_to_section
-7.  CPUAddressSpace
-    - 被简化，CPUState 还是持有一个 AddressSpace 的，但是只是靠两个 CPUAddressSpace。
-8.  AddressSpace 直接持有的 MemoryRegion
+7.  io_readx / io_writex
 9.  memory_region_clear_dirty_bitmap
     - 这是给 migration 使用的，没有必要
 10. RAMList::mru_block
@@ -36,11 +28,6 @@
     - 将 pc.h 中和 i8259 相关的代码移动到 i8259.h 中
 20. CPUArchId::cpu
     - 为了保持 X86_CPU 的语义一致性，当然也没有实现 Object 类型，将类型修改为 CPUState 了
-21. pc_memory_init
-    - 在这里设置了众多的 memory region 的映射问题
-      - 在 pc_init1 中处理了 PCI 相关的地址空间
-      - 在 x86_bios_rom_init 处理 bios 相关的空间
-    - [ ] 整个 pc_memory_init 实际上被过多的删除了，需要重新 review 一下，而且 pc.ram 之类的东西还是重新在这里添加的
 22. pc_system_firmware_init
     - 因为不支持 pflash 所以这个函数被简化为直接调用 x86_bios_rom_init 了
 23. smp_parse
@@ -70,6 +57,9 @@
     - 当前只是支持单核，所有的 atomic 操作都是简化的
 32. cpu_interrupt
     - 原来通过 cpu_interrupt_handler 全局变量赋值的设计过于鬼畜和充满误导性，让其直接调用 tcg_handle_interrupt
+33. run_on_cpu
+    - run_on_cpu 需要需要等待到 vCPU 将 hook 指向完成之后才会继续，其用户在 BMBT 模式下都消失了，这个函数直接被移除掉了
+    - 但是 qemu_work_cond 暂时保留下来
 
 # 几个 macro 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
@@ -79,9 +69,3 @@
 - MEM_TODO : 暂时没有移植的，和 MEM 相关的
 - RTC_TODO : 关于 rtc 的代码
 - SMBIOS_TODO :
-
-
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-npx --no-install commitlint --edit ""
