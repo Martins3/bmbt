@@ -318,6 +318,7 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
   page = start >> TARGET_PAGE_BITS;
 
   WITH_RCU_READ_LOCK_GUARD() {
+    duck_check(client == DIRTY_MEMORY_CODE);
     blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
     ramblock = qemu_get_ram_block(start);
     /* Range sanity check on the ramblock */

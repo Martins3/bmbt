@@ -48,6 +48,7 @@ static inline void cpu_physical_memory_set_dirty_flag(ram_addr_t addr,
 
   RCU_READ_LOCK_GUARD();
 
+  duck_check(client == DIRTY_MEMORY_CODE);
   blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
 
   set_bit_atomic(offset, blocks->blocks[idx]);
@@ -67,6 +68,7 @@ static inline bool cpu_physical_memory_get_dirty(ram_addr_t start,
   page = start >> TARGET_PAGE_BITS;
 
   WITH_RCU_READ_LOCK_GUARD() {
+    duck_check(client == DIRTY_MEMORY_CODE);
     blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
 
     idx = page / DIRTY_MEMORY_BLOCK_SIZE;
@@ -122,7 +124,8 @@ static inline void cpu_physical_memory_set_dirty_range(ram_addr_t start,
     while (page < end) {
       unsigned long next = MIN(end, base + DIRTY_MEMORY_BLOCK_SIZE);
 
-      if (likely(mask & (1 << DIRTY_MEMORY_MIGRATION))) {
+#ifdef BMBT
+      if (unlikely(mask & (1 << DIRTY_MEMORY_MIGRATION))) {
         bitmap_set_atomic(blocks[DIRTY_MEMORY_MIGRATION]->blocks[idx], offset,
                           next - page);
       }
@@ -130,9 +133,12 @@ static inline void cpu_physical_memory_set_dirty_range(ram_addr_t start,
         bitmap_set_atomic(blocks[DIRTY_MEMORY_VGA]->blocks[idx], offset,
                           next - page);
       }
-      if (unlikely(mask & (1 << DIRTY_MEMORY_CODE))) {
+#endif
+      if (likely(mask & (1 << DIRTY_MEMORY_CODE))) {
         bitmap_set_atomic(blocks[DIRTY_MEMORY_CODE]->blocks[idx], offset,
                           next - page);
+      } else {
+        g_assert_not_reached();
       }
 
       page = next;
@@ -144,11 +150,14 @@ static inline void cpu_physical_memory_set_dirty_range(ram_addr_t start,
 }
 
 static inline bool cpu_physical_memory_is_clean(ram_addr_t addr) {
+#ifdef BMBT
   bool vga = cpu_physical_memory_get_dirty_flag(addr, DIRTY_MEMORY_VGA);
   bool code = cpu_physical_memory_get_dirty_flag(addr, DIRTY_MEMORY_CODE);
   bool migration =
       cpu_physical_memory_get_dirty_flag(addr, DIRTY_MEMORY_MIGRATION);
   return !(vga && code && migration);
+#endif
+  return !cpu_physical_memory_get_dirty_flag(addr, DIRTY_MEMORY_CODE);
 }
 
 static inline bool offset_in_ramblock(RAMBlock *b, ram_addr_t offset) {
