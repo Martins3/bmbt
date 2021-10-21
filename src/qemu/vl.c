@@ -184,6 +184,7 @@ PCMachineState *machine_init() {
 
 void qemu_init() {
   ram_size = 128 * MiB;
+  duck_check(first_cpu == NULL);
 
   qemu_init_cpu_loop();
   qemu_init_cpu_list();
@@ -202,6 +203,6 @@ void qemu_init() {
   resume_all_vcpus();
 
   qemu_mutex_unlock_iothread();
-  duck_check(current_cpu == first_cpu);
-  qemu_tcg_rr_cpu_thread_fn(current_cpu);
+  duck_check(first_cpu != NULL);
+  qemu_tcg_rr_cpu_thread_fn(first_cpu);
 }
