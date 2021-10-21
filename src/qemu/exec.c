@@ -488,3 +488,53 @@ void cpu_exec_realizefn(CPUState *cpu) {
 #endif
 #endif
 }
+
+static CPUAddressSpace __cpu_ases[2];
+
+void cpu_address_space_init(CPUState *cpu, int asidx, const char *prefix) {
+  CPUAddressSpace *newas;
+  AddressSpace *as =
+      asidx == 0 ? &address_space_memory : &address_space_smm_memory;
+
+  // all address space already initialized memory_map_init
+#ifdef BMBT
+  char *as_name;
+
+  assert(mr);
+  as_name = g_strdup_printf("%s-%d", prefix, cpu->cpu_index);
+  address_space_init(as, mr, as_name);
+  g_free(as_name);
+#endif
+
+  /* Target code should have set num_ases before calling us */
+  assert(asidx < cpu->num_ases);
+  duck_check(cpu->num_ases == 2);
+
+#ifdef BMBT
+  if (asidx == 0) {
+    /* address space 0 gets the convenience alias */
+    cpu->as = as;
+  }
+
+  /* KVM cannot currently support multiple address spaces. */
+  assert(asidx == 0 || !kvm_enabled());
+#endif
+
+  if (!cpu->cpu_ases) {
+    cpu->cpu_ases = &__cpu_ases[0];
+  }
+
+  newas = &cpu->cpu_ases[asidx];
+  // CPUAddressSpace::cpu is only used in tcg_commit
+#ifdef BMBT
+  newas->cpu = cpu;
+#endif
+  newas->as = as;
+#ifdef BMBT
+  if (tcg_enabled()) {
+    newas->tcg_as_listener.log_global_after_sync = tcg_log_global_after_sync;
+    newas->tcg_as_listener.commit = tcg_commit;
+    memory_listener_register(&newas->tcg_as_listener, as);
+  }
+#endif
+}
