@@ -224,10 +224,7 @@ void *qemu_map_ram_ptr(struct RAMBlock *ram_block, ram_addr_t addr);
  */
 static inline void *memory_region_get_ram_ptr(MemoryRegion *mr) {
   // [interface 4]
-  void *ptr;
-  uint64_t offset = 0;
-  ptr = qemu_map_ram_ptr(mr->ram_block, offset);
-  return ptr;
+  return qemu_map_ram_ptr(mr->ram_block, 0);
 }
 
 static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write) {
