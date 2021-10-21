@@ -111,6 +111,7 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
   *xlat = offset - mr->offset;
 
   if (memory_region_is_ram(mr)) {
+    duck_check(plen != NULL);
     hwaddr diff = mr->size - *xlat;
     *plen = MIN(diff, *plen);
   }
@@ -149,6 +150,32 @@ ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr) {
   duck_check(mr->ram_block != NULL);
   return mr->ram_block ? mr->ram_block->offset : RAM_ADDR_INVALID;
 }
+
+static MemoryRegion iotlb_mr = {};
+
+// attrs and prot are used for iommu
+MemoryRegion *address_space_translate_for_iotlb(CPUState *cpu, int asidx,
+                                                hwaddr addr, hwaddr *xlat,
+                                                hwaddr *plen, MemTxAttrs attrs,
+                                                int *prot) {
+  // [interface 34]
+  RAMBlock *block;
+  bool is_ram = false;
+  RAMBLOCK_FOREACH(block) {
+    if (addr >= block->mr->offset &&
+        addr < block->mr->offset + block->max_length) {
+      is_ram = true;
+      break;
+    }
+  }
+  if (!is_ram) {
+    *plen = TARGET_PAGE_SIZE;
+    return &iotlb_mr;
+  }
+  AddressSpace *as = cpu->cpu_ases[asidx].as;
+  return as->mr_look_up(as, addr, xlat, plen);
+}
+
 // is_write and attrs are used for iommu
 MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
                                       hwaddr *xlat, hwaddr *len, bool is_write,

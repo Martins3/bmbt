@@ -65,6 +65,8 @@ QEMU_BUILD_BUG_ON(sizeof(target_ulong) > sizeof(run_on_cpu_data));
 QEMU_BUILD_BUG_ON(NB_MMU_MODES > 16);
 #define ALL_MMUIDX_BITS ((1 << NB_MMU_MODES) - 1)
 
+#define IOTLB_MAGIC 0x43
+
 static inline size_t sizeof_tlb(CPUArchState *env, uintptr_t mmu_idx) {
   return env_tlb(env)->f[mmu_idx].mask + (1 << CPU_TLB_ENTRY_BITS);
 }
@@ -713,13 +715,17 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
             vaddr, paddr, prot, mmu_idx);
 
   address = vaddr_page;
+#ifndef RELEASE_VERSION
   if (size < TARGET_PAGE_SIZE) {
     /* Repeat the MMU check and TLB fill on every access.  */
+    g_assert_not_reached();
     address |= TLB_INVALID_MASK;
   }
   if (attrs.byte_swap) {
+    g_assert_not_reached();
     address |= TLB_BSWAP;
   }
+#endif
 
   is_ram = memory_region_is_ram(mr);
   // is_romd = memory_region_is_romd(section->mr);
@@ -730,7 +736,8 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
     addend = (uintptr_t)memory_region_get_ram_ptr(mr) + xlat;
   } else {
     /* I/O does not; force the host address to NULL. */
-    addend = 0;
+    // [interface 34]
+    addend = paddr;
   }
 
   write_address = address;
@@ -748,8 +755,9 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
       }
     }
   } else {
+    // [interface 34]
     /* I/O or ROMD */
-    iotlb = memory_region_section_get_iotlb(cpu, mr) + xlat;
+    iotlb = IOTLB_MAGIC;
     /*
      * Writes to romd devices must go through MMIO to enable write.
      * Reads to romd devices go through the ram_ptr found above,
@@ -889,9 +897,19 @@ static void tlb_fill(CPUState *cpu, target_ulong addr, int size,
   assert(ok);
 }
 
+static void iotlb_check(CPUArchState *env, CPUIOTLBEntry *iotlbentry) {
+  duck_check(iotlbentry->addr == IOTLB_MAGIC);
+  CPUState *cpu = env_cpu(env);
+  MemTxAttrs cur_attrs = cpu_get_mem_attrs(env);
+  if (cur_attrs.secure != iotlbentry->attrs.secure) {
+    g_assert_not_reached();
+  }
+}
+
 static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
-                         int mmu_idx, target_ulong addr, uintptr_t retaddr,
-                         MMUAccessType access_type, MemOp op) {
+                         CPUTLBEntry *entry, int mmu_idx, target_ulong vaddr,
+                         uintptr_t retaddr, MMUAccessType access_type,
+                         MemOp op) {
   CPUState *cpu = env_cpu(env);
   hwaddr mr_offset;
   MemoryRegion *mr;
@@ -899,19 +917,33 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
   bool locked = false;
   MemTxResult r;
 
+  AddressSpace *as;
+  hwaddr haddr;
+
+#ifndef RELEASE_VERSION
+  iotlb_check(env, iotlbentry);
+#endif
+
+#ifdef BMBT
   mr = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
   mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
-#ifdef BMBT
+
   cpu->mem_io_pc = retaddr;
-#endif
   if (!cpu->can_do_io) {
     cpu_io_recompile(cpu, retaddr);
   }
+#endif
 
   if (!qemu_mutex_iothread_locked()) {
     qemu_mutex_lock_iothread();
     locked = true;
   }
+
+  // [interface 34]
+  haddr = ((uintptr_t)vaddr + entry->addend);
+  as = cpu_addressspace(cpu, iotlbentry->attrs);
+  mr = address_space_translate(as, haddr, &mr_offset, NULL, false,
+                               iotlbentry->attrs);
   r = memory_region_dispatch_read(mr, mr_offset, &val, op, iotlbentry->attrs);
   if (r != MEMTX_OK) {
     // [interface 7] x86 doesn't need handle failed io transaction
@@ -924,21 +956,28 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
   return 0;
 }
 
-static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, int mmu_idx,
-                      uint64_t val, target_ulong addr, uintptr_t retaddr,
-                      MemOp op) {
+static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
+                      CPUTLBEntry *entry, int mmu_idx, uint64_t val,
+                      target_ulong vaddr, uintptr_t retaddr, MemOp op) {
   CPUState *cpu = env_cpu(env);
   hwaddr mr_offset;
   MemoryRegion *mr;
   bool locked = false;
   MemTxResult r;
 
+  AddressSpace *as;
+  hwaddr haddr;
+
+#ifndef RELEASE_VERSION
+  iotlb_check(env, iotlbentry);
+#endif
+
+#ifdef BMBT
   mr = iotlb_to_section(cpu, iotlbentry->addr, iotlbentry->attrs);
   mr_offset = (iotlbentry->addr & TARGET_PAGE_MASK) + addr;
   if (!cpu->can_do_io) {
     cpu_io_recompile(cpu, retaddr);
   }
-#ifdef BMBT
   cpu->mem_io_pc = retaddr;
 #endif
 
@@ -946,6 +985,12 @@ static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, int mmu_idx,
     qemu_mutex_lock_iothread();
     locked = true;
   }
+
+  // [interface 34]
+  haddr = ((uintptr_t)vaddr + entry->addend);
+  as = cpu_addressspace(cpu, iotlbentry->attrs);
+  mr = address_space_translate(as, haddr, &mr_offset, NULL, true,
+                               iotlbentry->attrs);
   r = memory_region_dispatch_write(mr, mr_offset, val, op, iotlbentry->attrs);
   if (r != MEMTX_OK) {
     // [interface 7] x86 doesn't need handle failed io transaction
@@ -1428,7 +1473,7 @@ static inline uint64_t QEMU_ALWAYS_INLINE load_helper(
       env->current_tb->io_inst_detected = 1;
 #endif
 #endif
-      uint64_t temp = io_readx(env, iotlbentry, mmu_idx, addr, retaddr,
+      uint64_t temp = io_readx(env, iotlbentry, entry, mmu_idx, addr, retaddr,
                                access_type, op ^ (need_swap * MO_BSWAP));
 #ifdef MEMORY_HELPER_TIME
       unsigned long te = getusec();
@@ -1755,7 +1800,7 @@ static inline void QEMU_ALWAYS_INLINE store_helper(CPUArchState *env,
       env->current_tb->io_inst_detected = 1;
 #endif
 #endif
-      io_writex(env, iotlbentry, mmu_idx, val, addr, retaddr,
+      io_writex(env, iotlbentry, entry, mmu_idx, val, addr, retaddr,
                 op ^ (need_swap * MO_BSWAP));
 
 #ifdef MEMORY_HELPER_TIME
