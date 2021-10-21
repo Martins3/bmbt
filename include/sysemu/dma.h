@@ -44,6 +44,7 @@ static inline void dma_barrier(AddressSpace *as, DMADirection dir) {
   smp_mb();
 }
 
+#ifdef BMBT
 /* Checks that the given range of addresses is valid for DMA.  This is
  * useful for certain cases, but usually you should just use
  * dma_memory_{read,write}() and check for errors */
@@ -52,6 +53,7 @@ static inline bool dma_memory_valid(AddressSpace *as, dma_addr_t addr,
   return address_space_access_valid(
       as, addr, len, dir == DMA_DIRECTION_FROM_DEVICE, MEMTXATTRS_UNSPECIFIED);
 }
+#endif
 
 static inline int dma_memory_rw_relaxed(AddressSpace *as, dma_addr_t addr,
                                         void *buf, dma_addr_t len,
@@ -88,7 +90,8 @@ static inline int dma_memory_write(AddressSpace *as, dma_addr_t addr,
   return dma_memory_rw(as, addr, (void *)buf, len, DMA_DIRECTION_FROM_DEVICE);
 }
 
-int dma_memory_set(AddressSpace *as, dma_addr_t addr, uint8_t c, dma_addr_t len);
+int dma_memory_set(AddressSpace *as, dma_addr_t addr, uint8_t c,
+                   dma_addr_t len);
 
 #define DEFINE_LDST_DMA(_lname, _sname, _bits, _end)                           \
   static inline uint##_bits##_t ld##_lname##_##_end##_dma(AddressSpace *as,    \
