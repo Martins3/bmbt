@@ -46,13 +46,9 @@ static inline void mem_add_memory_region(hwaddr offset, MemoryRegion *mr) {
 
 #define RAM_ADDR_INVALID (~(ram_addr_t)0)
 
-static inline MemoryRegion *address_space_translate(AddressSpace *as,
-                                                    hwaddr addr, hwaddr *xlat,
-                                                    hwaddr *len, bool is_write,
-                                                    MemTxAttrs attrs) {
-  // FIXME port later
-  return NULL;
-}
+MemoryRegion *address_space_translate(AddressSpace *as, hwaddr addr,
+                                      hwaddr *xlat, hwaddr *len, bool is_write,
+                                      MemTxAttrs attrs);
 
 /**
  * memory_region_dispatch_read: perform a read directly to the specified
@@ -64,14 +60,9 @@ static inline MemoryRegion *address_space_translate(AddressSpace *as,
  * @op: size, sign, and endianness of the memory operation
  * @attrs: memory transaction attributes to use for the access
  */
-static inline MemTxResult memory_region_dispatch_read(MemoryRegion *mr,
-                                                      hwaddr addr,
-                                                      uint64_t *pval, MemOp op,
-                                                      MemTxAttrs attrs) {
-  // FIXME port later
-  MemTxResult res;
-  return res;
-}
+MemTxResult memory_region_dispatch_read(MemoryRegion *mr, hwaddr addr,
+                                        uint64_t *pval, MemOp op,
+                                        MemTxAttrs attrs);
 
 /**
  * memory_region_dispatch_write: perform a write directly to the specified
@@ -85,11 +76,7 @@ static inline MemTxResult memory_region_dispatch_read(MemoryRegion *mr,
  */
 MemTxResult memory_region_dispatch_write(MemoryRegion *mr, hwaddr addr,
                                          uint64_t data, MemOp op,
-                                         MemTxAttrs attrs) {
-  // FIXME port later
-  MemTxResult res;
-  return res;
-}
+                                         MemTxAttrs attrs);
 
 /* address_space_access_valid: check for validity of accessing an address
  * space range
