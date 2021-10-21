@@ -63,11 +63,6 @@
     assert(0);                                                                 \
   } while (0);
 
-#define duck_check(x)                                                          \
-  {                                                                            \
-    if (!(x)) {                                                                \
-      assert(false);                                                           \
-    }                                                                          \
-  }
+#define duck_check(x) assert(x)
 
 #endif /* end of include guard: COMPILER_H_LG8KIJYO */
