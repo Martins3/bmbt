@@ -1,9 +1,9 @@
 #include "x86tomips-options.h"
+#include "../../../include/qemu/option.h"
+#include "include/common.h"
 #include "include/error.h"
 #include "ir1/ir1.h"
-#include "include/common.h"
 #include <string.h>
-#include "option.h"
 
 int option_by_hand;
 int option_flag_pattern;
@@ -653,9 +653,8 @@ void x86_to_mips_parse_options(QemuOpts *opts)
     }
 
     if (verbose) {
-        // FIXME
-        // qemu_opts_print(opts,"\n");
-        printf("\n");
+      qemu_opts_print(opts, "\n");
+      printf("\n");
     }
 
     /* optm=none|select|all */
