@@ -183,6 +183,8 @@ PCMachineState *machine_init() {
 }
 
 void qemu_init() {
+  init_xtm_options();
+
   ram_size = 128 * MiB;
   duck_check(first_cpu == NULL);
 

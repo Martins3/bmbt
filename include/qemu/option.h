@@ -1,7 +1,8 @@
 #ifndef OPTION_INT_H_HVEKQS1U
 #define OPTION_INT_H_HVEKQS1U
 
-#include "include/qemu-def.h"
+#include "../types.h"
+#include "./queue.h"
 #include <string.h>
 
 enum QemuOptType {
@@ -48,7 +49,7 @@ typedef struct QemuOpts {
   QemuOptsList *list;
   // Location loc;
   QTAILQ_HEAD(, QemuOpt) head;
-  QTAILQ_ENTRY(QemuOpts) next;
+  // QTAILQ_ENTRY(QemuOpts) next;
 } QemuOpts;
 
 static inline QemuOpt *qemu_opt_find(QemuOpts *opts, const char *name) {
@@ -61,5 +62,7 @@ static inline QemuOpt *qemu_opt_find(QemuOpts *opts, const char *name) {
   }
   return NULL;
 }
+
+void qemu_opts_print(QemuOpts *opts, const char *separator);
 
 #endif /* end of include guard: OPTION_INT_H_HVEKQS1U */

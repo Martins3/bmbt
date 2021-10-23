@@ -43,4 +43,7 @@ void qemu_mutex_unlock_iothread();
  * thread is running within the main loop mutex.
  */
 bool qemu_mutex_iothread_locked(void);
+
+// used to initialize xtm optiosn
+void init_xtm_options();
 #endif /* end of include guard: MAIN_LOOP_H_BMOIUZGQ */

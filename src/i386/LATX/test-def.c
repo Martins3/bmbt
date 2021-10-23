@@ -1,18 +1,17 @@
 #include "include/common.h"
-#include "x86tomips-config.h"
-#include "x86tomips-options.h"
-#include "ir1/ir1.h"
-#include "ir2/ir2.h"
 #include "include/env.h"
 #include "include/etb.h"
-#include "include/reg_alloc.h"
-#include "include/flag_pattern.h"
 #include "include/flag_lbt.h"
+#include "include/flag_pattern.h"
+#include "include/reg_alloc.h"
+#include "ir1/ir1.h"
+#include "ir2/ir2.h"
+#include "x86tomips-config.h"
+#include "x86tomips-options.h"
 #include <string.h>
 
+#include "../../../include/qemu/option.h"
 #include "include/test-def.h"
-#include "option.h"
-
 
 TESTCFG tt_cfg;
 TESTENV tt_env_reset;
