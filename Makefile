@@ -1,10 +1,24 @@
+#!/usr/bin/make
 BASE_DIR = $(shell pwd)
 BUILD_DIR := $(BASE_DIR)/build
 kernel := $(BUILD_DIR)/kernel.bin
 LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 
-CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include
-CFLAGS := -Werror $(CFLAGS_HEADER)
+# ================================= glib =======================================
+GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
+GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
+# define the libs, include lm for completeness
+GLIBS= -lglib-2.0 -lm -lc
+
+$(info $(GLIB_LIB))
+$(info $(GLIB_INCLUDE))
+
+
+# ================================= glib =======================================
+
+CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include $(GLIB_INCLUDE)
+CFLAGS := -Werror $(CFLAGS_HEADER) $(GLIB_LIB)
+
 
 linker_script := src/linker.ld
 # assembly_source_files := src/head.S
@@ -18,13 +32,20 @@ c_source_files += $(wildcard src/qemu/*.c)
 c_source_files += $(wildcard src/util/*.c)
 c_source_files += $(wildcard src/unitest/*.c)
 c_source_files += $(wildcard src/i386/*.c)
-c_source_files += $(wildcard src/i386/LATX/*.c)
-c_source_files += $(wildcard src/i386/LATX/translator/*.c)
-c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
 
+CONFIG_LATX=y
+CONFIG_SOFTMMU=y
+include ./src/i386/Makefile.objs
+LATX_OBJ=$(addprefix ./src/i386/, $(obj-y))
+
+# c_source_files += $(wildcard src/i386/LATX/*.c)
+# c_source_files += $(wildcard src/i386/LATX/translator/*.c)
+# c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
+# c_source_files += $(wildcard src/i386/LATX/ir1/*.c)
+# c_source_files += $(wildcard src/i386/LATX/ir2/*.c)
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
-c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
+c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o) $(LATX_OBJ)
 
 obj_files := $(assembly_object_files) $(c_object_files)
 
@@ -84,6 +105,7 @@ $(kernel) : $(obj_files) $(LIBCAPSTONE)
 	@mkdir -p $(@D)
 	@# Just link all the object files.
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
+	@# $(LD) $(obj_files) -o $(kernel) $(GLIBS)
 	@echo "BMBT is ready"
 
 CAP_CFLAGS=$(CFLAGS_HEADER)

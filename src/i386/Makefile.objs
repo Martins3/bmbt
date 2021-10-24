@@ -1,0 +1,156 @@
+ifeq ($(CONFIG_LATX),y)
+
+obj-$(CONFIG_LATX) += LATX/x86tomips-config.o
+# obj-$(CONFIG_LATX) += LATX/debug/lockstep.o
+obj-$(CONFIG_LATX) += LATX/ir1/ir1.o
+obj-$(CONFIG_LATX) += LATX/ir2/ir2.o
+obj-$(CONFIG_LATX) += LATX/ir2/ir2_assemble.o
+ifneq ($(CONFIG_SOFTMMU),y)
+obj-$(CONFIG_LATX) += LATX/optimization/flag_reduction.o
+obj-$(CONFIG_LATX) += LATX/optimization/flag_pattern.o
+else
+obj-$(CONFIG_LATX) += LATX/optimization/njc.o
+endif
+obj-$(CONFIG_LATX) += LATX/optimization/flag_lbt.o
+obj-$(CONFIG_LATX) += LATX/optimization/ir2_optimization.o
+obj-$(CONFIG_LATX) += LATX/optimization/ibtc.o
+obj-$(CONFIG_LATX) += LATX/optimization/shadow_stack.o
+obj-$(CONFIG_LATX) += LATX/optimization/lsfpu.o
+obj-$(CONFIG_LATX) += LATX/optimization/cam.o
+obj-$(CONFIG_LATX) += LATX/etb.o
+obj-$(CONFIG_LATX) += LATX/env.o
+ifeq ($(CONFIG_XTM_TEST),y)
+obj-$(CONFIG_LATX) += LATX/test-def.o
+obj-$(CONFIG_LATX) += LATX/tests/dump_translate.o
+obj-$(CONFIG_LATX) += LATX/tests/run_one_tb.o
+endif
+obj-$(CONFIG_LATX) += LATX/mem.o
+obj-$(CONFIG_LATX) += LATX/translator/flag_usedef.o
+obj-$(CONFIG_LATX) += LATX/translator/translate.o
+obj-$(CONFIG_LATX) += LATX/translator/fpu.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_disasm.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_core.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_static_code.o
+obj-$(CONFIG_LATX) += LATX/translator/lsenv_offset.o
+obj-$(CONFIG_LATX) += LATX/translator/extension.o
+obj-$(CONFIG_LATX) += LATX/translator/reg_alloc.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_opnd_process.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_eflag.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_eflag_process.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_farith.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_fctrl.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_fcmovcc.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_fldst.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_jcc.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_sse.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_simd.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_setcc.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_mov.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_misc.o
+obj-$(CONFIG_LATX) += LATX/x86tomips-options.o
+obj-$(CONFIG_LATX) += LATX/error.o
+obj-$(CONFIG_LATX) += LATX/translator/cross-page-check.o
+ifeq ($(CONFIG_SOFTMMU),y)
+obj-$(CONFIG_LATX) += LATX/translator/tr_softmmu.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_sys.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_excp.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_sys_eflags.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_sys_eob.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_sys_helper.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_sys_string.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_sys_fp.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_arith_sys.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_arith_sys_byhand.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_logic_sys.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_logic_sys_byhand.o
+obj-$(CONFIG_LATX) += LATX/x86tomips-profile-sys.o
+obj-$(CONFIG_BTMMU) += btmmu.o
+else
+obj-$(CONFIG_LATX) += LATX/x86tomips-profile.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_arith_byhand.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_logic_byhand.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_arith.o
+obj-$(CONFIG_LATX) += LATX/translator/tr_logic.o
+endif
+obj-$(CONFIG_LATX) += LATX/translator/tr_mov_byhand.o
+
+else
+
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/x86tomips-config.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/debug/lockstep.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/ir1/ir1.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/ir2/ir2.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/ir2/ir2_assemble.o
+ifneq ($(CONFIG_SOFTMMU),y)
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/flag_reduction.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/flag_pattern.o
+else
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/njc.o
+endif
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/flag_lbt.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/ir2_optimization.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/ibtc.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/shadow_stack.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/lsfpu.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/optimization/cam.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/etb.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/env.o
+ifeq ($(CONFIG_XTM_MEMWATCH),y)
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/memwatch.o
+endif
+ifeq ($(CONFIG_XTM_TEST),y)
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/test-def.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/tests/dump_translate.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/tests/run_one_tb.o
+endif
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/mem.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/flag_usedef.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/translate.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/fpu.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_disasm.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_core.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_static_code.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/lsenv_offset.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/extension.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/reg_alloc.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_opnd_process.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_eflag.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_eflag_process.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_farith.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_fctrl.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_fcmovcc.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_fldst.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_jcc.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_sse.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_simd.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_setcc.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_mov.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_misc.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/x86tomips-options.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/error.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/cross-page-check.o
+ifeq ($(CONFIG_SOFTMMU),y)
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_softmmu.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_sys.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_excp.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_sys_eflags.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_sys_eob.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_sys_helper.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_sys_string.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_sys_fp.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_arith_sys.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_arith_sys_byhand.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_logic_sys.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_logic_sys_byhand.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/x86tomips-profile-sys.o
+obj-$(CONFIG_BTMMU) += btmmu.o
+else
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/x86tomips-profile.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_arith_byhand.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_logic_byhand.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_arith.o
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_logic.o
+endif
+obj-$(CONFIG_X86toMIPS) += X86toMIPS/translator/tr_mov_byhand.o
+
+endif
