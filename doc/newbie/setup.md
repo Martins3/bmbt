@@ -17,9 +17,11 @@ mkdir build
 - 运行参数
 ```sh
 #!/bin/bash
-
-/home/loongson/ld/x86-qemu-mips/build/i386-softmmu/qemu-system-i386 -hda ~/xqm_images/ubuntu10s.test.img.full -xtm select,tblink,lbt -kernel ~/xqm_images/vmlinuz-2.6.32 -append "console=ttyS0 root=/dev/sda1 ro init=/bin/bash tsc=reliable rw" --nographic \
+/home/loongson/ld/x86-qemu-mips/build/i386-softmmu/qemu-system-i386 \
+-hda ~/xqm_images/ubuntu10s.test.img.full -xtm select,tblink,lbt -kernel \
+~/xqm_images/vmlinuz-2.6.32 -append "console=ttyS0 root=/dev/sda1 ro init=/bin/bash tsc=reliable rw" --nographic \
 -chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ~/xqm_images/bios.bin
+
 ```
 - [ ] 这里的 ubuntu10s.test.img.full 和 vmlinuz-2.6.32 还没有自己编译过
 
