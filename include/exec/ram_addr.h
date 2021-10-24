@@ -198,6 +198,72 @@ static inline void *ramblock_ptr(RAMBlock *block, ram_addr_t offset) {
   return (char *)block->host + offset;
 }
 
+static inline bool cpu_physical_memory_all_dirty(ram_addr_t start,
+                                                 ram_addr_t length,
+                                                 unsigned client) {
+  DirtyMemoryBlocks *blocks;
+  unsigned long end, page;
+  unsigned long idx, offset, base;
+  bool dirty = true;
+
+  assert(client < DIRTY_MEMORY_NUM);
+
+  end = TARGET_PAGE_ALIGN(start + length) >> TARGET_PAGE_BITS;
+  page = start >> TARGET_PAGE_BITS;
+
+  RCU_READ_LOCK_GUARD();
+
+  blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
+
+  idx = page / DIRTY_MEMORY_BLOCK_SIZE;
+  offset = page % DIRTY_MEMORY_BLOCK_SIZE;
+  base = page - offset;
+  while (page < end) {
+    unsigned long next = MIN(end, base + DIRTY_MEMORY_BLOCK_SIZE);
+    unsigned long num = next - base;
+    unsigned long found = find_next_zero_bit(blocks->blocks[idx], num, offset);
+    if (found < num) {
+      dirty = false;
+      break;
+    }
+
+    page = next;
+    idx++;
+    offset = 0;
+    base += DIRTY_MEMORY_BLOCK_SIZE;
+  }
+
+  return dirty;
+}
+
+static inline uint8_t
+cpu_physical_memory_range_includes_clean(ram_addr_t start, ram_addr_t length,
+                                         uint8_t mask) {
+  uint8_t ret = 0;
+  duck_check((mask & (1 << DIRTY_MEMORY_CODE)) == (1 << DIRTY_MEMORY_CODE));
+
+#ifdef BMBT
+  if (mask & (1 << DIRTY_MEMORY_VGA) &&
+      !cpu_physical_memory_all_dirty(start, length, DIRTY_MEMORY_VGA)) {
+    ret |= (1 << DIRTY_MEMORY_VGA);
+  }
+#endif
+  if (mask & (1 << DIRTY_MEMORY_CODE) &&
+      !cpu_physical_memory_all_dirty(start, length, DIRTY_MEMORY_CODE)) {
+    ret |= (1 << DIRTY_MEMORY_CODE);
+  }
+
+#ifdef BMBT
+  if (mask & (1 << DIRTY_MEMORY_MIGRATION) &&
+      !cpu_physical_memory_all_dirty(start, length, DIRTY_MEMORY_MIGRATION)) {
+    ret |= (1 << DIRTY_MEMORY_MIGRATION);
+  }
+#endif
+  return ret;
+}
+
+void tb_invalidate_phys_range(ram_addr_t start, ram_addr_t end);
+
 #define DIRTY_CLIENTS_ALL ((1 << DIRTY_MEMORY_NUM) - 1)
 #define DIRTY_CLIENTS_NOCODE (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
 
