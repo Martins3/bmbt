@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#ifndef USE_SYSTEM_GLIB
 
 typedef struct GTree {
   struct GTree *left;
@@ -84,5 +85,8 @@ struct _GList {
 
 typedef struct QDict {
 } QDict;
+#else
+#include <glib.h>
+#endif
 
 #endif /* end of include guard: GLIB_STUB_H_78QYZX2K */

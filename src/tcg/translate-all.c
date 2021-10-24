@@ -137,7 +137,7 @@ struct page_entry {
  * See also: page_collection_lock().
  */
 struct page_collection {
-  struct GTree *tree;
+  GTree *tree;
   struct page_entry *max;
 };
 
