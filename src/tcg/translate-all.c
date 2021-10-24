@@ -2108,6 +2108,7 @@ void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr) {
   tb_jmp_cache_clear_page(cpu, addr);
 }
 
+#ifdef BMBT
 static void print_qht_statistics(struct qht_stats hst) {
   uint32_t hgram_opts;
   size_t hgram_bins;
@@ -2143,6 +2144,7 @@ static void print_qht_statistics(struct qht_stats hst) {
               qdist_avg(&hst.chain), hgram);
   g_free(hgram);
 }
+#endif
 
 struct tb_tree_stats {
   size_t nb_tbs;
