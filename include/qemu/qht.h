@@ -9,17 +9,18 @@
 
 #include "../types.h"
 #include "thread.h"
-#include "qdist.h"
+// #include "qdist.h"
 
 typedef bool (*qht_cmp_func_t)(const void *a, const void *b);
 
 struct qht {
-    struct qht_map *map;
-    qht_cmp_func_t cmp;
-    QemuMutex lock; /* serializes setters of ht->map */
-    unsigned int mode;
+  struct qht_map *map;
+  qht_cmp_func_t cmp;
+  QemuMutex lock; /* serializes setters of ht->map */
+  unsigned int mode;
 };
 
+#ifdef BMBT
 /**
  * struct qht_stats - Statistics of a QHT
  * @head_buckets: number of head buckets
@@ -35,12 +36,13 @@ struct qht {
  * Chains are chains of buckets, whose first link is always a head bucket.
  */
 struct qht_stats {
-    size_t head_buckets;
-    size_t used_head_buckets;
-    size_t entries;
-    struct qdist chain;
-    struct qdist occupancy;
+  size_t head_buckets;
+  size_t used_head_buckets;
+  size_t entries;
+  struct qdist chain;
+  struct qdist occupancy;
 };
+#endif
 
 typedef bool (*qht_lookup_func_t)(const void *obj, const void *userp);
 typedef void (*qht_iter_func_t)(void *p, uint32_t h, void *up);
