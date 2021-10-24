@@ -32,11 +32,11 @@ static inline bool kvm_allows_irq0_override(void) { return 1; }
 static inline bool xen_enabled(void) { return false; }
 
 // copied from target/i386/sev-stub.c
-bool sev_enabled(void) { return false; }
-uint64_t sev_get_me_mask(void) { return ~0; }
-uint32_t sev_get_cbit_position(void) { return 0; }
-uint32_t sev_get_reduced_phys_bits(void) { return 0; }
-char *sev_get_launch_measurement(void) { return NULL; }
+static inline bool sev_enabled(void) { return false; }
+static inline uint64_t sev_get_me_mask(void) { return ~0; }
+static inline uint32_t sev_get_cbit_position(void) { return 0; }
+static inline uint32_t sev_get_reduced_phys_bits(void) { return 0; }
+static inline char *sev_get_launch_measurement(void) { return NULL; }
 
 // @todo copied from include/hw/acpi/pc-hotplug.h
 // maybe we will review the cpu hotplug and memory hotplug later
