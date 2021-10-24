@@ -4,6 +4,9 @@
 #include "../exec/cpu-defs.h"
 
 /* Look up symbol for debugging purpose.  Returns "" if unknown. */
-const char *lookup_symbol(target_ulong orig_addr);
+static inline const char *lookup_symbol(target_ulong orig_addr) {
+  // @todo
+  return "lookup_symbol is only used in cpu_tb_exec for debugging";
+}
 
 #endif /* end of include guard: DISAS_H_1FXNJ9VM */
