@@ -652,6 +652,14 @@ bool prepare_mmio_access(MemoryRegion *mr) {
   return release_lock;
 }
 
+uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr) {
+  uint8_t mask = 0;
+  if (mr->ram_block) {
+    mask |= (1 << DIRTY_MEMORY_MIGRATION);
+  }
+  return mask;
+}
+
 // originally defined in dirty_memory_extend
 static void setup_dirty_memory(hwaddr total_ram_size) {
   ram_addr_t new_num_blocks =

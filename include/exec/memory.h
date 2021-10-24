@@ -236,6 +236,17 @@ static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write) {
   }
 }
 
+/**
+ * memory_region_get_dirty_log_mask: return the clients for which a
+ * memory region is logging writes.
+ *
+ * Returns a bitmap of clients, in which the DIRTY_MEMORY_* constants
+ * are the bit indices.
+ *
+ * @mr: the memory region being queried
+ */
+uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr);
+
 void memory_map_init(hwaddr size);
 void tcg_commit();
 
