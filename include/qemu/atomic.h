@@ -125,4 +125,6 @@
 #define smp_rmb() smp_mb_acquire()
 #define smp_wmb() smp_mb_release()
 
+#define atomic_inc(ptr) ((void)__atomic_fetch_add(ptr, 1, __ATOMIC_SEQ_CST))
+
 #endif /* end of include guard: ATOMIC_H_VE645TXJ */

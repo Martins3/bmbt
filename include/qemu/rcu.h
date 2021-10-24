@@ -19,4 +19,19 @@ static inline void rcu_unregister_thread(void) {}
 #define QTAILQ_INSERT_TAIL_RCU QTAILQ_INSERT_TAIL
 #define QTAILQ_REMOVE_RCU QTAILQ_REMOVE
 
+// @todo
+struct rcu_head {
+  struct rcu_head *next;
+  // RCUCBFunc *func;
+};
+
+#define atomic_rcu_set(ptr, i)                                                 \
+  do {                                                                         \
+    *ptr = i;                                                                  \
+  } while (0)
+
+// @todo
+#define call_rcu(x, y, z)                                                      \
+  {}
+
 #endif /* end of include guard: RCU_H_LHWIHDTM */

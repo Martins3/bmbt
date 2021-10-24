@@ -38,6 +38,20 @@ static inline void qemu_mutex_lock(QemuMutex *mutex) {
   mutex->lock = true;
 }
 
+static inline void qemu_mutex_lock__raw(QemuMutex *mutex) {
+  qemu_mutex_lock(mutex);
+}
+
+static inline bool qemu_mutex_trylock(QemuMutex *mutex) {
+  qemu_mutex_lock(mutex);
+  return true;
+}
+
+static inline bool qemu_mutex_trylock__raw(QemuMutex *mutex) {
+  qemu_mutex_trylock(mutex);
+  return true;
+}
+
 static inline void qemu_mutex_unlock(QemuMutex *mutex) {
   assert(mutex->lock == true);
   mutex->lock = false;

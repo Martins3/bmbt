@@ -63,6 +63,8 @@
     assert(0);                                                                 \
   } while (0);
 
+#define QEMU_ALIGNED(X) __attribute__((aligned(X)))
+
 #define duck_check(x) assert(x)
 
 #endif /* end of include guard: COMPILER_H_LG8KIJYO */
