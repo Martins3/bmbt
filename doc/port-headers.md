@@ -8,7 +8,7 @@
 ## [ ] TODO
 1. `#include <stdbool>` 之类的头文件真的需要清理掉吗 ?
 2. 如何让 acpi / kernel / tcg 使用同一个 header
-3. qdist.h : 主要是 print_qht_statistics 中间使用的用于分析统计信息的，也许直接删除吧
+- [x] qdist.h : 主要是 print_qht_statistics 中间使用的用于分析统计信息的，暂时直接删除掉了，以后需要的时候在添加吧
 
 ## 一些记录
 1. 在 thread-posix.h 中定义了 QemuMutex QemuCond QemuSemaphore QemuEvent QemuThread, 但是只使用了 QemuMutex 了，将其移动到 thread.h 在和锁相关的问题上一起分析
