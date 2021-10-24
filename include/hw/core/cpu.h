@@ -624,7 +624,7 @@ static inline hwaddr cpu_get_phys_page_attrs_debug(CPUState *cpu, vaddr addr,
   return cc->get_phys_page_debug(cpu, addr);
 }
 
-bool qemu_cpu_is_self(CPUState *cpu) { return true; }
+static inline bool qemu_cpu_is_self(CPUState *cpu) { return true; }
 
 /**
  * qemu_cpu_kick:

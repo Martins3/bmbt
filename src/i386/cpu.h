@@ -1986,12 +1986,12 @@ static inline int x86_asidx_from_attrs(CPUState *cs, MemTxAttrs attrs) {
  * Return the requested address space of this CPU. @asidx
  * specifies which address space to read.
  */
-AddressSpace *cpu_get_address_space(CPUState *cpu, int asidx) {
+static inline AddressSpace *cpu_get_address_space(CPUState *cpu, int asidx) {
   /* Return the AddressSpace corresponding to the specified index */
   return cpu->cpu_ases[asidx].as;
 }
 
-AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs) {
+static inline AddressSpace *cpu_addressspace(CPUState *cs, MemTxAttrs attrs) {
   return cpu_get_address_space(cs, cpu_asidx_from_attrs(cs, attrs));
 }
 
