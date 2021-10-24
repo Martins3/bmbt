@@ -24,7 +24,7 @@
 #include "glib_stub.h"
 struct tcg_region_tree {
   QemuMutex lock;
-  struct GTree *tree;
+  GTree *tree;
   /* padding to avoid false sharing is computed at run-time */
 };
 
