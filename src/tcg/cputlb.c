@@ -2015,4 +2015,12 @@ uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
 }
 
 /* Code access functions.  */
-// [interface] *_cmmu removed, they are useless because of XQM
+// *_cmmu 's only user is cpu_read_code_via_qemu
+static uint64_t full_ldub_cmmu(CPUArchState *env, target_ulong addr,
+                               TCGMemOpIdx oi, uintptr_t retaddr) {
+  return load_helper(env, addr, oi, retaddr, MO_8, true, full_ldub_cmmu);
+}
+uint8_t helper_ret_ldub_cmmu(CPUArchState *env, target_ulong addr,
+                             TCGMemOpIdx oi, uintptr_t retaddr) {
+  return full_ldub_cmmu(env, addr, oi, retaddr);
+}
