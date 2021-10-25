@@ -12,7 +12,6 @@
 #include <signal.h>
 #include <ucontext.h>
 #include <string.h>
-#include <pthread.h>
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
 #include "x86tomips-profile-sys.h"
