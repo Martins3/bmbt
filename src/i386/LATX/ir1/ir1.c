@@ -199,11 +199,20 @@ csh handle16;
 #endif
 void xtm_capstone_init(void)
 {
-    if (cs_open(CS_ARCH_X86, CS_MODE_32, &handle) != CS_ERR_OK) {
-        fprintf(stderr, "%s %s %d error : cs_open \n", __FILE__, __func__,
-                __LINE__);
-        exit(-1);
-    }
+  // @todo this is a really quick fix
+  cs_opt_mem opt;
+  opt.malloc = malloc;
+  opt.calloc = calloc;
+  opt.realloc = realloc;
+  opt.free = free;
+  opt.vsnprintf = vsnprintf;
+  cs_option(CS_ARCH_X86, CS_OPT_MEM, (size_t)&opt);
+
+  if (cs_open(CS_ARCH_X86, CS_MODE_32, &handle) != CS_ERR_OK) {
+    fprintf(stderr, "%s %s %d error : cs_open \n", __FILE__, __func__,
+            __LINE__);
+    exit(-1);
+  }
     cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 #ifdef CONFIG_SOFTMMU
     if (cs_open(CS_ARCH_X86, CS_MODE_16, &handle16) != CS_ERR_OK) {
