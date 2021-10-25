@@ -70,15 +70,22 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info dependency_files=$(dependency_files))
 # $(info $(BASE_DIR))
 
-all: check-and-reinit-submodules $(kernel)
+all: check-and-reinit-submodules $(kernel) capstone
 
 # https://stackoverflow.com/questions/52337010/automatic-initialization-and-update-of-submodules-in-makefile
-.PHONY: check-and-reinit-submodules
+.PHONY: check-and-reinit-submodules capstone
 check-and-reinit-submodules:
 	@if git submodule status | egrep -q '^[-]|^[+]' ; then \
             echo "INFO: Need to reinitialize git submodules"; \
             git submodule update --init; \
 	fi
+
+
+CAP_CFLAGS=$(CFLAGS_HEADER)
+CAP_CFLAGS+=-DCAPSTONE_HAS_X86
+capstone:
+	@mkdir -p $(@D)
+	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
 
 -include $(dependency_files)
 
@@ -97,35 +104,25 @@ $(BUILD_DIR)/%.o: %.S
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
-$(kernel) : $(obj_files) $(LIBCAPSTONE)
+$(kernel) : $(obj_files)
 	@# Create build directories - same structure as sources.
 	@mkdir -p $(@D)
-	@# Just link all the object files.
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
-	@echo $(kernel)
 	@gcc $(obj_files) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
 	@echo "BMBT is ready"
 
-CAP_CFLAGS=$(CFLAGS_HEADER)
-CAP_CFLAGS+=-DCAPSTONE_HAS_X86
 
-$(LIBCAPSTONE) :
-	@mkdir -p $(@D)
-	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
 
-.PHONY: all clean gdb
+.PHONY: all clean gdb run
 
 clean:
 	rm -r $(BUILD_DIR)
 
-gdb: $(kernel)
-	 gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+run: all
+	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+	$(kernel)
 
-run: $(kernel)
-	 @# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
-	 $(kernel)
-
-gdb: $(kernel)
+gdb: all
 	 @#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
 	 gdb --args $(kernel)
 
