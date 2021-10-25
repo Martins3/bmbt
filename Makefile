@@ -27,7 +27,7 @@ linker_script := src/linker.ld
 assembly_source_files :=
 
 c_source_files += $(wildcard src/*.c)
-c_source_files := $(wildcard src/tcg/*.c)
+c_source_files += $(wildcard src/tcg/*.c)
 c_source_files += $(wildcard src/hw/*/*.c)
 c_source_files += $(wildcard src/fpu/*.c)
 c_source_files += $(wildcard src/qemu/*.c)
@@ -108,6 +108,7 @@ $(kernel) : $(obj_files) $(LIBCAPSTONE)
 	@# Just link all the object files.
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
 	@$(LD) $(obj_files) $(LIBCAPSTONE)  -o $(kernel) $(GLIBS)
+	@gcc $(obj_files) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
 	@echo "BMBT is ready"
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
