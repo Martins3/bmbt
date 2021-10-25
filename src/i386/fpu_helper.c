@@ -900,7 +900,7 @@ void helper_fprem(CPUX86State *env)
     ST0 = double_to_floatx80(env, st0);
 }
 
-#if 0
+#if BMBT
 void helper_fyl2xp1(CPUX86State *env)
 {
     double fptemp = floatx80_to_double(env, ST0);
@@ -944,17 +944,18 @@ void helper_frndint(CPUX86State *env)
 {
     ST0 = floatx80_round_to_int(ST0, &env->fp_status);
 }
+#endif
 
-void helper_fscale(CPUX86State *env)
-{
-    if (floatx80_is_any_nan(ST1)) {
-        ST0 = ST1;
-    } else {
-        int n = floatx80_to_int32_round_to_zero(ST1, &env->fp_status);
-        ST0 = floatx80_scalbn(ST0, n, &env->fp_status);
-    }
+void helper_fscale(CPUX86State *env) {
+  if (floatx80_is_any_nan(ST1)) {
+    ST0 = ST1;
+  } else {
+    int n = floatx80_to_int32_round_to_zero(ST1, &env->fp_status);
+    ST0 = floatx80_scalbn(ST0, n, &env->fp_status);
+  }
 }
 
+#ifdef BMBT
 void helper_fsin(CPUX86State *env)
 {
     double fptemp = floatx80_to_double(env, ST0);
