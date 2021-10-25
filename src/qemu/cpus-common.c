@@ -133,3 +133,15 @@ void cpu_list_remove(CPUState *cpu) {
   QTAILQ_REMOVE_RCU(&cpus, cpu, node);
   cpu->cpu_index = UNASSIGNED_CPU_INDEX;
 }
+
+void async_run_on_cpu(CPUState *cpu, run_on_cpu_func func,
+                      run_on_cpu_data data) {
+  struct qemu_work_item *wi;
+
+  wi = g_malloc0(sizeof(struct qemu_work_item));
+  wi->func = func;
+  wi->data = data;
+  wi->free = true;
+
+  queue_work_on_cpu(cpu, wi);
+}
