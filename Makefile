@@ -11,15 +11,10 @@ GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
 # github action will not work with the absolute path
 GLIBS= -lglib-2.0 -lrt -lm -lc /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
 
-
-$(info $(GLIB_LIB))
-$(info $(GLIB_INCLUDE))
-
-
 # ================================= glib =======================================
 
 CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include $(GLIB_INCLUDE)
-CFLAGS := -Werror $(CFLAGS_HEADER) $(GLIB_LIB)
+CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB)
 
 
 linker_script := src/linker.ld
@@ -107,7 +102,7 @@ $(kernel) : $(obj_files) $(LIBCAPSTONE)
 	@mkdir -p $(@D)
 	@# Just link all the object files.
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
-	@$(LD) $(obj_files) $(LIBCAPSTONE)  -o $(kernel) $(GLIBS)
+	@echo $(kernel)
 	@gcc $(obj_files) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
 	@echo "BMBT is ready"
 
@@ -118,7 +113,7 @@ $(LIBCAPSTONE) :
 	@mkdir -p $(@D)
 	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
 
-.PHONY: all clean
+.PHONY: all clean gdb
 
 clean:
 	rm -r $(BUILD_DIR)
@@ -127,10 +122,12 @@ gdb: $(kernel)
 	 gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
 
 run: $(kernel)
-	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+	 @# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+	 $(kernel)
 
-defgdb: $(kernel)
-	 gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
+gdb: $(kernel)
+	 @#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
+	 gdb --args $(kernel)
 
 defrun: $(kernel)
 	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel) $(DEF)
