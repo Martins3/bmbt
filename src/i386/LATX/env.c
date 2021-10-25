@@ -3,7 +3,12 @@
 #include "x86tomips-options.h"
 #include "include/profile.h"
 
+#ifdef BMBT
 __thread ENV *lsenv;
+#else
+ENV *lsenv;
+#endif
+
 QHT * etb_cache_qht;
 
 #ifndef CONFIG_SOFTMMU
