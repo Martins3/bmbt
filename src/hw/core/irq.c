@@ -34,3 +34,14 @@ qemu_irq *qemu_extend_irqs(qemu_irq *old, int n_old, qemu_irq_handler handler,
 qemu_irq *qemu_allocate_irqs(qemu_irq_handler handler, void *opaque, int n) {
   return qemu_extend_irqs(NULL, 0, handler, opaque, n);
 }
+
+qemu_irq qemu_allocate_irq(qemu_irq_handler handler, void *opaque, int n) {
+  struct IRQState *irq;
+
+  irq = g_malloc(sizeof(struct IRQState));
+  irq->handler = handler;
+  irq->opaque = opaque;
+  irq->n = n;
+
+  return irq;
+}
