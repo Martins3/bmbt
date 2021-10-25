@@ -637,3 +637,44 @@ void cpu_check_watchpoint(CPUState *cpu, vaddr addr, vaddr len,
     }
   }
 }
+
+void cpu_abort(CPUState *cpu, const char *fmt, ...) {
+  va_list ap;
+  va_list ap2;
+
+  va_start(ap, fmt);
+  va_copy(ap2, ap);
+  fprintf(stderr, "qemu: fatal: ");
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  cpu_dump_state(cpu, stderr, CPU_DUMP_FPU | CPU_DUMP_CCOP);
+  // log by printf, doesn't support separated log
+#ifdef BMBT
+  if (qemu_log_separate()) {
+    qemu_log_lock();
+    qemu_log("qemu: fatal: ");
+    qemu_log_vprintf(fmt, ap2);
+    qemu_log("\n");
+    log_cpu_state(cpu, CPU_DUMP_FPU | CPU_DUMP_CCOP);
+    qemu_log_flush();
+    qemu_log_unlock();
+    qemu_log_close();
+  }
+#endif
+  va_end(ap2);
+  va_end(ap);
+  // doesn't support replay
+#ifdef BMBT
+  replay_finish();
+#endif
+#if defined(CONFIG_USER_ONLY)
+  {
+    struct sigaction act;
+    sigfillset(&act.sa_mask);
+    act.sa_handler = SIG_DFL;
+    act.sa_flags = 0;
+    sigaction(SIGABRT, &act, NULL);
+  }
+#endif
+  abort();
+}
