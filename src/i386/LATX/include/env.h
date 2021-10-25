@@ -37,7 +37,11 @@ typedef struct ENV {
 #endif
 } ENV;
 
+#ifdef BMBT
 extern __thread ENV *lsenv;
+#else
+extern ENV *lsenv;
+#endif
 
 /* Functions to access ENV's attributes */
 /* Integer Registers */
