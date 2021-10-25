@@ -7,8 +7,10 @@ LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 # ================================= glib =======================================
 GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
 GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
-# define the libs, include lm for completeness
-GLIBS= -lglib-2.0 -lm -lc
+# @todo libgcc is absolute path
+# github action will not work with the absolute path
+GLIBS= -lglib-2.0 -lrt -lm -lc /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+
 
 $(info $(GLIB_LIB))
 $(info $(GLIB_INCLUDE))
@@ -105,7 +107,7 @@ $(kernel) : $(obj_files) $(LIBCAPSTONE)
 	@mkdir -p $(@D)
 	@# Just link all the object files.
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
-	@# $(LD) $(obj_files) -o $(kernel) $(GLIBS)
+	@$(LD) $(obj_files) $(LIBCAPSTONE)  -o $(kernel) $(GLIBS)
 	@echo "BMBT is ready"
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
