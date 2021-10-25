@@ -41,7 +41,7 @@ static inline void seqlock_write_end(QemuSeqLock *sl) {
   atomic_set(&sl->sequence, sl->sequence + 1);
 }
 
-#ifdef QHT_LATER
+#ifdef QHT_TODO
 /* Lock out other writers and update the count.  */
 static inline void seqlock_write_lock_impl(QemuSeqLock *sl,
                                            QemuLockable *lock) {
