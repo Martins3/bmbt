@@ -69,12 +69,6 @@
     - io_readx 和 io_writex 从 CPUTLBEntry::addend 装入的 paddr 重新 address_space_translate
     - 在 address_space_translate_for_iotlb 中，如果是 ram，那么返回一个 iotlb_mr 就可以了
 
-# 几个 macro 的说明
+# BMBT 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
-
-- BMBT : 一定不需要，应该在每一个 BMBT 跟上解释为什么不需要这个东西
-- NEED_LATER : 将来应该需要
-- MEM_TODO : 暂时没有移植的，和 MEM 相关的
-- RTC_TODO : 关于 rtc 的代码
-- SMBIOS_TODO :
-- QHT_LATER
+应该在每一个 BMBT 跟上解释为什么不需要这个东西
