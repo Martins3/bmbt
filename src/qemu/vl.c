@@ -19,6 +19,7 @@ QemuUUID qemu_uuid;
 ram_addr_t ram_size;
 ReplayMode replay_mode = REPLAY_MODE_NONE;
 int singlestep = 0;
+int boot_menu = 0;
 
 bool machine_init_done;
 
