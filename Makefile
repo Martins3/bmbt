@@ -33,7 +33,7 @@ c_source_files += $(wildcard src/i386/*.c)
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
 include ./src/i386/Makefile.objs
-LATX_OBJ=$(addprefix ./src/i386/, $(obj-y))
+LATX_OBJ=$(addprefix $(BUILD_DIR)/src/i386/, $(obj-y))
 
 # c_source_files += $(wildcard src/i386/LATX/*.c)
 # c_source_files += $(wildcard src/i386/LATX/translator/*.c)
