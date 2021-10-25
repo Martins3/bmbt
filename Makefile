@@ -70,7 +70,7 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info dependency_files=$(dependency_files))
 # $(info $(BASE_DIR))
 
-all: check-and-reinit-submodules $(kernel) capstone
+all: check-and-reinit-submodules capstone $(kernel)
 
 # https://stackoverflow.com/questions/52337010/automatic-initialization-and-update-of-submodules-in-makefile
 .PHONY: check-and-reinit-submodules capstone
@@ -104,7 +104,7 @@ $(BUILD_DIR)/%.o: %.S
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
-$(kernel) : $(obj_files)
+$(kernel) : $(obj_files) capstone
 	@# Create build directories - same structure as sources.
 	@mkdir -p $(@D)
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
