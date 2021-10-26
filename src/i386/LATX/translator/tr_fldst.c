@@ -437,8 +437,7 @@ bool translate_fnstsw(IR1_INST *pir1)
 
 bool translate_fstsw(IR1_INST *pir1) { return translate_fnstsw(pir1); }
 
-static void __attribute__((__constructor__))
-x86tomips_tr_fldst_init(void)
+void x86tomips_tr_fldst_init(void)
 {
     pi = M_PI;
     lg2 = log10(2.0);
