@@ -4,5 +4,6 @@
 
 void x86_to_mips_parse_options(QemuOpts *opts);
 void x86_to_mips_parse_tests(QemuOpts *opts);
+QemuOptsList qemu_xtm_opts;
 
 #endif

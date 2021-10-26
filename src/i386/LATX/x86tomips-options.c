@@ -659,6 +659,7 @@ void x86_to_mips_parse_options(QemuOpts *opts)
 
     /* optm=none|select|all */
     opt = qemu_opt_find(opts, "optm");
+    assert(opt != NULL);
     str = opt->str;
     if (strncmp(str, "all", 3) == 0) {
         if (verbose) {
