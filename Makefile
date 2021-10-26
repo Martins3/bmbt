@@ -13,7 +13,7 @@ GLIBS= -lglib-2.0 -lrt -lm -lc /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
 
 # ================================= glib =======================================
 
-CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include $(GLIB_INCLUDE)
+CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include $(GLIB_INCLUDE) -I$(BASE_DIR)/include
 CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB)
 
 

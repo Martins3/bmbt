@@ -1,4 +1,6 @@
+#include "../../include/qemu/rcu.h"
 #include "../../include/unitest/greatest.h"
+#include <qemu/atomic.h>
 
 /* A test runs various assertions, then calls PASS(), FAIL(), or SKIP(). */
 TEST x_should_equal_1(void) {
@@ -15,8 +17,19 @@ TEST x_should_equal_1(void) {
   PASS();
 }
 
+TEST atomic(void) {
+  int x;
+  atomic_rcu_set(&x, 123);
+  ASSERT_EQ(x, 123);
+
+  PASS();
+};
+
 /* Suites can group multiple tests with common setup. */
-SUITE(the_suite) { RUN_TEST(x_should_equal_1); }
+SUITE(the_suite) {
+  RUN_TEST(x_should_equal_1);
+  RUN_TEST(atomic);
+}
 
 /* Add definitions that need to be in the test runner's main file. */
 GREATEST_MAIN_DEFS();
