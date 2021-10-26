@@ -19,7 +19,7 @@ SS ss;//shadow stack
 
 extern void xtm_capstone_init(void);
 
-static void __attribute__((__constructor__)) x86_to_mips_init(void)
+void x86_to_mips_init(void)
 {
     context_switch_bt_to_native = 0;
     context_switch_native_to_bt_ret_0 = 0;

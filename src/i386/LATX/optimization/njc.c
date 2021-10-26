@@ -28,8 +28,7 @@
  */
 ADDR njc_lookup_tb;
 
-static
-void __attribute__((__constructor__)) x86_to_mips_njc_init(void)
+void x86_to_mips_njc_init(void)
 {
     njc_lookup_tb = 0;
 }

@@ -36,8 +36,7 @@ uint64_t cam_clear_key_func; /* func(key) */
 ADDR cam_lookup_k2v;
 ADDR cam_lookup_k2i;
 
-static
-void __attribute__((__constructor__)) x86_to_mips_cam_init(void)
+void x86_to_mips_cam_init(void)
 {
     cam_clear_func = 0;
 }
