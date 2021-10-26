@@ -486,7 +486,11 @@ typedef QTAILQ_HEAD(CPUTailQ, CPUState) CPUTailQ;
 extern CPUTailQ cpus;
 
 #define first_cpu QTAILQ_FIRST(&cpus)
-#define CPU_NEXT(cpu) QTAILQ_NEXT(cpu, node)
+#define CPU_NEXT(cpu)                                                          \
+  ({                                                                           \
+    assert(cpu != NULL);                                                       \
+    QTAILQ_NEXT(cpu, node);                                                    \
+  })
 #define CPU_FOREACH(cpu) QTAILQ_FOREACH(cpu, &cpus, node)
 
 /**
@@ -709,6 +713,12 @@ void cpu_common_initfn(CPUState *cpu);
  * @cpu: The CPU to be added to the list of CPUs.
  */
 void cpu_list_add(CPUState *cpu);
+
+/**
+ * cpu_list_remove:
+ * @cpu: The CPU to be removed from the list of CPUs.
+ */
+void cpu_list_remove(CPUState *cpu);
 
 // originally put into cpu-common.h, put here because of header cycle dependence
 void tcg_flush_softmmu_tlb(CPUState *cs);
