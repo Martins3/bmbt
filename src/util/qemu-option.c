@@ -57,18 +57,20 @@ void qemu_opts_print(QemuOpts *opts, const char *separator) {
 QemuOpts __xtm_qemu_opts;
 
 static QemuOpt options[] = {
-    {.name = "select"},
-    {.name = "tblink"},
-    {.name = "lbt"},
-    {.name = "verbose"},
+    {.name = "tblink", .value.boolean = true},
+    {.name = "lbt", .value.boolean = true},
+    {.name = "verbose", .value.boolean = true},
+    {.name = "optm", .str = "select"},
 };
 
 void init_xtm_options() {
+  QemuOptsList *opts_list = &qemu_xtm_opts;
   QemuOpts *opts = &__xtm_qemu_opts;
+  opts->list = opts_list;
 
   QTAILQ_INIT(&opts->head);
 
-  for (int i = 0; i < sizeof(opts) / sizeof(QemuOpt); ++i) {
+  for (int i = 0; i < sizeof(options) / sizeof(QemuOpt); ++i) {
     QTAILQ_INSERT_TAIL(&opts->head, &(options[i]), next);
   }
   x86_to_mips_parse_options(opts);

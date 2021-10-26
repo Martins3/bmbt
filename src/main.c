@@ -1,7 +1,10 @@
-#include "../../include/qemu/rcu.h"
-#include "../../include/unitest/greatest.h"
+#include <exec/memory.h>
+#include <exec/ram_addr.h>
 #include <hw/core/cpu.h>
 #include <qemu/atomic.h>
+#include <qemu/main-loop.h>
+#include <qemu/rcu.h>
+#include <unitest/greatest.h>
 
 /* A test runs various assertions, then calls PASS(), FAIL(), or SKIP(). */
 TEST testx_should_equal_1(void) {
@@ -59,11 +62,36 @@ TEST test_cpu_list(void) {
   PASS();
 };
 
+TEST test_ram_block(void) {
+  RAMBlock *block;
+  int i = RAM_BLOCK_NUM;
+  int total_length = 0;
+  ram_list.blocks[0].block.max_length = 12;
+  ram_list.blocks[1].block.max_length = 12;
+
+  RAMBLOCK_FOREACH(block) {
+    i--;
+    total_length += block->max_length;
+  }
+  ASSERT_EQ(i, 0);
+  ASSERT_EQ(total_length, 24);
+  PASS();
+}
+
+TEST test_qemu_option(void) {
+  void call_constructor();
+  call_constructor();
+  init_xtm_options();
+  PASS();
+}
+
 /* Suites can group multiple tests with common setup. */
 SUITE(the_suite) {
   RUN_TEST(testx_should_equal_1);
   RUN_TEST(test_atomic);
   RUN_TEST(test_cpu_list);
+  RUN_TEST(test_ram_block);
+  RUN_TEST(test_qemu_option);
 }
 
 /* Add definitions that need to be in the test runner's main file. */
