@@ -25,11 +25,6 @@ struct rcu_head {
   // RCUCBFunc *func;
 };
 
-#define atomic_rcu_set(ptr, i)                                                 \
-  do {                                                                         \
-    *ptr = i;                                                                  \
-  } while (0)
-
 // @todo
 #define call_rcu(x, y, z)                                                      \
   {}
