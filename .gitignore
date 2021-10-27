@@ -11,3 +11,5 @@ out/
 *.gdb_history
 
 compile_commands.json
+*.json.gz
+.vscode/
