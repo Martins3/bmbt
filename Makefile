@@ -115,7 +115,7 @@ $(kernel) : $(obj_files) capstone
 .PHONY: all clean gdb run gcov
 
 gcov:
-	@mkdir -p $(@D)
+	@mkdir -p $(BUILD_DIR)
 	# gcov build/src/main.gcda
 	lcov --capture --directory . --output-file build/coverage.info
 	genhtml build/coverage.info --output-directory out
