@@ -100,10 +100,9 @@ bool qht_insert(struct qht *ht, void *p, uint32_t hash, void **existing);
  */
 void *qht_lookup_custom(const struct qht *ht, const void *userp, uint32_t hash,
                         qht_lookup_func_t func);
-void *qht_lookup_custom_xtm(
-        const struct qht *ht, const void *userp, uint32_t hash,
-        qht_lookup_func_t func,
-        void *xtm_data, void(*xtm_func)(void*));
+void *qht_lookup_custom_xtm(const struct qht *ht, const void *userp,
+                            uint32_t hash, qht_lookup_func_t func,
+                            void *xtm_data, void (*xtm_func)(void *));
 
 /**
  * qht_remove - remove a pointer from the hash table
