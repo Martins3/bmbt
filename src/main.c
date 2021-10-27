@@ -88,6 +88,10 @@ TEST test_qemu_option(void) {
   void call_constructor();
   call_constructor();
   init_xtm_options();
+
+  extern int xtm_sigint_opt(void);
+  ASSERT_EQ(xtm_sigint_opt(), 0);
+
   PASS();
 }
 
