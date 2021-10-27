@@ -864,7 +864,6 @@ bool qht_resize(struct qht *ht, size_t n_elems) {
   return ret;
 }
 
-#ifdef QHT_TODO
 /* pass @stats to qht_statistics_destroy() when done */
 void qht_statistics_init(const struct qht *ht, struct qht_stats *stats) {
   const struct qht_map *map;
@@ -924,4 +923,3 @@ void qht_statistics_destroy(struct qht_stats *stats) {
   qdist_destroy(&stats->occupancy);
   qdist_destroy(&stats->chain);
 }
-#endif

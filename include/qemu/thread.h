@@ -12,6 +12,7 @@ typedef struct QemuSpin {
 
 typedef struct QemuMutex {
   bool lock;
+  bool initialized;
 } QemuMutex;
 
 static inline void qemu_spin_init(QemuSpin *spin) { spin->lock = false; }
@@ -31,9 +32,13 @@ static inline bool qemu_spin_trylock(QemuSpin *spin) {
   return true;
 }
 
-static inline void qemu_mutex_init(QemuMutex *mutex) { mutex->lock = false; }
+static inline void qemu_mutex_init(QemuMutex *mutex) {
+  mutex->initialized = true;
+  mutex->lock = false;
+}
 
 static inline void qemu_mutex_lock(QemuMutex *mutex) {
+  assert(mutex->initialized);
   assert(mutex->lock == false);
   mutex->lock = true;
 }
@@ -44,7 +49,7 @@ static inline void qemu_mutex_lock__raw(QemuMutex *mutex) {
 
 static inline bool qemu_mutex_trylock(QemuMutex *mutex) {
   qemu_mutex_lock(mutex);
-  return true;
+  return false;
 }
 
 static inline bool qemu_mutex_trylock__raw(QemuMutex *mutex) {

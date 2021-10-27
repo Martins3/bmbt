@@ -7,6 +7,8 @@
 #include <qemu/qht.h>
 #include <qemu/rcu.h>
 #include <qemu/xxhash.h>
+#include <sysemu/cpus.h>
+#include <test/test.h>
 #include <unitest/greatest.h>
 
 /* A test runs various assertions, then calls PASS(), FAIL(), or SKIP(). */
@@ -33,6 +35,7 @@ TEST test_atomic(void) {
 };
 
 TEST test_cpu_list(void) {
+  qemu_init_cpu_list();
   CPUState cpu0;
   cpu_list_add(&cpu0);
   ASSERT_EQ(first_cpu, &cpu0);
@@ -139,6 +142,9 @@ TEST test_qht(void) {
   for (int i = 1; i < 100; i *= 10) {
     ASSERT_EQ(qht_reset_size(&htable, i * 4), true);
   }
+
+  qht_test_default();
+  qht_test_resize();
 
   PASS();
 }

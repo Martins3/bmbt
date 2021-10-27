@@ -27,7 +27,7 @@ c_source_files += $(wildcard src/hw/*/*.c)
 c_source_files += $(wildcard src/fpu/*.c)
 c_source_files += $(wildcard src/qemu/*.c)
 c_source_files += $(wildcard src/util/*.c)
-c_source_files += $(wildcard src/unitest/*.c)
+c_source_files += $(wildcard src/test/*.c)
 c_source_files += $(wildcard src/i386/*.c)
 
 CONFIG_LATX=y
