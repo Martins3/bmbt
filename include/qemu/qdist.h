@@ -21,22 +21,22 @@
  * should be considered.
  */
 struct qdist_entry {
-    double x;
-    unsigned long count;
+  double x;
+  unsigned long count;
 };
 
 struct qdist {
-    struct qdist_entry *entries;
-    size_t n;
-    size_t size;
+  struct qdist_entry *entries;
+  size_t n;
+  size_t size;
 };
 
-#define QDIST_PR_BORDER     BIT(0)
-#define QDIST_PR_LABELS     BIT(1)
+#define QDIST_PR_BORDER BIT(0)
+#define QDIST_PR_LABELS BIT(1)
 /* the remaining options only work if PR_LABELS is set */
-#define QDIST_PR_NODECIMAL  BIT(2)
-#define QDIST_PR_PERCENT    BIT(3)
-#define QDIST_PR_100X       BIT(4)
+#define QDIST_PR_NODECIMAL BIT(2)
+#define QDIST_PR_PERCENT BIT(3)
+#define QDIST_PR_100X BIT(4)
 #define QDIST_PR_NOBINRANGE BIT(5)
 
 void qdist_init(struct qdist *dist);
