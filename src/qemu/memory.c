@@ -674,15 +674,15 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
   ram_list.dirty_memory[DIRTY_MEMORY_CODE] = new_blocks;
 }
 
-static char __bios[BIOS_FILE_SIZE];
+static char __bios[BIOS_IMG_SIZE];
 
 static void x86_bios_rom_init() {
   int fd = open("/home/maritns3/core/seabios/out/bios.bin", O_RDONLY);
   duck_check(fd != -1);
 
   lseek(fd, 0, SEEK_SET);
-  int rc = read(fd, __bios, BIOS_FILE_SIZE);
-  duck_check(rc == BIOS_FILE_SIZE);
+  int rc = read(fd, __bios, BIOS_IMG_SIZE);
+  duck_check(rc == BIOS_IMG_SIZE);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->host = (void *)(&__bios[0]);
@@ -705,6 +705,14 @@ static void *alloc_ram(hwaddr size) {
   return host;
 }
 
+static inline void init_ram_block(const char *name, unsigned int index,
+                                  bool readonly, hwaddr offset, uint64_t size) {
+  MemoryRegion *mr = &ram_list.blocks[index].mr;
+  mr->readonly = false;
+  mr->offset = 0;
+  mr->size = SMRAM_C_BASE;
+  mr->name = "pc.ram low";
+}
 /*
  * in pc_memory_init initialized
  *  - pc.ram
@@ -717,7 +725,6 @@ static void *alloc_ram(hwaddr size) {
  * in cpu_address_space_init
  *  - smm
  */
-// @todo change endless assignment to function
 static void ram_init(hwaddr total_ram_size) {
   RAMBlock *block;
   MemoryRegion *mr;
@@ -734,51 +741,25 @@ static void ram_init(hwaddr total_ram_size) {
     mr->ops = NULL;
   }
 
-  // pc.ram low
-  mr = &ram_list.blocks[PC_LOW_RAM_INDEX].mr;
-  mr->readonly = false;
-  mr->offset = 0;
-  mr->size = SMRAM_C_BASE;
-  mr->name = "pc.ram low";
-
-  // smram
-  mr = &ram_list.blocks[PC_LOW_RAM_INDEX].mr;
-  mr->readonly = false;
-  mr->offset = SMRAM_C_BASE;
-  mr->size = SMRAM_C_SIZE;
-  mr->name = "smram";
+  init_ram_block("pc.ram low", PC_LOW_RAM_INDEX, false, 0, SMRAM_C_BASE);
+  init_ram_block("smram", SMRAM_INDEX, false, SMRAM_C_BASE, SMRAM_C_SIZE);
 
   // pam expan and pam exbios
   duck_check(PAM_EXPAN_SIZE == PAM_EXBIOS_SIZE);
   for (int i = 0; i < PAM_EXPAN_NUM + PAM_EXBIOS_NUM; ++i) {
-    mr = &ram_list.blocks[PAM_INDEX].mr;
-    mr->readonly = true;
-    mr->offset = SMRAM_C_END + i * PAM_EXPAN_SIZE;
-    mr->size = PAM_EXPAN_SIZE;
-    mr->name = i < PAM_EXPAN_NUM ? "pam expan" : "pam exbios";
+    const char *name = i < PAM_EXPAN_NUM ? "pam expan" : "pam exbios";
+    hwaddr offset = SMRAM_C_END + i * PAM_EXPAN_SIZE;
+    init_ram_block(name, PAM_INDEX + i, true, offset, PAM_EXPAN_SIZE);
   }
 
-  mr = &ram_list.blocks[PAM_BIOS_INDEX].mr;
-  mr->readonly = true;
-  mr->offset = SMRAM_C_END * (PAM_EXPAN_NUM + PAM_EXBIOS_NUM);
-  mr->size = PAM_BIOS_SIZE;
-  mr->name = "pam bios";
+  init_ram_block("system bios", PAM_BIOS_INDEX, true,
+                 SMRAM_C_END * (PAM_EXPAN_NUM + PAM_EXBIOS_NUM), PAM_BIOS_SIZE);
+  duck_check(mr->offset + mr->size == X86_BIOS_MEM_SIZE);
 
-  duck_check(mr->offset + mr->size == BIOS_MEM_SIZE);
-
-  // pc.ram
-  mr = &ram_list.blocks[PC_RAM_INDEX].mr;
-  mr->readonly = false;
-  mr->offset = BIOS_MEM_SIZE;
-  mr->size = total_ram_size - BIOS_MEM_SIZE;
-  mr->name = "pc.ram";
-
-  // pc.bios
-  mr = &ram_list.blocks[PC_BIOS_INDEX].mr;
-  mr->readonly = true;
-  mr->offset = 4 * GiB - 256 * KiB;
-  mr->size = total_ram_size - BIOS_MEM_SIZE;
-  mr->name = "pc.ram";
+  init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
+                 total_ram_size - X86_BIOS_MEM_SIZE);
+  init_ram_block("pc.bios", PC_BIOS_INDEX, true, 4 * GiB - BIOS_IMG_SIZE,
+                 BIOS_IMG_SIZE);
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
