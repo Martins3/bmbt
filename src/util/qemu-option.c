@@ -59,7 +59,7 @@ QemuOpts __xtm_qemu_opts;
 static QemuOpt options[] = {
     {.name = "tblink", .value.boolean = true},
     {.name = "lbt", .value.boolean = true},
-    {.name = "verbose", .value.boolean = true},
+    {.name = "verbose", .value.boolean = false},
     {.name = "optm", .str = "select"},
 };
 
