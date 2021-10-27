@@ -1,9 +1,12 @@
 #include <exec/memory.h>
 #include <exec/ram_addr.h>
+#include <exec/tb-context.h>
 #include <hw/core/cpu.h>
 #include <qemu/atomic.h>
 #include <qemu/main-loop.h>
+#include <qemu/qht.h>
 #include <qemu/rcu.h>
+#include <qemu/xxhash.h>
 #include <unitest/greatest.h>
 
 /* A test runs various assertions, then calls PASS(), FAIL(), or SKIP(). */
@@ -85,6 +88,61 @@ TEST test_qemu_option(void) {
   PASS();
 }
 
+static bool str_cmp(const void *ap, const void *bp) {
+  const char *a = ap;
+  const char *b = bp;
+  return strcmp(a, b) == 0;
+}
+
+static bool custom_str_cmp(const void *ap, const void *bp) {
+  const char *a = ap;
+  const char *b = bp;
+  return strcmp(a, "ok") == 0 || strcmp(b, "ok") == 0;
+}
+
+static unsigned long hash_str(const char *str) {
+  unsigned long hash = 5381;
+  int c;
+
+  while ((0 != (c = *str++)))
+    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+  return hash;
+}
+
+TEST test_qht(void) {
+  struct qht htable;
+  qht_init(&htable, str_cmp, CODE_GEN_HTABLE_SIZE, QHT_MODE_AUTO_RESIZE);
+  char *str1 = "abc1";
+  char *str2 = "abc2";
+  unsigned long hash1 = hash_str(str1);
+  unsigned long hash2 = hash_str(str2);
+
+  void *res = qht_lookup(&htable, str1, hash1);
+  ASSERT_EQ(res, NULL);
+  qht_insert(&htable, str1, hash1, &res);
+  res = qht_lookup(&htable, str1, hash1);
+  ASSERT_EQ(res, str1);
+
+  qht_insert(&htable, str2, hash2, &res);
+  res = qht_lookup(&htable, str2, hash2);
+  ASSERT_EQ(res, str2);
+
+  res = qht_lookup(&htable, str2, hash1);
+  ASSERT_EQ(res, NULL);
+
+  res = qht_lookup(&htable, "fadfa", hash2);
+  ASSERT_EQ(res, NULL);
+
+  res = qht_lookup_custom(&htable, "ok", hash2, custom_str_cmp);
+
+  for (int i = 1; i < 100; i *= 10) {
+    ASSERT_EQ(qht_reset_size(&htable, i * 4), true);
+  }
+
+  PASS();
+}
+
 /* Suites can group multiple tests with common setup. */
 SUITE(the_suite) {
   RUN_TEST(testx_should_equal_1);
@@ -92,6 +150,7 @@ SUITE(the_suite) {
   RUN_TEST(test_cpu_list);
   RUN_TEST(test_ram_block);
   RUN_TEST(test_qemu_option);
+  RUN_TEST(test_qht);
 }
 
 /* Add definitions that need to be in the test runner's main file. */
