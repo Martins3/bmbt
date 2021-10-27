@@ -8,6 +8,7 @@
 #define QEMU_QDIST_H
 
 #include "../types.h"
+#include <qemu/bitops.h>
 
 /*
  * Samples with the same 'x value' end up in the same qdist_entry,
