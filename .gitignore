@@ -4,6 +4,7 @@
 *.bin
 *.d
 build/
+out/
 
 .ccls-cache/
 

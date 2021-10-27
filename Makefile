@@ -13,8 +13,13 @@ GLIBS= -lglib-2.0 -lrt -lm -lc /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
 
 # ================================= glib =======================================
 
+GCOV_CFLAGS=-fprofile-arcs -ftest-coverage
+GCOV_LFLAGS=-lgcov --coverage
+
+
 CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include $(GLIB_INCLUDE) -I$(BASE_DIR)/include
-CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB)
+CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB) $(GCOV_CFLAGS)
+LFLAGS := -g -Werror $(GCOV_LFLAGS) $(GLIB_LIB)
 
 
 linker_script := src/linker.ld
@@ -33,16 +38,11 @@ c_source_files += $(wildcard src/i386/*.c)
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
 include ./src/i386/Makefile.objs
-LATX_OBJ=$(addprefix $(BUILD_DIR)/src/i386/, $(obj-y))
-
-# c_source_files += $(wildcard src/i386/LATX/*.c)
-# c_source_files += $(wildcard src/i386/LATX/translator/*.c)
-# c_source_files += $(wildcard src/i386/LATX/optimization/*.c)
-# c_source_files += $(wildcard src/i386/LATX/ir1/*.c)
-# c_source_files += $(wildcard src/i386/LATX/ir2/*.c)
+LATX_SRC=$(addprefix src/i386/, $(obj-y))
+c_source_files += $(LATX_SRC)
 
 assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
-c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o) $(LATX_OBJ)
+c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
 
 obj_files := $(assembly_object_files) $(c_object_files)
 
@@ -100,7 +100,7 @@ $(BUILD_DIR)/%.o : %.c
 # compile assembly files
 $(BUILD_DIR)/%.o: %.S
 	@mkdir -p $(@D)
-	@$(GCC) $(CFLAGS) -MMD -D__ASSEMBLY__ -c $< -o $@
+	$(GCC) $(CFLAGS) -MMD -D__ASSEMBLY__ -c $< -o $@
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
@@ -108,23 +108,30 @@ $(kernel) : $(obj_files) capstone
 	@# Create build directories - same structure as sources.
 	@mkdir -p $(@D)
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
-	@gcc $(obj_files) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
+	@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
 	@echo "BMBT is ready"
 
 
+.PHONY: all clean gdb run gcov
 
-.PHONY: all clean gdb run
+gcov:
+	@mkdir -p $(@D)
+	# gcov build/src/main.gcda
+	lcov --capture --directory . --output-file build/coverage.info
+	genhtml build/coverage.info --output-directory out
+	microsoft-edge out/index.html
 
 clean:
 	rm -r $(BUILD_DIR)
 
 run: all
 	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+	find $(BUILD_DIR) -name "*.gcda" -type f -delete
 	$(kernel)
 
 gdb: all
-	 @#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
-	 gdb --args $(kernel)
+	@#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
+	gdb --args $(kernel)
 
 defrun: $(kernel)
 	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel) $(DEF)
