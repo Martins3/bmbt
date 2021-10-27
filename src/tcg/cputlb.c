@@ -1604,6 +1604,8 @@ tcg_target_ulong xtm_helper_le_lduw_mmu(CPUArchState *env, target_ulong addr,
 }
 #endif
 
+// bmbt doesn't big endian
+#ifdef BMBT
 static uint64_t full_be_lduw_mmu(CPUArchState *env, target_ulong addr,
                                  TCGMemOpIdx oi, uintptr_t retaddr) {
   return load_helper(env, addr, oi, retaddr, MO_BEUW, false, full_be_lduw_mmu);
@@ -1613,6 +1615,7 @@ tcg_target_ulong helper_be_lduw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr) {
   return full_be_lduw_mmu(env, addr, oi, retaddr);
 }
+#endif
 
 static uint64_t full_le_ldul_mmu(CPUArchState *env, target_ulong addr,
                                  TCGMemOpIdx oi, uintptr_t retaddr) {
@@ -1683,10 +1686,13 @@ tcg_target_ulong xtm_helper_le_ldsw_mmu(CPUArchState *env, target_ulong addr,
 }
 #endif
 
+// bmbt doesn't big endian
+#ifdef BMBT
 tcg_target_ulong helper_be_ldsw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr) {
   return (int16_t)helper_be_lduw_mmu(env, addr, oi, retaddr);
 }
+#endif
 
 tcg_target_ulong helper_le_ldsl_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr) {
