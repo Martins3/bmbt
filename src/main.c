@@ -153,18 +153,14 @@ TEST test_qht(void) {
   PASS();
 }
 
-#define NO_UNITEST
-
 /* Suites can group multiple tests with common setup. */
-SUITE(the_suite) {
-#ifdef NO_UNITEST
+SUITE(basic_test) {
   RUN_TEST(testx_should_equal_1);
   RUN_TEST(test_atomic);
   RUN_TEST(test_cpu_list);
   RUN_TEST(test_ram_block);
   RUN_TEST(test_qemu_option);
   RUN_TEST(test_qht);
-#endif
 }
 
 /* Add definitions that need to be in the test runner's main file. */
@@ -177,7 +173,8 @@ int main(int argc, char **argv) {
   /* RUN_TEST(x_should_equal_1); */
 
   /* Tests can also be gathered into test suites. */
-  RUN_SUITE(the_suite);
+  // RUN_SUITE(basic_test);
+  RUN_SUITE(memory_model_test);
 
   GREATEST_MAIN_END(); /* display results */
 }

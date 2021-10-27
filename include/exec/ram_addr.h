@@ -28,7 +28,7 @@ typedef struct RAMBlock {
 
 #define PAM_EXBIOS_INDEX (PAM_EXPAN_INDEX + PAM_EXPAN_NUM)
 #define PAM_EXBIOS_NUM 4
-
+// system bios
 #define PAM_BIOS_INDEX (PAM_EXBIOS_INDEX + PAM_EXBIOS_NUM)
 #define PAM_BIOS_NUM 1
 #define PAM_NUM (PAM_EXPAN_NUM + PAM_EXBIOS_NUM + PAM_BIOS_NUM)
@@ -38,9 +38,9 @@ typedef struct RAMBlock {
 #define PC_BIOS_INDEX (PC_RAM_INDEX + 1)
 
 #define RAM_BLOCK_NUM (PC_BIOS_INDEX + 1)
-#define BIOS_MEM_SIZE (PAM_BIOS_END + 1)
+#define X86_BIOS_MEM_SIZE (PAM_BIOS_END + 1)
 
-#define BIOS_FILE_SIZE (256 * KiB)
+#define BIOS_IMG_SIZE (256 * KiB)
 
 typedef struct RAMList {
   DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
