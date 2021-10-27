@@ -136,7 +136,13 @@ bool qht_remove(struct qht *ht, const void *p, uint32_t hash);
  */
 bool qht_reset_size(struct qht *ht, size_t n_elems);
 
-
-
-
+/**
+ * qht_lookup - Look up a pointer in a QHT
+ * @ht: QHT to be looked up
+ * @userp: pointer to pass to the comparison function
+ * @hash: hash of the pointer to be looked up
+ *
+ * Calls qht_lookup_custom() using @ht's default comparison function.
+ */
+void *qht_lookup(const struct qht *ht, const void *userp, uint32_t hash);
 #endif /* QEMU_QHT_H */
