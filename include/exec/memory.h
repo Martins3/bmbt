@@ -54,6 +54,7 @@ static inline void io_set_special_mr(MemoryRegion *mr) {
   address_space_io.dispatch->special_mr = mr;
 }
 
+// @todo it's vga
 static inline void mem_set_special_mr(MemoryRegion *mr) {
   address_space_memory.dispatch->special_mr = mr;
 }
@@ -109,9 +110,9 @@ typedef struct MemoryRegionOps {
 void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
                            void *opaque, const char *name, uint64_t size);
 
-void io_add_memory_region(hwaddr offset, MemoryRegion *mr);
+void io_add_memory_region(const hwaddr offset, MemoryRegion *mr);
 
-void mem_add_memory_region(hwaddr offset, MemoryRegion *mr);
+void mem_add_memory_region(MemoryRegion *mr);
 
 #define RAM_ADDR_INVALID (~(ram_addr_t)0)
 

@@ -8,18 +8,25 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-bool mr_initialized(MemoryRegion *mr) {
+static bool mr_initialized(const MemoryRegion *mr) {
+  duck_check(mr != NULL);
   int is_mmio = mr->ops != NULL;
   int is_ram = mr->ram_block != NULL;
+  if (mr->offset == 0) {
+    duck_check(strcmp(mr->name, "pc.ram low") == 0);
+  }
   return is_mmio + is_ram == 1;
 }
+
 static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
-                                 MemoryRegion *mr, hwaddr offset) {
+                                 MemoryRegion *mr) {
+#ifndef RELEASE_VERSION
   duck_check(mr_initialized(mr));
+#endif
+  hwaddr offset = mr->offset;
 
   tcg_commit();
 
-  mr->offset = offset;
   struct Gap {
     uint64_t left;
     uint64_t right;
@@ -32,39 +39,48 @@ static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
                      : 0;
     gap.right = dispatch->segments[i]->offset;
 
-    if (mr->offset >= gap.left && mr->offset + mr->size < gap.right) {
+    if (mr->offset >= gap.left && mr->offset + mr->size <= gap.right) {
       break;
     }
   }
 
+#ifndef RELEASE_VERSION
   if (i == dispatch->segment_num) {
-    MemoryRegion *last_mr = dispatch[i].segments[dispatch->segment_num - 1];
-    duck_check(offset >= last_mr->offset + last_mr->size);
+    if (i > 0) {
+      MemoryRegion *last_mr = dispatch->segments[i - 1];
+      duck_check(offset >= last_mr->offset + last_mr->size);
+    } else {
+      duck_check(offset >= 0);
+    }
   }
-
-  dispatch->segment_num++;
+#endif
 
   for (int k = dispatch->segment_num; k > i; --k) {
-    dispatch[k] = dispatch[k - 1];
+    dispatch->segments[k] = dispatch->segments[k - 1];
   }
   dispatch->segments[i] = mr;
+
+  dispatch->segment_num++;
 }
 
-// @todo initialize them
-bool smram_enable;
+// @todo actually in the beginning
+// smram_region_enable = 1, smram_enable = 0
+// make vga-lowmem available to normal CPU
 bool smram_region_enable;
+// make cpu in smm mode can ignore smram_region_enable
+bool smram_enable;
 
 static bool is_smram_access(hwaddr offset) {
   return offset >= SMRAM_C_BASE && offset < SMRAM_C_END;
 }
 
-typedef bool (*MemoryRegionMatch)(MemoryRegion *mr, hwaddr offset);
+typedef bool (*MemoryRegionMatch)(const MemoryRegion *mr, hwaddr offset);
 
-static bool mem_mr_match(MemoryRegion *mr, hwaddr offset) {
+static bool mem_mr_match(const MemoryRegion *mr, hwaddr offset) {
   return offset >= mr->offset && offset < mr->offset + mr->size;
 }
 
-static bool io_mr_match(MemoryRegion *mr, hwaddr offset) {
+static bool io_mr_match(const MemoryRegion *mr, hwaddr offset) {
   return offset == mr->offset;
 }
 
@@ -72,7 +88,8 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
                                            hwaddr offset,
                                            MemoryRegionMatch mr_match) {
   for (int i = 0; i < dispatch->segment_num; ++i) {
-    MemoryRegion *mr = dispatch[i].segments[i];
+    MemoryRegion *mr = dispatch->segments[i];
+    duck_check(mr != NULL);
     if (mr_match(mr, offset)) {
       return mr;
     }
@@ -102,10 +119,11 @@ static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
 static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
                                     hwaddr *xlat, hwaddr *plen) {
   if (is_smram_access(offset)) {
-    if (!smram_region_enable) {
+    if (!as->smm && smram_region_enable) {
       return as->dispatch->special_mr;
     }
-    if (as->smm && smram_enable) {
+
+    if (as->smm && !smram_enable && smram_region_enable) {
       return as->dispatch->special_mr;
     }
   }
@@ -120,12 +138,12 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
   return mr;
 }
 
-void io_add_memory_region(hwaddr offset, MemoryRegion *mr) {
-  as_add_memory_regoin(address_space_io.dispatch, mr, offset);
+void io_add_memory_region(const hwaddr offse, MemoryRegion *mr) {
+  as_add_memory_regoin(address_space_io.dispatch, mr);
 }
 
-void mem_add_memory_region(hwaddr offset, MemoryRegion *mr) {
-  as_add_memory_regoin(address_space_memory.dispatch, mr, offset);
+void mem_add_memory_region(MemoryRegion *mr) {
+  as_add_memory_regoin(address_space_memory.dispatch, mr);
 }
 
 void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
@@ -682,6 +700,7 @@ static void x86_bios_rom_init() {
 
   lseek(fd, 0, SEEK_SET);
   int rc = read(fd, __bios, BIOS_IMG_SIZE);
+  close(fd);
   duck_check(rc == BIOS_IMG_SIZE);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
@@ -708,10 +727,10 @@ static void *alloc_ram(hwaddr size) {
 static inline void init_ram_block(const char *name, unsigned int index,
                                   bool readonly, hwaddr offset, uint64_t size) {
   MemoryRegion *mr = &ram_list.blocks[index].mr;
-  mr->readonly = false;
-  mr->offset = 0;
-  mr->size = SMRAM_C_BASE;
-  mr->name = "pc.ram low";
+  mr->readonly = readonly;
+  mr->offset = offset;
+  mr->size = size;
+  mr->name = name;
 }
 /*
  * in pc_memory_init initialized
@@ -726,9 +745,6 @@ static inline void init_ram_block(const char *name, unsigned int index,
  *  - smm
  */
 static void ram_init(hwaddr total_ram_size) {
-  RAMBlock *block;
-  MemoryRegion *mr;
-
   void *host = alloc_ram(total_ram_size);
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
@@ -752,9 +768,15 @@ static void ram_init(hwaddr total_ram_size) {
     init_ram_block(name, PAM_INDEX + i, true, offset, PAM_EXPAN_SIZE);
   }
 
-  init_ram_block("system bios", PAM_BIOS_INDEX, true,
-                 SMRAM_C_END * (PAM_EXPAN_NUM + PAM_EXBIOS_NUM), PAM_BIOS_SIZE);
-  duck_check(mr->offset + mr->size == X86_BIOS_MEM_SIZE);
+  init_ram_block("system bios", PAM_BIOS_INDEX, true, PAM_BIOS_BASE,
+                 PAM_BIOS_SIZE);
+
+  duck_check(SMRAM_C_BASE + SMRAM_C_SIZE +
+                 PAM_EXPAN_SIZE * (PAM_EXPAN_NUM + PAM_EXBIOS_NUM) ==
+             PAM_BIOS_BASE);
+  duck_check(ram_list.blocks[PAM_BIOS_INDEX].mr.offset +
+                 ram_list.blocks[PAM_BIOS_INDEX].mr.size ==
+             X86_BIOS_MEM_SIZE);
 
   init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
                  total_ram_size - X86_BIOS_MEM_SIZE);
@@ -770,9 +792,14 @@ static void ram_init(hwaddr total_ram_size) {
     block->host = host + block->offset;
   }
 
-  // pc.bios offset is not same with mr.offset
-  block = &ram_list.blocks[PC_BIOS_INDEX].block;
+  // pc.bios's block::offset is not same with it's mr.offset
+  RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->offset = total_ram_size;
+
+  for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
+    MemoryRegion *mr = &ram_list.blocks[i].mr;
+    mem_add_memory_region(mr);
+  }
 
   // isa-bios / pc.bios's host point to file
   x86_bios_rom_init();
