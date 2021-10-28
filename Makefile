@@ -113,7 +113,7 @@ $(kernel) : $(obj_files) capstone
 	@echo "BMBT is ready"
 
 
-.PHONY: all clean gdb run gcov
+.PHONY: all clean gdb run gcov clear_gcda test
 
 gcov:
 	@mkdir -p build
@@ -128,10 +128,17 @@ gcov:
 clean:
 	rm -r $(BUILD_DIR)
 
-run: all
-	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
+
+run: all clear_gcda
+	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+	@# only test work in process
+	$(kernel) -s wip
+
+test: clear_gcda
 	$(kernel)
+
 
 gdb: all
 	@#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
