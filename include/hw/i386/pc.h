@@ -214,8 +214,6 @@ GSIState *pc_gsi_create(qemu_irq **irqs, bool pci_enabled);
 void pc_i8259_create(qemu_irq *i8259_irqs);
 void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name);
 
-PCMachineState *machine_init();
-
 void pc_machine_class_init(PCMachineClass *pcmc);
 void pc_machine_initfn(PCMachineState *pcms);
 
