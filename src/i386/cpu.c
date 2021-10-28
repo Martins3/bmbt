@@ -1569,7 +1569,9 @@ static PropValue tcg_default_props[] = {
 X86CPUVersion default_cpu_version = 1;
 
 void x86_cpu_set_default_version(X86CPUVersion version) {
-  g_assert_not_reached();
+  /* Translating CPU_VERSION_AUTO to CPU_VERSION_AUTO doesn't make sense */
+  assert(version != CPU_VERSION_AUTO);
+  default_cpu_version = version;
 }
 
 static X86CPUVersion x86_cpu_model_last_version(const X86CPUModel *model) {
