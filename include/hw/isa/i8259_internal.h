@@ -66,7 +66,15 @@ void pic_reset_common(PICCommonState *s);
 // [interface 17]
 PICCommonState *i8259_init_chip(const char *name, bool master);
 
-#define PIC_GET_CLASS(i) i->pc
+static inline PICClass *PIC_GET_CLASS(PICCommonState *i) {
+  duck_check(i->pc != NULL);
+  return i->pc;
+}
+
+static inline void PIC_SET_CLASS(PICCommonState *i, PICClass *pc) {
+  duck_check(pc != NULL);
+  i->pc = pc;
+}
 
 void pic_realize(PICCommonState *s);
 void pic_common_realize(PICCommonState *s);

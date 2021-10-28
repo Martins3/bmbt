@@ -86,7 +86,7 @@ MachineState *qdev_get_machine() {
   return MACHINE(&__pcms);
 }
 
-void QOM_machine_init() {
+PCMachineState *QOM_machine_init() {
   PCMachineState *pcms = &__pcms;
   PCMachineClass *pcmc = &__pcmc;
 
@@ -96,9 +96,9 @@ void QOM_machine_init() {
   X86MachineState *x86ms = X86_MACHINE(&__pcms);
   X86MachineClass *x86mc = X86_MACHINE_CLASS(mc);
 
-  pcms->pcmc = pcmc;
-  ms->mc = mc;
-  x86ms->x86mc = x86mc;
+  PC_MACHINE_SET_CLASS(pcms, pcmc);
+  MACHINE_SET_CLASS(ms, mc);
+  X86_MACHINE_SET_CLASS(x86ms, x86mc);
 
   machine_class_init(mc);
   machine_class_base_init(mc);
@@ -113,13 +113,12 @@ void QOM_machine_init() {
   pc_machine_v4_2_class_init(mc);
 
   machine_inited = true;
+  return pcms;
 }
 
 PCMachineState *machine_init() {
-  MachineState *current_machine = MACHINE(&__pcms);
+  MachineState *current_machine = MACHINE(QOM_machine_init());
   MachineClass *machine_class = MACHINE_GET_CLASS(current_machine);
-
-  QOM_machine_init();
 
   /* machine_class: default to UP */
   machine_class->max_cpus = machine_class->max_cpus ?: 1;
@@ -175,12 +174,6 @@ PCMachineState *machine_init() {
 
   machine_run_board_init(current_machine);
 
-  // qdev_machine_creation_done();
-  qemu_register_reset(qbus_reset_all_fn, NULL);
-  qemu_run_machine_init_done_notifiers();
-
-  qemu_system_reset(machine_class, current_machine);
-
   return &__pcms;
 }
 
@@ -199,6 +192,8 @@ void call_constructor() {
 }
 
 void qemu_init() {
+  MachineState *current_machine;
+  MachineClass *machine_class;
   call_constructor();
 
   init_xtm_options();
@@ -211,6 +206,8 @@ void qemu_init() {
 
   memory_map_init(ram_size);
   qemu_mutex_lock_iothread();
+
+  PCMachineState *pcms = machine_init();
   tcg_init();
 
   init_real_host_page_size();
@@ -218,11 +215,15 @@ void qemu_init() {
 
   qemu_set_log(0);
 
-  machine_init();
+  // qdev_machine_creation_done();
+  qemu_register_reset(qbus_reset_all_fn, NULL);
+  qemu_run_machine_init_done_notifiers();
+
+  current_machine = MACHINE(&__pcms);
+  machine_class = MACHINE_GET_CLASS(current_machine);
+  qemu_system_reset(machine_class, current_machine);
 
   resume_all_vcpus();
 
   qemu_mutex_unlock_iothread();
-  duck_check(first_cpu != NULL);
-  qemu_tcg_rr_cpu_thread_fn(first_cpu);
 }

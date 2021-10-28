@@ -88,7 +88,6 @@ typedef struct PCMachineState {
   hwaddr memhp_io_base;
 } PCMachineState;
 
-#define PC_MACHINE_GET_CLASS(pcms) pcms->pcmc
 #define PC_MACHINE(mc)                                                         \
   ({                                                                           \
     MachineState *tmp = mc;                                                    \
@@ -155,6 +154,17 @@ typedef struct PCMachineClass {
   /* use PVH to load kernels that support this feature */
   bool pvh_enabled;
 } PCMachineClass;
+
+static inline PCMachineClass *PC_MACHINE_GET_CLASS(PCMachineState *pcms) {
+  duck_check(pcms->pcmc != NULL);
+  return pcms->pcmc;
+}
+
+static inline void PC_MACHINE_SET_CLASS(PCMachineState *pcms,
+                                        PCMachineClass *pcmc) {
+  duck_check(pcmc != NULL);
+  pcms->pcmc = pcmc;
+}
 
 static inline MachineState *X86_TO_MACHINE(X86MachineState *x) {
   return (MachineState *)x;

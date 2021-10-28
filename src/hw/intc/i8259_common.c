@@ -176,7 +176,7 @@ static PICClass __slave_pc;
 PICCommonState *QOM_init_PIC(bool master) {
   PICCommonState *pic = master ? &__master_pic : &__slave_pic;
   PICClass *pc = master ? &__master_pc : &__slave_pc;
-  pic->pc = pc;
+  PIC_SET_CLASS(pic, pc);
 
   pic_common_class_init(PIC_COMMON_CLASS(pc));
   i8259_class_init(pc);

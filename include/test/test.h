@@ -7,5 +7,6 @@ void qht_test_default(void);
 void qht_test_resize(void);
 
 SUITE(memory_model_test);
+SUITE(fw_cfg_test);
 
 #endif /* end of include guard: TEST_H_QZO8LE4C */

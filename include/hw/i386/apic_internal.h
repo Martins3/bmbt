@@ -187,7 +187,16 @@ struct APICCommonState {
   bool legacy_instance_id;
 };
 
-#define APIC_COMMON_GET_CLASS(s) s->info
+static inline APICCommonClass *APIC_COMMON_GET_CLASS(APICCommonState *s) {
+  duck_check(s->info != NULL);
+  return s->info;
+}
+
+static inline void APIC_COMMON_SET_CLASS(APICCommonState *s,
+                                         APICCommonClass *info) {
+  duck_check(info != NULL);
+  s->info = info;
+}
 
 typedef struct VAPICState {
   uint8_t tpr;

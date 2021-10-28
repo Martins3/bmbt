@@ -449,6 +449,7 @@ IOAPICCommonState *QOM_ioapic_init() {
 
   ioapic_common_class_init(c);
   ioapic_class_init(c);
+  IOAPIC_COMMON_SET_CLASS(s, c);
 
   s->version = IOAPIC_VER_DEF;
 

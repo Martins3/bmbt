@@ -402,6 +402,7 @@ APICCommonState *QOM_apic_init() {
 
   apic_common_class_init();
   apic_class_init(apic_class);
+  APIC_COMMON_SET_CLASS(apic, apic_class);
 
   apic_common_initfn(apic);
 

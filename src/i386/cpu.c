@@ -4169,7 +4169,8 @@ X86CPU *QOM_cpu_init() {
 
   x86_cpu_cpudef_class_init(x86_cpu_class, model);
 
-  x86_cpu->xcc = x86_cpu_class;
+  X86_CPU_SET_CLASS(x86_cpu, x86_cpu_class);
+
   cpu->cc = cpu_class;
 
   x86_cpu_common_class_init(x86_cpu_class);
