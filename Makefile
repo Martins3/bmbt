@@ -144,7 +144,7 @@ run: all clear_gcda
 	$(kernel) -s wip
 
 test: all clear_gcda
-	$(kernel)
+	$(kernel) -s wip
 
 
 gdb: all
