@@ -143,7 +143,7 @@ run: all clear_gcda
 	@# only test work in process
 	$(kernel) -s wip
 
-test: clear_gcda
+test: all clear_gcda
 	$(kernel)
 
 
