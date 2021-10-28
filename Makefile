@@ -95,6 +95,7 @@ capstone:
 $(BUILD_DIR)/%.o : %.c
 	@mkdir -p $(@D)
 	@$(GCC) $(CFLAGS) -MMD -c $< -o $@
+	@# $(GCC) $(CFLAGS) -MMD -E $< -o $@.c
 	@echo "  CC      $<"
 
 # compile assembly files
@@ -115,18 +116,21 @@ $(kernel) : $(obj_files) capstone
 .PHONY: all clean gdb run gcov
 
 gcov:
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p build
 	# gcov build/src/main.gcda
-	lcov --capture --directory . --output-file build/coverage.info
-	genhtml build/coverage.info --output-directory out
-	microsoft-edge out/index.html
+	$(shell touch build/coverage.info)
+	$(shell mv build/coverage.info build/coverage.info.merge)
+	lcov -capture --directory build --output-file build/coverage.info
+	lcov -add-tracefile build/coverage.info.merge -add-tracefile build/coverage.info --directory $(BUILD_DIR) --output-file $(BUILD_DIR)/coverage.info
+	genhtml build/coverage.info --output-directory build/lcov_out
+	microsoft-edge build/lcov_out/index.html
 
 clean:
 	rm -r $(BUILD_DIR)
 
 run: all
 	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
-	find $(BUILD_DIR) -name "*.gcda" -type f -delete
+	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
 	$(kernel)
 
 gdb: all
