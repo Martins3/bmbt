@@ -947,7 +947,7 @@ void pc_acpi_smi_interrupt(void *opaque, int irq, int level) {
  * in hw/core/machine.c but includes CPU die support.
  */
 void pc_smp_parse(MachineState *ms) {
-  printf("huxueshi:%s %s\n", __FUNCTION__, "No extra QemuOpts needed");
+  // No extra QemuOpts for smp in BMBT mode
 }
 
 // 1. ms->smp.cpus = 1

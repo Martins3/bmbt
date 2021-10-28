@@ -2231,6 +2231,12 @@ void x86_update_hflags(CPUX86State *env);
 #define APIC_DEFAULT_ADDRESS 0xfee00000
 #define APIC_SPACE_SIZE 0x100000
 
+/*
+ * Resolve to version defined by current machine type.
+ * See x86_cpu_set_default_version()
+ */
+#define CPU_VERSION_AUTO -2
+
 static inline void cpu_x86_load_seg_cache_sipi(X86CPU *cpu,
                                                uint8_t sipi_vector) {
   CPUState *cs = CPU(cpu);
@@ -2246,7 +2252,6 @@ int cpu_get_pic_interrupt(CPUX86State *s);
 /* MSDOS compatibility mode FPU exception support */
 void x86_register_ferr_irq(qemu_irq irq);
 void cpu_set_ignne(void);
-
 
 typedef int X86CPUVersion;
 
