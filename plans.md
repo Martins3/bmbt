@@ -27,25 +27,8 @@
 - MEM_TODO : 暂时没有移植的，和 MEM 相关的
 - RTC_TODO : 关于 rtc 的代码
 - SMBIOS_TODO :
-- QHT_TODO : 对于 QHT 没有深入的理解
 
-## 需要添加 unitest 的部分
-- [ ] first cpu ..
-```c
-#define first_cpu QTAILQ_FIRST(&cpus)
-#define CPU_NEXT(cpu) QTAILQ_NEXT(cpu, node)
-#define CPU_FOREACH(cpu) QTAILQ_FOREACH(cpu, &cpus, node)
-```
-  - [ ] 如果没有添加，CPU_NEXT 得到是啥? first_cpu 是啥?
-  - [ ] 只有一个 cpu, CPU_NEXT 是啥?
-- [ ] atomic.h
-- [ ] src/qemu/memory.c
-- [ ] RAMBLOCK_FOREACH : C 的 for 语言的过于巧妙的使用
-- [ ] QEMU options 没有仔细的 review 的
-  - https://github.com/Martins3/bmbt/issues/171 : debug 的结果看一下
-- [ ] qht
-  - 及其快速的移植的，没有正确的保障的，将 QEMU 本身的 unitest 跑一下
-  - 无法理解 seqlock 中的 seqlock_write_lock_impl 被注释掉之后还是正确工作，而且 seqlock 似乎没有 writer 吗?
+处理掉 src/qemu/memory.c 的测试啊, 应该首先构造一些 memory region 自己测试一下，顺便方便别人理解
 
 ## 还需要分析的细节问题
 2. apic
