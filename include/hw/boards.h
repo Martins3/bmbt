@@ -258,7 +258,15 @@ struct MachineState {
 
 MachineState *qdev_get_machine();
 
-#define MACHINE_GET_CLASS(machine) machine->mc
+static inline MachineClass *MACHINE_GET_CLASS(MachineState *machine) {
+  duck_check(machine->mc != NULL);
+  return machine->mc;
+}
+
+static inline void MACHINE_SET_CLASS(MachineState *machine, MachineClass *mc) {
+  duck_check(mc != NULL);
+  machine->mc = mc;
+}
 
 void machine_class_init(MachineClass *mc);
 void machine_class_base_init(MachineClass *mc);

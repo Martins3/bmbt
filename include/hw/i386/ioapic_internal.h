@@ -90,7 +90,18 @@ struct IOAPICCommonState {
   int irq_eoi[IOAPIC_NUM_PINS];
   // QEMUTimer *delayed_ioapic_service_timer; // FIXME :linker: what's delayed ?
 };
-#define IOAPIC_COMMON_GET_CLASS(is) is->icc
+
+static inline IOAPICCommonClass *
+IOAPIC_COMMON_GET_CLASS(IOAPICCommonState *is) {
+  duck_check(is->icc != NULL);
+  return is->icc;
+}
+
+static inline void IOAPIC_COMMON_SET_CLASS(IOAPICCommonState *is,
+                                           IOAPICCommonClass *icc) {
+  duck_check(icc != NULL);
+  is->icc = icc;
+}
 
 // QOM
 IOAPICCommonState *QOM_ioapic_init();

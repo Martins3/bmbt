@@ -8,6 +8,7 @@
 #include <qemu/rcu.h>
 #include <qemu/xxhash.h>
 #include <sysemu/cpus.h>
+#include <sysemu/sysemu.h>
 #include <test/test.h>
 #include <unitest/greatest.h>
 
@@ -153,6 +154,11 @@ TEST test_qht(void) {
   PASS();
 }
 
+TEST test_qemu_init() {
+  qemu_init();
+  PASS();
+}
+
 /* Suites can group multiple tests with common setup. */
 SUITE(basic_test) {
   RUN_TEST(testx_should_equal_1);
@@ -162,6 +168,8 @@ SUITE(basic_test) {
   RUN_TEST(test_qemu_option);
   RUN_TEST(test_qht);
 }
+
+SUITE(wip) { RUN_TEST(test_qemu_init); }
 
 /* Add definitions that need to be in the test runner's main file. */
 GREATEST_MAIN_DEFS();
@@ -173,8 +181,10 @@ int main(int argc, char **argv) {
   /* RUN_TEST(x_should_equal_1); */
 
   /* Tests can also be gathered into test suites. */
+  // RUN_SUITE(wip);
   RUN_SUITE(basic_test);
   RUN_SUITE(memory_model_test);
+  // RUN_SUITE(fw_cfg_test);
 
   GREATEST_MAIN_END(); /* display results */
 }

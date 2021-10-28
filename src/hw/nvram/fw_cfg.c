@@ -344,7 +344,7 @@ static bool fw_cfg_comb_valid(void *opaque, hwaddr addr, unsigned size,
   return (size == 1) || (is_write && size == 2);
 }
 
-#if MEM_TODO
+#ifdef BMBT
 static const MemoryRegionOps fw_cfg_ctl_mem_ops = {
     .read = fw_cfg_ctl_mem_read,
     .write = fw_cfg_ctl_mem_write,
@@ -363,6 +363,7 @@ static const MemoryRegionOps fw_cfg_data_mem_ops = {
             .accepts = fw_cfg_data_mem_valid,
         },
 };
+#endif
 
 static const MemoryRegionOps fw_cfg_comb_mem_ops = {
     .read = fw_cfg_data_read,
@@ -379,7 +380,6 @@ static const MemoryRegionOps fw_cfg_dma_mem_ops = {
     .valid.max_access_size = 8,
     .impl.max_access_size = 8,
 };
-#endif
 
 void fw_cfg_reset() {
   /* we never register a read callback for FW_CFG_SIGNATURE */
