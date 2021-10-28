@@ -1,4 +1,6 @@
 #!/usr/bin/make
+SHELL:=/bin/bash
+
 BASE_DIR = $(shell pwd)
 BUILD_DIR := $(BASE_DIR)/build
 kernel := $(BUILD_DIR)/kernel.bin
@@ -115,15 +117,20 @@ $(kernel) : $(obj_files) capstone
 
 .PHONY: all clean gdb run gcov clear_gcda test
 
+gcov_out=build/gcov
+gcov_info=$(gcov_out)/bmbt_coverage.info
+gcov_merge_info=$(gcov_out)/bmbt_merge.info
+
 gcov:
-	@mkdir -p build
-	# gcov build/src/main.gcda
-	$(shell touch build/coverage.info)
-	$(shell mv build/coverage.info build/coverage.info.merge)
-	lcov -capture --directory build --output-file build/coverage.info
-	lcov -add-tracefile build/coverage.info.merge -add-tracefile build/coverage.info --directory $(BUILD_DIR) --output-file $(BUILD_DIR)/coverage.info
-	genhtml build/coverage.info --output-directory build/lcov_out
-	microsoft-edge build/lcov_out/index.html
+	@mkdir -p $(gcov_out)
+	lcov -capture --directory build --output-file $(gcov_info)
+	if [[ -e $(gcov_merge_info) ]]; then\
+		lcov -a $(gcov_merge_info) -a $(gcov_info) -d build -o $(gcov_merge_info); \
+	else \
+		lcov -a $(gcov_info) -d build -o $(gcov_merge_info); \
+	fi
+	genhtml $(gcov_merge_info) --output-directory $(gcov_out)
+	# microsoft-edge $(gcov_out)/index.html
 
 clean:
 	rm -r $(BUILD_DIR)
