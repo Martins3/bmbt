@@ -371,12 +371,27 @@ typedef struct CPUClass {
   void (*tcg_initialize)(void);
 } CPUClass;
 
-#define CPU_GET_CLASS(cpu) cpu->cc
+static inline CPUClass *CPU_GET_CLASS(const CPUState *cpu) {
+  duck_check(cpu->cc);
+  return cpu->cc;
+}
+
+static inline void CPU_SET_CLASS(CPUState *cpu, CPUClass *cc) {
+  duck_check(cc != NULL);
+  cpu->cc = cc;
+}
+
 #define CPU_CLASS(oc)                                                          \
   ({                                                                           \
     X86CPUClass *tmp = oc;                                                     \
     (CPUClass *)tmp;                                                           \
   })
+
+/* Since this macro is used a lot in hot code paths and in conjunction with
+ * FooCPU *foo_env_get_cpu(), we deviate from usual QOM practice by using
+ * an unchecked cast.
+ */
+#define CPU(obj) ((CPUState *)(obj))
 
 /* current CPU in the current thread. It is only valid inside
    cpu_exec() */
@@ -409,12 +424,6 @@ void cpu_watchpoint_remove_all(CPUState *cpu, int mask);
 void cpu_check_watchpoint(CPUState *cpu, vaddr addr, vaddr len,
                           MemTxAttrs attrs, int flags, uintptr_t ra);
 int cpu_watchpoint_address_matches(CPUState *cpu, vaddr addr, vaddr len);
-
-/* Since this macro is used a lot in hot code paths and in conjunction with
- * FooCPU *foo_env_get_cpu(), we deviate from usual QOM practice by using
- * an unchecked cast.
- */
-#define CPU(obj) ((CPUState *)(obj))
 
 /**
  * CPUDumpFlags:
