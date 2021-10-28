@@ -23,6 +23,8 @@
   - 修改 AddressSpace::segments 的时候，也就是 io_add_memory_region 和 mem_add_memory_region
   - smm / pam 修改映射关系的时候，对应原来的代码  memory_region_set_enabled 会调用 memory_region_transaction_commit 的情况啊!
 
+- pc.bios 的空间不是在 ram_size 中的，但是 1M 的 bios 是属于的
+
 ## TODO
 - [ ] 处理一下各个 submodule 注册 memory region，比如 fw_cfg
 
@@ -64,7 +66,7 @@
 |-----------------------------------|-------------------------------------------------|---------------------------|
 | address_space_translate_for_iotlb | [cpu asidx](获取地址) addr [attrs prot](没用的) | MemoryRegionSection, xlat |
 | address_space_translate           | as addr [is_write attrs](没用的)                       | MemoryRegion, xlat, len   |
-maddress_space_translate_internal  | d, addr, resolve_subpage                        | xlat, plen                |
+| address_space_translate_internal  | d, addr, resolve_subpage                        | xlat, plen                |
 
 
 ## 到底那些地方可以简化
