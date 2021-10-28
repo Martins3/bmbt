@@ -108,10 +108,10 @@ static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
   // @todo I think pio always write beginning and toward to end
   // maybe not true for PIIX_RCR_IOPORT
   // maybe PIIX_RCR_IOPORT never got used
-  xlat = 0;
-  // @todo address_space_io is used in misc_helper.c and jump memory_ldst.c
+  *xlat = 0;
+  // address_space_io is used in misc_helper.c and jump memory_ldst.c
   // I think it's impossible to cross the memory region
-  duck_check(*plen != mr->size);
+  duck_check(*plen == mr->size);
   *plen = MIN(*plen, mr->size);
   return mr;
 }
@@ -138,7 +138,10 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
   return mr;
 }
 
-void io_add_memory_region(const hwaddr offse, MemoryRegion *mr) {
+void io_add_memory_region(const hwaddr offset, MemoryRegion *mr) {
+  // @todo put offset into MemoryRegion::offset
+  // we will change the interface later
+  duck_check(offset == mr->offset);
   as_add_memory_regoin(address_space_io.dispatch, mr);
 }
 
@@ -324,7 +327,6 @@ static MemTxResult memory_region_dispatch_read1(MemoryRegion *mr, hwaddr addr,
         addr, pval, size, mr->ops->impl.min_access_size,
         mr->ops->impl.max_access_size, memory_region_read_accessor, mr, attrs);
   }
-  //
   g_assert_not_reached();
 }
 
