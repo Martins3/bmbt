@@ -181,8 +181,6 @@ PCMachineState *machine_init() {
   current_machine->cpu_type = machine_class->default_cpu_type;
   // parse_numa_opts(current_machine);
 
-  machine_run_board_init(current_machine);
-
   return &__pcms;
 }
 
@@ -211,24 +209,27 @@ void qemu_init() {
   duck_check(first_cpu == NULL);
 
   qemu_init_cpu_loop();
+  qemu_mutex_lock_iothread();
+
   qemu_init_cpu_list();
 
   memory_map_init(ram_size);
-  qemu_mutex_lock_iothread();
-
-  PCMachineState *pcms = machine_init();
-  tcg_init();
 
   init_real_host_page_size();
   init_cache_info();
 
   qemu_set_log(0);
 
+  PCMachineState *pcms = machine_init();
+  tcg_init();
+
+  current_machine = MACHINE(&__pcms);
+  machine_run_board_init(current_machine);
+
   // qdev_machine_creation_done();
   qemu_register_reset(qbus_reset_all_fn, NULL);
   qemu_run_machine_init_done_notifiers();
 
-  current_machine = MACHINE(&__pcms);
   machine_class = MACHINE_GET_CLASS(current_machine);
   qemu_system_reset(machine_class, current_machine);
 

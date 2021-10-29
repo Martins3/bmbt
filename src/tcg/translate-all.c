@@ -26,9 +26,6 @@
 int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
                             void *code_hightwater, int *search_size);
 
-// defined in accel/tcg/cpu-exec-common.c, which is simple file
-bool tcg_allowed;
-
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
 // #include "../i386/LATX/include/cross-page-check.h"
 #include "../i386/LATX/x86tomips-profile-sys.h"
