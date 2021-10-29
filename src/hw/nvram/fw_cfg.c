@@ -329,6 +329,7 @@ static bool fw_cfg_ctl_mem_valid(void *opaque, hwaddr addr, unsigned size,
 
 static void fw_cfg_comb_write(void *opaque, hwaddr addr, uint64_t value,
                               unsigned size) {
+  duck_check(addr == 0);
   switch (size) {
   case 1:
     fw_cfg_write(opaque, (uint8_t)value);
@@ -943,11 +944,9 @@ static Property fw_cfg_io_properties[] = {
 static void fw_cfg_io_realize(FWCfgIoState *s) {
   fw_cfg_file_slots_allocate(FW_CFG(s));
 
-  // @todo FW_CFG_CTL_SIZE == 2
   /* when using port i/o, the 8-bit data register ALWAYS overlaps
    * with half of the 16-bit control register. Hence, the total size
    * of the i/o region used is FW_CFG_CTL_SIZE */
-
   memory_region_init_io(&s->comb_iomem, &fw_cfg_comb_mem_ops, FW_CFG(s),
                         "fwcfg", FW_CFG_CTL_SIZE);
 
