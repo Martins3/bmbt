@@ -7,13 +7,18 @@
 #include "../types.h"
 
 #include "cpus.h"
+#include <string.h>
 
 void qemu_add_machine_init_done_notifier(Notifier *notify);
 void qemu_remove_machine_init_done_notifier(Notifier *notify);
 
 static inline char *get_boot_devices_list(size_t *size) {
-  // FIXME :linker: need more thinking about how to load guest image
-  return NULL;
+  const char *linux_dma = "/rom@genroms/linuxboot_dma.bin";
+  *size = strlen(linux_dma) + 1;
+  char *boot_list = g_malloc0(*size);
+  strcpy(boot_list, linux_dma);
+  duck_check(*size == 0x1f);
+  return boot_list;
 }
 
 static inline char *get_boot_devices_lchs_list(size_t *size) { return NULL; }
