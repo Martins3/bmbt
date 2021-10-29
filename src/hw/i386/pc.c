@@ -1126,7 +1126,7 @@ void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
   e820_add_entry(0, x86ms->below_4g_mem_size, E820_RAM);
 
   // bigger RAM size will be supported later
-  duck_check(x86ms->above_4g_mem_size < 0);
+  duck_check(x86ms->above_4g_mem_size == 0);
 #ifdef BMBT
   if (x86ms->above_4g_mem_size > 0) {
     ram_above_4g = g_malloc(sizeof(*ram_above_4g));
