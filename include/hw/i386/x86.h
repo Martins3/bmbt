@@ -8,7 +8,7 @@
 
 typedef struct {
   /*< private >*/
-  MachineClass parent;
+  MachineClass parent_class;
 
   /*< public >*/
 
@@ -20,7 +20,7 @@ typedef struct {
 
 typedef struct {
   /*< private >*/
-  MachineState parent;
+  MachineState parent_obj;
   X86MachineClass *x86mc;
 
   /*< public >*/
