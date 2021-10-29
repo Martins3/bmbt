@@ -139,13 +139,22 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
 }
 
 void io_add_memory_region(const hwaddr offset, MemoryRegion *mr) {
-  // @todo put offset into MemoryRegion::offset
-  // we will change the interface later
-  duck_check(offset == mr->offset);
+  duck_check(offset != 0 && mr->offset == 0);
+  duck_check(!memory_region_is_ram(mr));
+  mr->offset = offset;
+  as_add_memory_regoin(address_space_io.dispatch, mr);
+}
+
+void mmio_add_memory_region(const hwaddr offset, MemoryRegion *mr) {
+  duck_check(offset != 0 && mr->offset == 0);
+  duck_check(!memory_region_is_ram(mr));
+  mr->offset = offset;
   as_add_memory_regoin(address_space_io.dispatch, mr);
 }
 
 void mem_add_memory_region(MemoryRegion *mr) {
+  duck_check(mr->offset != 0);
+  duck_check(memory_region_is_ram(mr));
   as_add_memory_regoin(address_space_memory.dispatch, mr);
 }
 

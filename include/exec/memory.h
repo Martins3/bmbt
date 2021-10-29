@@ -112,6 +112,8 @@ void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
 
 void io_add_memory_region(const hwaddr offset, MemoryRegion *mr);
 
+void mmio_add_memory_region(const hwaddr offset, MemoryRegion *mr);
+
 void mem_add_memory_region(MemoryRegion *mr);
 
 #define RAM_ADDR_INVALID (~(ram_addr_t)0)
@@ -204,7 +206,16 @@ bool prepare_mmio_access(MemoryRegion *mr);
  *
  * @mr: the memory region being queried
  */
-static inline bool memory_region_is_ram(MemoryRegion *mr) { return mr->ram; }
+static inline bool memory_region_is_ram(MemoryRegion *mr) {
+#ifndef RELEASE_VERSION
+  if (mr->ram) {
+    duck_check(mr->ram_block != NULL);
+  } else {
+    duck_check(mr->ram_block == NULL);
+  }
+#endif
+  return mr->ram;
+}
 
 ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr);
 void *qemu_map_ram_ptr(struct RAMBlock *ram_block, ram_addr_t addr);
