@@ -69,7 +69,6 @@ TEST test_rw(void) {
   MemoryRegion *mr1 = g_malloc0(sizeof(MemoryRegion));
   uint32_t port = 0x100;
   memory_region_init_io(mr1, &ops1, mr1, "<ioport 1>", 4);
-  mr1->offset = port;
   io_add_memory_region(port, mr1);
 
   // helper

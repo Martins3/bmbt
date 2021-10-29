@@ -105,29 +105,27 @@ static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
   } else {
     mr = memory_region_look_up(as->dispatch, offset, io_mr_match);
   }
-  // @todo I think pio always write beginning and toward to end
-  // maybe not true for PIIX_RCR_IOPORT
-  // maybe PIIX_RCR_IOPORT never got used
-  *xlat = 0;
-  // address_space_io is used in misc_helper.c and jump memory_ldst.c
-  // I think it's impossible to cross the memory region
-  duck_check(*plen == mr->size);
-  *plen = MIN(*plen, mr->size);
+  *xlat = offset - mr->offset;
   return mr;
 }
 
 static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
                                     hwaddr *xlat, hwaddr *plen) {
+  MemoryRegion *mr = NULL;
   if (is_smram_access(offset)) {
     if (!as->smm && smram_region_enable) {
-      return as->dispatch->special_mr;
+      mr = as->dispatch->special_mr;
     }
 
     if (as->smm && !smram_enable && smram_region_enable) {
-      return as->dispatch->special_mr;
+      mr = as->dispatch->special_mr;
     }
   }
-  MemoryRegion *mr = memory_region_look_up(as->dispatch, offset, mem_mr_match);
+
+  if (mr == NULL) {
+    mr = memory_region_look_up(as->dispatch, offset, mem_mr_match);
+  }
+
   *xlat = offset - mr->offset;
 
   if (memory_region_is_ram(mr)) {
@@ -153,7 +151,6 @@ void mmio_add_memory_region(const hwaddr offset, MemoryRegion *mr) {
 }
 
 void mem_add_memory_region(MemoryRegion *mr) {
-  duck_check(mr->offset != 0);
   duck_check(memory_region_is_ram(mr));
   as_add_memory_regoin(address_space_memory.dispatch, mr);
 }
