@@ -5,6 +5,7 @@
 #define IO_APIC_DEFAULT_ADDRESS 0xfec00000
 
 #define TYPE_IOAPIC "ioapic"
+#include "ioapic_internal.h"
 
 void ioapic_eoi_broadcast(int vector);
 

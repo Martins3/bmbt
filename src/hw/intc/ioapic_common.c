@@ -1,4 +1,4 @@
-#include "../../../include/hw/i386/ioapic_internal.h"
+#include "../../../include/hw/i386/ioapic.h"
 
 /* ioapic_no count start from 0 to MAX_IOAPICS,
  * remove as static variable from ioapic_common_init.
