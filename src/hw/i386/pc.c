@@ -2073,7 +2073,10 @@ static void pc_machine_reset(MachineState *machine) {
       // device_reset(cpu->apic_state);
       APICCommonState *as = cpu->apic_state;
       APICCommonClass *ac = APIC_COMMON_GET_CLASS(as);
-      ac->reset(as);
+      if (ac->reset)
+        ac->reset(as);
+    } else {
+      g_assert_not_reached();
     }
   }
 }
