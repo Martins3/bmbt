@@ -3011,9 +3011,11 @@ static void x86_cpu_apic_create(X86CPU *cpu) {
 
 static void x86_cpu_apic_realize(X86CPU *cpu) {
   APICCommonState *apic;
+  MemoryRegion *mr;
   static bool apic_mmio_map_once;
 
   if (cpu->apic_state == NULL) {
+    g_assert_not_reached();
     return;
   }
 
@@ -3023,17 +3025,21 @@ static void x86_cpu_apic_realize(X86CPU *cpu) {
   /* Map APIC MMIO area */
   apic = cpu->apic_state;
   if (!apic_mmio_map_once) {
-#ifdef MEM_TODO
+#ifdef BMBT
     memory_region_add_subregion_overlap(get_system_memory(),
                                         apic->apicbase & MSR_IA32_APICBASE_BASE,
                                         &apic->io_memory, 0x1000);
+#else
+    hwaddr offset = (apic->apicbase & MSR_IA32_APICBASE_BASE);
+    duck_check(offset == 0xfee00000);
+    mmio_add_memory_region(offset, &apic->io_memory);
 #endif
     apic_mmio_map_once = true;
   }
 }
 
 static void x86_cpu_machine_done(Notifier *n, void *unused) {
-#ifdef MEM_TODO
+#ifdef BMBT
   X86CPU *cpu = container_of(n, X86CPU, machine_done);
   MemoryRegion *smram =
       (MemoryRegion *)object_resolve_path("/machine/smram", NULL);

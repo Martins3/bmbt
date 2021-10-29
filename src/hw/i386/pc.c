@@ -1478,9 +1478,7 @@ void ioapic_init_gsi(GSIState *gsi_state, const char *parent_name) {
   IOAPICCommonState *s = QOM_ioapic_init();
   ioapic_common_realize(s);
 
-#ifdef MEM_TODO
-  // sysbus_mmio_map(d, 0, IO_APIC_DEFAULT_ADDRESS);
-#endif
+  sysbus_mmio_map(IOAPIC_SYS_BUS_DEVICE(s), 0, IO_APIC_DEFAULT_ADDRESS);
 
   for (int i = 0; i < IOAPIC_NUM_PINS; i++) {
     gsi_state->ioapic_irq[i] = qdev_get_gpio_in(&s->gpio, i);

@@ -302,7 +302,6 @@ static uint64_t elcr_ioport_read(void *opaque, hwaddr addr, unsigned size) {
   return s->elcr;
 }
 
-#ifdef MEM_TODO
 static const MemoryRegionOps pic_base_ioport_ops = {
     .read = pic_ioport_read,
     .write = pic_ioport_write,
@@ -322,17 +321,12 @@ static const MemoryRegionOps pic_elcr_ioport_ops = {
             .max_access_size = 1,
         },
 };
-#endif
 
 void pic_realize(PICCommonState *s) {
   PICClass *pc = PIC_GET_CLASS(s);
 
-#ifdef MEM_TODO
-  memory_region_init_io(&s->base_io, OBJECT(s), &pic_base_ioport_ops, s, "pic",
-                        2);
-  memory_region_init_io(&s->elcr_io, OBJECT(s), &pic_elcr_ioport_ops, s, "elcr",
-                        1);
-#endif
+  memory_region_init_io(&s->base_io, &pic_base_ioport_ops, s, "pic", 2);
+  memory_region_init_io(&s->elcr_io, &pic_elcr_ioport_ops, s, "elcr", 1);
 
   qdev_init_gpio_out(&s->gpio, s->int_out, ARRAY_SIZE(s->int_out));
   qdev_init_gpio_in(&s->gpio, pic_set_irq, s, 8);

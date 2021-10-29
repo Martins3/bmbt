@@ -1,4 +1,5 @@
 #include "../../../include/hw/i386/ioapic.h"
+#include <hw/sysbus.h>
 
 /* ioapic_no count start from 0 to MAX_IOAPICS,
  * remove as static variable from ioapic_common_init.
@@ -129,9 +130,7 @@ void ioapic_common_realize(IOAPICCommonState *s) {
   info = IOAPIC_COMMON_GET_CLASS(s);
   info->realize(s);
 
-#ifdef MEM_TODO
-  sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->io_memory);
-#endif
+  sysbus_init_mmio(IOAPIC_SYS_BUS_DEVICE(s), &s->io_memory);
   ioapic_no++;
 }
 

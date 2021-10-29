@@ -7,6 +7,7 @@
 #include "../../types.h"
 #include "../irq.h"
 #include "ioapic.h"
+#include <hw/sysbus.h>
 
 #define MAX_IOAPICS 1
 
@@ -74,7 +75,7 @@ typedef struct IOAPICCommonClass {
 } IOAPICCommonClass;
 
 struct IOAPICCommonState {
-  // SysBusDevice busdev;
+  SysBusDevice busdev;
   GPIOList gpio;
 
   IOAPICCommonClass *icc;
@@ -90,6 +91,10 @@ struct IOAPICCommonState {
   int irq_eoi[IOAPIC_NUM_PINS];
   // QEMUTimer *delayed_ioapic_service_timer; // FIXME :linker: what's delayed ?
 };
+
+static inline SysBusDevice *IOAPIC_SYS_BUS_DEVICE(IOAPICCommonState *s) {
+  return (SysBusDevice *)s;
+}
 
 static inline IOAPICCommonClass *
 IOAPIC_COMMON_GET_CLASS(IOAPICCommonState *is) {

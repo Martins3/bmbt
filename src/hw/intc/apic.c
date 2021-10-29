@@ -740,7 +740,6 @@ static void apic_post_load(APICCommonState *s) {
   }
 }
 
-#if MEM_TODO
 static const MemoryRegionOps apic_io_ops = {
     .read = apic_mem_read,
     .write = apic_mem_write,
@@ -750,7 +749,6 @@ static const MemoryRegionOps apic_io_ops = {
     .valid.max_access_size = 4,
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
-#endif
 
 // FIXME put msi_nonbroken here temporarily, maybe we never need it
 bool msi_nonbroken = false;
@@ -762,10 +760,8 @@ static void apic_realize(APICCommonState *s) {
     return;
   }
 
-#ifdef MEM_TODO
-  memory_region_init_io(&s->io_memory, OBJECT(s), &apic_io_ops, s, "apic-msi",
+  memory_region_init_io(&s->io_memory, &apic_io_ops, s, "apic-msi",
                         APIC_SPACE_SIZE);
-#endif
 
 #ifdef NEED_LATER
   s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, apic_timer, s);
