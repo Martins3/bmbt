@@ -2,7 +2,7 @@
 #include "../../../include/exec/cpu-all.h"
 #include "../../../include/exec/hwaddr.h"
 #include "../../../include/hw/i386/apic.h"
-#include "../../../include/hw/i386/ioapic_internal.h"
+#include "../../../include/hw/i386/ioapic.h"
 #include "../../../include/hw/i386/topology.h"
 #include "../../../include/hw/isa/i8259.h"
 #include "../../../include/hw/loader.h"
