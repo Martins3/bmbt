@@ -198,6 +198,7 @@ static void apic_set_base(APICCommonState *s, uint64_t val) {
       (s->apicbase & (MSR_IA32_APICBASE_BSP | MSR_IA32_APICBASE_ENABLE));
   /* if disabled, cannot be enabled again */
   if (!(val & MSR_IA32_APICBASE_ENABLE)) {
+    g_assert_not_reached();
     s->apicbase &= ~MSR_IA32_APICBASE_ENABLE;
     cpu_clear_apic_feature(&s->cpu->env);
     s->spurious_vec &= ~APIC_SV_ENABLE;
