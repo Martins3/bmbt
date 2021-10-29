@@ -1,7 +1,5 @@
 # 整体的计划分析
 
-
-
 ## 问题
 - [ ] 所以还是使用 e820 来实现探测内存吗? 那么 acpi 是做什么用的?
 - [ ] get_boot_devices_list 的返回结果是 /rom@genroms/linuxboot_dma.bin，通过这种方式直接启动 Linux，如果是从 disk 上启动 guest 的时候，那么其返回为 NULL
@@ -23,12 +21,45 @@
 - probe pci devices
 
 ## 需要处理的大块问题
-- NEED_LATER : 将来应该需要
-- MEM_TODO : 暂时没有移植的，和 MEM 相关的
-- RTC_TODO : 关于 rtc 的代码
-- SMBIOS_TODO :
+```plain
+src/hw/i386/fw_cfg.c:33:#if SMBIOS_TODO
+```
 
-处理掉 src/qemu/memory.c 的测试啊, 应该首先构造一些 memory region 自己测试一下，顺便方便别人理解
+```plain
+src/hw/i386/pc.c:512:#if RTC_TODO
+src/hw/i386/pc.c:1629:#ifdef RTC_TODO
+src/hw/i386/pc_piix.c:170:#if RTC_TODO
+```
+
+```plain
+src/hw/i386/pc_piix.c:133:#if NEED_LATER
+src/hw/i386/pc_piix.c:156:#if NEED_LATER
+src/hw/i386/pc_piix.c:219:#if NEED_LATER
+src/hw/i386/fw_cfg.c:101:#ifdef NEED_LATER
+src/hw/i386/fw_cfg.c:111:#ifdef NEED_LATER
+src/i386/helper.c:397:#ifdef NEED_LATER
+src/hw/intc/ioapic.c:398:#ifdef NEED_LATER
+```
+应该是这里有事情被简化掉了，所以现在 x86_cpu_realizefn 中没有初始化 features 字段
+如果上面的 NEED_LATER 都修复了，但是问题还是没有解决，那么就出现了大问题了
+
+```c
+/*
+#0  0x000055555561a88a in qemu_cond_broadcast (cond=0x0) at src/qemu/../../include/exec/../hw/core/../../qemu/thread.h:102
+#1  0x000055555561b3a7 in qemu_cpu_kick (cpu=0x55555596e8e0 <__x86_cpu>) at src/qemu/cpus.c:298
+#2  0x000055555561b5e3 in cpu_resume (cpu=0x55555596e8e0 <__x86_cpu>) at src/qemu/cpus.c:432
+#3  0x000055555561b626 in resume_all_vcpus () at src/qemu/cpus.c:441
+#4  0x000055555561c036 in qemu_init () at src/qemu/vl.c:236
+#5  0x00005555555c8f45 in test_qemu_init () at src/main.c:158
+#6  0x00005555555c91fe in wip () at src/main.c:172
+```
+
+
+## 需要
+- [ ] x86_cpu_apic_realize : 向 memory 中添加 apic 的映射空间，这个是需要测试的
+- [ ] 添加一个 assert 直接到最后比较 feature 是否相等的，但是这个需要 i386 的数据
+- [ ] x86_cpu_properties 中的项目需要一个个的检查一遍
+- [ ] 核查一下最后的 tlb flush 的事情是积累下来的
 
 ## 还需要分析的细节问题
 2. apic
