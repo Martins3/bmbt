@@ -416,6 +416,7 @@ void qemu_init_vcpu(CPUState *cpu) {
     qemu_cond_wait(&qemu_cpu_cond, &qemu_global_mutex);
   }
 #endif
+  qemu_tcg_init_vcpu(cpu);
 }
 
 void qemu_init_cpu_loop(void) {
