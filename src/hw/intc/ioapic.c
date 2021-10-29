@@ -360,13 +360,11 @@ static void ioapic_mem_write(void *opaque, hwaddr addr, uint64_t val,
   ioapic_update_kvm_routes(s);
 }
 
-#if MEM_TODO
 static const MemoryRegionOps ioapic_io_ops = {
     .read = ioapic_mem_read,
     .write = ioapic_mem_write,
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
-#endif
 
 static void ioapic_machine_done_notify(Notifier *notifier, void *data) {
 #ifdef CONFIG_KVM
@@ -395,10 +393,9 @@ static void ioapic_realize(IOAPICCommonState *s) {
     return;
   }
 
-#ifdef MEM_TODO
-  memory_region_init_io(&s->io_memory, OBJECT(s), &ioapic_io_ops, s, "ioapic",
-                        0x1000);
+  memory_region_init_io(&s->io_memory, &ioapic_io_ops, s, "ioapic", 0x1000);
 
+#ifdef NEED_LATER
   // FIXME :linker: timer
   s->delayed_ioapic_service_timer =
       timer_new_ns(QEMU_CLOCK_VIRTUAL, delayed_ioapic_service_cb, s);

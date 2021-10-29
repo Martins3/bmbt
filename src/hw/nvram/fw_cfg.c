@@ -943,18 +943,17 @@ static Property fw_cfg_io_properties[] = {
 static void fw_cfg_io_realize(FWCfgIoState *s) {
   fw_cfg_file_slots_allocate(FW_CFG(s));
 
+  // @todo FW_CFG_CTL_SIZE == 2
   /* when using port i/o, the 8-bit data register ALWAYS overlaps
    * with half of the 16-bit control register. Hence, the total size
    * of the i/o region used is FW_CFG_CTL_SIZE */
 
-  // FIXME init the memory region
-  // memory_region_init_io(&s->comb_iomem, OBJECT(s), &fw_cfg_comb_mem_ops,
-  // FW_CFG(s), "fwcfg", FW_CFG_CTL_SIZE);
+  memory_region_init_io(&s->comb_iomem, &fw_cfg_comb_mem_ops, FW_CFG(s),
+                        "fwcfg", FW_CFG_CTL_SIZE);
 
   if (FW_CFG(s)->dma_enabled) {
-    // FIXME init the memory region
-    // memory_region_init_io(&FW_CFG(s)->dma_iomem, OBJECT(s),
-    // &fw_cfg_dma_mem_ops, FW_CFG(s), "fwcfg.dma", sizeof(dma_addr_t));
+    memory_region_init_io(&FW_CFG(s)->dma_iomem, &fw_cfg_dma_mem_ops, FW_CFG(s),
+                          "fwcfg.dma", sizeof(dma_addr_t));
   }
 
   fw_cfg_common_realize(FW_CFG(s));
