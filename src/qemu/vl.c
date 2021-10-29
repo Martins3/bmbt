@@ -9,6 +9,7 @@
 #include "../../include/sysemu/replay.h"
 #include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/tcg.h"
+#include <hw/i386/ioapic.h>
 
 #include <stdbool.h>
 
@@ -25,6 +26,14 @@ bool machine_init_done;
 
 static NotifierList machine_init_done_notifiers =
     NOTIFIER_LIST_INITIALIZER(machine_init_done_notifiers);
+
+QEMU_BUILD_BUG_ON(offsetof(X86CPUClass, parent_class) != 0);
+QEMU_BUILD_BUG_ON(offsetof(X86CPU, parent_obj) != 0);
+QEMU_BUILD_BUG_ON(offsetof(PCMachineState, parent_obj) != 0);
+QEMU_BUILD_BUG_ON(offsetof(X86MachineState, parent_obj) != 0);
+QEMU_BUILD_BUG_ON(offsetof(PCMachineClass, parent_class) != 0);
+QEMU_BUILD_BUG_ON(offsetof(X86MachineClass, parent_class) != 0);
+QEMU_BUILD_BUG_ON(offsetof(IOAPICCommonState, busdev) != 0);
 
 void qemu_add_machine_init_done_notifier(Notifier *notify) {
   notifier_list_add(&machine_init_done_notifiers, notify);
