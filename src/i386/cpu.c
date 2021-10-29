@@ -27,6 +27,16 @@ struct CPUID2CacheDescriptorInfo {
   int associativity;
 };
 
+// @todo compare the features before calling x86_cpu_apic_create in 32bit mode
+static inline void show_features(X86CPU *cpu) {
+  CPUX86State *env = &cpu->env;
+  int w;
+  for (w = 0; w < FEATURE_WORDS; w++) {
+    printf("%lx ", env->features[w]);
+  }
+  printf("huxueshi:%s \n", __FUNCTION__);
+}
+
 /*
  * Known CPUID 2 cache descriptors.
  * From Intel SDM Volume 2A, CPUID instruction
@@ -1087,7 +1097,1178 @@ typedef struct FeatureWordInfo {
   uint64_t no_autoenable_flags;
 } FeatureWordInfo;
 
-static FeatureWordInfo feature_word_info[FEATURE_WORDS] = {};
+/* This CPUID returns two feature bitmaps in eax, edx. Before enabling
+ * a particular paravirtualization, the appropriate feature bit should
+ * be checked in eax. The performance hint feature bit should be checked
+ * in edx.
+ */
+#define KVM_CPUID_FEATURES 0x40000001
+#define KVM_FEATURE_CLOCKSOURCE 0
+#define KVM_FEATURE_NOP_IO_DELAY 1
+#define KVM_FEATURE_MMU_OP 2
+
+static FeatureWordInfo feature_word_info[FEATURE_WORDS] = {
+    [FEAT_1_EDX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "fpu",
+                    "vme",
+                    "de",
+                    "pse",
+                    "tsc",
+                    "msr",
+                    "pae",
+                    "mce",
+                    "cx8",
+                    "apic",
+                    NULL,
+                    "sep",
+                    "mtrr",
+                    "pge",
+                    "mca",
+                    "cmov",
+                    "pat",
+                    "pse36",
+                    "pn" /* Intel psn */,
+                    "clflush" /* Intel clfsh */,
+                    NULL,
+                    "ds" /* Intel dts */,
+                    "acpi",
+                    "mmx",
+                    "fxsr",
+                    "sse",
+                    "sse2",
+                    "ss",
+                    "ht" /* Intel htt */,
+                    "tm",
+                    "ia64",
+                    "pbe",
+                },
+            .cpuid =
+                {
+                    .eax = 1,
+                    .reg = R_EDX,
+                },
+            .tcg_features = TCG_FEATURES,
+        },
+    [FEAT_1_ECX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "pni" /* Intel,AMD sse3 */,
+                    "pclmulqdq",
+                    "dtes64",
+                    "monitor",
+                    "ds-cpl",
+                    "vmx",
+                    "smx",
+                    "est",
+                    "tm2",
+                    "ssse3",
+                    "cid",
+                    NULL,
+                    "fma",
+                    "cx16",
+                    "xtpr",
+                    "pdcm",
+                    NULL,
+                    "pcid",
+                    "dca",
+                    "sse4.1",
+                    "sse4.2",
+                    "x2apic",
+                    "movbe",
+                    "popcnt",
+                    "tsc-deadline",
+                    "aes",
+                    "xsave",
+                    NULL /* osxsave */,
+                    "avx",
+                    "f16c",
+                    "rdrand",
+                    "hypervisor",
+                },
+            .cpuid =
+                {
+                    .eax = 1,
+                    .reg = R_ECX,
+                },
+            .tcg_features = TCG_EXT_FEATURES,
+        },
+    /* Feature names that are already defined on feature_name[] but
+     * are set on CPUID[8000_0001].EDX on AMD CPUs don't have their
+     * names on feat_names below. They are copied automatically
+     * to features[FEAT_8000_0001_EDX] if and only if CPU vendor is AMD.
+     */
+    [FEAT_8000_0001_EDX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL /* fpu */,
+                    NULL /* vme */,
+                    NULL /* de */,
+                    NULL /* pse */,
+                    NULL /* tsc */,
+                    NULL /* msr */,
+                    NULL /* pae */,
+                    NULL /* mce */,
+                    NULL /* cx8 */,
+                    NULL /* apic */,
+                    NULL,
+                    "syscall",
+                    NULL /* mtrr */,
+                    NULL /* pge */,
+                    NULL /* mca */,
+                    NULL /* cmov */,
+                    NULL /* pat */,
+                    NULL /* pse36 */,
+                    NULL,
+                    NULL /* Linux mp */,
+                    "nx",
+                    NULL,
+                    "mmxext",
+                    NULL /* mmx */,
+                    NULL /* fxsr */,
+                    "fxsr-opt",
+                    "pdpe1gb",
+                    "rdtscp",
+                    NULL,
+                    "lm",
+                    "3dnowext",
+                    "3dnow",
+                },
+            .cpuid =
+                {
+                    .eax = 0x80000001,
+                    .reg = R_EDX,
+                },
+            .tcg_features = TCG_EXT2_FEATURES,
+        },
+    [FEAT_8000_0001_ECX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "lahf-lm",    "cmp-legacy",  "svm",
+                    "extapic",    "cr8legacy",   "abm",
+                    "sse4a",      "misalignsse", "3dnowprefetch",
+                    "osvw",       "ibs",         "xop",
+                    "skinit",     "wdt",         NULL,
+                    "lwp",        "fma4",        "tce",
+                    NULL,         "nodeid-msr",  NULL,
+                    "tbm",        "topoext",     "perfctr-core",
+                    "perfctr-nb", NULL,          NULL,
+                    NULL,         NULL,          NULL,
+                    NULL,         NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x80000001,
+                    .reg = R_ECX,
+                },
+            .tcg_features = TCG_EXT3_FEATURES,
+            /*
+             * TOPOEXT is always allowed but can't be enabled blindly by
+             * "-cpu host", as it requires consistent cache topology info
+             * to be provided so it doesn't confuse guests.
+             */
+            .no_autoenable_flags = CPUID_EXT3_TOPOEXT,
+        },
+    [FEAT_C000_0001_EDX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL,  NULL,     "xstore",    "xstore-en", NULL,
+                    NULL,  "xcrypt", "xcrypt-en", "ace2",      "ace2-en",
+                    "phe", "phe-en", "pmm",       "pmm-en",    NULL,
+                    NULL,  NULL,     NULL,        NULL,        NULL,
+                    NULL,  NULL,     NULL,        NULL,        NULL,
+                    NULL,  NULL,     NULL,        NULL,        NULL,
+                    NULL,  NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0xC0000001,
+                    .reg = R_EDX,
+                },
+            .tcg_features = TCG_EXT4_FEATURES,
+        },
+    [FEAT_KVM] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "kvmclock",
+                    "kvm-nopiodelay",
+                    "kvm-mmu",
+                    "kvmclock",
+                    "kvm-asyncpf",
+                    "kvm-steal-time",
+                    "kvm-pv-eoi",
+                    "kvm-pv-unhalt",
+                    NULL,
+                    "kvm-pv-tlb-flush",
+                    NULL,
+                    "kvm-pv-ipi",
+                    "kvm-poll-control",
+                    "kvm-pv-sched-yield",
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    "kvmclock-stable-bit",
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .cpuid =
+                {
+                    .eax = KVM_CPUID_FEATURES,
+                    .reg = R_EAX,
+                },
+            .tcg_features = TCG_KVM_FEATURES,
+        },
+    [FEAT_KVM_HINTS] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "kvm-hint-dedicated",
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .cpuid =
+                {
+                    .eax = KVM_CPUID_FEATURES,
+                    .reg = R_EDX,
+                },
+            .tcg_features = TCG_KVM_FEATURES,
+            /*
+             * KVM hints aren't auto-enabled by -cpu host, they need to be
+             * explicitly enabled in the command-line.
+             */
+            .no_autoenable_flags = ~0U,
+        },
+    /*
+     * .feat_names are commented out for Hyper-V enlightenments because we
+     * don't want to have two different ways for enabling them on QEMU command
+     * line. Some features (e.g. "hyperv_time", "hyperv_vapic", ...) require
+     * enabling several feature bits simultaneously, exposing these bits
+     * individually may just confuse guests.
+     */
+    [FEAT_HYPERV_EAX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL /* hv_msr_vp_runtime_access */,
+                    NULL /* hv_msr_time_refcount_access */,
+                    NULL /* hv_msr_synic_access */,
+                    NULL /* hv_msr_stimer_access */,
+                    NULL /* hv_msr_apic_access */,
+                    NULL /* hv_msr_hypercall_access */,
+                    NULL /* hv_vpindex_access */,
+                    NULL /* hv_msr_reset_access */,
+                    NULL /* hv_msr_stats_access */,
+                    NULL /* hv_reftsc_access */,
+                    NULL /* hv_msr_idle_access */,
+                    NULL /* hv_msr_frequency_access */,
+                    NULL /* hv_msr_debug_access */,
+                    NULL /* hv_msr_reenlightenment_access */,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x40000003,
+                    .reg = R_EAX,
+                },
+        },
+    [FEAT_HYPERV_EBX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL /* hv_create_partitions */,
+                    NULL /* hv_access_partition_id */,
+                    NULL /* hv_access_memory_pool */,
+                    NULL /* hv_adjust_message_buffers */,
+                    NULL /* hv_post_messages */,
+                    NULL /* hv_signal_events */,
+                    NULL /* hv_create_port */,
+                    NULL /* hv_connect_port */,
+                    NULL /* hv_access_stats */,
+                    NULL,
+                    NULL,
+                    NULL /* hv_debugging */,
+                    NULL /* hv_cpu_power_management */,
+                    NULL /* hv_configure_profiler */,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x40000003,
+                    .reg = R_EBX,
+                },
+        },
+    [FEAT_HYPERV_EDX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL /* hv_mwait */,
+                    NULL /* hv_guest_debugging */,
+                    NULL /* hv_perf_monitor */,
+                    NULL /* hv_cpu_dynamic_part */,
+                    NULL /* hv_hypercall_params_xmm */,
+                    NULL /* hv_guest_idle_state */,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL /* hv_guest_crash_msr */,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x40000003,
+                    .reg = R_EDX,
+                },
+        },
+    [FEAT_HV_RECOMM_EAX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL /* hv_recommend_pv_as_switch */,
+                    NULL /* hv_recommend_pv_tlbflush_local */,
+                    NULL /* hv_recommend_pv_tlbflush_remote */,
+                    NULL /* hv_recommend_msr_apic_access */,
+                    NULL /* hv_recommend_msr_reset */,
+                    NULL /* hv_recommend_relaxed_timing */,
+                    NULL /* hv_recommend_dma_remapping */,
+                    NULL /* hv_recommend_int_remapping */,
+                    NULL /* hv_recommend_x2apic_msrs */,
+                    NULL /* hv_recommend_autoeoi_deprecation */,
+                    NULL /* hv_recommend_pv_ipi */,
+                    NULL /* hv_recommend_ex_hypercalls */,
+                    NULL /* hv_hypervisor_is_nested */,
+                    NULL /* hv_recommend_int_mbec */,
+                    NULL /* hv_recommend_evmcs */,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x40000004,
+                    .reg = R_EAX,
+                },
+        },
+    [FEAT_HV_NESTED_EAX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .cpuid =
+                {
+                    .eax = 0x4000000A,
+                    .reg = R_EAX,
+                },
+        },
+    [FEAT_SVM] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "npt",          "lbrv",
+                    "svm-lock",     "nrip-save",
+                    "tsc-scale",    "vmcb-clean",
+                    "flushbyasid",  "decodeassists",
+                    NULL,           NULL,
+                    "pause-filter", NULL,
+                    "pfthreshold",  NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                    NULL,           NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x8000000A,
+                    .reg = R_EDX,
+                },
+            .tcg_features = TCG_SVM_FEATURES,
+        },
+    [FEAT_7_0_EBX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "fsgsbase", "tsc-adjust", NULL,       "bmi1",
+                    "hle",      "avx2",       NULL,       "smep",
+                    "bmi2",     "erms",       "invpcid",  "rtm",
+                    NULL,       NULL,         "mpx",      NULL,
+                    "avx512f",  "avx512dq",   "rdseed",   "adx",
+                    "smap",     "avx512ifma", "pcommit",  "clflushopt",
+                    "clwb",     "intel-pt",   "avx512pf", "avx512er",
+                    "avx512cd", "sha-ni",     "avx512bw", "avx512vl",
+                },
+            .cpuid =
+                {
+                    .eax = 7,
+                    .needs_ecx = true,
+                    .ecx = 0,
+                    .reg = R_EBX,
+                },
+            .tcg_features = TCG_7_0_EBX_FEATURES,
+        },
+    [FEAT_7_0_ECX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL,
+                    "avx512vbmi",
+                    "umip",
+                    "pku",
+                    NULL /* ospke */,
+                    "waitpkg",
+                    "avx512vbmi2",
+                    NULL,
+                    "gfni",
+                    "vaes",
+                    "vpclmulqdq",
+                    "avx512vnni",
+                    "avx512bitalg",
+                    NULL,
+                    "avx512-vpopcntdq",
+                    NULL,
+                    "la57",
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    "rdpid",
+                    NULL,
+                    NULL,
+                    "cldemote",
+                    NULL,
+                    "movdiri",
+                    "movdir64b",
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 7,
+                    .needs_ecx = true,
+                    .ecx = 0,
+                    .reg = R_ECX,
+                },
+            .tcg_features = TCG_7_0_ECX_FEATURES,
+        },
+    [FEAT_7_0_EDX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL,
+                    NULL,
+                    "avx512-4vnniw",
+                    "avx512-4fmaps",
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    "md-clear",
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL /* pconfig */,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    "spec-ctrl",
+                    "stibp",
+                    NULL,
+                    "arch-capabilities",
+                    "core-capability",
+                    "ssbd",
+                },
+            .cpuid =
+                {
+                    .eax = 7,
+                    .needs_ecx = true,
+                    .ecx = 0,
+                    .reg = R_EDX,
+                },
+            .tcg_features = TCG_7_0_EDX_FEATURES,
+        },
+    [FEAT_7_1_EAX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL, NULL, NULL, NULL, NULL, "avx512-bf16", NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL,          NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL,          NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL,          NULL, NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 7,
+                    .needs_ecx = true,
+                    .ecx = 1,
+                    .reg = R_EAX,
+                },
+            .tcg_features = TCG_7_1_EAX_FEATURES,
+        },
+    [FEAT_8000_0007_EDX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL,     NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                    "invtsc", NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                    NULL,     NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                    NULL,     NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x80000007,
+                    .reg = R_EDX,
+                },
+            .tcg_features = TCG_APM_FEATURES,
+            .unmigratable_flags = CPUID_APM_INVTSC,
+        },
+    [FEAT_8000_0008_EBX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "clzero",    NULL,         "xsaveerptr", NULL, NULL,
+                    NULL,        NULL,         NULL,         NULL, "wbnoinvd",
+                    NULL,        NULL,         "ibpb",       NULL, NULL,
+                    NULL,        NULL,         NULL,         NULL, NULL,
+                    NULL,        NULL,         NULL,         NULL, "amd-ssbd",
+                    "virt-ssbd", "amd-no-ssb", NULL,         NULL, NULL,
+                    NULL,        NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0x80000008,
+                    .reg = R_EBX,
+                },
+            .tcg_features = 0,
+            .unmigratable_flags = 0,
+        },
+    [FEAT_XSAVE] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    "xsaveopt", "xsavec", "xgetbv1", "xsaves", NULL, NULL, NULL,
+                    NULL,       NULL,     NULL,      NULL,     NULL, NULL, NULL,
+                    NULL,       NULL,     NULL,      NULL,     NULL, NULL, NULL,
+                    NULL,       NULL,     NULL,      NULL,     NULL, NULL, NULL,
+                    NULL,       NULL,     NULL,      NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 0xd,
+                    .needs_ecx = true,
+                    .ecx = 1,
+                    .reg = R_EAX,
+                },
+            .tcg_features = TCG_XSAVE_FEATURES,
+        },
+    [FEAT_6_EAX] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL, NULL, "arat", NULL, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL,   NULL, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL,   NULL, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL,   NULL, NULL, NULL, NULL, NULL,
+                },
+            .cpuid =
+                {
+                    .eax = 6,
+                    .reg = R_EAX,
+                },
+            .tcg_features = TCG_6_EAX_FEATURES,
+        },
+    [FEAT_XSAVE_COMP_LO] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .cpuid =
+                {
+                    .eax = 0xD,
+                    .needs_ecx = true,
+                    .ecx = 0,
+                    .reg = R_EAX,
+                },
+            .tcg_features = ~0U,
+            .migratable_flags =
+                XSTATE_FP_MASK | XSTATE_SSE_MASK | XSTATE_YMM_MASK |
+                XSTATE_BNDREGS_MASK | XSTATE_BNDCSR_MASK | XSTATE_OPMASK_MASK |
+                XSTATE_ZMM_Hi256_MASK | XSTATE_Hi16_ZMM_MASK | XSTATE_PKRU_MASK,
+        },
+    [FEAT_XSAVE_COMP_HI] =
+        {
+            .type = CPUID_FEATURE_WORD,
+            .cpuid =
+                {
+                    .eax = 0xD,
+                    .needs_ecx = true,
+                    .ecx = 0,
+                    .reg = R_EDX,
+                },
+            .tcg_features = ~0U,
+        },
+    /*Below are MSR exposed features*/
+    [FEAT_ARCH_CAPABILITIES] =
+        {
+            .type = MSR_FEATURE_WORD,
+            .feat_names =
+                {
+                    "rdctl-no",
+                    "ibrs-all",
+                    "rsba",
+                    "skip-l1dfl-vmentry",
+                    "ssb-no",
+                    "mds-no",
+                    "pschange-mc-no",
+                    "tsx-ctrl",
+                    "taa-no",
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                },
+            .msr =
+                {
+                    .index = MSR_IA32_ARCH_CAPABILITIES,
+                },
+        },
+    [FEAT_CORE_CAPABILITY] =
+        {
+            .type = MSR_FEATURE_WORD,
+            .feat_names =
+                {
+                    NULL, NULL, NULL, NULL, NULL, "split-lock-detect",
+                    NULL, NULL, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL,
+                    NULL, NULL,
+                },
+            .msr =
+                {
+                    .index = MSR_IA32_CORE_CAPABILITY,
+                },
+        },
+
+    [FEAT_VMX_PROCBASED_CTLS] = {.type = MSR_FEATURE_WORD,
+                                 .feat_names =
+                                     {
+                                         NULL,
+                                         NULL,
+                                         "vmx-vintr-pending",
+                                         "vmx-tsc-offset",
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         "vmx-hlt-exit",
+                                         NULL,
+                                         "vmx-invlpg-exit",
+                                         "vmx-mwait-exit",
+                                         "vmx-rdpmc-exit",
+                                         "vmx-rdtsc-exit",
+                                         NULL,
+                                         NULL,
+                                         "vmx-cr3-load-noexit",
+                                         "vmx-cr3-store-noexit",
+                                         NULL,
+                                         NULL,
+                                         "vmx-cr8-load-exit",
+                                         "vmx-cr8-store-exit",
+                                         "vmx-flexpriority",
+                                         "vmx-vnmi-pending",
+                                         "vmx-movdr-exit",
+                                         "vmx-io-exit",
+                                         "vmx-io-bitmap",
+                                         NULL,
+                                         "vmx-mtf",
+                                         "vmx-msr-bitmap",
+                                         "vmx-monitor-exit",
+                                         "vmx-pause-exit",
+                                         "vmx-secondary-ctls",
+                                     },
+                                 .msr =
+                                     {
+                                         .index =
+                                             MSR_IA32_VMX_TRUE_PROCBASED_CTLS,
+                                     }},
+
+    [FEAT_VMX_SECONDARY_CTLS] = {.type = MSR_FEATURE_WORD,
+                                 .feat_names =
+                                     {
+                                         "vmx-apicv-xapic",
+                                         "vmx-ept",
+                                         "vmx-desc-exit",
+                                         "vmx-rdtscp-exit",
+                                         "vmx-apicv-x2apic",
+                                         "vmx-vpid",
+                                         "vmx-wbinvd-exit",
+                                         "vmx-unrestricted-guest",
+                                         "vmx-apicv-register",
+                                         "vmx-apicv-vid",
+                                         "vmx-ple",
+                                         "vmx-rdrand-exit",
+                                         "vmx-invpcid-exit",
+                                         "vmx-vmfunc",
+                                         "vmx-shadow-vmcs",
+                                         "vmx-encls-exit",
+                                         "vmx-rdseed-exit",
+                                         "vmx-pml",
+                                         NULL,
+                                         NULL,
+                                         "vmx-xsaves",
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                     },
+                                 .msr =
+                                     {
+                                         .index = MSR_IA32_VMX_PROCBASED_CTLS2,
+                                     }},
+
+    [FEAT_VMX_PINBASED_CTLS] = {.type = MSR_FEATURE_WORD,
+                                .feat_names =
+                                    {
+                                        "vmx-intr-exit",
+                                        NULL,
+                                        NULL,
+                                        "vmx-nmi-exit",
+                                        NULL,
+                                        "vmx-vnmi",
+                                        "vmx-preemption-timer",
+                                        "vmx-posted-intr",
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                    },
+                                .msr =
+                                    {
+                                        .index =
+                                            MSR_IA32_VMX_TRUE_PINBASED_CTLS,
+                                    }},
+
+    [FEAT_VMX_EXIT_CTLS] = {.type = MSR_FEATURE_WORD,
+                            /*
+                             * VMX_VM_EXIT_HOST_ADDR_SPACE_SIZE is copied from
+                             * the LM CPUID bit.
+                             */
+                            .feat_names =
+                                {
+                                    NULL,
+                                    NULL,
+                                    "vmx-exit-nosave-debugctl",
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL /* vmx-exit-host-addr-space-size */,
+                                    NULL,
+                                    NULL,
+                                    "vmx-exit-load-perf-global-ctrl",
+                                    NULL,
+                                    NULL,
+                                    "vmx-exit-ack-intr",
+                                    NULL,
+                                    NULL,
+                                    "vmx-exit-save-pat",
+                                    "vmx-exit-load-pat",
+                                    "vmx-exit-save-efer",
+                                    "vmx-exit-load-efer",
+                                    "vmx-exit-save-preemption-timer",
+                                    "vmx-exit-clear-bndcfgs",
+                                    NULL,
+                                    "vmx-exit-clear-rtit-ctl",
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                },
+                            .msr =
+                                {
+                                    .index = MSR_IA32_VMX_TRUE_EXIT_CTLS,
+                                }},
+
+    [FEAT_VMX_ENTRY_CTLS] = {.type = MSR_FEATURE_WORD,
+                             .feat_names =
+                                 {
+                                     NULL,
+                                     NULL,
+                                     "vmx-entry-noload-debugctl",
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     "vmx-entry-ia32e-mode",
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     "vmx-entry-load-perf-global-ctrl",
+                                     "vmx-entry-load-pat",
+                                     "vmx-entry-load-efer",
+                                     "vmx-entry-load-bndcfgs",
+                                     NULL,
+                                     "vmx-entry-load-rtit-ctl",
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                 },
+                             .msr =
+                                 {
+                                     .index = MSR_IA32_VMX_TRUE_ENTRY_CTLS,
+                                 }},
+
+    [FEAT_VMX_MISC] = {.type = MSR_FEATURE_WORD,
+                       .feat_names =
+                           {
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               "vmx-store-lma",
+                               "vmx-activity-hlt",
+                               "vmx-activity-shutdown",
+                               "vmx-activity-wait-sipi",
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               "vmx-vmwrite-vmexit-fields",
+                               "vmx-zero-len-inject",
+                               NULL,
+                           },
+                       .msr =
+                           {
+                               .index = MSR_IA32_VMX_MISC,
+                           }},
+
+    [FEAT_VMX_EPT_VPID_CAPS] = {.type = MSR_FEATURE_WORD,
+                                .feat_names =
+                                    {
+                                        "vmx-ept-execonly",
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        "vmx-page-walk-4",
+                                        "vmx-page-walk-5",
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        "vmx-ept-2mb",
+                                        "vmx-ept-1gb",
+                                        NULL,
+                                        NULL,
+                                        "vmx-invept",
+                                        "vmx-eptad",
+                                        "vmx-ept-advanced-exitinfo",
+                                        NULL,
+                                        NULL,
+                                        "vmx-invept-single-context",
+                                        "vmx-invept-all-context",
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        "vmx-invvpid",
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        "vmx-invvpid-single-addr",
+                                        "vmx-invept-single-context",
+                                        "vmx-invvpid-all-context",
+                                        "vmx-invept-single-context-noglobals",
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                    },
+                                .msr =
+                                    {
+                                        .index = MSR_IA32_VMX_EPT_VPID_CAP,
+                                    }},
+
+    [FEAT_VMX_BASIC] =
+        {
+            .type = MSR_FEATURE_WORD,
+            .feat_names =
+                {
+                    [54] = "vmx-ins-outs",
+                    [55] = "vmx-true-ctls",
+                },
+            .msr =
+                {
+                    .index = MSR_IA32_VMX_BASIC,
+                },
+            /* Just to be safe - we don't support setting the MSEG version
+               field.  */
+            .no_autoenable_flags = MSR_VMX_BASIC_DUAL_MONITOR,
+        },
+
+    [FEAT_VMX_VMFUNC] = {.type = MSR_FEATURE_WORD,
+                         .feat_names =
+                             {
+                                 [0] = "vmx-eptp-switching",
+                             },
+                         .msr =
+                             {
+                                 .index = MSR_IA32_VMX_VMFUNC,
+                             }},
+
+};
 
 typedef struct FeatureMask {
   FeatureWord index;
@@ -3324,6 +4505,7 @@ static void x86_cpu_filter_features(X86CPU *cpu, bool verbose) {
     mark_unavailable_features(cpu, w, unavailable_features, prefix);
   }
 
+  // kvm is useless
 #ifdef BMBT
   if ((env->features[FEAT_7_0_EBX] & CPUID_7_0_EBX_INTEL_PT) && kvm_enabled()) {
     KVMState *s = CPU(cpu)->kvm_state;
@@ -3514,6 +4696,8 @@ void x86_cpu_realizefn(X86CPU *cpu) {
 
   if (cpu->env.features[FEAT_1_EDX] & CPUID_APIC || ms->smp.cpus > 1) {
     x86_cpu_apic_create(cpu);
+  } else {
+    g_assert_not_reached();
   }
 #endif
 
@@ -3850,6 +5034,8 @@ static void x86_cpu_initfn(X86CPU *cpu) {
 
   if (xcc->model) {
     x86_cpu_load_model(cpu, xcc->model);
+  } else {
+    g_assert_not_reached();
   }
 }
 

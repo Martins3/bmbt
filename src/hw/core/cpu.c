@@ -104,7 +104,7 @@ void cpu_reset(CPUState *cpu) {
     (*klass->reset)(cpu);
   } else {
     // reset must be registered
-    duck_check(false);
+    g_assert_not_reached();
   }
 
   // fuck_trace_guest_cpu_reset(cpu);
