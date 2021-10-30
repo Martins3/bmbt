@@ -137,6 +137,7 @@ gcov:
 
 clean:
 	rm -r $(BUILD_DIR)
+	rm -r seabios/out
 
 clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
