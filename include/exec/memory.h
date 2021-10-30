@@ -259,7 +259,7 @@ static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write) {
  */
 uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr);
 
-void memory_map_init(hwaddr size);
+void memory_map_init(ram_addr_t size);
 void tcg_commit();
 
 #endif /* end of include guard: MEMORY_H_E0UHP2JS */
