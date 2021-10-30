@@ -24,7 +24,9 @@ int qemu_log(const char *fmt, ...) {
 /* enable or disable low levels log */
 void qemu_set_log(int log_flags) {
   qemu_loglevel = log_flags;
-  qemu_logfile = fopen("/tmp/bmbt.log", "w");
+  qemu_logfile = fopen("./build/bmbt.log", "w");
+  duck_check(qemu_logfile != NULL);
+  qemu_log("start loging\n");
 }
 
 void log_cpu_state(CPUState *cpu, int flags) {
@@ -35,7 +37,7 @@ void log_cpu_state(CPUState *cpu, int flags) {
 
 /* Returns true if addr is in our debug filter or no filter defined
  */
-bool qemu_log_in_addr_range(uint64_t addr) { return false; }
+bool qemu_log_in_addr_range(uint64_t addr) { return true; }
 
 /*
  * Print like vprintf().

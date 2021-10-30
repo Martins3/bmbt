@@ -48,11 +48,14 @@ c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
 
 obj_files := $(assembly_object_files) $(c_object_files)
 
-# UNAME := $(shell uname -a)
-# ifeq (,$(findstring loongson, $(UNAME)))
+UNAME := $(shell uname -a)
+ifeq (,$(findstring loongson, $(UNAME)))
+	UNAME=x86
+else
+	UNAME=loongson
+endif
 # ARCH_PREFIX=~/arch/LARCH_toolchain_root_newabi/bin/loongarch64-linux-gnu-
 # QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
-# endif
 
 
 CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use # 暂时不使用 iwyu
@@ -90,7 +93,11 @@ capstone:
 	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
 
 seabios:
-	@$(MAKE) -C ./seabios
+	@if [ $(UNAME) = x86 ]; then \
+		$(MAKE) -C ./seabios; \
+	else \
+		echo "seabios can't be compiled in loongson host"; \
+	fi
 
 -include $(dependency_files)
 
