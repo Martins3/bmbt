@@ -8,6 +8,7 @@
 #include "cpu-para.h"
 #include "ramlist.h"
 #include <assert.h>
+#include <qemu/units.h>
 
 typedef struct RAMBlock {
   uint8_t *host;
@@ -41,6 +42,14 @@ typedef struct RAMBlock {
 #define X86_BIOS_MEM_SIZE (PAM_BIOS_END + 1)
 
 #define BIOS_IMG_SIZE (256 * KiB)
+// pc.ram low  * 1
+// smram       * 1
+// 0x40000 pam * 12
+// system bios * 1
+// pc.ram      * 1
+// pc.bios     * 1
+QEMU_BUILD_BUG_ON(RAM_BLOCK_NUM != (1 + 1 + 12 + 1 + 1 + 1));
+QEMU_BUILD_BUG_ON(PAM_EXBIOS_SIZE * 4 + PAM_BIOS_SIZE != 128 * KiB);
 
 typedef struct RAMList {
   DirtyMemoryBlocks *dirty_memory[DIRTY_MEMORY_NUM];
