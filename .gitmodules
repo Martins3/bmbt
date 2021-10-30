@@ -1,3 +1,7 @@
 [submodule "capstone"]
 	path = capstone
 	url = https://github.com/aquynh/capstone
+
+[submodule "seabios"]
+	path = seabios
+	url = https://git.seabios.org/seabios.git

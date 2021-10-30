@@ -75,7 +75,7 @@ dependency_files = $(obj_files:%.o=%.d)
 all: check-and-reinit-submodules capstone $(kernel)
 
 # https://stackoverflow.com/questions/52337010/automatic-initialization-and-update-of-submodules-in-makefile
-.PHONY: check-and-reinit-submodules capstone
+.PHONY: check-and-reinit-submodules capstone seabios
 check-and-reinit-submodules:
 	@if git submodule status | egrep -q '^[-]|^[+]' ; then \
             echo "INFO: Need to reinitialize git submodules"; \
@@ -88,6 +88,9 @@ CAP_CFLAGS+=-DCAPSTONE_HAS_X86
 capstone:
 	@mkdir -p $(@D)
 	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
+
+seabios:
+	@$(MAKE) -C ./seabios
 
 -include $(dependency_files)
 
@@ -107,7 +110,7 @@ $(BUILD_DIR)/%.o: %.S
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
-$(kernel) : $(obj_files) capstone
+$(kernel) : $(obj_files) capstone seabios
 	@# Create build directories - same structure as sources.
 	@mkdir -p $(@D)
 	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
