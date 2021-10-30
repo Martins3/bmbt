@@ -726,7 +726,7 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
 static char __pc_bios[PC_BIOS_IMG_SIZE];
 
 static ram_addr_t x86_bios_rom_init() {
-  int fd = open("/home/maritns3/core/seabios/out/bios.bin", O_RDONLY);
+  int fd = open("./seabios/out/bios.bin", O_RDONLY);
   duck_check(fd != -1);
 
   lseek(fd, 0, SEEK_SET);
