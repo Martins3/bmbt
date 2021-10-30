@@ -336,7 +336,10 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
     mr_offset = (ram_addr_t)(page << TARGET_PAGE_BITS) - ramblock->offset;
     mr_size = (end - page) << TARGET_PAGE_BITS;
 
-    // memory_region_clear_dirty_bitmap(ramblock->mr, mr_offset, mr_size);
+    // related with MemoryListener::log_clear, as is empty in tcg mode
+#ifdef BMTB
+    memory_region_clear_dirty_bitmap(ramblock->mr, mr_offset, mr_size);
+#endif
   }
 
   if (dirty && tcg_enabled()) {
