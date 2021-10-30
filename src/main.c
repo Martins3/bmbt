@@ -156,6 +156,7 @@ TEST test_qht(void) {
 
 TEST test_qemu_init() {
   qemu_init();
+  qemu_boot();
   PASS();
 }
 

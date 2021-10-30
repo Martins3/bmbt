@@ -5366,8 +5366,8 @@ X86CPU *QOM_cpu_init() {
 
   x86_cpu_cpudef_class_init(x86_cpu_class, model);
 
-  x86_cpu_common_class_init(x86_cpu_class);
   cpu_class_init(cpu_class);
+  x86_cpu_common_class_init(x86_cpu_class);
 
   cpu_common_initfn(cpu);
   x86_cpu_initfn(x86_cpu);
