@@ -752,7 +752,7 @@ static inline void init_ram_block(const char *name, unsigned int index,
  * in cpu_address_space_init
  *  - smm
  */
-static void ram_init(hwaddr total_ram_size) {
+static void ram_init(ram_addr_t total_ram_size) {
   void *host = alloc_ram(total_ram_size);
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
@@ -816,7 +816,7 @@ static void ram_init(hwaddr total_ram_size) {
 static AddressSpaceDispatch __memory_dispatch;
 static AddressSpaceDispatch __io_dispatch;
 
-void memory_map_init(hwaddr size) {
+void memory_map_init(ram_addr_t size) {
 #ifdef BMBT
   system_memory = g_malloc(sizeof(*system_memory));
 
