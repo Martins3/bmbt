@@ -278,7 +278,6 @@ MemoryRegion *iotlb_to_section(CPUState *cpu, hwaddr index, MemTxAttrs attrs) {
  */
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr) {
   duck_check(ram_block != NULL);
-
   return ramblock_ptr(ram_block, addr);
 }
 
@@ -399,6 +398,7 @@ RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
     }
   }
 
+  g_assert_not_reached();
   return NULL;
 
 found:
