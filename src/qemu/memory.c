@@ -700,27 +700,27 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
   ram_list.dirty_memory[DIRTY_MEMORY_CODE] = new_blocks;
 }
 
-static char __bios[BIOS_IMG_SIZE];
+static char __pc_bios[PC_BIOS_IMG_SIZE];
 
 static void x86_bios_rom_init() {
   int fd = open("/home/maritns3/core/seabios/out/bios.bin", O_RDONLY);
   duck_check(fd != -1);
 
   lseek(fd, 0, SEEK_SET);
-  int rc = read(fd, __bios, BIOS_IMG_SIZE);
+  int rc = read(fd, __pc_bios, PC_BIOS_IMG_SIZE);
   close(fd);
-  duck_check(rc == BIOS_IMG_SIZE);
+  duck_check(rc == PC_BIOS_IMG_SIZE);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
-  block->host = (void *)(&__bios[0]);
+  block->host = (void *)(&__pc_bios[0]);
 
   // e0000-fffff (prio 1, rom): alias isa-bios @pc.bios 20000-3ffff
   for (int i = 0; i < PAM_EXBIOS_NUM; ++i) {
     block = &ram_list.blocks[PAM_EXBIOS_INDEX].block;
-    block->host = (void *)(&__bios[0]) + 128 * KiB + PAM_EXBIOS_SIZE * i;
+    block->host = (void *)(&__pc_bios[0]) + 128 * KiB + PAM_EXBIOS_SIZE * i;
   }
   block = &ram_list.blocks[PAM_BIOS_INDEX].block;
-  block->host = (void *)(&__bios[0]) + 128 * KiB + PAM_EXBIOS_SIZE * 4;
+  block->host = (void *)(&__pc_bios[0]) + 128 * KiB + PAM_EXBIOS_SIZE * 4;
 
   duck_check(PAM_EXBIOS_SIZE * 4 + PAM_BIOS_SIZE == 128 * KiB);
 }
@@ -788,8 +788,8 @@ static void ram_init(ram_addr_t total_ram_size) {
 
   init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
                  total_ram_size - X86_BIOS_MEM_SIZE);
-  init_ram_block("pc.bios", PC_BIOS_INDEX, true, 4 * GiB - BIOS_IMG_SIZE,
-                 BIOS_IMG_SIZE);
+  init_ram_block("pc.bios", PC_BIOS_INDEX, true, 4 * GiB - PC_BIOS_IMG_SIZE,
+                 PC_BIOS_IMG_SIZE);
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;

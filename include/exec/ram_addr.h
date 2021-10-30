@@ -41,7 +41,7 @@ typedef struct RAMBlock {
 #define RAM_BLOCK_NUM (PC_BIOS_INDEX + 1)
 #define X86_BIOS_MEM_SIZE (PAM_BIOS_END + 1)
 
-#define BIOS_IMG_SIZE (256 * KiB)
+#define PC_BIOS_IMG_SIZE (256 * KiB)
 // pc.ram low  * 1
 // smram       * 1
 // 0x40000 pam * 12
