@@ -74,6 +74,10 @@ static bool is_smram_access(hwaddr offset) {
   return offset >= SMRAM_C_BASE && offset < SMRAM_C_END;
 }
 
+static bool is_isa_bios_access(hwaddr offset) {
+  return offset >= PAM_EXBIOS_BASE && offset < PAM_BIOS_END;
+}
+
 typedef bool (*MemoryRegionMatch)(const MemoryRegion *mr, hwaddr offset);
 
 static bool mem_mr_match(const MemoryRegion *mr, hwaddr offset) {
@@ -109,9 +113,28 @@ static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
   return mr;
 }
 
+// e0000-fffff (prio 1, rom): alias isa-bios @pc.bios 20000-3ffff
+static inline MemoryRegion *isa_bios_access(hwaddr offset, hwaddr *xlat,
+                                            hwaddr *plen) {
+  MemoryRegion *pc_bios;
+  if (!is_isa_bios_access(offset)) {
+    return NULL;
+  }
+  pc_bios = &ram_list.blocks[PC_BIOS_INDEX].mr;
+
+  *xlat = offset - PAM_EXBIOS_BASE;
+  *plen = MIN(*plen, pc_bios->size - *xlat);
+
+  return pc_bios;
+}
+
 static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
                                     hwaddr *xlat, hwaddr *plen) {
-  MemoryRegion *mr = NULL;
+  MemoryRegion *mr = isa_bios_access(offset, xlat, plen);
+  if (mr) {
+    return mr;
+  }
+
   if (is_smram_access(offset)) {
     if (!as->smm && smram_region_enable) {
       mr = as->dispatch->special_mr;
@@ -702,27 +725,20 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
 
 static char __pc_bios[PC_BIOS_IMG_SIZE];
 
-static void x86_bios_rom_init() {
+static ram_addr_t x86_bios_rom_init() {
   int fd = open("/home/maritns3/core/seabios/out/bios.bin", O_RDONLY);
   duck_check(fd != -1);
 
   lseek(fd, 0, SEEK_SET);
   int rc = read(fd, __pc_bios, PC_BIOS_IMG_SIZE);
-  close(fd);
   duck_check(rc == PC_BIOS_IMG_SIZE);
+  close(fd);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->host = (void *)(&__pc_bios[0]);
 
-  // e0000-fffff (prio 1, rom): alias isa-bios @pc.bios 20000-3ffff
-  for (int i = 0; i < PAM_EXBIOS_NUM; ++i) {
-    block = &ram_list.blocks[PAM_EXBIOS_INDEX].block;
-    block->host = (void *)(&__pc_bios[0]) + 128 * KiB + PAM_EXBIOS_SIZE * i;
-  }
-  block = &ram_list.blocks[PAM_BIOS_INDEX].block;
-  block->host = (void *)(&__pc_bios[0]) + 128 * KiB + PAM_EXBIOS_SIZE * 4;
-
-  duck_check(PAM_EXBIOS_SIZE * 4 + PAM_BIOS_SIZE == 128 * KiB);
+  // isa-bios is handled in function isa_bios_access
+  return PC_BIOS_IMG_SIZE;
 }
 
 static void *alloc_ram(hwaddr size) {
@@ -753,6 +769,7 @@ static inline void init_ram_block(const char *name, unsigned int index,
  *  - smm
  */
 static void ram_init(ram_addr_t total_ram_size) {
+  ram_addr_t rom_size;
   void *host = alloc_ram(total_ram_size);
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
@@ -810,7 +827,8 @@ static void ram_init(ram_addr_t total_ram_size) {
   }
 
   // isa-bios / pc.bios's host point to file
-  x86_bios_rom_init();
+  rom_size = x86_bios_rom_init();
+  setup_dirty_memory(total_ram_size + rom_size);
 }
 
 static AddressSpaceDispatch __memory_dispatch;
