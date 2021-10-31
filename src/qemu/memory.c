@@ -122,7 +122,7 @@ static inline MemoryRegion *isa_bios_access(hwaddr offset, hwaddr *xlat,
   }
   pc_bios = &ram_list.blocks[PC_BIOS_INDEX].mr;
 
-  *xlat = offset - PAM_EXBIOS_BASE;
+  *xlat = offset - PAM_EXBIOS_BASE + 128 * KiB;
   *plen = MIN(*plen, pc_bios->size - *xlat);
 
   return pc_bios;
