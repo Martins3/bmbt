@@ -98,6 +98,7 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
       return mr;
     }
   }
+  printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
   g_assert_not_reached();
 }
 
@@ -831,8 +832,8 @@ static void ram_init(ram_addr_t total_ram_size) {
   setup_dirty_memory(total_ram_size + rom_size);
 }
 
-static AddressSpaceDispatch __memory_dispatch;
-static AddressSpaceDispatch __io_dispatch;
+static AddressSpaceDispatch __memory_dispatch = {.name = "memory dispatch"};
+static AddressSpaceDispatch __io_dispatch = {.name = "io dispatch"};
 
 void memory_map_init(ram_addr_t size) {
 #ifdef BMBT
