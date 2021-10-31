@@ -35,6 +35,7 @@ typedef struct {
   MemoryRegion *segments[MAX_SEGMENTS_IN_AS];
   int segment_num;
   MemoryRegion *special_mr;
+  char name[100];
 } AddressSpaceDispatch;
 
 typedef struct AddressSpace {
