@@ -11,7 +11,9 @@ GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
 GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
 # @todo libgcc is absolute path
 # github action will not work with the absolute path
-GLIBS= -lglib-2.0 -lrt -lm -lc /usr/lib/gcc/x86_64-linux-gnu/9/libgcc.a
+# -lc : add glibc
+# -lm : add libmath
+GLIBS= -lglib-2.0 -lrt -lm -lc
 
 # ================================= glib =======================================
 
@@ -48,13 +50,11 @@ c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
 
 obj_files := $(assembly_object_files) $(c_object_files)
 
+ARCH_PREFIX :=
 UNAME := $(shell uname -a)
-ifeq (,$(findstring loongson, $(UNAME)))
-	UNAME=x86
-else
-	UNAME=loongson
+ifneq (,$(findstring maritns3-pc, $(UNAME)))
+$(error "Compile and run code in 3a5000")
 endif
-# ARCH_PREFIX=~/arch/LARCH_toolchain_root_newabi/bin/loongarch64-linux-gnu-
 # QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
 
 
@@ -92,13 +92,6 @@ capstone:
 	@mkdir -p $(@D)
 	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
 
-seabios:
-	@if [ $(UNAME) = x86 ]; then \
-		$(MAKE) -C ./seabios; \
-	else \
-		echo "seabios can't be compiled in loongson host"; \
-	fi
-
 -include $(dependency_files)
 
 # Build target for every single object file.
@@ -117,12 +110,11 @@ $(BUILD_DIR)/%.o: %.S
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
-$(kernel) : $(obj_files) capstone seabios
-	@# Create build directories - same structure as sources.
-	@mkdir -p $(@D)
-	@# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
-	@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
-	@echo "BMBT is ready"
+$(kernel) : $(obj_files) capstone
+		@mkdir -p $(@D)
+		@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
+
+# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
 
 
 .PHONY: all clean gdb run gcov clear_gcda test
@@ -144,7 +136,6 @@ gcov:
 
 clean:
 	rm -r $(BUILD_DIR)
-	rm -r seabios/out
 
 clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
