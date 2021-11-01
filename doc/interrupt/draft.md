@@ -4,9 +4,6 @@
 ## 问题
 - [ ] make a table explaining every field of APIC and IOAPIC struct in QEMU
 
-- [ ] 实际上，ISABus 中的只有成员 irq 有用，而且是通过 isa_bus_irqs 赋值的，实际上，没有啥作用的
-  - 实际上，我猜测 ISABus 主要是为了 keyboard 之类的设备容易模拟吧
-
 - [ ] 似乎没有整明白 : gsi_handler 和 qemu_set_irq 的关系
   - [ ] qdev_connect_gpio_out 等价的效果到底是什么
   - [ ] 比如 pic_realize 中的注册
@@ -22,6 +19,20 @@
   - apic_poll_irq : 如果中断是来自于其他的 thread，那么就采用这种方式，比如时钟中断
     - 因为时钟是在另一个线程处理的，所以需要实现
   - 如果不是来自于 pic 的中断，那就清理掉这个中断
+
+## isa
+- [ ] 实际上，ISABus 中的只有成员 irq 有用，而且是通过 isa_bus_irqs 赋值的，实际上，没有啥作用的
+  - 实际上，我猜测 ISABus 主要是为了 keyboard 之类的设备容易模拟吧
+
+将 `x86ms->gsi` 赋值给 ISABus::irqs
+
+```c
+void isa_bus_irqs(ISABus *bus, qemu_irq *irqs)
+{
+    bus->irqs = irqs;
+}
+```
+- 既然现在还没有处理 isa_bus_irqs ，这个问题暂时放到这里吧
 
 #### EOI
 - [ ] apic_eoi : 和 10.8.5 中描述的一致，当 apic 接受到一个 EOIUpon receiving an EOI, the APIC clears the highest priority bit in the ISR and dispatches the next highest priority
