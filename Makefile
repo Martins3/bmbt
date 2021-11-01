@@ -112,6 +112,7 @@ $(BUILD_DIR)/%.o: %.S
 # Actual target of the binary - depends on all .o files.
 $(kernel) : $(obj_files) capstone
 		@mkdir -p $(@D)
+		@echo "  Link    $@"
 		@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
 
 # $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
