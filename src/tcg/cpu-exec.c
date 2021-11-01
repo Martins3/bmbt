@@ -225,9 +225,7 @@ static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
 }
 #endif
 
-static void cpu_update_icount(CPUState *cpu) {
-  // FIXME
-}
+static void cpu_update_icount(CPUState *cpu) { g_assert_not_reached(); }
 
 static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
                                     TranslationBlock **last_tb, int *tb_exit) {
@@ -258,6 +256,8 @@ static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
 
   /* Instruction counter expired.  */
   assert(use_icount);
+  // bmbt doesn't support icount
+  g_assert_not_reached();
 #ifndef CONFIG_USER_ONLY
   /* Ensure global icount has gone forward */
   cpu_update_icount(cpu);
