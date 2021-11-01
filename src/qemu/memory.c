@@ -98,6 +98,8 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
       return mr;
     }
   }
+  CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
+  printf("guest ip : %x\n", env->segs[R_CS].base + env->eip);
   printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
   g_assert_not_reached();
 }

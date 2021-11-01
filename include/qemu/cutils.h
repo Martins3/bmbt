@@ -1,6 +1,8 @@
 #ifndef CUTILS_H_FZW1YGWR
 #define CUTILS_H_FZW1YGWR
 
+#include <time.h>
+
 /**
  * pstrcpy:
  * @buf: buffer to copy string into
@@ -20,5 +22,7 @@
  *    bytes and then add a NUL
  */
 void pstrcpy(char *buf, int buf_size, const char *str);
+
+time_t mktimegm(struct tm *tm);
 
 #endif /* end of include guard: CUTILS_H_FZW1YGWR */

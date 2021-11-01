@@ -5,6 +5,7 @@
 #include "../qemu/notify.h"
 #include "../qemu/uuid.h"
 #include "../types.h"
+#include <qemu/timer.h>
 
 #include "cpus.h"
 #include <string.h>
@@ -26,6 +27,7 @@ static inline char *get_boot_devices_lchs_list(size_t *size) { return NULL; }
 extern int boot_menu;
 
 extern QemuUUID qemu_uuid;
+extern QEMUClockType rtc_clock;
 
 void qemu_init();
 
