@@ -2,16 +2,10 @@
 
 ## 问题
 - [ ] 所以还是使用 e820 来实现探测内存吗? 那么 acpi 是做什么用的?
-- [ ] get_boot_devices_list 的返回结果是 /rom@genroms/linuxboot_dma.bin，通过这种方式直接启动 Linux，如果是从 disk 上启动 guest 的时候，那么其返回为 NULL
-  - 所以，到底用什么方法来加载 guest 的啊
-
-## 将用户态的依赖彻底移除掉
-- setsigjmp 这种东西在内核态可以使用吗?
-- 如何保证自己对于 glibc 没有依赖?
 
 ## 在 bare-mental 上测试 seabios 的执行
 - 添加设备和中断支持
-- 了解 UEFI SDK
+- 了解 UEFI SDK : 按照 UEFI SDK 的方式加载程序，而不是内核的方式
 - https://github.com/tianocore/tianocore.github.io
 - apci probe
 - cache init
@@ -19,12 +13,6 @@
 - TLB refill init
 - memory probe
 - probe pci devices
-
-## 处理的问题
-
-## how to port clock
-- [ ] 为什么制作出来了 timer_list_group 的概念
-- [ ] 全局变量的 rtc_clock 正确初始化，其中影响是什么?
 
 ## 需要处理的大块问题
 ```plain
@@ -42,14 +30,6 @@ src/hw/intc/ioapic.c:398:#ifdef NEED_LATER
 ```
 应该是这里有事情被简化掉了，所以现在 x86_cpu_realizefn 中没有初始化 features 字段
 如果上面的 NEED_LATER 都修复了，但是问题还是没有解决，那么就出现了大问题了
-
-## 需要
-- [ ] x86_cpu_apic_realize : 向 memory 中添加 apic 的映射空间，这个是需要测试的
-- [ ] 添加一个 assert 直接到最后比较 feature 是否相等的，但是这个需要 i386 的数据
-- [ ] x86_cpu_properties 中的项目需要一个个的检查一遍
-- [ ] 核查一下最后的 tlb flush 的事情是积累下来的
-- [ ] disass 的调试感觉还是有必要的呀
-- [ ] 比如 rtc_reset 中会调用一下 qemu_irq_lower，这种在 qemu_init 的时候导致的中断到时候还是需要分析一下的呀
 
 ## 还需要分析的细节问题
 2. apic
@@ -84,6 +64,4 @@ src/hw/intc/ioapic.c:398:#ifdef NEED_LATER
   - [ ] 一些 unreachable 之类的
   - [ ] tcg_abort
   - [ ] 在 bitmap.c 中间是直接从
-  - [ ] g_assert
-  - [ ] error_report
 9. pit 和 hpet 需要模拟?
