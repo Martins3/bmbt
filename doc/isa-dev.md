@@ -69,12 +69,7 @@ disass 其位置，在 fd_disable_dma 上，所以 dma 暂时不用考虑了
 分析一下:
 coalesced_timer / irq_coalesced
 
-
 - [ ] DEBUG_COALESCED 真的有用吗?
-
-
-
-
 
 ```c
 cmos: read index=0x0f val=0x00
@@ -132,3 +127,45 @@ cmos: read index=0x10 val=0x50
 #### rtc
 在
 configure_rtc 配置 rtc 起始时间，和处理实践漂移的情况的
+
+# 分析一下可能需要模拟的设备
+
+看来一下，感觉其实还好吧！
+
+| Device           | Strategy             |
+|------------------|----------------------|
+| port92           |                      |
+| ioport80         |                      |
+| ioportF0         |                      |
+| rtc              |                      |
+| isa-debugcon     |                      |
+| pci-conf-idx     |                      |
+| pci-conf-data    |                      |
+| fwcfg            |                      |
+| fwcfg.dma        |                      |
+| io               |                      |
+| apm-io           |                      |
+| rtc-index        |                      |
+| vga              |                      |
+| vbe              |                      |
+| i8042-cmd        |                      |
+| i8042-data       |                      |
+| parallel         |                      |
+| serial           |                      |
+| kvmvapic         |                      |
+| pcspk            | speaker 暂时不用考虑 |
+| acpi-cnt         |                      |
+| acpi-evt         |                      |
+| acpi-gpe0        |                      |
+| acpi-cpu-hotplug |                      |
+| acpi-tmr         |                      |
+| dma-page         |                      |
+| dma-cont         |                      |
+| fdc              |                      |
+| e1000-io         |                      |
+| piix-bmdma       |                      |
+| bmdma            |                      |
+| ide              |                      |
+
+## vbe
+https://wiki.osdev.org/VBE
