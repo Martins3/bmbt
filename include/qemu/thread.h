@@ -64,6 +64,8 @@ static inline void qemu_mutex_unlock(QemuMutex *mutex) {
 
 static inline bool qemu_mutex_locked(QemuMutex *mutex) { return mutex->lock; }
 
+// in QEMU, QemuThread is used for qemu_cpu_is_self
+#ifdef BMBT
 typedef struct QemuThread {
   int thread;
 } QemuThread;
@@ -71,6 +73,7 @@ typedef struct QemuThread {
 static inline void qemu_thread_get_self(QemuThread *thread) {
   thread->thread = 0x1234;
 }
+#endif
 
 // CPUState::thread_id is used by machine-qmp-cmds.c
 #ifdef BMBT
