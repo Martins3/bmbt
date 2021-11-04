@@ -2013,15 +2013,6 @@ void x86_stw_phys(CPUState *cs, hwaddr addr, uint32_t val);
 void x86_stl_phys(CPUState *cs, hwaddr addr, uint32_t val);
 void x86_stq_phys(CPUState *cs, hwaddr addr, uint64_t val);
 
-/* i386-specific interrupt pending bits.  */
-#define CPU_INTERRUPT_POLL CPU_INTERRUPT_TGT_EXT_1
-#define CPU_INTERRUPT_SMI CPU_INTERRUPT_TGT_EXT_2
-#define CPU_INTERRUPT_NMI CPU_INTERRUPT_TGT_EXT_3
-#define CPU_INTERRUPT_MCE CPU_INTERRUPT_TGT_EXT_4
-#define CPU_INTERRUPT_VIRQ CPU_INTERRUPT_TGT_INT_0
-#define CPU_INTERRUPT_SIPI CPU_INTERRUPT_TGT_INT_1
-#define CPU_INTERRUPT_TPR CPU_INTERRUPT_TGT_INT_2
-
 /* svm_helper.c */
 void cpu_svm_check_intercept_param(CPUX86State *env1, uint32_t type,
                                    uint64_t param, uintptr_t retaddr);
