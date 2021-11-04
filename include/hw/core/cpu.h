@@ -139,7 +139,7 @@ typedef struct CPUState {
   int nr_cores;
   int nr_threads;
 
-  struct QemuThread *thread;
+  // struct QemuThread *thread;
 #ifdef _WIN32
   HANDLE hThread;
 #endif

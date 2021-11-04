@@ -156,7 +156,7 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
 #endif
 
   qemu_mutex_lock_iothread();
-  qemu_thread_get_self(cpu->thread);
+  // qemu_thread_get_self(cpu->thread);
 
   // cpu->thread_id = qemu_get_thread_id();
   cpu->created = true;
@@ -371,7 +371,7 @@ static void qemu_tcg_init_vcpu(CPUState *cpu) {
     cpu->created = true;
   }
 #endif
-  cpu->thread = g_malloc0(sizeof(QemuThread));
+  // cpu->thread = g_malloc0(sizeof(QemuThread));
   cpu->halt_cond = g_malloc0(sizeof(QemuCond));
   qemu_cond_init(cpu->halt_cond);
 }
