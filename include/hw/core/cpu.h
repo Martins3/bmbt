@@ -147,7 +147,7 @@ typedef struct CPUState {
   int thread_id;
 #endif
   bool running, has_waiter;
-  struct QemuCond *halt_cond;
+  // struct QemuCond *halt_cond;
   bool thread_kicked;
   bool created;
   bool stop;
