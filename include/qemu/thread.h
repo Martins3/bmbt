@@ -72,10 +72,10 @@ static inline void qemu_thread_get_self(QemuThread *thread) {
   thread->thread = 0x1234;
 }
 
-static inline int qemu_get_thread_id(void) {
-  // return syscall(SYS_gettid);
-  return 0x4567;
-}
+// CPUState::thread_id is used by machine-qmp-cmds.c
+#ifdef BMBT
+static inline int qemu_get_thread_id(void) { return syscall(SYS_gettid); }
+#endif
 
 // In BMBT mode,  signal or broadcast firstly, then wait on it
 typedef struct QemuCond {
