@@ -100,7 +100,7 @@ static void qemu_tcg_rr_wait_io_event(void) {
 
   while (all_cpu_threads_idle()) {
     stop_tcg_kick_timer();
-    qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
+    // qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
   }
 
   start_tcg_kick_timer();
@@ -175,7 +175,7 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
 
   /* wait for initial kick-off after machine start */
   while (first_cpu->stopped) {
-    qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
+    // qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
 
     /* process any pending work */
     CPU_FOREACH(cpu) {
@@ -294,10 +294,10 @@ static void qemu_cpu_kick_rr_cpus(void) {
 }
 
 void qemu_cpu_kick(CPUState *cpu) {
-  qemu_cond_broadcast(cpu->halt_cond);
+  // qemu_cond_broadcast(cpu->halt_cond);
   if (tcg_enabled()) {
     if (qemu_tcg_mttcg_enabled()) {
-      // cpu_exit(cpu);
+      cpu_exit(cpu);
     } else {
       qemu_cpu_kick_rr_cpus();
     }
@@ -372,8 +372,8 @@ static void qemu_tcg_init_vcpu(CPUState *cpu) {
   }
 #endif
   // cpu->thread = g_malloc0(sizeof(QemuThread));
-  cpu->halt_cond = g_malloc0(sizeof(QemuCond));
-  qemu_cond_init(cpu->halt_cond);
+  // cpu->halt_cond = g_malloc0(sizeof(QemuCond));
+  // qemu_cond_init(cpu->halt_cond);
 }
 
 void qemu_init_vcpu(CPUState *cpu) {

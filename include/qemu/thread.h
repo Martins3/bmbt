@@ -80,38 +80,6 @@ static inline void qemu_thread_get_self(QemuThread *thread) {
 static inline int qemu_get_thread_id(void) { return syscall(SYS_gettid); }
 #endif
 
-// In BMBT mode,  signal or broadcast firstly, then wait on it
-typedef struct QemuCond {
-  bool cond_ready;
-  bool initiated;
-} QemuCond;
-
-static inline void qemu_cond_init(QemuCond *cond) {
-  duck_check(!cond->initiated);
-  cond->cond_ready = false;
-  cond->initiated = true;
-}
-/*
- * IMPORTANT: The implementation does not guarantee that pthread_cond_signal
- * and pthread_cond_broadcast can be called except while the same mutex is
- * held as in the corresponding pthread_cond_wait calls!
- */
-static inline void qemu_cond_signal(QemuCond *cond) {
-  duck_check(!cond->cond_ready);
-  cond->cond_ready = true;
-}
-
-static inline void qemu_cond_broadcast(QemuCond *cond) {
-  duck_check(!cond->cond_ready);
-  cond->cond_ready = true;
-}
-
-static inline void qemu_cond_wait(QemuCond *cond, QemuMutex *mutex) {
-  duck_check(cond->cond_ready);
-  duck_check(!qemu_mutex_locked(mutex));
-  cond->cond_ready = false;
-}
-
 #define QEMU_LOCK_GUARD(x)                                                     \
   {                                                                            \
     qemu_mutex_lock(x);                                                        \
