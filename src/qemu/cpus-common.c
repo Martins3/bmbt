@@ -9,8 +9,6 @@ struct qemu_work_item {
   bool free, exclusive, done;
 };
 
-// [interface 33]
-static QemuCond qemu_work_cond;
 static QemuMutex qemu_cpu_list_lock;
 
 CPUTailQ cpus = QTAILQ_HEAD_INITIALIZER(cpus);
@@ -25,7 +23,8 @@ void qemu_init_cpu_list(void) {
   qemu_cond_init(&exclusive_resume);
 #endif
   qemu_mutex_init(&qemu_cpu_list_lock);
-  qemu_cond_init(&qemu_work_cond);
+  // [interface 33]
+  // qemu_cond_init(&qemu_work_cond);
 }
 
 void process_queued_cpu_work(CPUState *cpu) {
@@ -66,7 +65,9 @@ void process_queued_cpu_work(CPUState *cpu) {
     }
   }
   qemu_mutex_unlock(&cpu->work_mutex);
-  qemu_cond_broadcast(&qemu_work_cond);
+
+  // [interface 33]
+  // qemu_cond_broadcast(&qemu_work_cond);
 }
 
 static void queue_work_on_cpu(CPUState *cpu, struct qemu_work_item *wi) {
