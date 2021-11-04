@@ -57,12 +57,6 @@
 #define QEMU_FLATTEN
 #endif
 
-#define bmbt_assert()                                                          \
-  do {                                                                         \
-    printf("not implement yet %s %d\n", __FUNCTION__, __LINE__);               \
-    assert(0);                                                                 \
-  } while (0);
-
 #define QEMU_ALIGNED(X) __attribute__((aligned(X)))
 
 #define duck_check(x) assert(x)
