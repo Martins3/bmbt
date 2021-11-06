@@ -59,7 +59,7 @@
     - 原来通过 cpu_interrupt_handler 全局变量赋值的设计过于鬼畜和充满误导性，让其直接调用 tcg_handle_interrupt
 33. run_on_cpu
     - run_on_cpu 需要需要等待到 vCPU 将 hook 指向完成之后才会继续，其用户在 BMBT 模式下都消失了，这个函数直接被移除掉了
-    - 但是 qemu_work_cond 暂时保留下来
+    - 条件变量的逻辑不能简单的修改为: 前面 boardcast 后面接受的模式, 所以讲牵连的 qemu_work_cond 也需要被一并被删除掉的
 34. iotlb
     - QEMU 本身存在 subpage 这让将 IO 访问也放到 TLB 中，但是现在 subpage 机制取消掉了，所以无法继续使用 TOTLB 机制了
     - 删除 memory_region_section_get_iotlb
@@ -68,6 +68,8 @@
     - 原本 io 的 CPUTLBEntry::addend 装入的是 0，现在需要装入 paddr
     - io_readx 和 io_writex 从 CPUTLBEntry::addend 装入的 paddr 重新 address_space_translate
     - 在 address_space_translate_for_iotlb 中，如果是 ram，那么返回一个 iotlb_mr 就可以了
+35. QemuEvent QEMUTimerList::timers_done_ev
+    - qemu_clock_enable 中需要 timerlist_run_timers 执行完成才可以可以返回，表示 timerlist 确实结束了呀
 
 # BMBT 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
