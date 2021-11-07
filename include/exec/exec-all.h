@@ -175,8 +175,6 @@ extern int singlestep;
 #define GETPC()                                                                \
   ((uintptr_t)__builtin_extract_return_addr(__builtin_return_address(0)))
 
-void tlb_flush(CPUState *cpu);
-
 /**
  * cpu_restore_state:
  * @cpu: the vCPU state is to be restore to
