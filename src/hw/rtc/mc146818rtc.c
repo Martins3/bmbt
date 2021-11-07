@@ -803,7 +803,7 @@ static void rtc_realizefn(RTCState *s) {
   check_update_timer(s);
 
   s->suspend_notifier.notify = rtc_notify_suspend;
-#ifdef MEM_TODO
+#ifdef PORT_RTC
   qemu_register_suspend_notifier(&s->suspend_notifier);
 
   memory_region_init_io(&s->io, OBJECT(s), &cmos_ops, s, "rtc", 2);
@@ -833,7 +833,7 @@ static void rtc_realizefn(RTCState *s) {
   QLIST_INSERT_HEAD(&rtc_devices, s, link);
 }
 
-#ifdef MEM_TODO
+#ifdef PORT_RTC
 ISADevice *mc146818_rtc_init(ISABus *bus, int base_year,
                              qemu_irq intercept_irq) {
   DeviceState *dev;
