@@ -162,4 +162,14 @@ static inline QEMUTimer *timer_new_ns(QEMUClockType type, QEMUTimerCB *cb,
   return timer_new(type, SCALE_NS, cb, opaque);
 }
 
+// signal-timer.c
+typedef void(TimerHandler)(int sig, siginfo_t *si, void *uc);
+timer_t setup_timer(TimerHandler handler);
+void soonest_timer_ns(timer_t tid, long ns);
+void soonest_timer_s(timer_t tid, long s);
+void block_interrupt();
+void unblock_interrupt();
+bool is_interrupt_blocked();
+void fire_timer();
+
 #endif /* end of include guard: TIMER_H_PBGYZKVR */
