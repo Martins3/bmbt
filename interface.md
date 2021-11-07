@@ -70,6 +70,18 @@
     - 在 address_space_translate_for_iotlb 中，如果是 ram，那么返回一个 iotlb_mr 就可以了
 35. QemuEvent QEMUTimerList::timers_done_ev
     - qemu_clock_enable 中需要 timerlist_run_timers 执行完成才可以可以返回，表示 timerlist 确实结束了呀
+36. qemu_cpu_is_self
+    - 在 QEMU 中，为了其他线程访问直接访问 vCPU 的私有数据，在 tlb flush 和 tcg_handle_interrupt 的地方需要使用上这个操作
+    - 现在，这个函数用于区分当前是否运行在 signal handler 中的
+    - **感觉** qemu_cpu_is_self 可以被优化为永远返回 true 的
+      - tlb flush 发生在 vCPU thread 的，比如 helper, 所以无需考虑
+      - interrupt 因为 vapic 的移除，可以简化掉
+37. timerlist_notify
+    - 如果添加的 timer 当前的 soonest 的 timer 还要早，那么需要尽快执行一下 qemu_clock_run_timers
+    - [ ] 在 bare metal 状态下实现，这个问题需要重新思考
+39. verify_BQL_held
+    - 我们认为 vm_clock_seqlock vm_clock_lock 这两个 lock 在 bmbt 中总是会 vCPU thread 已经持有了 BQL 或者在 signal handler 中调用
+    - 所以没有必要添加更多的锁
 
 # BMBT 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
