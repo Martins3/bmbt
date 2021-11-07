@@ -8,6 +8,7 @@
 #include "../irq.h"
 #include "ioapic.h"
 #include <hw/sysbus.h>
+#include <qemu/timer.h>
 
 #define MAX_IOAPICS 1
 
@@ -89,7 +90,7 @@ struct IOAPICCommonState {
   uint64_t irq_count[IOAPIC_NUM_PINS];
   int irq_level[IOAPIC_NUM_PINS];
   int irq_eoi[IOAPIC_NUM_PINS];
-  // QEMUTimer *delayed_ioapic_service_timer; // FIXME :linker: what's delayed ?
+  QEMUTimer *delayed_ioapic_service_timer;
 };
 
 static inline SysBusDevice *IOAPIC_SYS_BUS_DEVICE(IOAPICCommonState *s) {
