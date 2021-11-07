@@ -68,6 +68,7 @@ bool is_interrupt_blocked(void) { return __blocked; }
 
 void block_interrupt() {
   assert(__blocked == false);
+  assert(qemu_cpu_is_self(NULL));
   __blocked = true;
   sigset_t blocked;
   sigemptyset(&blocked);
@@ -78,6 +79,7 @@ void block_interrupt() {
 
 void unblock_interrupt() {
   assert(__blocked == true);
+  assert(qemu_cpu_is_self(NULL));
   __blocked = false;
   sigset_t blocked;
   sigemptyset(&blocked);

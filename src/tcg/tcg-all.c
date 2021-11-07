@@ -11,7 +11,7 @@ unsigned long tcg_tb_size;
 /* mask must never be zero, except for A20 change call */
 void tcg_handle_interrupt(CPUState *cpu, int mask) {
   int old_mask;
-  g_assert(qemu_mutex_iothread_locked());
+  g_assert(qemu_mutex_iothread_locked() || !qemu_cpu_is_self(cpu));
 
   old_mask = cpu->interrupt_request;
   cpu->interrupt_request |= mask;
@@ -21,8 +21,7 @@ void tcg_handle_interrupt(CPUState *cpu, int mask) {
    * case its halted.
    */
   if (!qemu_cpu_is_self(cpu)) {
-    g_assert_not_reached();
-    // qemu_cpu_kick(cpu);
+    qemu_cpu_kick(cpu);
   } else {
 #ifdef CONFIG_X86toMIPS
     if (xtm_sigint_opt()) {
