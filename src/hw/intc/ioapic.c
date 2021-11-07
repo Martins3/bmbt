@@ -223,10 +223,9 @@ void ioapic_eoi_broadcast(int vector) {
            * detect an interrupt storm.
            */
           s->irq_eoi[n] = 0;
-          // FIXME :linker: timer ???
-          // timer_mod_anticipate(s->delayed_ioapic_service_timer,
-          // qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
-          // NANOSECONDS_PER_SECOND / 100);
+          timer_mod_anticipate(s->delayed_ioapic_service_timer,
+                               qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+                                   NANOSECONDS_PER_SECOND / 100);
           // fuck_trace_ioapic_eoi_delayed_reassert(n);
         } else {
           ioapic_service(s);
@@ -395,11 +394,8 @@ static void ioapic_realize(IOAPICCommonState *s) {
 
   memory_region_init_io(&s->io_memory, &ioapic_io_ops, s, "ioapic", 0x1000);
 
-#ifdef NEED_LATER
-  // FIXME :linker: timer
   s->delayed_ioapic_service_timer =
       timer_new_ns(QEMU_CLOCK_VIRTUAL, delayed_ioapic_service_cb, s);
-#endif
 
   qdev_init_gpio_in(&s->gpio, ioapic_set_irq, s, IOAPIC_NUM_PINS);
 

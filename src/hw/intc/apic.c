@@ -764,9 +764,7 @@ static void apic_realize(APICCommonState *s) {
   memory_region_init_io(&s->io_memory, &apic_io_ops, s, "apic-msi",
                         APIC_SPACE_SIZE);
 
-#ifdef NEED_LATER
   s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, apic_timer, s);
-#endif
 
   local_apics[s->id] = s;
 
