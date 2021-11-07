@@ -234,7 +234,7 @@ void qemu_init() {
   machine_class = MACHINE_GET_CLASS(current_machine);
   qemu_system_reset(machine_class, current_machine);
 
-  resume_all_vcpus();
+  vm_start();
 
   qemu_mutex_unlock_iothread();
 }

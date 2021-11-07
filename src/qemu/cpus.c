@@ -4,6 +4,8 @@
 #include "../../include/qemu/rcu.h"
 #include "../i386/LATX/x86tomips-config.h"
 #include "../tcg/tcg.h"
+#include <qemu/seqloch.h>
+#include <qemu/timer.h>
 
 // [interface 11]
 static bool iothread_locked = false;
@@ -435,8 +437,170 @@ void cpu_resume(CPUState *cpu) {
 void resume_all_vcpus(void) {
   CPUState *cpu;
 
-#ifdef NEED_LATER
   qemu_clock_enable(QEMU_CLOCK_VIRTUAL, true);
-#endif
   CPU_FOREACH(cpu) { cpu_resume(cpu); }
+}
+
+/**
+ * Prepare for (re)starting the VM.
+ * Returns -1 if the vCPUs are not to be restarted (e.g. if they are already
+ * running or in case of an error condition), 0 otherwise.
+ */
+int vm_prepare_start(void) {
+  cpu_enable_ticks();
+  return 0;
+}
+
+void vm_start(void) {
+  if (!vm_prepare_start()) {
+    resume_all_vcpus();
+  }
+}
+
+/* Return the virtual CPU time, based on the instruction counter.  */
+int64_t cpu_get_icount(void) { g_assert_not_reached(); }
+
+typedef struct TimersState {
+  /* Protected by BQL.  */
+  int64_t cpu_ticks_prev;
+  int64_t cpu_ticks_offset;
+
+#ifdef BMBT
+  /* Protect fields that can be respectively read outside the
+   * BQL, and written from multiple threads.
+   */
+  QemuSeqLock vm_clock_seqlock;
+  QemuSpin vm_clock_lock;
+#endif
+
+  int16_t cpu_ticks_enabled;
+
+#ifdef BMBT
+  /* Conversion factor from emulated instructions to virtual clock ticks.  */
+  int16_t icount_time_shift;
+
+  /* Compensate for varying guest execution speed.  */
+  int64_t qemu_icount_bias;
+
+  int64_t vm_clock_warp_start;
+#endif
+  int64_t cpu_clock_offset;
+
+#ifdef BMBT
+  /* Only written by TCG thread */
+  int64_t qemu_icount;
+
+  /* for adjusting icount */
+  QEMUTimer *icount_rt_timer;
+  QEMUTimer *icount_vm_timer;
+  QEMUTimer *icount_warp_timer;
+#endif
+} TimersState;
+
+static TimersState timers_state;
+
+static int64_t cpu_get_clock_locked(void) {
+  int64_t time;
+
+  time = timers_state.cpu_clock_offset;
+  if (timers_state.cpu_ticks_enabled) {
+    time += get_clock();
+  }
+
+  return time;
+}
+
+// [interface 39]
+static inline void verify_BQL_held() {
+  if (qemu_cpu_is_self(NULL)) {
+    assert(qemu_mutex_iothread_locked());
+  }
+}
+
+/* Return the monotonic time elapsed in VM, i.e.,
+ * the time between vm_start and vm_stop
+ */
+int64_t cpu_get_clock(void) {
+  int64_t ti;
+  unsigned start;
+
+#ifdef BMBT
+  do {
+    start = seqlock_read_begin(&timers_state.vm_clock_seqlock);
+    ti = cpu_get_clock_locked();
+  } while (seqlock_read_retry(&timers_state.vm_clock_seqlock, start));
+#else
+  ti = cpu_get_clock_locked();
+  verify_BQL_held();
+#endif
+
+  return ti;
+}
+
+static int64_t cpu_get_ticks_locked(void) {
+  int64_t ticks = timers_state.cpu_ticks_offset;
+  if (timers_state.cpu_ticks_enabled) {
+    ticks += cpu_get_host_ticks();
+  }
+
+  if (timers_state.cpu_ticks_prev > ticks) {
+    /* Non increasing ticks may happen if the host uses software suspend.  */
+    timers_state.cpu_ticks_offset += timers_state.cpu_ticks_prev - ticks;
+    ticks = timers_state.cpu_ticks_prev;
+  }
+
+  timers_state.cpu_ticks_prev = ticks;
+  return ticks;
+}
+
+/* return the time elapsed in VM between vm_start and vm_stop.  Unless
+ * icount is active, cpu_get_ticks() uses units of the host CPU cycle
+ * counter.
+ */
+int64_t cpu_get_ticks(void) {
+  int64_t ticks;
+
+  if (use_icount) {
+    return cpu_get_icount();
+  }
+
+#ifdef BMBT
+  qemu_spin_lock(&timers_state.vm_clock_lock);
+  ticks = cpu_get_ticks_locked();
+  qemu_spin_unlock(&timers_state.vm_clock_lock);
+#else
+  ticks = cpu_get_ticks_locked();
+  verify_BQL_held();
+#endif
+  return ticks;
+}
+
+void qemu_start_warp_timer(void) {
+  int64_t clock;
+  int64_t deadline;
+
+  if (!use_icount) {
+    return;
+  }
+  g_assert_not_reached();
+}
+
+/* enable cpu_get_ticks()
+ * Caller must hold BQL which serves as mutex for vm_clock_seqlock.
+ */
+void cpu_enable_ticks(void) {
+#ifdef BMBT
+  seqlock_write_lock(&timers_state.vm_clock_seqlock,
+                     &timers_state.vm_clock_lock);
+#endif
+  if (!timers_state.cpu_ticks_enabled) {
+    timers_state.cpu_ticks_offset -= cpu_get_host_ticks();
+    timers_state.cpu_clock_offset -= get_clock();
+    timers_state.cpu_ticks_enabled = 1;
+  }
+  verify_BQL_held();
+#ifdef BMBT
+  seqlock_write_unlock(&timers_state.vm_clock_seqlock,
+                       &timers_state.vm_clock_lock);
+#endif
 }
