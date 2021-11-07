@@ -3,6 +3,7 @@
 
 #include "../../src/tcg/glib_stub.h"
 #include "../types.h"
+#include <sys/time.h>
 
 #define NANOSECONDS_PER_SECOND 1000000000LL
 
@@ -49,6 +50,39 @@ int64_t cpu_get_ticks(void);
 void cpu_enable_ticks(void);
 /* Caller must hold BQL */
 void cpu_disable_ticks(void);
+
+int64_t cpu_get_icount(void);
+int64_t cpu_get_clock(void);
+
+/* get host real time in nanosecond */
+static inline int64_t get_clock_realtime(void) {
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec * 1000000000LL + (tv.tv_usec * 1000);
+}
+
+/**
+ * qemu_start_warp_timer:
+ *
+ * Starts a timer for virtual clock update
+ */
+void qemu_start_warp_timer(void);
+
+/**
+ * qemu_clock_enable:
+ * @type: the clock type
+ * @enabled: true to enable, false to disable
+ *
+ * Enable or disable a clock
+ * Disabling the clock will wait for related timerlists to stop
+ * executing qemu_run_timers.  Thus, this functions should not
+ * be used from the callback of a timer that is based on @clock.
+ * Doing so would cause a deadlock.
+ *
+ * Caller should hold BQL.
+ */
+void qemu_clock_enable(QEMUClockType type, bool enabled);
 
 /**
  * timer_expire_time_ns:
@@ -161,6 +195,50 @@ static inline QEMUTimer *timer_new_ns(QEMUClockType type, QEMUTimerCB *cb,
                                       void *opaque) {
   return timer_new(type, SCALE_NS, cb, opaque);
 }
+
+/**
+ * timer_mod_anticipate:
+ * @ts: the timer
+ * @expire_time: the expiry time in nanoseconds
+ *
+ * Modify a timer to expire at @expire_time or the current time, whichever
+ * comes earlier, taking into account the scale associated with the timer.
+ *
+ * This function is thread-safe but the timer and its timer list must not be
+ * freed while this function is running.
+ */
+void timer_mod_anticipate(QEMUTimer *ts, int64_t expire_time);
+
+/**
+ * qemu_soonest_timeout:
+ * @timeout1: first timeout in nanoseconds (or -1 for infinite)
+ * @timeout2: second timeout in nanoseconds (or -1 for infinite)
+ *
+ * Calculates the soonest of two timeout values. -1 means infinite, which
+ * is later than any other value.
+ *
+ * Returns: soonest timeout value in nanoseconds (or -1 for infinite)
+ */
+static inline int64_t qemu_soonest_timeout(int64_t timeout1, int64_t timeout2) {
+  /* we can abuse the fact that -1 (which means infinite) is a maximal
+   * value when cast to unsigned. As this is disgusting, it's kept in
+   * one inline function.
+   */
+  return ((uint64_t)timeout1 < (uint64_t)timeout2) ? timeout1 : timeout2;
+}
+
+static inline int64_t get_clock(void) {
+  {
+    /* XXX: using gettimeofday leads to problems if the date
+       changes, so it should be avoided. */
+    return get_clock_realtime();
+  }
+}
+
+/* The host CPU doesn't have an easily accessible cycle counter.
+   Just return a monotonically increasing value.  This will be
+   totally wrong, but hopefully better than nothing.  */
+static inline int64_t cpu_get_host_ticks(void) { return get_clock(); }
 
 // signal-timer.c
 typedef void(TimerHandler)(int sig, siginfo_t *si, void *uc);

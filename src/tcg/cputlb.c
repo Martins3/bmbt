@@ -17,6 +17,7 @@
 #include "../i386/cpu.h"
 #include "tcg.h"
 #include "translate-all.h"
+#include <qemu/timer.h>
 
 #include "tcg.h"
 #include <assert.h>
@@ -74,11 +75,6 @@ static inline size_t sizeof_tlb(CPUArchState *env, uintptr_t mmu_idx) {
 static void tlb_window_reset(CPUTLBDesc *desc, int64_t ns, size_t max_entries) {
   desc->window_begin_ns = ns;
   desc->window_max_entries = max_entries;
-}
-
-int64_t get_clock_realtime(void) {
-  // @todo timer
-  return 0;
 }
 
 static void tlb_dyn_init(CPUArchState *env) {
