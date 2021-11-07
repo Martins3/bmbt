@@ -146,6 +146,9 @@ run: all clear_gcda
 	@# only test work in process
 	$(kernel) -s wip
 
+compile: all
+	$(MAKE) -C seabios
+
 test: all clear_gcda
 	$(kernel)
 
