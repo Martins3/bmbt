@@ -38,55 +38,167 @@ Not confirmed.
 因为 xlat 的地址偏移计算错误了，在 34b51de58fdd85c199f3784adc8b3064a2bf0596 中修复了。
 
 ## bug 2
-```plain
-// ...
-tlb_flush_by_mmuidx_async_work: mmu_idx:0x0007
-locked src/qemu/cpus.c:158
-huxueshi:tb_htable_lookup fffffff0
-tlb_set_page_with_attrs: vaddr=fffff000 paddr=0x00000000fffff000 prot=7 idx=2
-[test-trace] EIP=0xfff0 / CS_BASE=0xffff0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
-[test-trace] EIP=0xe05b / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
-huxueshi:tb_htable_lookup fe05b
-tlb_set_page_with_attrs: vaddr=000fe000 paddr=0x00000000000fe000 prot=7 idx=2
-[test-trace] EIP=0xe05b / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
-tlb_set_page_with_attrs: vaddr=000f6000 paddr=0x00000000000f6000 prot=7 idx=2
-[test-trace] EIP=0xe066 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
-huxueshi:tb_htable_lookup fe066
-[test-trace] EIP=0xe066 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
-[test-trace] EIP=0xe06a / CS_BASE=0xf0000 / FLAGS=0x48 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
-huxueshi:tb_htable_lookup fe06a
-[test-trace] EIP=0xe06a / CS_BASE=0xf0000 / FLAGS=0x48 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
-[test-trace] EIP=0xe070 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0x7000,0,0,0
-huxueshi:tb_htable_lookup fe070
-[test-trace] EIP=0xe070 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0x7000,0,0,0
-[test-trace] EIP=0xcf24 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
-huxueshi:tb_htable_lookup fcf24
-tlb_set_page_with_attrs: vaddr=000fc000 paddr=0x00000000000fc000 prot=7 idx=2
-[test-trace] EIP=0xcf24 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
-guest ip : fcf24
-failed in [io dispatch] with offset=[70]
-**
-ERROR:src/qemu/memory.c:105:memory_region_look_up: code should not be reached
-make: *** [Makefile:146: run] Aborted
-```
-actually, doesn't jump to fcf24
-
-```c
-Line 322 of "./src/post.c" starts at address 0xee770 <handle_post> and ends at 0xee774 <handle_post+4>.
-```
-
-```plain
-Line 25 of "./src/resume.c" starts at address 0xc4da <handle_resume> and ends at 0xc4e0 <handle_resume+6>.
-```
-
 ```c
 /*
-#0  huxueshi () at src/qemu/memory.c:93
-#1  0x0000000120084e60 in memory_region_look_up (dispatch=0x1203111c0 <__io_dispatch>, offset=112, mr_match=0x120084cc4 <io_mr_match>) at src/qemu/memory.c:105
-#2  0x0000000120084fbc in io_mr_look_up (as=0x120417410 <address_space_io>, offset=112, xlat=0xffffff2dc8, plen=0xffffff2dd0) at src/qemu/memory.c:119
-#3  0x0000000120085af8 in address_space_translate (as=0x120417410 <address_space_io>, addr=112, xlat=0xffffff2dc8, len=0xffffff2dd0, is_write=true, attrs=...)
-    at src/qemu/memory.c:244
-#4  0x0000000120016190 in address_space_stb (as=0x120417410 <address_space_io>, addr=112, val=143, attrs=..., result=0x0) at src/tcg/memory_ldst.c:301
-#5  0x00000001200a9530 in helper_outb (env=0x1203f21d0 <__x86_cpu+34784>, port=112, data=143) at src/i386/misc_helper.c:21
-#6  0x0000000070000f9c in ?? ()
+#0  timerlist_notify (timer_list=0x120430470) at src/util/qemu-timer.c:111
+#1  0x0000000120094a9c in timerlist_rearm (timer_list=0x120430470) at src/util/qemu-timer.c:119
+#2  0x0000000120094bb0 in timer_mod_ns (ts=0x12044c2f0, expire_time=1636358497725530000) at src/util/qemu-timer.c:134
+#3  0x0000000120094c20 in timer_mod (ts=0x12044c2f0, expire_time=1636358497725530000) at src/util/qemu-timer.c:139
+#4  0x000000012004f85c in check_update_timer (s=0x12039d580 <__mc146818_rtc>) at src/hw/rtc/mc146818rtc.c:157
+#5  0x0000000120052068 in rtc_realizefn (s=0x12039d580 <__mc146818_rtc>) at src/hw/rtc/mc146818rtc.c:778
+#6  0x0000000120052248 in mc146818_rtc_init (base_year=2000, intercept_irq=0x12044b9f0) at src/hw/rtc/mc146818rtc.c:832
+#7  0x000000012003d9f0 in pc_init1 (machine=0x1203a5f00 <__pcms>, host_type=0x12019b978 "i440FX-pcihost", pci_type=0x12019b970 "i440FX") at src/hw/i386/pc_piix.c:171
+#8  0x000000012003db40 in pc_init_v4_2 (machine=0x1203a5f00 <__pcms>) at src/hw/i386/pc_piix.c:272
+#9  0x0000000120048eb4 in machine_run_board_init (machine=0x1203a5f00 <__pcms>) at src/hw/core/machine.c:214
+#10 0x0000000120086ecc in qemu_init () at src/qemu/vl.c:237
 ```
+timerlist_notify 使用的是发送信号，但是，此时从 signal handler 使用下面的方法获取 timer_id 就是一个错误的操作了。
+
+```c
+  timer_t *tidptr = si->si_value.sival_ptr;
+```
+在 85ceb76 被修复掉了。
+
+## bug 3
+
+正确的:
+```plain
+[test-trace before] EIP=0xfff0 / CS_BASE=0xffff0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
+[test-trace after] EIP=0xe05b / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
+
+[test-trace before] EIP=0xe05b / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
+[test-trace after] EIP=0xe062 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+
+[test-trace before] EIP=0xe062 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+[test-trace after] EIP=0xe066 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+
+[test-trace before] EIP=0xe066 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+[test-trace after] EIP=0xe068 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+
+[test-trace before] EIP=0xe068 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+[test-trace after] EIP=0xe06a / CS_BASE=0xf0000 / FLAGS=0x48 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+
+[test-trace before] EIP=0xe06a / CS_BASE=0xf0000 / FLAGS=0x48 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+[test-trace after] EIP=0xe070 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0x7000,0,0,0
+
+[test-trace before] EIP=0xe070 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0x7000,0,0,0
+[test-trace after] EIP=0xe076 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+
+[test-trace before] EIP=0xe076 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf24 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+
+[test-trace before] EIP=0xcf24 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf25 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf25 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf26 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf26 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf29 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf29 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf2f / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0x8f,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf2f / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0x8f,0,0xf01a2,0,0x7000,0,0,0
+
+[test-trace after] EIP=0xcf31 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0x8f,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf31 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0x8f,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf33 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf33 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf35 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf35 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf37 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0x2,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf37 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0x2,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf39 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0x2,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf39 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0x2,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf3c / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf3c / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf42 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf42 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf48 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace before] EIP=0xcf48 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf4b / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0x60000010,0xf01a2,0,0x7000,0,0,0
+```
+
+错误的
+```plain
+// 第一条指令
+[test-trace before] EIP=0xfff0 / CS_BASE=0xffff0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
+[test-trace after] EIP=0xe05b / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
+
+// cmpl : 访问代码以及访问 HaveRunPost，所以存在两个
+tlb_set_page_with_attrs: vaddr=000fe000 paddr=0x00000000000fe000 prot=7 idx=2
+[test-trace before] EIP=0xe05b / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x2 / REGS=0,0,0x663,0,0,0,0,0
+tlb_set_page_with_attrs: vaddr=000f6000 paddr=0x00000000000f6000 prot=7 idx=2
+[test-trace after] EIP=0xe062 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+
+// jnz
+[test-trace before] EIP=0xe062 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+[test-trace after] EIP=0xe066 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+
+// xorw
+[test-trace before] EIP=0xe066 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0x663,0,0,0,0,0
+[test-trace after] EIP=0xe068 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+
+// movw
+[test-trace before] EIP=0xe068 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+[test-trace after] EIP=0xe06a / CS_BASE=0xf0000 / FLAGS=0x48 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+
+// movl $ BUILD_STACK_ADDR , %esp
+[test-trace before] EIP=0xe06a / CS_BASE=0xf0000 / FLAGS=0x48 / EFLAGS=0x46 / REGS=0,0,0,0,0,0,0,0
+[test-trace after] EIP=0xe070 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0x7000,0,0,0
+
+// movl $ \cfunc , %edx
+[test-trace before] EIP=0xe070 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0,0,0x7000,0,0,0
+[test-trace after] EIP=0xe076 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+
+// jmp transition32
+[test-trace before] EIP=0xe076 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf24 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+
+tlb_set_page_with_attrs: vaddr=000fc000 paddr=0x00000000000fc000 prot=7 idx=2
+[test-trace before] EIP=0xcf24 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf25 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+
+[test-trace before] EIP=0xcf25 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf26 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+
+[test-trace before] EIP=0xcf26 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf29 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+
+[test-trace before] EIP=0xcf29 / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0,0,0xf01a2,0,0x7000,0,0,0
+[test-trace after] EIP=0xcf2f / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0x8f,0,0xf01a2,0,0x7000,0,0,0
+
+[test-trace before] EIP=0xcf2f / CS_BASE=0xf0000 / FLAGS=0x40 / EFLAGS=0x46 / REGS=0x8f,0,0xf01a2,0,0x7000,0,0,0
+```
+
+对应的源代码:
+```asm
+        // Reset stack, transition to 32bit mode, and call a C function.
+        .macro ENTRY_INTO32 cfunc
+        xorw %dx, %dx
+        movw %dx, %ss
+        movl $ BUILD_STACK_ADDR , %esp
+        movl $ \cfunc , %edx
+        jmp transition32
+        .endm
+```
+
+```asm
+entry_post:
+        cmpl $0, %cs:HaveRunPost                // Check for resume/reboot
+        jnz entry_resume
+        ENTRY_INTO32 _cfunc32flat_handle_post   // Normal entry point
+
+        ORG 0xe2c3
+```
+
+```asm
+reset_vector:
+        ljmpw $SEG_BIOS, $entry_post
+
+        // 0xfff5 - BiosDate in misc.c
+
+        // 0xfffe - BiosModelId in misc.c
+
+        // 0xffff - BiosChecksum in misc.c
+
+        .end
+```
+好吧，是我看错了，根本就没有 bug，之前对于 seabios 的执行流程理解错了。

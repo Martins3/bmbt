@@ -52,24 +52,21 @@ $1 = 0xffffffff81738d84
 ```
 disass 其位置，在 fd_disable_dma 上，所以 dma 暂时不用考虑了
 
+## port 92
+以前运行到了
+fcf24
+
+guest ip : fcf06
+failed in [io dispatch] with offset=[92]
+
+
 ## ata
 - [ ] 在 info qtree 中间暂时找不到啊
 
 ## rtc
 主要发生在 xqm/hw/rtc/mc146818rtc.c 中间
-
-- [x] 为什么感觉 rtc 中的 reset 又是忘记了调用呀
-   - 好吧，记错了，reset 当然会调用，在 initfn 中也是会调用的呀
-- [x] 真的会出现多个设备吗?
-  - 目前来说，只有一个设备的
-- [x] 验证两个事情:
-  - coalesced_timer : 没用，这是是真的
-  - lost_tick_policy == default
-
-分析一下:
-coalesced_timer / irq_coalesced
-
-- [ ] DEBUG_COALESCED 真的有用吗?
+- [ ] qemu_system_wakeup_request
+  - 既然调用到这里了，那么说明之前存在让 guest 睡眠的情况
 
 ```c
 cmos: read index=0x0f val=0x00
@@ -123,10 +120,6 @@ cmos: read index=0x00 val=0x59
 kcmos: read index=0x10 val=0x50
 cmos: read index=0x10 val=0x50
 ```
-
-#### rtc
-在
-configure_rtc 配置 rtc 起始时间，和处理实践漂移的情况的
 
 # 分析一下可能需要模拟的设备
 

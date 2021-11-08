@@ -82,6 +82,10 @@
 39. verify_BQL_held
     - 我们认为 vm_clock_seqlock vm_clock_lock 这两个 lock 在 bmbt 中总是会 vCPU thread 已经持有了 BQL 或者在 signal handler 中调用
     - 所以没有必要添加更多的锁
+40. qemu_mutex_lock_iothread_impl
+    - 只有在 vCPU thread 中才对于 BQL 上锁，而 signal handler 不能试图去上 BQL 的锁
+      - 因为在 QEMU 中，原来的 timer 的 callback 都是在 main loop 中持有 BQL 之后才会去调用的，如果再次上锁，那么是死锁了
+    - 所以 tcg_handle_interrupt 也需要进行对应的修改。
 
 # BMBT 的说明
 我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
