@@ -13,6 +13,12 @@ repos:
 
 -   repo: local
     hooks:
+    -   id: no-tmp-todo
+        name: no-tmp-todo
+        description: sometimes I will TMP_TOOD meaning fix it before commit
+        entry: script/hook/no-tmp-todo.sh
+        language: script
+
     -   id: format-code
         name: format code
         description: check whether modified code is formatted or not
