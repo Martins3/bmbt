@@ -53,7 +53,7 @@ static inline void qdev_init_gpio_in(GPIOList *dev_gpio,
 static inline void qdev_init_gpio_out(GPIOList *dev_gpio, qemu_irq *pins,
                                       int n) {
   assert(n == 1);
-  dev_gpio->out[0] = &pins[0];
+  dev_gpio->out[0] = pins;
 }
 
 static inline void qdev_connect_gpio_out(GPIOList *dev_gpio, int n,
