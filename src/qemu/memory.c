@@ -80,17 +80,12 @@ static bool is_isa_bios_access(hwaddr offset) {
 
 typedef bool (*MemoryRegionMatch)(const MemoryRegion *mr, hwaddr offset);
 
-static bool mem_mr_match(const MemoryRegion *mr, hwaddr offset) {
+static inline bool mr_match(const MemoryRegion *mr, hwaddr offset) {
   return offset >= mr->offset && offset < mr->offset + mr->size;
 }
 
-static bool io_mr_match(const MemoryRegion *mr, hwaddr offset) {
-  return offset == mr->offset;
-}
-
 static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
-                                           hwaddr offset,
-                                           MemoryRegionMatch mr_match) {
+                                           hwaddr offset) {
   for (int i = 0; i < dispatch->segment_num; ++i) {
     MemoryRegion *mr = dispatch->segments[i];
     duck_check(mr != NULL);
@@ -110,7 +105,7 @@ static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
   if (offset == PIIX_RCR_IOPORT) {
     mr = as->dispatch->special_mr;
   } else {
-    mr = memory_region_look_up(as->dispatch, offset, io_mr_match);
+    mr = memory_region_look_up(as->dispatch, offset);
   }
   *xlat = offset - mr->offset;
   return mr;
@@ -149,7 +144,7 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
   }
 
   if (mr == NULL) {
-    mr = memory_region_look_up(as->dispatch, offset, mem_mr_match);
+    mr = memory_region_look_up(as->dispatch, offset);
   }
 
   *xlat = offset - mr->offset;
