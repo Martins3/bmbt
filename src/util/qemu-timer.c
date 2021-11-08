@@ -33,7 +33,6 @@ struct QEMUTimerList {
 #endif
 };
 
-// PORT_RTC 这个东西似乎是没有初始化吧
 QEMUTimerListGroup main_loop_tlg;
 
 int64_t qemu_clock_get_ns(QEMUClockType type) {

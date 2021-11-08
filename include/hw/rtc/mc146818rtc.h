@@ -38,7 +38,6 @@ typedef struct RTCState {
   Notifier clock_reset_notifier;
   LostTickPolicy lost_tick_policy;
   Notifier suspend_notifier;
-  // 多个 RTCState 吗?
   QLIST_ENTRY(RTCState) link;
 } RTCState;
 
