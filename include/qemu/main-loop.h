@@ -46,4 +46,6 @@ bool qemu_mutex_iothread_locked(void);
 
 // used to initialize xtm optiosn
 void init_xtm_options();
+
+void setup_timer_interrupt();
 #endif /* end of include guard: MAIN_LOOP_H_BMOIUZGQ */

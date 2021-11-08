@@ -13,10 +13,10 @@
 
 #define TIMER_SIG SIGRTMAX /* Our timer notification signal */
 
+static timer_t interrpt_tid;
 timer_t setup_timer(TimerHandler handler) {
   struct sigaction sa;
   struct sigevent sev;
-  static timer_t tid;
 
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = handler;
@@ -24,14 +24,14 @@ timer_t setup_timer(TimerHandler handler) {
   if (sigaction(TIMER_SIG, &sa, NULL) == -1) {
     error_report("set sigaction failed\n");
   }
-  sev.sigev_value.sival_ptr = &tid;
+  sev.sigev_value.sival_ptr = &interrpt_tid;
   sev.sigev_notify = SIGEV_SIGNAL; /* Notify via signal */
   sev.sigev_signo = TIMER_SIG;     /* Notify using this signal */
 
-  if (timer_create(CLOCK_REALTIME, &sev, &tid) == -1) {
+  if (timer_create(CLOCK_REALTIME, &sev, &interrpt_tid) == -1) {
     error_report("timer_create failed\n");
   }
-  return tid;
+  return interrpt_tid;
 }
 
 static void soonest_timer(timer_t tid, long s, long ns) {
@@ -61,6 +61,8 @@ static void soonest_timer(timer_t tid, long s, long ns) {
 void soonest_timer_s(timer_t tid, long s) { soonest_timer(tid, s, 0); }
 
 void soonest_timer_ns(timer_t tid, long ns) { soonest_timer(tid, 0, ns); }
+
+void soonest_interrupt_ns(long ns) { soonest_timer(interrpt_tid, 0, ns); }
 
 static bool __blocked = false;
 

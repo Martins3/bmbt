@@ -434,22 +434,22 @@ int64_t timerlistgroup_deadline_ns(QEMUTimerListGroup *tlg) {
 static void timer_interrupt_handler(int sig, siginfo_t *si, void *uc) {
   duck_check(!is_interrupt_blocked());
   enter_interrpt_context();
-  timer_t *tidptr = si->si_value.sival_ptr;
   int64_t timeout_ns = -1;
 
   qemu_clock_run_all_timers();
 
   timeout_ns = qemu_soonest_timeout(timeout_ns,
                                     timerlistgroup_deadline_ns(&main_loop_tlg));
-  duck_check(timeout_ns != -1);
-  soonest_timer_ns(*tidptr, 1000 * 1000 * 100);
+  if (timeout_ns == -1) {
+    warn_report("no timer to fire");
+  }
+  soonest_interrupt_ns(timeout_ns);
   leave_interrpt_context();
 }
 
-timer_t setup_timer_interrupt() {
+void setup_timer_interrupt() {
   init_clocks();
-  timer_t tid = setup_timer(timer_interrupt_handler);
-  return tid;
+  setup_timer(timer_interrupt_handler);
 }
 
 void qemu_clock_notify(QEMUClockType type) {
