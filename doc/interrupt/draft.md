@@ -32,7 +32,6 @@ void isa_bus_irqs(ISABus *bus, qemu_irq *irqs)
     bus->irqs = irqs;
 }
 ```
-- 既然现在还没有处理 isa_bus_irqs ，这个问题暂时放到这里吧
 
 #### EOI
 - [ ] apic_eoi : 和 10.8.5 中描述的一致，当 apic 接受到一个 EOIUpon receiving an EOI, the APIC clears the highest priority bit in the ISR and dispatches the next highest priority
