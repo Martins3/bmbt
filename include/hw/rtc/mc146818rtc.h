@@ -39,14 +39,13 @@ typedef struct RTCState {
   LostTickPolicy lost_tick_policy;
   Notifier suspend_notifier;
   QLIST_ENTRY(RTCState) link;
+
+  GPIOList gpio;
 } RTCState;
 
 #define RTC_ISA_IRQ 8
 
-#ifdef PORT_RTC
-ISADevice *mc146818_rtc_init(ISABus *bus, int base_year,
-                             qemu_irq intercept_irq);
-#endif
+RTCState *mc146818_rtc_init(int base_year, qemu_irq intercept_irq);
 void rtc_set_memory(RTCState *dev, int addr, int val);
 int rtc_get_memory(RTCState *dev, int addr);
 
