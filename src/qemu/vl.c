@@ -52,12 +52,15 @@ void fw_cfg_reset();
 void pic_reset();
 void apic_reset_common();
 void iopaic_reset();
+void rtc_resetdev();
 
+// DeviceClass::reset
 void qbus_reset_all_fn(void *opaque) {
   fw_cfg_reset();
   pic_reset();
   apic_reset_common();
   iopaic_reset();
+  rtc_resetdev();
 }
 
 /*
@@ -84,6 +87,11 @@ void qemu_system_reset(MachineClass *mc, MachineState *current_machine) {
   }
   cpu_synchronize_all_post_reset();
 #endif
+}
+
+static void configure_rtc() {
+  /* Set defaults */
+  rtc_clock = QEMU_CLOCK_HOST;
 }
 
 static PCMachineState __pcms;
