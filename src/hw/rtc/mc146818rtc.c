@@ -1,6 +1,7 @@
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/rtc/mc146818rtc_regs.h>
 #include <qemu/cutils.h>
+#include <sysemu/reset.h>
 #include <sysemu/sysemu.h>
 #include <types.h>
 
@@ -51,19 +52,8 @@ static uint64_t get_guest_rtc_ns(RTCState *s) {
          s->offset;
 }
 
-static void rtc_coalesced_timer_update(RTCState *s) {
-  if (s->irq_coalesced == 0) {
-    timer_del(s->coalesced_timer);
-  } else {
-    /* divide each RTC interval to 2 - 8 smaller intervals */
-    int c = MIN(s->irq_coalesced, 7) + 1;
-    int64_t next_clock =
-        qemu_clock_get_ns(rtc_clock) + periodic_clock_to_ns(s->period / c);
-    timer_mod(s->coalesced_timer, next_clock);
-  }
-}
+static void rtc_coalesced_timer_update(RTCState *s) { g_assert_not_reached(); }
 
-// PORT_RTC : 会出现多个 rtc_device 的情况吗?
 static QLIST_HEAD(, RTCState) rtc_devices = QLIST_HEAD_INITIALIZER(rtc_devices);
 
 #ifdef TARGET_I386
@@ -82,23 +72,7 @@ static bool rtc_policy_slew_deliver_irq(RTCState *s) {
 }
 #endif
 
-static void rtc_coalesced_timer(void *opaque) {
-  g_assert_not_reached();
-#ifdef BMBT
-  RTCState *s = opaque;
-
-  if (s->irq_coalesced != 0) {
-    s->cmos_data[RTC_REG_C] |= 0xc0;
-    DPRINTF_C("cmos: injecting from timer\n");
-    if (rtc_policy_slew_deliver_irq(s)) {
-      s->irq_coalesced--;
-      DPRINTF_C("cmos: coalesced irqs decreased to %d\n", s->irq_coalesced);
-    }
-  }
-
-  rtc_coalesced_timer_update(s);
-#endif
-}
+static void rtc_coalesced_timer(void *opaque) { g_assert_not_reached(); }
 #else
 static bool rtc_policy_slew_deliver_irq(RTCState *s) {
   assert(0);
@@ -299,7 +273,6 @@ static void rtc_update_timer(void *opaque) {
     irqs |= REG_C_AF;
     if (s->cmos_data[RTC_REG_B] & REG_B_AIE) {
       g_assert_not_reached();
-      // PORT_RTC : actually QEMU need it
       // qemu_system_wakeup_request(QEMU_WAKEUP_REASON_RTC, NULL);
     }
   }
@@ -475,8 +448,9 @@ static void rtc_set_time(RTCState *s) {
   s->base_rtc = mktimegm(&tm);
   s->last_update = qemu_clock_get_ns(rtc_clock);
 
-  // PORT_RTC
-  // qapi_event_send_rtc_change(qemu_timedate_diff(&tm));
+#ifdef BMBT
+  qapi_event_send_rtc_change(qemu_timedate_diff(&tm));
+#endif
 }
 
 static void rtc_set_cmos(RTCState *s, const struct tm *tm) {
@@ -783,6 +757,7 @@ static void rtc_realizefn(RTCState *s) {
 
   rtc_set_date_from_host(s);
 
+  duck_check(s->lost_tick_policy == LOST_TICK_POLICY_DISCARD);
 #ifdef BMBT
   switch (s->lost_tick_policy) {
 #ifdef TARGET_I386
@@ -802,40 +777,39 @@ static void rtc_realizefn(RTCState *s) {
   s->update_timer = timer_new_ns(rtc_clock, rtc_update_timer, s);
   check_update_timer(s);
 
+#ifdef BMBT
   s->suspend_notifier.notify = rtc_notify_suspend;
-#ifdef PORT_RTC
   qemu_register_suspend_notifier(&s->suspend_notifier);
+#endif
 
-  memory_region_init_io(&s->io, OBJECT(s), &cmos_ops, s, "rtc", 2);
+  memory_region_init_io(&s->io, &cmos_ops, s, "rtc", 2);
+#ifdef BMBT
   isa_register_ioport(isadev, &s->io, base);
+#else
+  io_add_memory_region(base, &s->io);
+#endif
 
-  // FIXME
-  // 很奇怪啊?
-  // - [ ] 为什么将 rtc-index 是 rtc 的 subregion 的呀
-  // - [ ] 而且两者的 handler 相同的
-  // - [ ] 实际上，可以去掉 rtc-index 的呀，在 handler 的角度而言，总是遇到
-  //
-  //
-  /* register rtc 0x70 port for coalesced_pio */
+  // coalesced io is used by kvm
+#ifdef BMBT
   memory_region_set_flush_coalesced(&s->io);
-  memory_region_init_io(&s->coalesced_io, OBJECT(s), &cmos_ops, s, "rtc-index",
-                        1);
+  memory_region_init_io(&s->coalesced_io, &cmos_ops, s, "rtc-index", 1);
   memory_region_add_subregion(&s->io, 0, &s->coalesced_io);
   memory_region_add_coalescing(&s->coalesced_io, 0, 1);
+#endif
 
-  qdev_set_legacy_instance_id(dev, base, 3);
+  // qdev_set_legacy_instance_id(dev, base, 3);
   qemu_register_reset(rtc_reset, s);
 
-  object_property_add_tm(OBJECT(s), "date", rtc_get_date, NULL);
+  // object_property_add_tm(OBJECT(s), "date", rtc_get_date, NULL);
 
-  qdev_init_gpio_out(dev, &s->irq, 1);
-#endif
+  qdev_init_gpio_out(&s->gpio, &s->irq, 1);
   QLIST_INSERT_HEAD(&rtc_devices, s, link);
 }
 
-#ifdef PORT_RTC
-ISADevice *mc146818_rtc_init(ISABus *bus, int base_year,
-                             qemu_irq intercept_irq) {
+static RTCState __mc146818_rtc;
+RTCState *mc146818_rtc_init(int base_year, qemu_irq intercept_irq) {
+  RTCState *mc146818_rtc = &__mc146818_rtc;
+#ifdef BMBT
   DeviceState *dev;
   ISADevice *isadev;
 
@@ -851,19 +825,28 @@ ISADevice *mc146818_rtc_init(ISABus *bus, int base_year,
 
   object_property_add_alias(qdev_get_machine(), "rtc-time", OBJECT(isadev),
                             "date", NULL);
+#endif
+  mc146818_rtc->base_year = base_year;
+  mc146818_rtc->lost_tick_policy = LOST_TICK_POLICY_DISCARD;
+  rtc_realizefn(mc146818_rtc);
+  qdev_connect_gpio_out(&mc146818_rtc->gpio, 0, intercept_irq);
+  duck_check(mc146818_rtc->irq == intercept_irq);
 
-  return isadev;
+  return mc146818_rtc;
 }
 
+#ifdef BMBT
 static Property mc146818rtc_properties[] = {
     DEFINE_PROP_INT32("base_year", RTCState, base_year, 1980),
     DEFINE_PROP_LOSTTICKPOLICY("lost_tick_policy", RTCState, lost_tick_policy,
                                LOST_TICK_POLICY_DISCARD),
     DEFINE_PROP_END_OF_LIST(),
 };
+#endif
 
-static void rtc_resetdev(DeviceState *d) {
-  RTCState *s = MC146818_RTC(d);
+void rtc_resetdev() {
+  // RTCState *s = MC146818_RTC(d);
+  RTCState *s = &__mc146818_rtc;
 
   /* Reason: VM do suspend self will set 0xfe
    * Reset any values other than 0xfe(Guest suspend case) */
@@ -872,6 +855,7 @@ static void rtc_resetdev(DeviceState *d) {
   }
 }
 
+#ifdef BMBT
 static void rtc_class_initfn(ObjectClass *klass, void *data) {
   DeviceClass *dc = DEVICE_CLASS(klass);
 
