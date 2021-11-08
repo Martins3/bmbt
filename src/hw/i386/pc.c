@@ -13,7 +13,7 @@
 #include "../../../include/sysemu/sysemu.h"
 #include "../../../include/sysemu/tcg.h"
 #include "../../i386/cpu.h"
-#include "../../tcg/glib_stub.h"
+// #include "../../tcg/glib_stub.h"
 #include "acpi-build.h"
 #include "e820_memory_layout.h"
 

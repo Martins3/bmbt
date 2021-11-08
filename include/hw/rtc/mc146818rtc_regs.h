@@ -1,7 +1,7 @@
 #ifndef MC146818RTC_REGS_H_BAVDOJPR
 #define MC146818RTC_REGS_H_BAVDOJPR
 
-#include "../../../src/tcg/glib_stub.h"
+#include "../../glib/gtestutils.h"
 #include <stdint.h>
 
 #define RTC_SECONDS 0

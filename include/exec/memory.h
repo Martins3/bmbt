@@ -1,7 +1,7 @@
 #ifndef MEMORY_H_E0UHP2JS
 #define MEMORY_H_E0UHP2JS
 
-#include "../../src/tcg/glib_stub.h"
+#include "../../glib/gtree.h"
 #include "../hw/pci-host/pam.h"
 #include "cpu-common.h"
 #include "hwaddr.h"

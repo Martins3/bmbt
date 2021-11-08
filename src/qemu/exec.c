@@ -7,7 +7,7 @@
 #include "../tcg/translate-all.h"
 
 #include <errno.h>
-
+#include <stdarg.h>
 /* 0 = Do not count executed instructions.
    1 = Precise instruction counting.
    2 = Adaptive rate instruction counting.  */

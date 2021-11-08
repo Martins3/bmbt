@@ -1,4 +1,4 @@
-#include "../../src/tcg/glib_stub.h"
+#include "../../glib/gtestutils.h"
 #include <qemu/osdep.h>
 #include <qemu/qht.h>
 #include <qemu/rcu.h>

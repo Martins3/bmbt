@@ -1,7 +1,7 @@
 #include "../../../include/types.h"
 #include "../../../include/qemu/bswap.h"
 #include "e820_memory_layout.h"
-#include "../../tcg/glib_stub.h"
+#include "../../glib/gmem.h"
 #include <errno.h>
 
 

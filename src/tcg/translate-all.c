@@ -17,7 +17,7 @@
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 
-#include "./glib_stub.h"
+#include "../../glib/gtree.h"
 #include "./tcg.h"
 #include <assert.h>
 #include <stdbool.h>

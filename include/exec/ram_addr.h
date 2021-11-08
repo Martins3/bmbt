@@ -7,6 +7,7 @@
 #include "cpu-common.h"
 #include "cpu-para.h"
 #include "ramlist.h"
+#include "../../glib/gmacros.h"
 #include <assert.h>
 #include <qemu/units.h>
 

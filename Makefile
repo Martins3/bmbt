@@ -7,7 +7,10 @@ kernel := $(BUILD_DIR)/kernel.bin
 LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 
 # ================================= glib =======================================
+# usr make lglib=0 to usr system glib
+ifneq ($(lglib), 0)
 GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
+endif
 GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
 # @todo libgcc is absolute path
 # github action will not work with the absolute path
@@ -115,10 +118,17 @@ $(kernel) : $(obj_files) capstone
 		@echo "  Link    $@"
 		@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
 
+# compile with local glib.
+$(kernel_lglib) : $(obj_files) capstone
+		@mkdir -p $(@D)
+		@echo "  Link    $@"
+		@$(GCC) $(obj_files) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
+
+
 # $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
 
 
-.PHONY: all clean gdb run gcov clear_gcda test
+.PHONY: all clean gdb run gcov clear_gcda test lglib 
 
 gcov_out=build/gcov
 gcov_info=$(gcov_out)/bmbt_coverage.info

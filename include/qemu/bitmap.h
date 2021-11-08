@@ -1,7 +1,7 @@
 #ifndef BITMAP_H_ENRPTXFD
 #define BITMAP_H_ENRPTXFD
 
-#include "../../src/tcg/glib_stub.h"
+#include "../../glib/gmem.h"
 #include "bitops.h"
 
 #include <stdlib.h>

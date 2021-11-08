@@ -1,7 +1,7 @@
 #ifndef TIMER_H_PBGYZKVR
 #define TIMER_H_PBGYZKVR
 
-#include "../../src/tcg/glib_stub.h"
+#include "../../glib/gmem.h"
 #include "../types.h"
 #include <sys/time.h>
 

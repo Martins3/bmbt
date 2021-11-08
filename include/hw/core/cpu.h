@@ -1,6 +1,7 @@
 #ifndef CPU_H_5RAXENPS
 #define CPU_H_5RAXENPS
 
+#include "../../glib/gtestutils.h"
 #include "../../exec/hwaddr.h"
 #include "../../exec/memattrs.h"
 #include "../../exec/memory.h"

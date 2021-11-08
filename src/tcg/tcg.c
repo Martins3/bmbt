@@ -21,7 +21,7 @@
 
 #define CPU_TEMP_BUF_NLONGS 128
 
-#include "glib_stub.h"
+#include "../../glib/gtree.h"
 struct tcg_region_tree {
   QemuMutex lock;
   GTree *tree;

@@ -6,7 +6,7 @@
 #include "../../include/exec/memop.h"
 #include "../../include/qemu/config-target.h"
 #include "../../src/tcg/loongarch/tcg-target.h"
-#include "glib_stub.h"
+// #include "glib_stub.h"
 #include "loongarch/tcg-target.h"
 #include <stddef.h>
 #include <stdint.h>

@@ -24,7 +24,7 @@ int qemu_log(const char *fmt, ...) {
 /* enable or disable low levels log */
 void qemu_set_log(int log_flags) {
   qemu_loglevel = log_flags;
-  qemu_logfile = fopen("./build/bmbt.log", "w");
+  qemu_logfile = fopen("./bmbt.log", "w");
   duck_check(qemu_logfile != NULL);
   qemu_log("start loging\n");
 }

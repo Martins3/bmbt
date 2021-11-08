@@ -1,5 +1,5 @@
 #include <hw/sysbus.h>
-
+#include "../../glib/gtestutils.h"
 static void sysbus_mmio_map_common(SysBusDevice *dev, int n, hwaddr addr,
                                    bool may_overlap, int priority) {
   assert(n >= 0 && n < dev->num_mmio);

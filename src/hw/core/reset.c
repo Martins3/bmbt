@@ -1,7 +1,7 @@
 #include "../../../include/sysemu/reset.h"
 #include "../../../include/qemu/queue.h"
 #include "../../../include/types.h"
-#include "../../tcg/glib_stub.h"
+#include "../../glib/gmem.h"
 
 /* reset/shutdown handler */
 

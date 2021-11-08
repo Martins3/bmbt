@@ -1,6 +1,6 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/error-report.h"
-#include "../tcg/glib_stub.h"
+#include "../../glib/gtestutils.h"
 #include <sys/mman.h>
 
 static int qemu_mprotect__osdep(void *addr, size_t size, int prot) {

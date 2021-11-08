@@ -1,7 +1,7 @@
 #ifndef BSWAP_H_POC0IZMR
 #define BSWAP_H_POC0IZMR
 
-#include "../../src/tcg/glib_stub.h"
+#include "../../glib/gtestutils.h"
 #include "../fpu/softfloat-types.h"
 #include "../types.h"
 

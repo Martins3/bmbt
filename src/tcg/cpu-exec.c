@@ -19,6 +19,7 @@
 #include "../i386/cpu.h"
 #include "../i386/svm.h"
 #include "tcg.h"
+#include "../../glib/gmacros.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>

@@ -4,7 +4,7 @@
 #include "../../../include/qemu/cutils.h"
 #include "../../../include/qemu/error-report.h"
 #include "../../../include/sysemu/reset.h"
-#include "../../tcg/glib_stub.h"
+// #include "../../tcg/glib_stub.h"
 #include <assert.h>
 #include <string.h>
 

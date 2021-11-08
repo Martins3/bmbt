@@ -1,5 +1,5 @@
 #include "../../../include/hw/irq.h"
-#include "../../tcg/glib_stub.h"
+#include "../../glib/gmem.h"
 
 struct IRQState {
   // Object parent_obj;

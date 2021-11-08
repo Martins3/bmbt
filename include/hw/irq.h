@@ -1,6 +1,6 @@
 #ifndef IRQ_H_TZGVAY9K
 #define IRQ_H_TZGVAY9K
-#include "../../src/tcg/glib_stub.h"
+#include "../../glib/gmem.h"
 #include <assert.h>
 
 typedef void (*qemu_irq_handler)(void *opaque, int n, int level);

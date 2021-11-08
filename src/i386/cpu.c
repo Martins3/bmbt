@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include "../../glib/glist.h"
 #include "../../include/exec/cpu-ldst.h"
 #include "../../include/exec/exec-all.h"
 #include "../../include/fpu/softfloat-helpers.h"
