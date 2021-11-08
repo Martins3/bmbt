@@ -53,7 +53,7 @@ obj_files := $(assembly_object_files) $(c_object_files)
 ARCH_PREFIX :=
 UNAME := $(shell uname -a)
 ifneq (,$(findstring maritns3-pc, $(UNAME)))
-# $(error "Compile and run code in 3a5000")
+$(error "Compile and run code in 3a5000")
 endif
 # QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
 
