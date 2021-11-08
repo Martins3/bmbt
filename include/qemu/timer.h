@@ -244,6 +244,7 @@ static inline int64_t cpu_get_host_ticks(void) { return get_clock(); }
 typedef void(TimerHandler)(int sig, siginfo_t *si, void *uc);
 timer_t setup_timer(TimerHandler handler);
 void soonest_timer_ns(timer_t tid, long ns);
+void soonest_interrupt_ns(long ns);
 void soonest_timer_s(timer_t tid, long s);
 void block_interrupt();
 void unblock_interrupt();

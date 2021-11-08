@@ -218,6 +218,7 @@ void qemu_init() {
   duck_check(first_cpu == NULL);
 
   qemu_init_cpu_loop();
+  setup_timer_interrupt();
   qemu_mutex_lock_iothread();
 
   qemu_init_cpu_list();
