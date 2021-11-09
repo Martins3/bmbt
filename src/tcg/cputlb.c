@@ -1115,12 +1115,6 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
     page_collection_unlock(pages);
   }
 
-  /*
-   * Set both VGA and migration bits for simplicity and to remove
-   * the notdirty callback faster.
-   */
-  cpu_physical_memory_set_dirty_range(ram_addr, size, DIRTY_CLIENTS_NOCODE);
-
   /* We remove the notdirty callback only if the code has been flushed. */
   if (!cpu_physical_memory_is_clean(ram_addr)) {
     // fuck_trace_memory_notdirty_set_dirty(mem_vaddr);
@@ -1837,6 +1831,7 @@ static inline void QEMU_ALWAYS_INLINE store_helper(CPUArchState *env,
      * There is a build-time assert inside to remind you of this.  ;-)
      */
     if (unlikely(need_swap)) {
+      g_assert_not_reached();
       store_memop(haddr, val, op ^ MO_BSWAP);
     } else {
       store_memop(haddr, val, op);
