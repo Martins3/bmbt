@@ -1,9 +1,10 @@
-#include "../../i386/cpu.h"
 #include "../../../include/hw/firmware/smbios.h"
 #include "../../../include/hw/i386/pc.h"
 #include "../../../include/hw/pci-host/i440fx.h"
 #include "../../../include/qemu/error-report.h"
 #include "../../../include/qemu/units.h"
+#include "../../i386/cpu.h"
+#include <hw/rtc/mc146818rtc.h>
 
 /* PC hardware initialisation */
 static void pc_init1(MachineState *machine, const char *host_type,
@@ -15,14 +16,14 @@ static void pc_init1(MachineState *machine, const char *host_type,
   // MemoryRegion *system_memory = get_system_memory();
   // MemoryRegion *system_io = get_system_io();
   // PCIBus *pci_bus;
-  // ISABus *isa_bus;
+  ISABus *isa_bus;
   PCII440FXState *i440fx_state;
   int piix3_devfn = -1;
   qemu_irq smi_irq;
   GSIState *gsi_state;
   // DriveInfo *hd[MAX_IDE_BUS * MAX_IDE_DEVS];
   // BusState *idebus[MAX_IDE_BUS];
-  // ISADevice *rtc_state;
+  RTCState *rtc_state;
   MemoryRegion *ram_memory;
   MemoryRegion *pci_memory;
   MemoryRegion *rom_memory;
@@ -153,9 +154,9 @@ static void pc_init1(MachineState *machine, const char *host_type,
     */
   }
 
-#if NEED_LATER
-  // isa_bus_irqs(isa_bus, x86ms->gsi);
-#endif
+  static ISABus tmp_isa_bus;
+  isa_bus = &tmp_isa_bus;
+  isa_bus_irqs(isa_bus, x86ms->gsi);
 
   pc_i8259_create(gsi_state->i8259_irq);
 
@@ -167,19 +168,22 @@ static void pc_init1(MachineState *machine, const char *host_type,
     x86_register_ferr_irq(x86ms->gsi[13]);
   }
 
-#if RTC_TODO
+#if NEED_LATER
   pc_vga_init(isa_bus, pcmc->pci_enabled ? pci_bus : NULL);
+#endif
 
   assert(pcms->vmport != ON_OFF_AUTO__MAX);
   if (pcms->vmport == ON_OFF_AUTO_AUTO) {
     pcms->vmport = xen_enabled() ? ON_OFF_AUTO_OFF : ON_OFF_AUTO_ON;
   }
 
+  duck_check(pcms->vmport == ON_OFF_AUTO_ON);
+
   /* init basic PC hardware */
   pc_basic_device_init(isa_bus, x86ms->gsi, &rtc_state, true,
                        (pcms->vmport != ON_OFF_AUTO_ON), pcms->pit_enabled,
                        0x4);
-
+#ifdef NEED_LATER
   pc_nic_init(pcmc, isa_bus, pci_bus);
 
   ide_drive_get(hd, ARRAY_SIZE(hd));

@@ -16,9 +16,10 @@
 #include "../../tcg/glib_stub.h"
 #include "acpi-build.h"
 #include "e820_memory_layout.h"
+#include <hw/rtc/mc146818rtc.h>
 
 /* debug PC/ISA interrupts */
-//#define DEBUG_IRQ
+#define DEBUG_IRQ
 
 #ifdef DEBUG_IRQ
 #define DPRINTF(fmt, ...)                                                      \
@@ -793,17 +794,20 @@ void pc_cmos_init(PCMachineState *pcms, BusState *idebus0, BusState *idebus1,
   arg.idebus[1] = idebus1;
   qemu_register_reset(pc_cmos_init_late, &arg);
 }
+#endif
 
 #define TYPE_PORT92 "port92"
 #define PORT92(obj) OBJECT_CHECK(Port92State, (obj), TYPE_PORT92)
 
 /* port 92 stuff: could be split off */
 typedef struct Port92State {
-  ISADevice parent_obj;
+  // ISADevice parent_obj;
 
   MemoryRegion io;
   uint8_t outport;
   qemu_irq a20_out;
+
+  GPIOList gpio;
 } Port92State;
 
 static void port92_write(void *opaque, hwaddr addr, uint64_t val,
@@ -815,7 +819,8 @@ static void port92_write(void *opaque, hwaddr addr, uint64_t val,
   s->outport = val;
   qemu_set_irq(s->a20_out, (val >> 1) & 1);
   if ((val & 1) && !(oldval & 1)) {
-    qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
+    g_assert_not_reached();
+    // qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
   }
 }
 
@@ -828,21 +833,26 @@ static uint64_t port92_read(void *opaque, hwaddr addr, unsigned size) {
   return ret;
 }
 
-static void port92_init(ISADevice *dev, qemu_irq a20_out) {
-  qdev_connect_gpio_out_named(DEVICE(dev), PORT92_A20_LINE, 0, a20_out);
+static void port92_init(Port92State *s, qemu_irq a20_out) {
+  // qdev_connect_gpio_out_named(DEVICE(dev), PORT92_A20_LINE, 0, a20_out);
+  qdev_connect_gpio_out(&s->gpio, 0, a20_out);
 }
 
+#ifdef BMBT
 static const VMStateDescription vmstate_port92_isa = {
     .name = "port92",
     .version_id = 1,
     .minimum_version_id = 1,
     .fields = (VMStateField[]){VMSTATE_UINT8(outport, Port92State),
                                VMSTATE_END_OF_LIST()}};
+#endif
 
-static void port92_reset(DeviceState *d) {
-  Port92State *s = PORT92(d);
+static Port92State __port92;
+void port92_reset() {
+  // Port92State *s = PORT92(d);
 
-  s->outport &= ~1;
+  Port92State *port92 = &__port92;
+  port92->outport &= ~1;
 }
 
 static const MemoryRegionOps port92_ops = {
@@ -856,23 +866,36 @@ static const MemoryRegionOps port92_ops = {
     .endianness = DEVICE_LITTLE_ENDIAN,
 };
 
-static void port92_initfn(Object *obj) {
-  Port92State *s = PORT92(obj);
+static void port92_initfn(Port92State *s) {
+  // Port92State *s = PORT92(obj);
 
-  memory_region_init_io(&s->io, OBJECT(s), &port92_ops, s, "port92", 1);
+  memory_region_init_io(&s->io, &port92_ops, s, "port92", 1);
 
   s->outport = 0;
 
-  qdev_init_gpio_out_named(DEVICE(obj), &s->a20_out, PORT92_A20_LINE, 1);
+  // qdev_init_gpio_out_named(DEVICE(obj), &s->a20_out, PORT92_A20_LINE, 1);
+  qdev_init_gpio_out(&s->gpio, &s->a20_out, 1);
 }
 
-static void port92_realizefn(DeviceState *dev, Error **errp) {
+static void port92_realizefn(Port92State *s) {
+#ifdef BMBT
   ISADevice *isadev = ISA_DEVICE(dev);
   Port92State *s = PORT92(dev);
 
   isa_register_ioport(isadev, &s->io, 0x92);
+#endif
+  io_add_memory_region(0x92, &s->io);
 }
 
+static Port92State *QOM_port92_init() {
+  Port92State *port92 = &__port92;
+  port92_initfn(port92);
+  port92_realizefn(port92);
+
+  return port92;
+}
+
+#ifdef BMBT
 static void port92_class_initfn(ObjectClass *klass, void *data) {
   DeviceClass *dc = DEVICE_CLASS(klass);
 
@@ -897,9 +920,10 @@ static const TypeInfo port92_info = {
 
 static void port92_register_types(void) { type_register_static(&port92_info); }
 
-type_init(port92_register_types)
+type_init(port92_register_types);
+#endif
 
-    static void handle_a20_line_change(void *opaque, int irq, int level) {
+static void handle_a20_line_change(void *opaque, int irq, int level) {
   X86CPU *cpu = opaque;
 
   /* XXX: send to all CPUs ? */
@@ -907,6 +931,7 @@ type_init(port92_register_types)
   x86_cpu_set_a20(cpu, level);
 }
 
+#ifdef BMBT
 #define NE2000_NB_MAX 6
 
 static const int ne2000_io[NE2000_NB_MAX] = {0x300, 0x320, 0x340,
@@ -1305,9 +1330,11 @@ static const MemoryRegionOps ioportF0_io_ops = {
             .max_access_size = 1,
         },
 };
+#endif
 
 static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
                             bool no_vmport) {
+#ifdef NEED_LATER
   int i;
   DriveInfo *fd[MAX_FD];
   qemu_irq *a20_line;
@@ -1336,17 +1363,24 @@ static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
     qdev_prop_set_ptr(dev, "ps2_mouse", i8042);
     qdev_init_nofail(dev);
   }
-  port92 = isa_create_simple(isa_bus, "port92");
+#endif
+  qemu_irq *a20_line;
+  Port92State *port92;
+  // port92 = isa_create_simple(isa_bus, "port92");
+  port92 = QOM_port92_init();
 
   a20_line = qemu_allocate_irqs(handle_a20_line_change, first_cpu, 2);
+#ifdef NEED_LATER
   i8042_setup_a20_line(i8042, a20_line[0]);
+#endif
   port92_init(port92, a20_line[1]);
   g_free(a20_line);
 }
 
-void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, ISADevice **rtc_state,
+void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
                           bool create_fdctrl, bool no_vmport, bool has_pit,
                           uint32_t hpet_irqs) {
+#ifdef NEED_LATER
   int i;
   DeviceState *hpet = NULL;
   int pit_isa_irq = 0;
@@ -1412,11 +1446,15 @@ void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, ISADevice **rtc_state,
   }
 
   i8257_dma_init(isa_bus, 0);
+#endif
+
+  mc146818_rtc_init(2000, gsi[8]);
 
   /* Super I/O */
   pc_superio_init(isa_bus, create_fdctrl, no_vmport);
 }
 
+#ifdef NEED_LATER
 void pc_nic_init(PCMachineClass *pcmc, ISABus *isa_bus, PCIBus *pci_bus) {
   int i;
 
@@ -2037,12 +2075,12 @@ void pc_machine_initfn(PCMachineState *pcms) {
   PCMachineClass *pcmc = PC_MACHINE_GET_CLASS(pcms);
 #if NEED_LATER
   pcms->smm = ON_OFF_AUTO_AUTO;
+#endif
 #ifdef CONFIG_VMPORT
   pcms->vmport = ON_OFF_AUTO_AUTO;
 #else
   pcms->vmport = ON_OFF_AUTO_OFF;
 #endif /* CONFIG_VMPORT */
-#endif
 
   /* acpi build is enabled by default if machine supports it */
   pcms->acpi_build_enabled = pcmc->has_acpi_build;
