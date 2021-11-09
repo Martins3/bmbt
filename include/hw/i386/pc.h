@@ -10,6 +10,7 @@
 #include "../isa/isa.h"
 #include "ioapic.h"
 #include "x86.h"
+#include <hw/rtc/mc146818rtc.h>
 
 /* Global System Interrupts */
 
@@ -42,6 +43,14 @@ static inline char *sev_get_launch_measurement(void) { return NULL; }
 // maybe we will review the cpu hotplug and memory hotplug later
 #define ACPI_MEMORY_HOTPLUG_BASE 0x0a00
 
+// copied build/qapi/qapi-types-common.h
+typedef enum OnOffAuto {
+    ON_OFF_AUTO_AUTO,
+    ON_OFF_AUTO_ON,
+    ON_OFF_AUTO_OFF,
+    ON_OFF_AUTO__MAX,
+} OnOffAuto;
+
 /**
  * PCMachineState:
  * @acpi_dev: link to ACPI PM device that performs ACPI hotplug handling
@@ -72,6 +81,7 @@ typedef struct PCMachineState {
   OnOffAuto vmport;
   OnOffAuto smm;
 #endif
+  OnOffAuto vmport;
 
   bool acpi_build_enabled;
   bool smbus_enabled;
@@ -231,5 +241,9 @@ PCMachineState *machine_init();
 void pc_machine_v4_2_class_init(MachineClass *mc);
 
 #define FW_CFG_IO_BASE 0x510
+
+void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
+                          bool create_fdctrl, bool no_vmport, bool has_pit,
+                          uint32_t hpet_irqs);
 
 #endif /* end of include guard: PC_H_0VFJYDT2 */

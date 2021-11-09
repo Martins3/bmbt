@@ -161,4 +161,9 @@
 // [interface 30]
 #define CONFIG_XTM_TEST 1
 
+// originally put in build/x86_64-softmmu/config-devices.h
+// @todo why it's auto generated?
+#define CONFIG_VMMOUSE 1
+#define CONFIG_VMPORT 1
+
 #endif /* end of include guard: CONFIG_HOST_H_OTZD6DK0 */
