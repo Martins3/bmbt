@@ -20,7 +20,7 @@
   - [ ] CPUState 中的 cpu_index, cluster_index 等
 - [ ] 分析一下 include/hw/i386/topology.h 的实现
 
-- [ ] PCMachineClass 中为什么需要将 smm 和 vmport 单独分析出来
+- [ ] PCMachineClass 中为什么需要将 smm
 
 - [ ] tcg_init_ctx 应该是自动被初始化好了，但是 review tcg.c 中相关的代码吧
 

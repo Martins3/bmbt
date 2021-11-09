@@ -1,6 +1,13 @@
 ## tech
 
-gdb out/rom16.o
+<!-- vim-markdown-toc GitLab -->
+
+- [bug 1](#bug-1)
+- [bug 2](#bug-2)
+- [bug 3](#bug-3)
+- [bug 4](#bug-4)
+
+<!-- vim-markdown-toc -->
 
 ## bug 1
 ```plain
@@ -202,3 +209,70 @@ reset_vector:
         .end
 ```
 好吧，是我看错了，根本就没有 bug，之前对于 seabios 的执行流程理解错了。
+
+## bug 4
+就现在(fd99fdcf94cbe9dd4d472f130eea5aff52607a4c)而言，
+运行的 timer 只有 rtc 。
+
+```plain
+huxueshi:timer_interrupt_handler                        <- 进入 signal handler
+huxueshi:timerlist_run_timers [run callback]            <- 首先运行  callback
+huxueshi:check_update_timer                             <- callback 为 check_update_timer
+huxueshi:timer_mod_ns_locked 1636500309034373000        <- check_update_timer 要求之后的时间
+timerlist_deadline_ns: delta=77512154308000
+timerlist_deadline_ns: expire_time=1636500309034373000
+timerlist_deadline_ns: now=1636422796880151000
+huxueshi:timerlistgroup_deadline_ns 0 77512154308000
+huxueshi:timerlistgroup_deadline_ns 1 77512154308000
+huxueshi:timerlistgroup_deadline_ns 2 77512154308000
+huxueshi:timerlistgroup_deadline_ns 3 77512154308000
+huxueshi:soonest_timer 77512
+```
+
+如果不去添加调试，那么可以得到下面的内容:
+```plain
+huxueshi:timer_interrupt_handler
+timerlist_deadline_ns: delta=999236000
+timerlist_deadline_ns: expire_time=1636424963515329000
+timerlist_deadline_ns: now=1636424962516099000
+huxueshi:timerlistgroup_deadline_ns 0 999236000
+huxueshi:timerlistgroup_deadline_ns 1 999236000
+huxueshi:timerlistgroup_deadline_ns 2 999236000
+huxueshi:timerlistgroup_deadline_ns 3 999236000
+huxueshi:soonest_timer 999236000
+huxueshi:timer_interrupt_handler
+timerlist_deadline_ns: delta=999198000
+timerlist_deadline_ns: expire_time=1636424963515329000
+timerlist_deadline_ns: now=1636424962516135000
+huxueshi:timerlistgroup_deadline_ns 0 999198000
+huxueshi:timerlistgroup_deadline_ns 1 999198000
+huxueshi:timerlistgroup_deadline_ns 2 999198000
+huxueshi:timerlistgroup_deadline_ns 3 999198000
+huxueshi:soonest_timer 999198000
+huxueshi:timer_interrupt_handler
+timerlist_deadline_ns: delta=999177000
+timerlist_deadline_ns: expire_time=1636424963515329000
+timerlist_deadline_ns: now=1636424962516157000
+huxueshi:timerlistgroup_deadline_ns 0 999177000
+huxueshi:timerlistgroup_deadline_ns 1 999177000
+huxueshi:timerlistgroup_deadline_ns 2 999177000
+huxueshi:timerlistgroup_deadline_ns 3 999177000
+huxueshi:soonest_timer 999177000
+```
+
+之所以 timer_interrupt_handler 在被这么快速的触发
+
+```c
+> 1636424962516157000 - 1636424962516135000
+ans = 22016.0
+```
+不是 timer 到时间了，而是因为 timerlist_notify 的原因
+
+和我们预想的一样，之所以现在这个问题没有出现，是因为
+程序太快的就结束了，没有运行到 check_update_timer 中触发错误的位置。
+
+check_update_timer 的 timer_mod 并不是一定会触发错误的。
+
+真正的原因在于: get_next_alarm 返回的时间就是 73412
+
+想不到吧，这就是正确的返回值
