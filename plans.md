@@ -15,7 +15,6 @@
 - probe pci devices
 
 ## 需要处理的大块问题
-// 目前只有这几个了，不要在添加新的
 ```plain
 src/hw/i386/fw_cfg.c:33:#if SMBIOS_TODO
 ```
@@ -29,6 +28,38 @@ src/hw/i386/fw_cfg.c:111:#ifdef NEED_LATER
 src/i386/helper.c:397:#ifdef NEED_LATER
 src/hw/intc/ioapic.c:398:#ifdef NEED_LATER
 ```
+- [ ] RTC_TODO
 
 应该是这里有事情被简化掉了，所以现在 x86_cpu_realizefn 中没有初始化 features 字段
 如果上面的 NEED_LATER 都修复了，但是问题还是没有解决，那么就出现了大问题了
+
+## 正在调试的东西
+- [ ] 分析一下，下面的几个 log 输出的含义:
+  - 其实之前一致都是没有搞清楚的问题，在 bios 中，这个时候 qemu_raise_irq 的最后的效果是什么?
+```plain
+CPUIRQ: pc: lowering GSI 8
+CPUIRQ: pic_irqs: lower irq 0
+CPUIRQ: pic_irqs: lower irq 0
+CPUIRQ: pic_irqs: lower irq 0
+```
+
+- [ ] cpu_physical_memory_set_dirty_range 为什么会出现 segment fault
+  - [ ] 调用到这里，那就是说明当前是存在写的操作
+  - [ ] 但是 PAM 的 write 还是没有打开的呀！
+
+- [ ] cpu_physical_memory_set_dirty_range 本身就是触发了 g_assert_not_reached 了呀，怎么可能的
+
+- [ ] signal 我的 gdb 现在是没有办法 backtrace 了呀，好难啊
+  - 有没有办法让 gdb 不被信号打断的
+
+- [ ] 验证一下，active_timers_lock 也是可以通过 verify_BQL 的
+```c
+    qemu_mutex_unlock(&timer_list->active_timers_lock);
+```
+
+
+```c
+kernel.bin: src/util/signal-timer.c:49: soonest_timer: Assertion `ns < 1000 * 1000 * 1000' failed.
+```
+- 获取时间变为负数了之类的
+- 最后，找到的问题出现的地方为 check_update_timer 这里了

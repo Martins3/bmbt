@@ -53,12 +53,6 @@ $1 = 0xffffffff81738d84
 disass 其位置，在 fd_disable_dma 上，所以 dma 暂时不用考虑了
 
 ## port 92
-以前运行到了
-fcf24
-
-guest ip : fcf06
-failed in [io dispatch] with offset=[92]
-
 
 ## ata
 - [ ] 在 info qtree 中间暂时找不到啊

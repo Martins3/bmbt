@@ -69,6 +69,7 @@ $1 = 0xe92d6
 disass 0xe92d6
 ```
 如果是 seabios，启动 gdb 的方法: gdb out/rom.o
+或者 gdb out/rom16.o
 
 ## 配置 5000 的机器
 https://github.com/garywill/linux-router
