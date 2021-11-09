@@ -741,7 +741,8 @@ static ram_addr_t x86_bios_rom_init() {
 
 static void *alloc_ram(hwaddr size) {
   // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
-  void *host = mmap(0, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void *host = mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   duck_check(host != (void *)-1);
   return host;
 }
