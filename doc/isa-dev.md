@@ -156,3 +156,22 @@ cmos: read index=0x10 val=0x50
 
 ## vbe
 https://wiki.osdev.org/VBE
+
+## debugcon
+创建的位置
+```c
+/*
+#0  debugcon_isa_realizefn (dev=0x5555579225c0, errp=0x7fffffffcc80) at /home/maritns3/core/xqm/hw/char/debugcon.c:99
+#1  0x0000555555a25435 in device_set_realized (obj=<optimized out>, value=<optimized out>, errp=0x7fffffffcda8) at /home/maritns3/core/xqm/hw/core/qdev.c:876
+#2  0x0000555555bb1deb in property_set_bool (obj=0x5555579225c0, v=<optimized out>, name=<optimized out>, opaque=0x555557922480, errp=0x7fffffffcda8) at /home/maritns3
+/core/xqm/qom/object.c:2078
+#3  0x0000555555bb65d4 in object_property_set_qobject (obj=obj@entry=0x5555579225c0, value=value@entry=0x555557922b80, name=name@entry=0x555555db1285 "realized", errp=
+errp@entry=0x7fffffffcda8) at /home/maritns3/core/xqm/qom/qom-qobject.c:26
+#4  0x0000555555bb3e0a in object_property_set_bool (obj=0x5555579225c0, value=<optimized out>, name=0x555555db1285 "realized", errp=0x7fffffffcda8) at /home/maritns3/c
+ore/xqm/qom/object.c:1336
+#5  0x00005555559b7d01 in qdev_device_add (opts=0x55555650a4b0, errp=<optimized out>) at /home/maritns3/core/xqm/qdev-monitor.c:673
+#6  0x00005555559ba4e3 in device_init_func (opaque=<optimized out>, opts=<optimized out>, errp=0x555556424eb0 <error_fatal>) at /home/maritns3/core/xqm/vl.c:2212
+#7  0x0000555555cc1fa2 in qemu_opts_foreach (list=<optimized out>, func=0x5555559ba4d0 <device_init_func>, opaque=0x0, errp=0x555556424eb0 <error_fatal>) at /home/mari
+tns3/core/xqm/util/qemu-option.c:1170
+#8  0x000055555582b15c in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at /home/maritns3/core/xqm/vl.c:4372
+```
