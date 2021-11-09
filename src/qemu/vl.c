@@ -22,6 +22,15 @@ ReplayMode replay_mode = REPLAY_MODE_NONE;
 int singlestep = 0;
 int boot_menu = 0;
 QEMUClockType rtc_clock;
+static enum {
+  RTC_BASE_UTC,
+  RTC_BASE_LOCALTIME,
+  RTC_BASE_DATETIME,
+} rtc_base_type = RTC_BASE_UTC;
+static time_t rtc_ref_start_datetime;
+static int rtc_realtime_clock_offset; /* used only with QEMU_CLOCK_REALTIME */
+static int rtc_host_datetime_offset = -1; /* valid & used only with
+                                             RTC_BASE_DATETIME */
 
 bool machine_init_done;
 
@@ -92,6 +101,43 @@ void qemu_system_reset(MachineClass *mc, MachineState *current_machine) {
 static void configure_rtc() {
   /* Set defaults */
   rtc_clock = QEMU_CLOCK_HOST;
+}
+
+/* RTC reference time/date access */
+static time_t qemu_ref_timedate(QEMUClockType clock) {
+  time_t value = qemu_clock_get_ms(clock) / 1000;
+  switch (clock) {
+  case QEMU_CLOCK_REALTIME:
+    value -= rtc_realtime_clock_offset;
+    /* fall through */
+  case QEMU_CLOCK_VIRTUAL:
+    value += rtc_ref_start_datetime;
+    break;
+  case QEMU_CLOCK_HOST:
+    if (rtc_base_type == RTC_BASE_DATETIME) {
+      value -= rtc_host_datetime_offset;
+    }
+    break;
+  default:
+    assert(0);
+  }
+  return value;
+}
+
+void qemu_get_timedate(struct tm *tm, int offset) {
+  time_t ti = qemu_ref_timedate(rtc_clock);
+
+  ti += offset;
+
+  switch (rtc_base_type) {
+  case RTC_BASE_DATETIME:
+  case RTC_BASE_UTC:
+    gmtime_r(&ti, tm);
+    break;
+  case RTC_BASE_LOCALTIME:
+    localtime_r(&ti, tm);
+    break;
+  }
 }
 
 static PCMachineState __pcms;

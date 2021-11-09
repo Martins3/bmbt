@@ -227,6 +227,19 @@ static inline int64_t qemu_soonest_timeout(int64_t timeout1, int64_t timeout2) {
   return ((uint64_t)timeout1 < (uint64_t)timeout2) ? timeout1 : timeout2;
 }
 
+/**
+ * qemu_clock_get_ms;
+ * @type: the clock type
+ *
+ * Get the millisecond value of a clock with
+ * type @type
+ *
+ * Returns: the clock value in milliseconds
+ */
+static inline int64_t qemu_clock_get_ms(QEMUClockType type) {
+  return qemu_clock_get_ns(type) / SCALE_MS;
+}
+
 static inline int64_t get_clock(void) {
   {
     /* XXX: using gettimeofday leads to problems if the date
@@ -239,6 +252,9 @@ static inline int64_t get_clock(void) {
    Just return a monotonically increasing value.  This will be
    totally wrong, but hopefully better than nothing.  */
 static inline int64_t cpu_get_host_ticks(void) { return get_clock(); }
+
+// vl.c
+void qemu_get_timedate(struct tm *tm, int offset);
 
 // signal-timer.c
 typedef void(TimerHandler)(int sig, siginfo_t *si, void *uc);
