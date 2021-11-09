@@ -62,7 +62,10 @@ void soonest_timer_s(timer_t tid, long s) { soonest_timer(tid, s, 0); }
 
 void soonest_timer_ns(timer_t tid, long ns) { soonest_timer(tid, 0, ns); }
 
-void soonest_interrupt_ns(long ns) { soonest_timer(interrpt_tid, 0, ns); }
+void soonest_interrupt_ns(long ns) {
+  soonest_timer(interrpt_tid, ns / NANOSECONDS_PER_SECOND,
+                ns % NANOSECONDS_PER_SECOND);
+}
 
 static bool __blocked = false;
 
