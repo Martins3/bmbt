@@ -272,8 +272,4 @@ cpu_physical_memory_range_includes_clean(ram_addr_t start, ram_addr_t length,
 }
 
 void tb_invalidate_phys_range(ram_addr_t start, ram_addr_t end);
-
-#define DIRTY_CLIENTS_ALL ((1 << DIRTY_MEMORY_NUM) - 1)
-#define DIRTY_CLIENTS_NOCODE (DIRTY_CLIENTS_ALL & ~(1 << DIRTY_MEMORY_CODE))
-
 #endif /* end of include guard: RAM_ADDR_H_ACNMERX5 */
