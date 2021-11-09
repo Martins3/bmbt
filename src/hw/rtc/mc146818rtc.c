@@ -587,33 +587,17 @@ int rtc_get_memory(RTCState *s, int addr) {
   return s->cmos_data[addr];
 }
 
-static struct tm last_wisper = {
-    .tm_sec = 6,      /* Seconds.	[0-60] (1 leap second) */
-    .tm_min = 28,     /* Minutes.	[0-59] */
-    .tm_hour = 2,     /* Hours.	[0-23] */
-    .tm_mday = 1,     /* Day.		[1-31] */
-    .tm_mon = 10,     /* Month.	[0-11] */
-    .tm_year = 121,   /* Year	- 1900.  */
-    .tm_wday = 1,     /* Day of week.	[0-6] */
-    .tm_yday = 304,   /* Days in year.[0-365]	*/
-    .tm_isdst = 0,    /* DST.		[-1/0/1]*/
-    .tm_gmtoff = 0,   /* Seconds east of UTC.  */
-    .tm_zone = "GMT", /* Timezone abbreviation.  */
-};
-
 static void rtc_set_date_from_host(RTCState *s) {
-#ifdef BMBT
   struct tm tm;
 
   qemu_get_timedate(&tm, 0);
-#endif
 
-  s->base_rtc = mktimegm(&last_wisper);
+  s->base_rtc = mktimegm(&tm);
   s->last_update = qemu_clock_get_ns(rtc_clock);
   s->offset = 0;
 
   /* set the CMOS date */
-  rtc_set_cmos(s, &last_wisper);
+  rtc_set_cmos(s, &tm);
 }
 
 #ifdef BMBT
