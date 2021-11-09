@@ -284,6 +284,8 @@ void qemu_init() {
   current_machine = MACHINE(&__pcms);
   machine_run_board_init(current_machine);
 
+  QOM_init_debugcon();
+
   // qdev_machine_creation_done();
   qemu_register_reset(qbus_reset_all_fn, NULL);
   qemu_run_machine_init_done_notifiers();

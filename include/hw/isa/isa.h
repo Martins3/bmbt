@@ -18,6 +18,11 @@ typedef struct {
   qemu_irq *irqs;
 } ISABus;
 
+typedef struct {
+} ISADevice;
+
 void isa_bus_irqs(ISABus *bus, qemu_irq *irqs);
+
+void QOM_init_debugcon();
 
 #endif /* end of include guard: ISA_H_LNNOWHFU */
