@@ -793,6 +793,7 @@ static void rtc_realizefn(RTCState *s) {
 static RTCState __mc146818_rtc;
 RTCState *mc146818_rtc_init(int base_year, qemu_irq intercept_irq) {
   RTCState *mc146818_rtc = &__mc146818_rtc;
+  duck_check(intercept_irq != NULL);
 #ifdef BMBT
   DeviceState *dev;
   ISADevice *isadev;

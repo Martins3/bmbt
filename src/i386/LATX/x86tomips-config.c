@@ -418,7 +418,7 @@ void x86_to_mips_before_exec_tb(CPUState *cpu, struct TranslationBlock *tb)
 
     lsenv->after_exec_tb_fixed = 0;
 #ifdef CONFIG_XTM_TEST
-    fprintf(stderr, "[test-trace] ");
+    fprintf(stderr, "[before tb] ");
     fprintf(stderr, "EIP=%#x / CS_BASE=%#x / FLAGS=%#x / EFLAGS=%#x / REGS=%#x,%#x,%#x,%#x,%#x,%#x,%#x,%#x\n",
             env->eip, env->segs[1].base, env->hflags, env->eflags,
             env->regs[0], env->regs[1], env->regs[2], env->regs[3],
@@ -470,7 +470,7 @@ void x86_to_mips_after_exec_tb(CPUX86State *env, TranslationBlock *tb)
 
 #ifdef CONFIG_XTM_TEST
     uint32_t eflags = helper_read_eflags(env);
-    fprintf(stderr, "[test-trace] ");
+    fprintf(stderr, "[after  tb] ");
     fprintf(stderr, "EIP=%#x / CS_BASE=%#x / FLAGS=%#x / EFLAGS=%#x / REGS=%#x,%#x,%#x,%#x,%#x,%#x,%#x,%#x\n",
             env->eip, env->segs[1].base, env->hflags, eflags,
             env->regs[0], env->regs[1], env->regs[2], env->regs[3],
