@@ -86,7 +86,21 @@
     - 只有在 vCPU thread 中才对于 BQL 上锁，而 signal handler 不能试图去上 BQL 的锁
       - 因为在 QEMU 中，原来的 timer 的 callback 都是在 main loop 中持有 BQL 之后才会去调用的，如果再次上锁，那么是死锁了
     - 所以 tcg_handle_interrupt 也需要进行对应的修改。
-
-# BMBT 的说明
-我发现，不要将原来的代码递归的拷贝过来，而是整个代码都拷贝过来，然后使用 `#if` 逐个 disable 掉。
-应该在每一个 BMBT 跟上解释为什么不需要这个东西
+41. do_pci_register_device
+    - 不支持 hotplug 设备，所以 DeviceState::hotplugged 总是不能为 true
+42. i440fx_init
+    - i440fx_init 初始化了三个东西
+      - i440fx pci host bridge
+      - pci bus
+      - i440fx pci device
+    - 因为 qdev 的设计，在进行 host bridege 的初始化的时候，会自动 realize 关联到上的 pci bus 的
+    - pci bus 的 realize 都是一些设置 memory region 的事情，暂时没有什么用途，就不添加了
+43. pcie
+    - 暂时不支持 pcie 设备的，这导致下面的函数被简化:
+      - pci_is_express_downstream_port 直接返回 false
+44. pci_bus_num
+    - 暂时不支持多个 pci bus ，总是返回 0
+45. pci_get_bus
+    - 之前是通过 DeviceState::parent_bus 实现的，现在直接在 PCIDevice::bus 中保存
+46. pci_update_mappings
+    - [ ] 理论上，所有的 PCI 设备都是直通的，所以 PCIIORegion 是不需要我们来管理的
