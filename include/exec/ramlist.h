@@ -1,10 +1,11 @@
 #ifndef RAMLIST_H_JVOL1YC8
 #define RAMLIST_H_JVOL1YC8
 
-#define DIRTY_MEMORY_VGA       0
-#define DIRTY_MEMORY_CODE      1
+#include <qemu/rcu.h>
+#define DIRTY_MEMORY_VGA 0
+#define DIRTY_MEMORY_CODE 1
 #define DIRTY_MEMORY_MIGRATION 2
-#define DIRTY_MEMORY_NUM       3        /* num of dirty bits */
+#define DIRTY_MEMORY_NUM 3 /* num of dirty bits */
 
 /* The dirty memory bitmap is split into fixed-size blocks to allow growth
  * under RCU.  The bitmap for a block can be accessed as follows:
@@ -33,9 +34,8 @@
  */
 #define DIRTY_MEMORY_BLOCK_SIZE ((ram_addr_t)256 * 1024 * 8)
 typedef struct {
-    // struct rcu_head rcu;
-    int place_holder_for_flexible_array_members;
-    unsigned long *blocks[];
+  struct rcu_head rcu;
+  unsigned long *blocks[];
 } DirtyMemoryBlocks;
 
 #endif /* end of include guard: RAMLIST_H_JVOL1YC8 */
