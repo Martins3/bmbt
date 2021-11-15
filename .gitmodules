@@ -4,4 +4,4 @@
 
 [submodule "seabios"]
 	path = seabios
-	url = https://git.seabios.org/seabios.git
+	url = https://github.com/coreboot/seabios
