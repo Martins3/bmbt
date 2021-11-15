@@ -1961,7 +1961,8 @@ static void pci_qdev_realize(PCIDevice *pci_dev, const char *name) {
 #endif
 }
 
-const char pci_devices_names[][PCI_TYPE_NAME_LEN] = {"i440fx", "piix3"};
+const char pci_devices_names[][PCI_TYPE_NAME_LEN] = {TYPE_I440FX_PCI_DEVICE,
+                                                     TYPE_PIIX3_DEVICE};
 
 PCIDevice *PCI_DEVICE(void *pci_dev) {
   PCIDevice *dev = (PCIDevice *)pci_dev;
@@ -1971,6 +1972,7 @@ PCIDevice *PCI_DEVICE(void *pci_dev) {
       return dev;
     }
   }
+  printf("unimplemented devices [%s] \n", dev->type);
   g_assert_not_reached();
 }
 
@@ -1979,14 +1981,15 @@ PCII440FXState *QOM_init_pci_i440fx(PCIBus *bus);
 
 static PCIDevice *QOM_init_pci_dev(PCIBus *bus, const char *name) {
 
-  if (strcmp(name, "i440fx") == 0) {
-    PCI_DEVICE(QOM_init_pci_i440fx(bus));
+  if (strcmp(name, TYPE_I440FX_PCI_DEVICE) == 0) {
+    return PCI_DEVICE(QOM_init_pci_i440fx(bus));
   }
 
-  else if (strcmp(name, "piix3") == 0) {
-    PCI_DEVICE(QOM_init_piix3(bus));
+  else if (strcmp(name, TYPE_PIIX3_DEVICE) == 0) {
+    return PCI_DEVICE(QOM_init_piix3(bus));
   }
 
+  printf("unimplemented devices [%s] \n", name);
   g_assert_not_reached();
 }
 

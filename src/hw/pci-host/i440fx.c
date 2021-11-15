@@ -66,7 +66,7 @@ struct PCII440FXState {
 };
 
 static inline PCII440FXState *I440FX_PCI_DEVICE(PCIDevice *pci) {
-  dynamic_type_check(pci, "i440fx");
+  dynamic_type_check(pci, TYPE_I440FX_PCI_DEVICE);
   return (PCII440FXState *)pci;
 }
 
@@ -288,6 +288,7 @@ PCIBus *i440fx_init(const char *host_type, const char *pci_type,
   I440FXState *i440fx;
 
   // host_type : i440FX-pcihost
+  // pci_type  : i440FX
 
 #ifdef BMBT
   dev = qdev_create(NULL, host_type);
@@ -398,7 +399,7 @@ static PCIDeviceClass __pci_i440fx_class;
 PCII440FXState *QOM_init_pci_i440fx(PCIBus *bus) {
   PCII440FXState *i440fx = &__pci_i440fx;
   PCIDeviceClass *c = &__pci_i440fx_class;
-  strcpy(i440fx->dev.type, "i440fx");
+  strcpy(i440fx->dev.type, TYPE_I440FX_PCI_DEVICE);
   PCI_DEVICE_SET_CLASS(&i440fx->dev, c);
   i440fx_class_init(c);
   i440fx->dev.bus = bus;
