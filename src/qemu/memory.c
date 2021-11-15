@@ -4,6 +4,7 @@
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/units.h"
 #include <fcntl.h> // for open
+#include <hw/pci-host/pam.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -63,19 +64,23 @@ static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
   dispatch->segment_num++;
 }
 
-// @todo actually in the beginning
-// smram_region_enable = 1, smram_enable = 0
 // make vga-lowmem available to normal CPU
-bool smram_region_enable;
+static bool smram_region_enable;
 // make cpu in smm mode can ignore smram_region_enable
-bool smram_enable;
+static bool smram_enable;
+
+void smram_region_set_enabled(bool en) { smram_region_enable = en; }
+void smram_set_enabled(bool en) { smram_enable = en; }
 
 static bool is_smram_access(hwaddr offset) {
   return offset >= SMRAM_C_BASE && offset < SMRAM_C_END;
 }
 
 static bool is_isa_bios_access(hwaddr offset) {
-  return offset >= PAM_EXBIOS_BASE && offset < PAM_BIOS_END;
+  if (offset >= PAM_EXBIOS_BASE && offset < PAM_BIOS_END) {
+    return pam_type_is_pci(offset);
+  }
+  return false;
 }
 
 typedef bool (*MemoryRegionMatch)(const MemoryRegion *mr, hwaddr offset);
@@ -103,7 +108,8 @@ static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
                                    hwaddr *xlat, hwaddr *plen) {
   MemoryRegion *mr;
   if (offset == PIIX_RCR_IOPORT) {
-    mr = as->dispatch->special_mr;
+    // guest shouldn't access to piix3-reset
+    g_assert_not_reached();
   } else {
     mr = memory_region_look_up(as->dispatch, offset);
   }
@@ -126,6 +132,8 @@ static inline MemoryRegion *isa_bios_access(hwaddr offset, hwaddr *xlat,
   return pc_bios;
 }
 
+static MemoryRegion low_vga;
+
 static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
                                     hwaddr *xlat, hwaddr *plen) {
   MemoryRegion *mr = isa_bios_access(offset, xlat, plen);
@@ -135,12 +143,17 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
 
   if (is_smram_access(offset)) {
     if (!as->smm && smram_region_enable) {
-      mr = as->dispatch->special_mr;
+      mr = &low_vga;
     }
 
     if (as->smm && !smram_enable && smram_region_enable) {
-      mr = as->dispatch->special_mr;
+      mr = &low_vga;
     }
+  }
+
+  if (mr == &low_vga) {
+    // no vga in bmbt
+    g_assert_not_reached();
   }
 
   if (mr == NULL) {

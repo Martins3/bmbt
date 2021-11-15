@@ -5,6 +5,7 @@
 #include "../../../include/qemu/units.h"
 #include "../../i386/cpu.h"
 #include <hw/rtc/mc146818rtc.h>
+#include <hw/southbridge/piix.h>
 
 /* PC hardware initialisation */
 static void pc_init1(MachineState *machine, const char *host_type,
@@ -13,9 +14,8 @@ static void pc_init1(MachineState *machine, const char *host_type,
   PCMachineClass *pcmc = PC_MACHINE_GET_CLASS(pcms);
   X86MachineState *x86ms = X86_MACHINE(pcms);
   MemoryRegion *system_memory = NULL;
-  // MemoryRegion *system_memory = get_system_memory();
-  // MemoryRegion *system_io = get_system_io();
-  // PCIBus *pci_bus;
+  MemoryRegion *system_io = NULL;
+  PCIBus *pci_bus;
   ISABus *isa_bus;
   PCII440FXState *i440fx_state;
   int piix3_devfn = -1;
@@ -25,7 +25,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
   // BusState *idebus[MAX_IDE_BUS];
   RTCState *rtc_state;
   MemoryRegion *ram_memory;
-  MemoryRegion *pci_memory;
+  MemoryRegion *pci_memory = NULL;
   MemoryRegion *rom_memory;
   ram_addr_t lowmem;
 
@@ -131,7 +131,6 @@ static void pc_init1(MachineState *machine, const char *host_type,
   gsi_state = pc_gsi_create(&x86ms->gsi, pcmc->pci_enabled);
 
   if (pcmc->pci_enabled) {
-#if NEED_LATER
     PIIX3State *piix3;
 
     pci_bus =
@@ -143,7 +142,6 @@ static void pc_init1(MachineState *machine, const char *host_type,
     piix3 = piix3_create(pci_bus, &isa_bus);
     piix3->pic = x86ms->gsi;
     piix3_devfn = piix3->dev.devfn;
-#endif
   } else {
     g_assert_not_reached();
     /*
@@ -154,8 +152,6 @@ static void pc_init1(MachineState *machine, const char *host_type,
     */
   }
 
-  static ISABus tmp_isa_bus;
-  isa_bus = &tmp_isa_bus;
   isa_bus_irqs(isa_bus, x86ms->gsi);
 
   pc_i8259_create(gsi_state->i8259_irq);
@@ -168,7 +164,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
     x86_register_ferr_irq(x86ms->gsi[13]);
   }
 
-#if NEED_LATER
+#if BMBT
   pc_vga_init(isa_bus, pcmc->pci_enabled ? pci_bus : NULL);
 #endif
 
@@ -183,12 +179,14 @@ static void pc_init1(MachineState *machine, const char *host_type,
   pc_basic_device_init(isa_bus, x86ms->gsi, &rtc_state, true,
                        (pcms->vmport != ON_OFF_AUTO_ON), pcms->pit_enabled,
                        0x4);
-#ifdef NEED_LATER
+#ifdef BMBT
   pc_nic_init(pcmc, isa_bus, pci_bus);
 
   ide_drive_get(hd, ARRAY_SIZE(hd));
+#endif
 
   if (pcmc->pci_enabled) {
+#ifdef BMBT
     PCIDevice *dev;
     if (xen_enabled()) {
       dev = pci_piix3_xen_ide_init(pci_bus, hd, piix3_devfn + 1);
@@ -197,9 +195,9 @@ static void pc_init1(MachineState *machine, const char *host_type,
     }
     idebus[0] = qdev_get_child_bus(&dev->qdev, "ide.0");
     idebus[1] = qdev_get_child_bus(&dev->qdev, "ide.1");
-    pc_cmos_init(pcms, idebus[0], idebus[1], rtc_state);
-  }
 #endif
+    pc_cmos_init(pcms, rtc_state);
+  }
 
 #ifdef CONFIG_IDE_ISA
   else {
@@ -220,11 +218,13 @@ static void pc_init1(MachineState *machine, const char *host_type,
   }
 #endif
 
-#if NEED_LATER
+#if BMBT
   if (pcmc->pci_enabled && machine_usb(machine)) {
     pci_create_simple(pci_bus, piix3_devfn + 2, "piix3-usb-uhci");
   }
+#endif
 
+#ifdef NEED_LATER
   if (pcmc->pci_enabled && acpi_enabled) {
     DeviceState *piix4_pm;
 

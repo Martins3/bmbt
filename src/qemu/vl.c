@@ -21,6 +21,8 @@ ram_addr_t ram_size;
 ReplayMode replay_mode = REPLAY_MODE_NONE;
 int singlestep = 0;
 int boot_menu = 0;
+int fd_bootchk = 1;
+int acpi_enabled = 0;
 QEMUClockType rtc_clock;
 static enum {
   RTC_BASE_UTC,

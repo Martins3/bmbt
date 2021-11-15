@@ -2,7 +2,6 @@
 #define MEMORY_H_E0UHP2JS
 
 #include "../../src/tcg/glib_stub.h"
-#include "../hw/pci-host/pam.h"
 #include "cpu-common.h"
 #include "hwaddr.h"
 #include "memattrs.h"
@@ -34,7 +33,6 @@ typedef struct MemoryRegion {
 typedef struct {
   MemoryRegion *segments[MAX_SEGMENTS_IN_AS];
   int segment_num;
-  MemoryRegion *special_mr;
   char name[100];
 } AddressSpaceDispatch;
 
@@ -49,16 +47,6 @@ typedef struct AddressSpace {
 extern AddressSpace address_space_io;
 extern AddressSpace address_space_memory;
 extern AddressSpace address_space_smm_memory;
-
-// @todo call these two functions
-static inline void io_set_special_mr(MemoryRegion *mr) {
-  address_space_io.dispatch->special_mr = mr;
-}
-
-// @todo it's vga
-static inline void mem_set_special_mr(MemoryRegion *mr) {
-  address_space_memory.dispatch->special_mr = mr;
-}
 
 /*
  * Memory region callbacks
@@ -262,5 +250,8 @@ uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr);
 
 void memory_map_init(ram_addr_t size);
 void tcg_commit();
+
+void smram_region_set_enabled(bool en);
+void smram_set_enabled(bool en);
 
 #endif /* end of include guard: MEMORY_H_E0UHP2JS */

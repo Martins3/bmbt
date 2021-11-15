@@ -8,6 +8,7 @@
 #include "cpu-para.h"
 #include "ramlist.h"
 #include <assert.h>
+#include <hw/pci-host/pam.h>
 #include <qemu/units.h>
 
 typedef struct RAMBlock {
@@ -23,13 +24,13 @@ typedef struct RAMBlock {
 #define SMRAM_INDEX 1
 // pam
 #define PAM_INDEX 2
-
+// pam expan
 #define PAM_EXPAN_INDEX PAM_INDEX
 #define PAM_EXPAN_NUM 8
-
+// pam extend
 #define PAM_EXBIOS_INDEX (PAM_EXPAN_INDEX + PAM_EXPAN_NUM)
 #define PAM_EXBIOS_NUM 4
-// system bios
+// pam system bios
 #define PAM_BIOS_INDEX (PAM_EXBIOS_INDEX + PAM_EXBIOS_NUM)
 #define PAM_BIOS_NUM 1
 #define PAM_NUM (PAM_EXPAN_NUM + PAM_EXBIOS_NUM + PAM_BIOS_NUM)
@@ -63,6 +64,10 @@ typedef struct RAMList {
 } RAMList;
 
 extern RAMList ram_list;
+
+static inline MemoryRegion *get_ram_mr(unsigned idx) {
+  return &ram_list.blocks[idx].mr;
+}
 
 #define RAMBLOCK_FOREACH(block)                                                \
   int __i;                                                                     \
