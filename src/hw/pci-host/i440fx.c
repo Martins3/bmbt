@@ -357,7 +357,6 @@ PCIBus *i440fx_init(const char *host_type, const char *pci_type,
   if (ram_size > 255) {
     ram_size = 255;
   }
-  duck_check(ram_size == 128);
   d->config[I440FX_COREBOOT_RAM_SIZE] = ram_size;
 
   i440fx_update_memory_mappings(f);
