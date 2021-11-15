@@ -195,9 +195,9 @@ static vaddr cpu_adjust_watchpoint_address(CPUState *cpu, vaddr addr, int len) {
 void cpu_class_init(CPUClass *k) {
   // k->parse_features = cpu_common_parse_features;
   k->reset = cpu_common_reset;
-  k->get_arch_id = cpu_common_get_arch_id;
-  k->has_work = cpu_common_has_work;
-  k->get_paging_enabled = cpu_common_get_paging_enabled;
+  // k->get_arch_id = cpu_common_get_arch_id;
+  // k->has_work = cpu_common_has_work;
+  // k->get_paging_enabled = cpu_common_get_paging_enabled;
   // k->get_memory_mapping = cpu_common_get_memory_mapping;
   // k->write_elf32_qemunote = cpu_common_write_elf32_qemunote;
   // k->write_elf32_note = cpu_common_write_elf32_note;
@@ -211,7 +211,7 @@ void cpu_class_init(CPUClass *k) {
   // k->cpu_exec_enter = cpu_common_noop;
   // k->cpu_exec_exit = cpu_common_noop;
   // k->cpu_exec_interrupt = cpu_common_exec_interrupt;
-  k->adjust_watchpoint_address = cpu_adjust_watchpoint_address;
+  // k->adjust_watchpoint_address = cpu_adjust_watchpoint_address;
   // set_bit(DEVICE_CATEGORY_CPU, dc->categories);
   // dc->realize = cpu_common_realizefn;
   // dc->unrealize = cpu_common_unrealizefn;
