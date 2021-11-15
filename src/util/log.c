@@ -4,6 +4,18 @@
 FILE *qemu_logfile;
 int qemu_loglevel;
 
+FILE *get_logfile(const char *f) {
+#ifdef BUILD_ON_LOONGSON
+  char filename[256] = "build_loongson/";
+#else
+  char filename[256] = "build_x86/";
+#endif
+  strcat(filename, f);
+  FILE *file = fopen(filename, "w");
+  duck_check(file != NULL);
+  return file;
+}
+
 /* Return the number of characters emitted.  */
 int qemu_log(const char *fmt, ...) {
   int ret = 0;
@@ -24,8 +36,7 @@ int qemu_log(const char *fmt, ...) {
 /* enable or disable low levels log */
 void qemu_set_log(int log_flags) {
   qemu_loglevel = log_flags;
-  qemu_logfile = fopen("./build/bmbt.log", "w");
-  duck_check(qemu_logfile != NULL);
+  qemu_logfile = get_logfile("bmbt.log");
   qemu_log("start loging\n");
 }
 

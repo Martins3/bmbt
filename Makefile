@@ -1,8 +1,18 @@
 #!/usr/bin/make
 SHELL:=/bin/bash
 
-BASE_DIR = $(shell pwd)
-BUILD_DIR := $(BASE_DIR)/build
+ARCH_BUILD := build_loongson
+ARCH_PREFIX :=
+ARCH_FLAGS := -DBUILD_ON_LOONGSON
+UNAME := $(shell uname -a)
+ifneq (,$(findstring x86_64, $(UNAME)))
+	ARCH_BUILD := build_x86
+	ARCH_FLAGS :=
+endif
+# QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
+
+BASE_DIR := $(shell pwd)
+BUILD_DIR := $(BASE_DIR)/$(ARCH_BUILD)
 kernel := $(BUILD_DIR)/kernel.bin
 LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 
@@ -22,7 +32,7 @@ GCOV_LFLAGS=-lgcov --coverage
 
 
 CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include $(GLIB_INCLUDE) -I$(BASE_DIR)/include
-CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB) $(GCOV_CFLAGS)
+CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB) $(GCOV_CFLAGS) $(ARCH_FLAGS)
 LFLAGS := -g -Werror $(GCOV_LFLAGS) $(GLIB_LIB)
 
 
@@ -49,14 +59,6 @@ assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
 c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
 
 obj_files := $(assembly_object_files) $(c_object_files)
-
-ARCH_PREFIX :=
-UNAME := $(shell uname -a)
-ifneq (,$(findstring maritns3-pc, $(UNAME)))
-$(error "Compile and run code in 3a5000")
-endif
-# QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
-
 
 CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use # 暂时不使用 iwyu
 CXX=gcc
@@ -120,17 +122,17 @@ $(kernel) : $(obj_files) capstone
 
 .PHONY: all clean gdb run gcov clear_gcda test
 
-gcov_out=build/gcov
+gcov_out=$(ARCH_BUILD)/gcov
 gcov_info=$(gcov_out)/bmbt_coverage.info
 gcov_merge_info=$(gcov_out)/bmbt_merge.info
 
 gcov:
 	@mkdir -p $(gcov_out)
-	lcov -capture --directory build --output-file $(gcov_info)
+	lcov -capture --directory $(ARCH_BUILD) --output-file $(gcov_info)
 	if [[ -e $(gcov_merge_info) ]]; then\
-		lcov -a $(gcov_merge_info) -a $(gcov_info) -d build -o $(gcov_merge_info); \
+		lcov -a $(gcov_merge_info) -a $(gcov_info) -d $(ARCH_BUILD) -o $(gcov_merge_info); \
 	else \
-		lcov -a $(gcov_info) -d build -o $(gcov_merge_info); \
+		lcov -a $(gcov_info) -d $(ARCH_BUILD) -o $(gcov_merge_info); \
 	fi
 	genhtml $(gcov_merge_info) --output-directory $(gcov_out)
 	# microsoft-edge $(gcov_out)/index.html

@@ -3,7 +3,8 @@
 *.txt
 *.bin
 *.d
-build/
+build_x86
+build_loongson
 
 .ccls-cache/
 
