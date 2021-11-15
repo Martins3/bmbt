@@ -31,9 +31,6 @@
 #include <sysemu/reset.h>
 #include <sysemu/sysemu.h>
 
-#define TYPE_PIIX3_PCI_DEVICE "pci-piix3"
-#define TYPE_PIIX3_DEVICE "PIIX3"
-
 static void piix3_set_irq_pic(PIIX3State *piix3, int pic_irq) {
   qemu_set_irq(piix3->pic[pic_irq],
                !!(piix3->pic_levels & (((1ULL << PIIX_NUM_PIRQS) - 1)
@@ -100,7 +97,7 @@ static void piix3_update_irq_levels(PIIX3State *piix3) {
 }
 
 static inline PIIX3State *PIIX3_PCI_DEVICE(PCIDevice *dev) {
-  dynamic_type_check(dev, "piix3");
+  dynamic_type_check(dev, TYPE_PIIX3_DEVICE);
   return (PIIX3State *)dev;
 }
 
@@ -250,7 +247,7 @@ static const MemoryRegionOps rcr_ops = {
     .read = rcr_read, .write = rcr_write, .endianness = DEVICE_LITTLE_ENDIAN};
 
 static void piix3_realize(PCIDevice *dev) {
-  assert(strcmp(dev->type, "piix3") == 0);
+  dynamic_type_check(dev, TYPE_PIIX3_DEVICE);
   PIIX3State *d = (PIIX3State *)dev;
 
 #ifdef BMBT
@@ -352,7 +349,7 @@ PIIX3State *QOM_init_piix3(PCIBus *bus) {
   PIIX3State *piix3 = &__piix3;
   PCIDeviceClass *c = &__piix3_class;
 
-  strcpy(piix3->dev.type, "piix3");
+  strcpy(piix3->dev.type, TYPE_PIIX3_DEVICE);
   PCI_DEVICE_SET_CLASS(&piix3->dev, c);
   piix3_class_init(c);
 

@@ -57,5 +57,6 @@ typedef struct PIIXState {
   MemoryRegion rcr_mem;
 } PIIX3State;
 
+#define TYPE_PIIX3_DEVICE "PIIX3"
 PIIX3State *piix3_create(PCIBus *pci_bus, ISABus **isa_bus);
 #endif /* end of include guard: PIIX_H_BBMFPUA1 */
