@@ -1,6 +1,7 @@
 #include <exec/hwaddr.h>
 #include <exec/memory.h>
 #include <hw/isa/isa.h>
+#include <qemu/log.h>
 
 #define TYPE_ISA_DEBUGCON_DEVICE "isa-debugcon"
 
@@ -87,11 +88,7 @@ static void debugcon_isa_realizefn(ISADebugconState *isa) {
                         TYPE_ISA_DEBUGCON_DEVICE, 1);
   memory_region_add_subregion(isa_address_space_io(d), isa->iobase, &s->io);
 #endif
-
-  isa->state.log = fopen("./build/seabios.log", "w");
-  if (isa->state.log == NULL) {
-    g_assert_not_reached();
-  }
+  isa->state.log = get_logfile("seabios.log");
 
   DebugconState *s = &isa->state;
   memory_region_init_io(&s->io, &debugcon_ops, s, TYPE_ISA_DEBUGCON_DEVICE, 1);

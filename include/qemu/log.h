@@ -63,4 +63,6 @@ static inline void log_cpu_state_mask(int mask, CPUState *cpu, int flags) {
 
 void qemu_set_log(int log_flags);
 
+FILE *get_logfile(const char *filename);
+
 #endif /* end of include guard: LOG_H_DLREVUT7 */
