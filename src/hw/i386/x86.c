@@ -131,7 +131,7 @@ const CPUArchIdList *x86_possible_cpu_arch_ids(MachineState *ms) {
   return ms->possible_cpus;
 }
 
-#ifdef NEED_LATER
+#ifdef BMBT
 static void x86_nmi(NMIState *n, int cpu_index, Error **errp) {
   /* cpu index isn't used */
   CPUState *cs;

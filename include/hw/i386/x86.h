@@ -5,6 +5,7 @@
 #include "../boards.h"
 #include "../irq.h"
 #include "../nvram/fw_cfg.h"
+#include <hw/rtc/mc146818rtc.h>
 
 typedef struct {
   /*< private >*/
@@ -24,10 +25,9 @@ typedef struct {
   X86MachineClass *x86mc;
 
   /*< public >*/
-
-#ifdef NEED_LATER
   /* Pointers to devices and objects: */
-  ISADevice *rtc;
+  RTCState *rtc;
+#ifdef NEED_LATER
   GMappedFile *initrd_mapped_file;
 #endif
   qemu_irq *gsi;

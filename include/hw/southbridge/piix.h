@@ -1,6 +1,10 @@
 #ifndef PIIX_H_BBMFPUA1
 #define PIIX_H_BBMFPUA1
 
+#include <exec/memory.h>
+#include <hw/irq.h>
+#include <hw/pci/pci.h>
+
 #define TYPE_PIIX4_PM "PIIX4_PM"
 
 #ifdef BMBT
@@ -24,7 +28,6 @@ I2CBus *piix4_pm_init(PCIBus *bus, int devfn, uint32_t smb_io_base,
 #define PIIX_NUM_PIC_IRQS 16 /* i8259 * 2 */
 #define PIIX_NUM_PIRQS 4ULL  /* PIRQ[A-D] */
 
-#ifdef NEED_LATER
 typedef struct PIIXState {
   PCIDevice dev;
 
@@ -54,13 +57,5 @@ typedef struct PIIXState {
   MemoryRegion rcr_mem;
 } PIIX3State;
 
-extern PCIDevice *piix4_dev;
-
 PIIX3State *piix3_create(PCIBus *pci_bus, ISABus **isa_bus);
-
-DeviceState *piix4_create(PCIBus *pci_bus, ISABus **isa_bus, I2CBus **smbus,
-                          size_t ide_buses);
-
-#endif
-
 #endif /* end of include guard: PIIX_H_BBMFPUA1 */

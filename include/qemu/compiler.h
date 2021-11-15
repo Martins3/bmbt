@@ -59,6 +59,8 @@
 
 #define QEMU_ALIGNED(X) __attribute__((aligned(X)))
 
+#define QEMU_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+
 #define duck_check(x) assert(x)
 
 #endif /* end of include guard: COMPILER_H_LG8KIJYO */

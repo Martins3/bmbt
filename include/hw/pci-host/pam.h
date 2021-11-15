@@ -49,6 +49,7 @@
  *
  * 0xf0000 - 0xfffff System BIOS Area Memory Segments
  */
+#include <exec/memory.h>
 
 #define SMRAM_C_BASE 0xa0000
 #define SMRAM_C_END 0xc0000
@@ -77,5 +78,18 @@
 #define SMRAM_G_SMRAME ((uint8_t)(1 << 3))
 #define SMRAM_C_BASE_SEG_MASK ((uint8_t)0x7)
 #define SMRAM_C_BASE_SEG ((uint8_t)0x2) /* hardwired to b010 */
+
+typedef struct PAMMemoryRegion {
+  MemoryRegion *mr;
+  unsigned current;
+} PAMMemoryRegion;
+
+#define PAM_RAM 3
+#define PAM_ROM 1
+#define PAM_PCI 0
+
+void init_pam(PAMMemoryRegion *pam_mr, MemoryRegion *mr);
+void pam_update(PAMMemoryRegion *pam, int idx, uint8_t val);
+bool pam_type_is_pci(hwaddr offset);
 
 #endif /* QEMU_PAM_H */

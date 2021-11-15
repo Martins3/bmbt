@@ -22,6 +22,7 @@ typedef struct {
 } ISADevice;
 
 void isa_bus_irqs(ISABus *bus, qemu_irq *irqs);
+ISABus *get_isa_bus();
 
 void QOM_init_debugcon();
 

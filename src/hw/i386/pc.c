@@ -510,11 +510,10 @@ static void pic_irq_request(void *opaque, int irq, int level) {
   }
 }
 
-#if RTC_TODO
 /* PC cmos mappings */
-
 #define REG_EQUIPMENT_BYTE 0x14
 
+#ifdef BMBT
 int cmos_get_fd_drive_type(FloppyDriveType fd0) {
   int val;
 
@@ -552,6 +551,7 @@ static void cmos_init_hd(ISADevice *s, int type_ofs, int info_ofs,
   rtc_set_memory(s, info_ofs + 7, cylinders >> 8);
   rtc_set_memory(s, info_ofs + 8, sectors);
 }
+#endif
 
 /* convert boot_device letter to something recognizable by the bios */
 static int boot_device2nibble(char boot_device) {
@@ -568,8 +568,7 @@ static int boot_device2nibble(char boot_device) {
   }
   return 0;
 }
-
-static void set_boot_dev(ISADevice *s, const char *boot_device, Error **errp) {
+static void set_boot_dev(RTCState *s, const char *boot_device) {
 #define PC_MAX_BOOT_DEVICES 3
   int nbds, bds[3] = {
                 0,
@@ -578,13 +577,13 @@ static void set_boot_dev(ISADevice *s, const char *boot_device, Error **errp) {
 
   nbds = strlen(boot_device);
   if (nbds > PC_MAX_BOOT_DEVICES) {
-    error_setg(errp, "Too many boot devices for PC");
+    error_report("Too many boot devices for PC");
     return;
   }
   for (i = 0; i < nbds; i++) {
     bds[i] = boot_device2nibble(boot_device[i]);
     if (bds[i] == 0) {
-      error_setg(errp, "Invalid boot device for PC: '%c'", boot_device[i]);
+      error_report("Invalid boot device for PC: '%c'", boot_device[i]);
       return;
     }
   }
@@ -592,6 +591,7 @@ static void set_boot_dev(ISADevice *s, const char *boot_device, Error **errp) {
   rtc_set_memory(s, 0x38, (bds[2] << 4) | (fd_bootchk ? 0x0 : 0x1));
 }
 
+#ifdef BMBT
 static void pc_boot_set(void *opaque, const char *boot_device, Error **errp) {
   set_boot_dev(opaque, boot_device, errp);
 }
@@ -630,11 +630,13 @@ static void pc_cmos_init_floppy(ISADevice *rtc_state, ISADevice *floppy) {
   }
   rtc_set_memory(rtc_state, REG_EQUIPMENT_BYTE, val);
 }
-
+#endif
 typedef struct pc_cmos_init_late_arg {
-  ISADevice *rtc_state;
-  BusState *idebus[2];
+  RTCState *rtc_state;
+  // BusState *idebus[2];
 } pc_cmos_init_late_arg;
+
+#ifdef BMBT
 
 typedef struct check_fdc_state {
   ISADevice *floppy;
@@ -692,16 +694,18 @@ ISADevice *pc_find_fdc0(void) {
 
   return state.floppy;
 }
-
+#endif
 static void pc_cmos_init_late(void *opaque) {
   pc_cmos_init_late_arg *arg = opaque;
-  ISADevice *s = arg->rtc_state;
+  RTCState *s = arg->rtc_state;
   int16_t cylinders;
   int8_t heads, sectors;
   int val;
   int i, trans;
 
   val = 0;
+  // idebus is empty, started from pc_cmos_init
+#ifdef BMBT
   if (arg->idebus[0] &&
       ide_get_geometry(arg->idebus[0], 0, &cylinders, &heads, &sectors) >= 0) {
     cmos_init_hd(s, 0x19, 0x1b, cylinders, heads, sectors);
@@ -712,9 +716,11 @@ static void pc_cmos_init_late(void *opaque) {
     cmos_init_hd(s, 0x1a, 0x24, cylinders, heads, sectors);
     val |= 0x0f;
   }
+#endif
   rtc_set_memory(s, 0x12, val);
 
   val = 0;
+#ifdef BMBT
   for (i = 0; i < 4; i++) {
     /* NOTE: ide_get_geometry() returns the physical
        geometry.  It is always such that: 1 <= sects <= 63, 1
@@ -728,15 +734,17 @@ static void pc_cmos_init_late(void *opaque) {
       val |= trans << (i * 2);
     }
   }
+#endif
   rtc_set_memory(s, 0x39, val);
 
+#ifdef BMBT
   pc_cmos_init_floppy(s, pc_find_fdc0());
+#endif
 
   qemu_unregister_reset(pc_cmos_init_late, opaque);
 }
 
-void pc_cmos_init(PCMachineState *pcms, BusState *idebus0, BusState *idebus1,
-                  ISADevice *s) {
+void pc_cmos_init(PCMachineState *pcms, RTCState *s) {
   int val;
   static pc_cmos_init_late_arg arg;
   X86MachineState *x86ms = X86_MACHINE(pcms);
@@ -776,12 +784,16 @@ void pc_cmos_init(PCMachineState *pcms, BusState *idebus0, BusState *idebus1,
   rtc_set_memory(s, 0x5c, val >> 8);
   rtc_set_memory(s, 0x5d, val >> 16);
 
+#ifdef BMBT
   object_property_add_link(
       OBJECT(pcms), "rtc_state", TYPE_ISA_DEVICE, (Object **)&x86ms->rtc,
       object_property_allow_set_link, OBJ_PROP_LINK_STRONG, &error_abort);
   object_property_set_link(OBJECT(pcms), OBJECT(s), "rtc_state", &error_abort);
+#else
+  x86ms->rtc = s;
+#endif
 
-  set_boot_dev(s, MACHINE(pcms)->boot_order, &error_fatal);
+  set_boot_dev(s, MACHINE(pcms)->boot_order);
 
   val = 0;
   val |= 0x02; /* FPU is there */
@@ -790,11 +802,12 @@ void pc_cmos_init(PCMachineState *pcms, BusState *idebus0, BusState *idebus1,
 
   /* hard drives and FDC */
   arg.rtc_state = s;
+#ifdef BMBT
   arg.idebus[0] = idebus0;
   arg.idebus[1] = idebus1;
+#endif
   qemu_register_reset(pc_cmos_init_late, &arg);
 }
-#endif
 
 #define TYPE_PORT92 "port92"
 #define PORT92(obj) OBJECT_CHECK(Port92State, (obj), TYPE_PORT92)
@@ -1004,8 +1017,7 @@ void pc_hot_add_cpu(MachineState *ms, const int64_t id, Error **errp) {
 }
 #endif
 
-#if NEED_LATER
-static void rtc_set_cpus_count(ISADevice *rtc, uint16_t cpus_count) {
+static void rtc_set_cpus_count(RTCState *rtc, uint16_t cpus_count) {
   if (cpus_count > 0xff) {
     /* If the number of CPUs can't be represented in 8 bits, the
      * BIOS must use "FW_CFG_NB_CPUS". Set RTC field to 0 just
@@ -1016,19 +1028,17 @@ static void rtc_set_cpus_count(ISADevice *rtc, uint16_t cpus_count) {
     rtc_set_memory(rtc, 0x5f, cpus_count - 1);
   }
 }
-#endif
 
 static void pc_machine_done(Notifier *notifier, void *data) {
   PCMachineState *pcms = container_of(notifier, PCMachineState, machine_done);
   X86MachineState *x86ms = X86_MACHINE(pcms);
 
-// no extra-pci-roots
-#ifdef BMBT
   PCIBus *bus = pcms->bus;
 
   /* set the number of CPUs */
   rtc_set_cpus_count(x86ms->rtc, x86ms->boot_cpus);
 
+#ifdef BMBT
   if (bus) {
     int extra_hosts = 0;
 
@@ -1112,8 +1122,6 @@ void xen_load_linux(PCMachineState *pcms) {
 }
 #endif
 
-// @todo
-// 1. pc_memory_init need ram_memory return res
 void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
                     MemoryRegion *rom_memory, MemoryRegion **ram_memory) {
   int linux_boot, i;
@@ -1145,7 +1153,7 @@ void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
 #else
   // 1. no more memory region alias and don't allocate a single memory region
   // 2. All ram including ram_below_4g are statically allocated
-
+  *ram_memory = NULL;
 #endif
 
   e820_add_entry(0, x86ms->below_4g_mem_size, E820_RAM);
@@ -1662,11 +1670,9 @@ static void pc_cpu_plug(HotplugHandler *handler, X86CPU *cpu) {
 
   /* increment the number of CPUs */
   x86ms->boot_cpus++;
-#ifdef RTC_TODO
   if (x86ms->rtc) {
     rtc_set_cpus_count(x86ms->rtc, x86ms->boot_cpus);
   }
-#endif
   if (x86ms->fw_cfg) {
     fw_cfg_modify_i16(x86ms->fw_cfg, FW_CFG_NB_CPUS, x86ms->boot_cpus);
   }

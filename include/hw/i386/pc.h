@@ -10,6 +10,7 @@
 #include "../isa/isa.h"
 #include "ioapic.h"
 #include "x86.h"
+#include <hw/pci/pci.h>
 #include <hw/rtc/mc146818rtc.h>
 
 /* Global System Interrupts */
@@ -45,10 +46,10 @@ static inline char *sev_get_launch_measurement(void) { return NULL; }
 
 // copied build/qapi/qapi-types-common.h
 typedef enum OnOffAuto {
-    ON_OFF_AUTO_AUTO,
-    ON_OFF_AUTO_ON,
-    ON_OFF_AUTO_OFF,
-    ON_OFF_AUTO__MAX,
+  ON_OFF_AUTO_AUTO,
+  ON_OFF_AUTO_ON,
+  ON_OFF_AUTO_OFF,
+  ON_OFF_AUTO__MAX,
 } OnOffAuto;
 
 /**
@@ -72,8 +73,8 @@ typedef struct PCMachineState {
   // So, if we want to port ACPI, change acpi_dev to the real struct
   /* Pointers to devices and objects: */
   HotplugHandler *acpi_dev;
-#ifdef NEED_LATER
   PCIBus *bus;
+#ifdef NEED_LATER
   I2CBus *smbus;
   PFlashCFI01 *flash[2];
 
@@ -245,5 +246,11 @@ void pc_machine_v4_2_class_init(MachineClass *mc);
 void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
                           bool create_fdctrl, bool no_vmport, bool has_pit,
                           uint32_t hpet_irqs);
+uint64_t pc_pci_hole64_start(void);
+
+void pc_cmos_init(PCMachineState *pcms, RTCState *s);
+
+/* pc.c */
+extern int fd_bootchk;
 
 #endif /* end of include guard: PC_H_0VFJYDT2 */
