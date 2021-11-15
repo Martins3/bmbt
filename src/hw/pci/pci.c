@@ -1941,6 +1941,7 @@ static void pci_qdev_realize(PCIDevice *pci_dev, const char *name) {
   if (pc->realize) {
     pc->realize(pci_dev);
   } else {
+    printf("%s's class doesnt' register realize hook\n", pci_dev->type);
     g_assert_not_reached();
   }
 

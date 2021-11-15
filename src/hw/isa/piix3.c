@@ -351,6 +351,7 @@ PIIX3State *QOM_init_piix3(PCIBus *bus) {
 
   strcpy(piix3->dev.type, TYPE_PIIX3_DEVICE);
   PCI_DEVICE_SET_CLASS(&piix3->dev, c);
+  pci_piix3_class_init(c);
   piix3_class_init(c);
 
   piix3->dev.bus = bus;
