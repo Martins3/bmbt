@@ -19,16 +19,6 @@
 src/hw/i386/fw_cfg.c:33:#if SMBIOS_TODO
 ```
 
-```plain
-src/hw/i386/pc_piix.c:133:#if NEED_LATER
-src/hw/i386/pc_piix.c:156:#if NEED_LATER
-src/hw/i386/pc_piix.c:219:#if NEED_LATER
-src/hw/i386/fw_cfg.c:101:#ifdef NEED_LATER
-src/hw/i386/fw_cfg.c:111:#ifdef NEED_LATER
-src/i386/helper.c:397:#ifdef NEED_LATER
-src/hw/intc/ioapic.c:398:#ifdef NEED_LATER
-```
-
 应该是这里有事情被简化掉了，所以现在 x86_cpu_realizefn 中没有初始化 features 字段
 如果上面的 NEED_LATER 都修复了，但是问题还是没有解决，那么就出现了大问题了
 
@@ -51,3 +41,7 @@ CPUIRQ: pic_irqs: lower irq 0
 ```
 
 - [ ] 如何处理最后的两个 RTC_TODO
+
+- [ ] 重新 review 一下 pc_machine_device_pre_plug_cb 和 pc_machine_device_plug_cb
+  - [ ] 确认一下，真的只有是只有 cpu 和 acpi 使用吗?
+  - [ ] 为什么我感觉 pci 设备才是 hotplug 大户
