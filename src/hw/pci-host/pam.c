@@ -34,6 +34,5 @@ void pam_update(PAMMemoryRegion *pam, int idx, uint8_t val) {
   pam->current = (val >> ((!(idx & 1)) * 4)) & PAM_ATTR_MASK;
   set_pam_memory_region(pam, pam->current);
 
-  printf("huxueshi:%s pam=%d (%u -> %u)\n", __FUNCTION__, idx, prev,
-         pam->current);
+  printf("pam [%02d] (%u -> %u)\n", idx, prev, pam->current);
 }
