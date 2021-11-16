@@ -3,17 +3,6 @@
 ## 问题
 - [ ] 所以还是使用 e820 来实现探测内存吗? 那么 acpi 是做什么用的?
 
-## 在 bare-mental 上测试 seabios 的执行
-- 添加设备和中断支持
-- 了解 UEFI SDK : 按照 UEFI SDK 的方式加载程序，而不是内核的方式
-- https://github.com/tianocore/tianocore.github.io
-- apci probe
-- cache init
-- interrupt init
-- TLB refill init
-- memory probe
-- probe pci devices
-
 ## 需要处理的大块问题
 ```plain
 src/hw/i386/fw_cfg.c:33:#if SMBIOS_TODO
@@ -39,8 +28,6 @@ CPUIRQ: pic_irqs: lower irq 0
 ```c
     qemu_mutex_unlock(&timer_list->active_timers_lock);
 ```
-
-- [ ] 如何处理最后的两个 RTC_TODO
 
 - [ ] 重新 review 一下 pc_machine_device_pre_plug_cb 和 pc_machine_device_plug_cb
   - [ ] 确认一下，真的只有是只有 cpu 和 acpi 使用吗?
