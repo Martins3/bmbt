@@ -714,8 +714,8 @@ bool prepare_mmio_access(MemoryRegion *mr) {
 
 uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr) {
   uint8_t mask = 0;
-  if (mr->ram_block) {
-    mask |= (1 << DIRTY_MEMORY_MIGRATION);
+  if (memory_region_is_ram(mr)) {
+    mask |= (1 << DIRTY_MEMORY_CODE);
   }
   return mask;
 }
