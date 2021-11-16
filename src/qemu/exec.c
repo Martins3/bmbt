@@ -542,7 +542,6 @@ void cpu_address_space_init(CPUState *cpu, int asidx, const char *prefix) {
 #endif
 }
 
-// @todo remember pam / smram should trigger tcg_commit too
 void tcg_commit() {
 #ifdef BMBT
   CPUAddressSpace *cpuas;
