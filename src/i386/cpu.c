@@ -27,14 +27,14 @@ struct CPUID2CacheDescriptorInfo {
   int associativity;
 };
 
-// @todo compare the features before calling x86_cpu_apic_create in 32bit mode
-static inline void show_features(X86CPU *cpu) {
+static inline void check_features(X86CPU *cpu) {
+  long int standard_features_birmap[] = {
+      0x781abfd, 0x80000001, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0,         0,          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   CPUX86State *env = &cpu->env;
-  int w;
-  for (w = 0; w < FEATURE_WORDS; w++) {
-    printf("%lx ", env->features[w]);
+  for (int w = 0; w < FEATURE_WORDS; w++) {
+    assert(env->features[w] == standard_features_birmap[w]);
   }
-  printf("huxueshi:%s \n", __FUNCTION__);
 }
 
 /*
@@ -4770,6 +4770,7 @@ out:
     return;
   }
 #endif
+  check_features(cpu);
 }
 
 static void x86_cpu_unrealizefn(X86CPU *cpu) {
