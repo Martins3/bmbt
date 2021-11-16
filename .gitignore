@@ -3,6 +3,7 @@
 *.txt
 *.bin
 *.d
+*.org
 build_x86
 build_loongson
 
@@ -13,3 +14,5 @@ build_loongson
 compile_commands.json
 *.json.gz
 .vscode/
+
+debug.md
