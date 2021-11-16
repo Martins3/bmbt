@@ -44,8 +44,6 @@ static uint64_t debugcon_ioport_read(void *opaque, hwaddr addr,
                                      unsigned width) {
   DebugconState *s = opaque;
 
-  g_assert_not_reached();
-
 #ifdef DEBUG_DEBUGCON
   printf("debugcon: read addr=0x%04" HWADDR_PRIx "\n", addr);
 #endif
