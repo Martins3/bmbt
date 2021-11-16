@@ -3,6 +3,7 @@
 <!-- vim-markdown-toc GitLab -->
 
 - [tcg_register_thread](#tcg_register_thread)
+- [多核编程需要增加考虑的事情](#多核编程需要增加考虑的事情)
 
 <!-- vim-markdown-toc -->
 
@@ -12,7 +13,7 @@
     - 在 xqm 中 tcg_context_init 和 tcg_x86_init 不在需要调用 temp_idx, temp_tcgv_i32 和 tcgv_i32_temp 了，这实际上让 tcg_ctx 的初始化仅仅在 tcg_register_thread 中的
 
 ## tcg_register_thread
-commit-id:5fa309397ae8481eb 的 tcg_register_thread 
+commit-id:5fa309397ae8481eb 的 tcg_register_thread
 ```c
 void tcg_register_thread(void) {
   MachineState *ms = qdev_get_machine();
@@ -38,3 +39,6 @@ void tcg_register_thread(void) {
   qemu_mutex_unlock(&region.lock);
 }
 ```
+
+## 多核编程需要增加考虑的事情
+- soft tlb 的访问
