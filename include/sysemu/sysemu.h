@@ -22,7 +22,10 @@ static inline char *get_boot_devices_list(size_t *size) {
   return boot_list;
 }
 
-static inline char *get_boot_devices_lchs_list(size_t *size) { return NULL; }
+static inline char *get_boot_devices_lchs_list(size_t *size) {
+  *size = 0;
+  return NULL;
+}
 
 extern int boot_menu;
 
