@@ -580,6 +580,8 @@ static uint64_t cmos_ioport_read(void *opaque, hwaddr addr, unsigned size) {
 void rtc_set_memory(RTCState *s, int addr, int val) {
   if (addr >= 0 && addr <= 127)
     s->cmos_data[addr] = val;
+  else
+    g_assert_not_reached();
 }
 
 int rtc_get_memory(RTCState *s, int addr) {
