@@ -23,10 +23,10 @@ static void pc_init1(MachineState *machine, const char *host_type,
   GSIState *gsi_state;
   // DriveInfo *hd[MAX_IDE_BUS * MAX_IDE_DEVS];
   // BusState *idebus[MAX_IDE_BUS];
-  RTCState *rtc_state;
-  MemoryRegion *ram_memory;
+  RTCState *rtc_state = NULL;
+  MemoryRegion *ram_memory = NULL;
   MemoryRegion *pci_memory = NULL;
-  MemoryRegion *rom_memory;
+  MemoryRegion *rom_memory = NULL;
   ram_addr_t lowmem;
 
   /*

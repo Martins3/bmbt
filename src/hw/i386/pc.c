@@ -1456,7 +1456,7 @@ void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
   i8257_dma_init(isa_bus, 0);
 #endif
 
-  mc146818_rtc_init(2000, gsi[8]);
+  *rtc_state = mc146818_rtc_init(2000, gsi[8]);
 
   /* Super I/O */
   pc_superio_init(isa_bus, create_fdctrl, no_vmport);
