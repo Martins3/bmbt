@@ -1,6 +1,5 @@
 #include "../../include/qemu/host-utils.h"
 #include <assert.h>
-#include <unistd.h>
 
 int qemu_icache_linesize = 0;
 int qemu_icache_linesize_log;
@@ -8,14 +7,19 @@ int qemu_dcache_linesize = 0;
 int qemu_dcache_linesize_log;
 
 static void sys_cache_info(int *isize, int *dsize) {
-  // @todo of course we will port it
-  // 1. before make, run a shell get  _SC_LEVEL1_ICACHE_LINESIZE = 0x64
-  // 2. compile it with -D_SC_LEVEL1_ICACHE_LINESIZE=0x64
+  // @todo reimplement cache info in kernle mode
+  // typically icache size and dcache size are 64 byte
+  // get cache info in bare metal is difficult
 #ifdef _SC_LEVEL1_ICACHE_LINESIZE
   *isize = sysconf(_SC_LEVEL1_ICACHE_LINESIZE);
+#else
+  *isize = 64;
 #endif
+
 #ifdef _SC_LEVEL1_DCACHE_LINESIZE
   *dsize = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+#else
+  *isize = 64;
 #endif
 }
 
