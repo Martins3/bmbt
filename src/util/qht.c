@@ -76,10 +76,8 @@
 
 //#define QHT_DEBUG
 
-static inline void qemu_vfree(void *ptr) {
-  // @todo put it here temporarily, fix it later
-  free(ptr);
-}
+// originally put it util/oslib-posix.c, only used by qht
+static inline void qemu_vfree(void *ptr) { free(ptr); }
 /*
  * We want to avoid false sharing of cache lines. Most systems have 64-byte
  * cache lines so we go with it for simplicity.
