@@ -732,6 +732,9 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
     new_blocks->blocks[j] = bitmap_new(DIRTY_MEMORY_BLOCK_SIZE);
   }
   ram_list.dirty_memory[DIRTY_MEMORY_CODE] = new_blocks;
+
+  cpu_physical_memory_set_dirty_range(0, total_ram_size,
+                                      1 << DIRTY_MEMORY_CODE);
 }
 
 static char __pc_bios[PC_BIOS_IMG_SIZE];
