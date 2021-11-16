@@ -93,6 +93,8 @@ static void i440fx_update_memory_mappings(PCII440FXState *d) {
 
   smram_region_set_enabled(!(pd->config[I440FX_SMRAM] & SMRAM_D_OPEN));
   smram_set_enabled(pd->config[I440FX_SMRAM] & SMRAM_G_SMRAME);
+
+  tcg_commit();
 #ifdef BMBT
   memory_region_set_enabled(&d->smram_region,
                             !(pd->config[I440FX_SMRAM] & SMRAM_D_OPEN));
