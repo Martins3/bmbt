@@ -21,7 +21,13 @@ $(error "kernel path not setup, create kernel.mak and set KERNEL_PATH in it")
 endif
 
 # ================================= glib =======================================
+# lglib=1 to use local glib
+ifeq ($(glib), 0)
 GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
+$(info use system glib)
+else
+$(info use local glib)
+endif
 GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
 # @todo libgcc is absolute path
 # github action will not work with the absolute path
