@@ -415,8 +415,6 @@ bool memory_region_access_valid(MemoryRegion *mr, hwaddr addr, unsigned size,
 
   access_size = MAX(MIN(size, access_size_max), access_size_min);
   for (i = 0; i < size; i += access_size) {
-    // @todo mem review code here
-    // why we need accepts
     if (!mr->ops->valid.accepts(mr->opaque, addr + i, access_size, is_write,
                                 attrs)) {
       return false;
