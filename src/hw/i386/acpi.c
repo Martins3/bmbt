@@ -1,3 +1,3 @@
 void acpi_setup(void) {
-  // @todo
+  // @todo acpi
 }

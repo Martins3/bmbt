@@ -27,7 +27,7 @@ const char *fw_cfg_arch_key_name(uint16_t key) {
 }
 
 void fw_cfg_build_smbios(MachineState *ms, FWCfgState *fw_cfg) {
-  // @todo port smbios later
+  // @todo smbios
 }
 
 #if SMBIOS_TODO
