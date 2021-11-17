@@ -172,7 +172,7 @@ enum {
 /* Bits in cap_present field. */
 enum {
 // if anyone reference msi, don't forget to modify
-// pci_default_write_config
+// pci_default_write_config and QEMU_PCI_CAP_MSI
 #ifdef BMBT
   QEMU_PCI_CAP_MSI = 0x1,
   QEMU_PCI_CAP_MSIX = 0x2,
@@ -494,6 +494,7 @@ PCIDevice *pci_nic_init_nofail(NICInfo *nd, PCIBus *rootbus,
 PCIDevice *pci_vga_init(PCIBus *bus);
 
 static inline PCIBus *pci_get_bus(const PCIDevice *dev) {
+  // [interface 45]
   assert(dev->bus);
   return dev->bus;
 }

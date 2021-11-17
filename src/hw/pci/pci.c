@@ -240,7 +240,6 @@ int pci_bus_get_irq_level(PCIBus *bus, int irq_num) {
   return !!bus->irq_count[irq_num];
 }
 
-#ifdef BMBT
 /* Update interrupt status bit in config space on interrupt
  * state change. */
 static void pci_update_irq_status(PCIDevice *dev) {
@@ -288,10 +287,14 @@ static void pci_do_device_reset(PCIDevice *dev) {
   }
   pci_update_mappings(dev);
 
+  // maybe, need later
+#ifdef BMBT
   msi_reset(dev);
   msix_reset(dev);
+#endif
 }
 
+#ifdef BMBT
 /*
  * This function is called on #RST and FLR.
  * FLR if PCI_EXP_DEVCTL_BCR_FLR is set
@@ -300,14 +303,16 @@ void pci_device_reset(PCIDevice *dev) {
   qdev_reset_all(&dev->qdev);
   pci_do_device_reset(dev);
 }
+#endif
 
 /*
  * Trigger pci bus reset under a given bus.
  * Called via qbus_reset_all on RST# assert, after the devices
  * have been reset qdev_reset_all-ed already.
  */
-static void pcibus_reset(BusState *qbus) {
-  PCIBus *bus = DO_UPCAST(PCIBus, qbus, qbus);
+static PCIBus __pci_bus;
+void pcibus_reset() {
+  PCIBus *bus = &__pci_bus;
   int i;
 
   for (i = 0; i < ARRAY_SIZE(bus->devices); ++i) {
@@ -321,6 +326,7 @@ static void pcibus_reset(BusState *qbus) {
   }
 }
 
+#ifdef BMBT
 static void pci_host_bus_register(DeviceState *host) {
   PCIHostState *host_bridge = PCI_HOST_BRIDGE(host);
 
@@ -400,7 +406,6 @@ void pci_root_bus_new_inplace(PCIBus *bus, size_t bus_size, DeviceState *parent,
 }
 #endif
 
-static PCIBus __pci_bus;
 PCIBus *pci_root_bus_new(DeviceState *parent, const char *name,
                          MemoryRegion *address_space_mem,
                          MemoryRegion *address_space_io, uint8_t devfn_min,
@@ -1273,9 +1278,12 @@ void pci_default_write_config(PCIDevice *d, uint32_t addr, uint32_t val_in,
     pci_update_mappings(d);
 
   if (range_covers_byte(addr, l, PCI_COMMAND)) {
-    g_assert_not_reached();
+    printf("%s %s memory mappings\n",
+           pci_get_word(d->config + PCI_COMMAND) & PCI_COMMAND_MASTER
+               ? "enable"
+               : "disable",
+           d->type);
     pci_update_irq_disabled(d, was_irq_disabled);
-    // I don't think we should emulate pci devices except i440fx and piix3
 #ifdef BMBT
     memory_region_set_enabled(&d->bus_master_enable_region,
                               pci_get_word(d->config + PCI_COMMAND) &
@@ -1289,7 +1297,6 @@ void pci_default_write_config(PCIDevice *d, uint32_t addr, uint32_t val_in,
 #endif
 }
 
-#ifdef BMBT
 /***********************************************************/
 /* generic PCI irq support */
 
@@ -1309,6 +1316,7 @@ static void pci_irq_handler(void *opaque, int irq_num, int level) {
   pci_change_irq_level(pci_dev, irq_num, change);
 }
 
+#ifdef BMBT
 static inline int pci_intx(PCIDevice *pci_dev) {
   return pci_get_byte(pci_dev->config + PCI_INTERRUPT_PIN) - 1;
 }
