@@ -214,7 +214,9 @@ ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr) {
   return mr->ram_block ? mr->ram_block->offset : RAM_ADDR_INVALID;
 }
 
-static MemoryRegion iotlb_mr = {};
+static MemoryRegion __iotlb_mr = {};
+
+bool is_iotlb_mr(MemoryRegion *mr) { return mr == &__iotlb_mr; }
 
 // attrs and prot are used for iommu
 MemoryRegion *address_space_translate_for_iotlb(CPUState *cpu, int asidx,
@@ -232,8 +234,10 @@ MemoryRegion *address_space_translate_for_iotlb(CPUState *cpu, int asidx,
     }
   }
   if (!is_ram) {
+    // memory reion look up take up in io_readx and io_writex
+    // plen and xlat is unused
     *plen = TARGET_PAGE_SIZE;
-    return &iotlb_mr;
+    return &__iotlb_mr;
   }
   AddressSpace *as = cpu->cpu_ases[asidx].as;
   return as->mr_look_up(as, addr, xlat, plen);
