@@ -4659,8 +4659,8 @@ void x86_cpu_realizefn(X86CPU *cpu) {
 
   /* Cache information initialization */
   if (!cpu->legacy_cache) {
+    g_assert_not_reached();
     if (!xcc->model || !xcc->model->cpudef->cache_info) {
-      g_assert_not_reached();
 #ifdef BMBT
       char *name = x86_cpu_class_get_model_name(xcc);
       error_setg(errp, "CPU model '%s' doesn't support legacy-cache=off", name);
@@ -4944,6 +4944,37 @@ static void x86_cpu_initfn(X86CPU *cpu) {
   env->nr_dies = 1;
   cpu_set_cpustate_pointers(cpu);
 
+  // use x86_cpu_properties to initialize function
+  cpu->apic_id = UNASSIGNED_APIC_ID;
+  cpu->thread_id = -1;
+  cpu->core_id = -1;
+  cpu->die_id = -1;
+  cpu->socket_id = -1;
+  cpu->node_id = CPU_UNSET_NUMA_NODE_ID;
+  cpu->enable_pmu = false;
+
+  cpu->check_cpuid = true;
+  cpu->enforce_cpuid = false;
+  cpu->force_features = false;
+  cpu->expose_kvm = true;
+  cpu->host_phys_bits = false;
+  cpu->host_phys_bits_limit = false;
+  cpu->fill_mtrr_mask = true;
+  cpu->env.cpuid_level_func7 = UINT32_MAX;
+  cpu->env.cpuid_level = UINT32_MAX;
+  cpu->env.cpuid_xlevel = UINT32_MAX;
+  cpu->env.cpuid_xlevel2 = UINT32_MAX;
+  cpu->env.cpuid_min_level = 0;
+  cpu->env.cpuid_min_xlevel = 0;
+  cpu->env.cpuid_min_xlevel2 = 0;
+  cpu->full_cpuid_auto_level = true;
+  cpu->enable_cpuid_0xb = true;
+  cpu->enable_lmce = false;
+  cpu->enable_l3_cache = true;
+  cpu->expose_tcg = false;
+  cpu->migrate_smi_count = true;
+  cpu->legacy_cache = true;
+
   // In x86_cpu_load_model, first five properties are accessed directly.
   // Last three properties are useless
 #ifdef BMBT
@@ -5170,59 +5201,16 @@ void x86_update_hflags(CPUX86State *env) {
   env->hflags = hflags;
 }
 
-// FIXME check this one by one
 #ifdef BMBT
 static Property x86_cpu_properties[] = {
-#ifdef CONFIG_USER_ONLY
-    /* apic_id = 0 by default for *-user, see commit 9886e834 */
-    DEFINE_PROP_UINT32("apic-id", X86CPU, apic_id, 0),
-    DEFINE_PROP_INT32("thread-id", X86CPU, thread_id, 0),
-    DEFINE_PROP_INT32("core-id", X86CPU, core_id, 0),
-    DEFINE_PROP_INT32("die-id", X86CPU, die_id, 0),
-    DEFINE_PROP_INT32("socket-id", X86CPU, socket_id, 0),
-#else
+    // x86_cpu_new
     DEFINE_PROP_UINT32("apic-id", X86CPU, apic_id, UNASSIGNED_APIC_ID),
     DEFINE_PROP_INT32("thread-id", X86CPU, thread_id, -1),
     DEFINE_PROP_INT32("core-id", X86CPU, core_id, -1),
     DEFINE_PROP_INT32("die-id", X86CPU, die_id, -1),
     DEFINE_PROP_INT32("socket-id", X86CPU, socket_id, -1),
-#endif
     DEFINE_PROP_INT32("node-id", X86CPU, node_id, CPU_UNSET_NUMA_NODE_ID),
     DEFINE_PROP_BOOL("pmu", X86CPU, enable_pmu, false),
-
-    DEFINE_PROP_UINT32("hv-spinlocks", X86CPU, hyperv_spinlock_attempts,
-                       HYPERV_SPINLOCK_NEVER_RETRY),
-    DEFINE_PROP_BIT64("hv-relaxed", X86CPU, hyperv_features,
-                      HYPERV_FEAT_RELAXED, 0),
-    DEFINE_PROP_BIT64("hv-vapic", X86CPU, hyperv_features, HYPERV_FEAT_VAPIC,
-                      0),
-    DEFINE_PROP_BIT64("hv-time", X86CPU, hyperv_features, HYPERV_FEAT_TIME, 0),
-    DEFINE_PROP_BIT64("hv-crash", X86CPU, hyperv_features, HYPERV_FEAT_CRASH,
-                      0),
-    DEFINE_PROP_BIT64("hv-reset", X86CPU, hyperv_features, HYPERV_FEAT_RESET,
-                      0),
-    DEFINE_PROP_BIT64("hv-vpindex", X86CPU, hyperv_features,
-                      HYPERV_FEAT_VPINDEX, 0),
-    DEFINE_PROP_BIT64("hv-runtime", X86CPU, hyperv_features,
-                      HYPERV_FEAT_RUNTIME, 0),
-    DEFINE_PROP_BIT64("hv-synic", X86CPU, hyperv_features, HYPERV_FEAT_SYNIC,
-                      0),
-    DEFINE_PROP_BIT64("hv-stimer", X86CPU, hyperv_features, HYPERV_FEAT_STIMER,
-                      0),
-    DEFINE_PROP_BIT64("hv-frequencies", X86CPU, hyperv_features,
-                      HYPERV_FEAT_FREQUENCIES, 0),
-    DEFINE_PROP_BIT64("hv-reenlightenment", X86CPU, hyperv_features,
-                      HYPERV_FEAT_REENLIGHTENMENT, 0),
-    DEFINE_PROP_BIT64("hv-tlbflush", X86CPU, hyperv_features,
-                      HYPERV_FEAT_TLBFLUSH, 0),
-    DEFINE_PROP_BIT64("hv-evmcs", X86CPU, hyperv_features, HYPERV_FEAT_EVMCS,
-                      0),
-    DEFINE_PROP_BIT64("hv-ipi", X86CPU, hyperv_features, HYPERV_FEAT_IPI, 0),
-    DEFINE_PROP_BIT64("hv-stimer-direct", X86CPU, hyperv_features,
-                      HYPERV_FEAT_STIMER_DIRECT, 0),
-    DEFINE_PROP_ON_OFF_AUTO("hv-no-nonarch-coresharing", X86CPU,
-                            hyperv_no_nonarch_cs, ON_OFF_AUTO_OFF),
-    DEFINE_PROP_BOOL("hv-passthrough", X86CPU, hyperv_passthrough, false),
 
     DEFINE_PROP_BOOL("check", X86CPU, check_cpuid, true),
     DEFINE_PROP_BOOL("enforce", X86CPU, enforce_cpuid, false),
@@ -5242,39 +5230,20 @@ static Property x86_cpu_properties[] = {
     DEFINE_PROP_UINT32("min-xlevel2", X86CPU, env.cpuid_min_xlevel2, 0),
     DEFINE_PROP_BOOL("full-cpuid-auto-level", X86CPU, full_cpuid_auto_level,
                      true),
-    DEFINE_PROP_STRING("hv-vendor-id", X86CPU, hyperv_vendor_id),
+    // DEFINE_PROP_STRING("hv-vendor-id", X86CPU, hyperv_vendor_id),
     DEFINE_PROP_BOOL("cpuid-0xb", X86CPU, enable_cpuid_0xb, true),
     DEFINE_PROP_BOOL("lmce", X86CPU, enable_lmce, false),
     DEFINE_PROP_BOOL("l3-cache", X86CPU, enable_l3_cache, true),
-    DEFINE_PROP_BOOL("kvm-no-smi-migration", X86CPU, kvm_no_smi_migration,
-                     false),
-    DEFINE_PROP_BOOL("vmware-cpuid-freq", X86CPU, vmware_cpuid_freq, true),
+    // DEFINE_PROP_BOOL("kvm-no-smi-migration", X86CPU, kvm_no_smi_migration,
+    // false),
+    // DEFINE_PROP_BOOL("vmware-cpuid-freq", X86CPU, vmware_cpuid_freq, true),
     DEFINE_PROP_BOOL("tcg-cpuid", X86CPU, expose_tcg, true),
     DEFINE_PROP_BOOL("x-migrate-smi-count", X86CPU, migrate_smi_count, true),
     /*
      * lecacy_cache defaults to true unless the CPU model provides its
      * own cache information (see x86_cpu_load_def()).
      */
-    DEFINE_PROP_BOOL("legacy-cache", X86CPU, legacy_cache, true),
-
-    /*
-     * From "Requirements for Implementing the Microsoft
-     * Hypervisor Interface":
-     * https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/reference/tlfs
-     *
-     * "Starting with Windows Server 2012 and Windows 8, if
-     * CPUID.40000005.EAX contains a value of -1, Windows assumes that
-     * the hypervisor imposes no specific limit to the number of VPs.
-     * In this case, Windows Server 2012 guest VMs may use more than
-     * 64 VPs, up to the maximum supported number of processors applicable
-     * to the specific Windows version being used."
-     */
-    DEFINE_PROP_INT32("x-hv-max-vps", X86CPU, hv_max_vps, -1),
-    DEFINE_PROP_BOOL("x-hv-synic-kvm-only", X86CPU, hyperv_synic_kvm_only,
-                     false),
-    DEFINE_PROP_BOOL("x-intel-pt-auto-level", X86CPU, intel_pt_auto_level,
-                     true),
-    DEFINE_PROP_END_OF_LIST()};
+    DEFINE_PROP_BOOL("legacy-cache", X86CPU, legacy_cache, true)};
 #endif
 
 void tcg_x86_init(void) {
