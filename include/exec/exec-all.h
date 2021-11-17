@@ -439,6 +439,7 @@ void tlb_set_dirty(CPUState *cpu, target_ulong vaddr);
 /* exec.c */
 void tb_flush_jmp_cache(CPUState *cpu, target_ulong addr);
 
+bool is_iotlb_mr(MemoryRegion *mr);
 MemoryRegion *address_space_translate_for_iotlb(CPUState *cpu, int asidx,
                                                 hwaddr addr, hwaddr *xlat,
                                                 hwaddr *plen, MemTxAttrs attrs,
