@@ -3,6 +3,7 @@
 
 #include "../../glib/gmem.h"
 #include "../types.h"
+#include <signal.h>
 #include <sys/time.h>
 
 #define NANOSECONDS_PER_SECOND 1000000000LL
