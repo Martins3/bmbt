@@ -3,7 +3,9 @@
 
 #include "../../src/tcg/glib_stub.h"
 #include "../types.h"
+#include <signal.h>
 #include <sys/time.h>
+#include <time.h>
 
 #define NANOSECONDS_PER_SECOND 1000000000LL
 

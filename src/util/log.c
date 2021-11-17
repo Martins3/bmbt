@@ -1,4 +1,5 @@
 #include "../../include/qemu/log.h"
+#include <string.h>
 
 // [interface 29]
 FILE *qemu_logfile;
