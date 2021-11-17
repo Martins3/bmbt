@@ -181,7 +181,7 @@ void mmio_add_memory_region(const hwaddr offset, MemoryRegion *mr) {
   duck_check(offset != 0 && mr->offset == 0);
   duck_check(!memory_region_is_ram(mr));
   mr->offset = offset;
-  as_add_memory_regoin(address_space_io.dispatch, mr);
+  as_add_memory_regoin(address_space_memory.dispatch, mr);
 }
 
 void mem_add_memory_region(MemoryRegion *mr) {
