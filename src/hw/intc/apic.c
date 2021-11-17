@@ -751,7 +751,7 @@ static const MemoryRegionOps apic_io_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
 
-// FIXME put msi_nonbroken here temporarily, maybe we never need it
+// put here temporarily, if msi is needed, move it to msi.c
 bool msi_nonbroken = false;
 
 static void apic_realize(APICCommonState *s) {
