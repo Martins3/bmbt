@@ -1,5 +1,5 @@
 #ifndef _TRANSLATE_H_
-#define _TAANSLATE_H_
+#define _TRANSLATE_H_
 
 #include "../include/common.h"
 #include "../ir1/ir1.h"
