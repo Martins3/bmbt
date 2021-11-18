@@ -17,6 +17,7 @@
 #include "acpi-build.h"
 #include "e820_memory_layout.h"
 #include <hw/rtc/mc146818rtc.h>
+#include <hw/timer/i8254.h>
 
 /* debug PC/ISA interrupts */
 #define DEBUG_IRQ
@@ -1388,13 +1389,14 @@ static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
 void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
                           bool create_fdctrl, bool no_vmport, bool has_pit,
                           uint32_t hpet_irqs) {
+
+  ISADevice *pit = NULL;
 #ifdef NEED_LATER
   int i;
   DeviceState *hpet = NULL;
   int pit_isa_irq = 0;
   qemu_irq pit_alt_irq = NULL;
   qemu_irq rtc_irq = NULL;
-  ISADevice *pit = NULL;
   MemoryRegion *ioport80_io = g_new(MemoryRegion, 1);
   MemoryRegion *ioportF0_io = g_new(MemoryRegion, 1);
 
@@ -1455,6 +1457,9 @@ void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
 
   i8257_dma_init(isa_bus, 0);
 #endif
+
+  // @todo this is a temporary fix, maybe we need to port hpet later
+  pit = i8254_pit_init(isa_bus, 0x40, -1, gsi[0]);
 
   *rtc_state = mc146818_rtc_init(2000, gsi[8]);
 
