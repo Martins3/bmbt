@@ -38,6 +38,7 @@
 
 #define PIT_CLASS(class) OBJECT_CLASS_CHECK(PITClass, (class), TYPE_I8254)
 
+// [interface 47]
 #ifdef BMBT
 typedef struct PITClass {
   PITCommonClass parent_class;
@@ -386,8 +387,8 @@ ISADevice *i8254_pit_init(ISABus *bus, int base, int isa_irq,
   PITCommonState *pit = &__pit;
   PITCommonClass *pcc = &__pcc;
   pit->iobase = base;
-  pit_common_realize(pit);
   pit_realizefn(pit);
+  pit_common_realize(pit);
   pit_class_initfn(pcc);
   PIT_COMMON_SET_CLASS(pit, pcc);
 

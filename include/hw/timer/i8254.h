@@ -55,4 +55,6 @@ void pit_set_gate(PITCommonState *pit, int channel, int val);
 void pit_get_channel_info(PITCommonState *pit, int channel,
                           PITChannelInfo *info);
 
+ISADevice *i8254_pit_init(ISABus *bus, int base, int isa_irq, qemu_irq alt_irq);
+
 #endif /* HW_I8254_H */
