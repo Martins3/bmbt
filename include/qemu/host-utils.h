@@ -16,6 +16,11 @@ static inline int clz64(uint64_t val) {
   return val ? __builtin_clzll(val) : 64;
 }
 
+/* compute with 96 bit intermediate result: (a*b)/c */
+static inline uint64_t muldiv64(uint64_t a, uint32_t b, uint32_t c) {
+  return (__int128_t)a * b / c;
+}
+
 /*
  * Return @value rounded up to the nearest power of two modulo 2^64.
  * This is *zero* for @value > 2^63, so be careful.

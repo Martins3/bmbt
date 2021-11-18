@@ -66,6 +66,7 @@ void iopaic_reset();
 void rtc_resetdev();
 void port92_reset();
 void pcibus_reset();
+void pit_reset();
 
 // DeviceClass::reset
 void qbus_reset_all_fn(void *opaque) {
@@ -76,6 +77,7 @@ void qbus_reset_all_fn(void *opaque) {
   rtc_resetdev();
   port92_reset();
   pcibus_reset();
+  pit_reset();
 }
 
 /*
