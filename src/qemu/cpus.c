@@ -509,8 +509,6 @@ static int64_t cpu_get_clock_locked(void) {
   time = timers_state.cpu_clock_offset;
   if (timers_state.cpu_ticks_enabled) {
     time += get_clock();
-  } else {
-    g_assert_not_reached();
   }
 
   return time;
