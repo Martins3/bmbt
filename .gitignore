@@ -16,3 +16,6 @@ compile_commands.json
 .vscode/
 
 debug.md
+
+kernel.mak
+image/bzImage

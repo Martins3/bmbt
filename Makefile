@@ -16,6 +16,11 @@ BUILD_DIR := $(BASE_DIR)/$(ARCH_BUILD)
 bmbt := $(BUILD_DIR)/bmbt.bin
 LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 
+include ./kernel.mak
+ifeq (, $(KERNEL_PATH))
+$(error "kernel path not setup, create kernel.mak and set KERNEL_PATH in it")
+endif
+
 # ================================= glib =======================================
 GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
 GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
@@ -87,6 +92,9 @@ check-and-reinit-submodules:
             git submodule update --init; \
 	fi
 
+kernel:
+	$(MAKE) -C $(KERNEL_PATH)
+	@cp $(KERNEL_PATH)/arch/x86/boot/bzImage image/bzImage
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86
