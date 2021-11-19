@@ -94,6 +94,7 @@ check-and-reinit-submodules:
 
 kernel:
 	$(MAKE) -C $(KERNEL_PATH)
+	@mkdir -p image
 	@cp $(KERNEL_PATH)/arch/x86/boot/bzImage image/bzImage
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
