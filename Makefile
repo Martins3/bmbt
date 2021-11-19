@@ -45,25 +45,25 @@ linker_script := src/linker.ld
 # assembly_source_files := src/head.S
 assembly_source_files :=
 
-c_source_files += $(wildcard src/*.c)
-c_source_files += $(wildcard src/tcg/*.c)
-c_source_files += $(wildcard src/hw/*/*.c)
-c_source_files += $(wildcard src/fpu/*.c)
-c_source_files += $(wildcard src/qemu/*.c)
-c_source_files += $(wildcard src/util/*.c)
-c_source_files += $(wildcard src/test/*.c)
-c_source_files += $(wildcard src/i386/*.c)
+C_SRC_FILES += $(wildcard src/*.c)
+C_SRC_FILES += $(wildcard src/tcg/*.c)
+C_SRC_FILES += $(wildcard src/hw/*/*.c)
+C_SRC_FILES += $(wildcard src/fpu/*.c)
+C_SRC_FILES += $(wildcard src/qemu/*.c)
+C_SRC_FILES += $(wildcard src/util/*.c)
+C_SRC_FILES += $(wildcard src/test/*.c)
+C_SRC_FILES += $(wildcard src/i386/*.c)
 
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
 include ./src/i386/Makefile.objs
 LATX_SRC=$(addprefix src/i386/, $(obj-y))
-c_source_files += $(LATX_SRC)
+C_SRC_FILES += $(LATX_SRC)
 
-assembly_object_files := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
-c_object_files := $(c_source_files:%.c=$(BUILD_DIR)/%.o)
+ASSEMBLY_OBJ_FILES := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
+C_OBJ_FILES := $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
 
-obj_files := $(assembly_object_files) $(c_object_files)
+OBJ_FILES := $(ASSEMBLY_OBJ_FILES) $(C_OBJ_FILES)
 
 CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use # 暂时不使用 iwyu
 CXX=gcc
@@ -75,10 +75,10 @@ RANLIB=ranlib
 
 DEF = ../../qemu_bak/vmlinux
 
-dependency_files = $(obj_files:%.o=%.d)
+dependency_files = $(OBJ_FILES:%.o=%.d)
 
 # $(info GCC=$(GCC))
-# $(info obj_files=$(obj_files))
+# $(info OBJ_FILES=$(OBJ_FILES))
 # $(info dependency_files=$(dependency_files))
 # $(info $(BASE_DIR))
 
@@ -120,30 +120,30 @@ $(BUILD_DIR)/%.o: %.S
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
-$(bmbt) : $(obj_files) capstone
+$(bmbt) : $(OBJ_FILES) capstone
 		@mkdir -p $(@D)
 		@echo "  Link    $@"
-		@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(bmbt)
+		@$(GCC) $(OBJ_FILES) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(bmbt)
 
-# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(bmbt) $(obj_files)
+# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(bmbt) $(OBJ_FILES)
 
 
 .PHONY: all clean gdb run gcov clear_gcda test
 
-gcov_out=$(ARCH_BUILD)/gcov
-gcov_info=$(gcov_out)/bmbt_coverage.info
-gcov_merge_info=$(gcov_out)/bmbt_merge.info
+GCOV_OUT=$(ARCH_BUILD)/gcov
+GCOV_INFO=$(GCOV_OUT)/bmbt_coverage.info
+GCOV_MERGE_INFO=$(GCOV_OUT)/bmbt_merge.info
 
 gcov:
-	@mkdir -p $(gcov_out)
-	lcov -capture --directory $(ARCH_BUILD) --output-file $(gcov_info)
-	if [[ -e $(gcov_merge_info) ]]; then\
-		lcov -a $(gcov_merge_info) -a $(gcov_info) -d $(ARCH_BUILD) -o $(gcov_merge_info); \
+	@mkdir -p $(GCOV_OUT)
+	lcov -capture --directory $(ARCH_BUILD) --output-file $(GCOV_INFO)
+	if [[ -e $(GCOV_MERGE_INFO) ]]; then\
+		lcov -a $(GCOV_MERGE_INFO) -a $(GCOV_INFO) -d $(ARCH_BUILD) -o $(gcov_merge_info); \
 	else \
-		lcov -a $(gcov_info) -d $(ARCH_BUILD) -o $(gcov_merge_info); \
+		lcov -a $(GCOV_INFO) -d $(ARCH_BUILD) -o $(GCOV_MERGE_INFO); \
 	fi
-	genhtml $(gcov_merge_info) --output-directory $(gcov_out)
-	# microsoft-edge $(gcov_out)/index.html
+	genhtml $(GCOV_MERGE_INFO) --output-directory $(GCOV_OUT)
+	# microsoft-edge $(GCOV_OUT)/index.html
 
 clean:
 	rm -r $(BUILD_DIR)
