@@ -13,7 +13,7 @@ endif
 
 BASE_DIR := $(shell pwd)
 BUILD_DIR := $(BASE_DIR)/$(ARCH_BUILD)
-kernel := $(BUILD_DIR)/kernel.bin
+bmbt := $(BUILD_DIR)/bmbt.bin
 LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 
 # ================================= glib =======================================
@@ -77,7 +77,7 @@ dependency_files = $(obj_files:%.o=%.d)
 # $(info dependency_files=$(dependency_files))
 # $(info $(BASE_DIR))
 
-all: check-and-reinit-submodules capstone $(kernel)
+all: check-and-reinit-submodules capstone $(bmbt)
 
 # https://stackoverflow.com/questions/52337010/automatic-initialization-and-update-of-submodules-in-makefile
 .PHONY: check-and-reinit-submodules capstone seabios
@@ -112,12 +112,12 @@ $(BUILD_DIR)/%.o: %.S
 	@echo "  CC      $<"
 
 # Actual target of the binary - depends on all .o files.
-$(kernel) : $(obj_files) capstone
+$(bmbt) : $(obj_files) capstone
 		@mkdir -p $(@D)
 		@echo "  Link    $@"
-		@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(kernel)
+		@$(GCC) $(obj_files) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(bmbt)
 
-# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(kernel) $(obj_files)
+# $(LD) $(CFLAGS) -n -T $(linker_script) -o $(bmbt) $(obj_files)
 
 
 .PHONY: all clean gdb run gcov clear_gcda test
@@ -144,20 +144,20 @@ clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
 
 run: all clear_gcda
-	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel)
+	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt)
 	@# only test work in process
-	$(kernel) -s wip
+	$(bmbt) -s wip
 
 compile: all
 	$(MAKE) -C seabios
 
 test: all clear_gcda
-	$(kernel)
+	$(bmbt)
 
 
 gdb: all
-	@#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(DEF)
-	gdb --args $(kernel)
+	@#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(DEF)
+	gdb --args $(bmbt)
 
-defrun: $(kernel)
-	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -kernel $(kernel) $(DEF)
+defrun: $(bmbt)
+	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt) $(DEF)
