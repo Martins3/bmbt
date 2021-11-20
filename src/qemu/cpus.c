@@ -47,7 +47,7 @@ static void cpu_handle_guest_debug(CPUState *cpu) {
  * callers directly, instead of funneling them all through a single function.
  */
 void qemu_mutex_lock_iothread_impl(const char *file, int line) {
-  printf("locked %s:%d\n", file, line);
+  // printf("locked %s:%d\n", file, line);
   g_assert(!qemu_mutex_iothread_locked());
   qemu_mutex_lock(&qemu_global_mutex);
   // [interface 40]
