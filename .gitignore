@@ -19,3 +19,6 @@ debug.md
 
 kernel.mak
 image/bzImage
+
+pc-bios/linuxboot_dma.raw
+pc-bios/linuxboot_dma.img
