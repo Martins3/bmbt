@@ -163,10 +163,7 @@ struct MachineClass {
   ram_addr_t default_ram_size;
   const char *default_cpu_type;
   bool default_kernel_irqchip_split;
-  // migration related option
-#ifdef BMBT
   bool option_rom_has_mr;
-#endif
   bool rom_file_has_mr;
   int minimum_page_bits;
   bool has_hotpluggable_cpus;
