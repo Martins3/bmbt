@@ -5,6 +5,7 @@
 #include "../../qemu/bswap.h"
 #include "../../qemu/range.h"
 #include "../../sysemu/dma.h"
+#include "../qdev-core.h"
 #include <string.h>
 
 /* PCI includes legacy ISA access.  */
@@ -447,9 +448,6 @@ typedef PCIINTxRoute (*pci_route_irq_fn)(void *opaque, int pin);
 #endif
 
 bool pci_bus_is_express(PCIBus *bus);
-
-// currently, DeviceState is empty
-typedef struct DeviceState DeviceState;
 
 void pci_root_bus_new_inplace(PCIBus *bus, size_t bus_size, DeviceState *parent,
                               const char *name, MemoryRegion *address_space_mem,
