@@ -1,6 +1,8 @@
 #include "../../../include/hw/i386/pc.h"
 #include "../../../include/hw/i386/topology.h"
 #include "../../i386/cpu.h"
+#include <exec/cpu-all.h>
+#include <standard-headers/asm-x86/bootparam.h>
 
 #define BIOS_FILENAME "bios.bin"
 
@@ -148,8 +150,6 @@ static void x86_nmi(NMIState *n, int cpu_index, Error **errp) {
 }
 #endif
 
-// @todo As for how to boot kernel, it's not clear yet
-#ifdef BMBT
 static long get_file_size(FILE *f) {
   long where, size;
 
@@ -163,6 +163,7 @@ static long get_file_size(FILE *f) {
   return size;
 }
 
+#ifdef BMBT
 struct setup_data {
   uint64_t next;
   uint32_t type;
@@ -264,6 +265,7 @@ static bool load_elfboot(const char *kernel_filename, int kernel_file_size,
 
   return true;
 }
+#endif
 
 void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
                     int acpi_data_size, bool pvh_enabled,
@@ -276,8 +278,9 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
   hwaddr real_addr, prot_addr, cmdline_addr, initrd_addr = 0;
   FILE *f;
   char *vmode;
-  MachineState *machine = MACHINE(x86ms);
+  MachineState *machine = X86_TO_MACHINE(x86ms);
   struct setup_data *setup_data;
+  // initialized in machine_set_kernel
   const char *kernel_filename = machine->kernel_filename;
   const char *initrd_filename = machine->initrd_filename;
   const char *dtb_filename = machine->dtb;
@@ -306,6 +309,8 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
   if (ldl_p(header + 0x202) == 0x53726448) {
     protocol = lduw_p(header + 0x206);
   } else {
+    g_assert_not_reached();
+#ifdef BMBT
     /*
      * This could be a multiboot kernel. If it is, let's stop treating it
      * like a Linux kernel.
@@ -372,6 +377,7 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
       return;
     }
     protocol = 0;
+#endif
   }
 
   if (protocol < 0x200 || !(header[0x211] & 0x01)) {
@@ -435,6 +441,9 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
   /* handle vga= parameter */
   vmode = strstr(kernel_cmdline, "vga=");
   if (vmode) {
+    // currently, bmbt doesn't support vga
+    g_assert_not_reached();
+#ifdef BMBT
     unsigned int video_mode;
     const char *end;
     int ret;
@@ -454,6 +463,7 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
       }
     }
     stw_p(header + 0x1fa, video_mode);
+#endif
   }
 
   /* loader type */
@@ -489,7 +499,9 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
               gerr->message);
       exit(1);
     }
+#ifdef BMBT
     x86ms->initrd_mapped_file = mapped_file;
+#endif
 
     initrd_data = g_mapped_file_get_contents(mapped_file);
     initrd_size = g_mapped_file_get_length(mapped_file);
@@ -538,6 +550,9 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
 
   /* append dtb to kernel */
   if (dtb_filename) {
+    // bmbt doesn't support dtb file now.
+    g_assert_not_reached();
+#ifdef BMBT
     if (protocol < 0x209) {
       fprintf(stderr, "qemu: Linux kernel too old to load a dtb\n");
       exit(1);
@@ -562,6 +577,7 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
     setup_data->len = cpu_to_le32(dtb_size);
 
     load_image_size(dtb_filename, setup_data->data, dtb_size);
+#endif
   }
 
   memcpy(setup, header, MIN(sizeof(header), setup_size));
@@ -582,6 +598,7 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
   nb_option_roms++;
 }
 
+#ifdef BMBT
 void x86_bios_rom_init(MemoryRegion *rom_memory, bool isapc_ram_fw) {
   char *filename;
   MemoryRegion *bios, *isa_bios;

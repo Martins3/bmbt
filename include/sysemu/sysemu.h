@@ -5,6 +5,7 @@
 #include "../qemu/notify.h"
 #include "../qemu/uuid.h"
 #include "../types.h"
+#include <hw/qdev-core.h>
 #include <qemu/timer.h>
 
 #include "cpus.h"
@@ -12,15 +13,6 @@
 
 void qemu_add_machine_init_done_notifier(Notifier *notify);
 void qemu_remove_machine_init_done_notifier(Notifier *notify);
-
-static inline char *get_boot_devices_list(size_t *size) {
-  const char *linux_dma = "/rom@genroms/linuxboot_dma.bin";
-  *size = strlen(linux_dma) + 1;
-  char *boot_list = g_malloc0(*size);
-  strcpy(boot_list, linux_dma);
-  duck_check(*size == 0x1f);
-  return boot_list;
-}
 
 static inline char *get_boot_devices_lchs_list(size_t *size) {
   *size = 0;
@@ -31,6 +23,19 @@ extern int boot_menu;
 
 extern QemuUUID qemu_uuid;
 extern QEMUClockType rtc_clock;
+
+#define MAX_OPTION_ROMS 16
+typedef struct QEMUOptionRom {
+  const char *name;
+  int32_t bootindex;
+} QEMUOptionRom;
+extern QEMUOptionRom option_rom[MAX_OPTION_ROMS];
+extern int nb_option_roms;
+
+void add_boot_device_path(int32_t bootindex, DeviceState *dev,
+                          const char *suffix);
+char *get_boot_devices_list(size_t *size);
+extern bool boot_strict;
 
 void qemu_init();
 

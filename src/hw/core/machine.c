@@ -152,6 +152,11 @@ void machine_initfn(MachineState *ms) {
   // ms->mem_merge = true;
   ms->enable_graphics = true;
 
+  // qemu option is too complex, hard code it here.
+  ms->kernel_filename = "image/bzImage";
+  // ms->initrd_filename = "";
+  ms->kernel_cmdline = "";
+
   if (mc->nvdimm_supported) {
     g_assert_not_reached();
 #ifdef BMBT

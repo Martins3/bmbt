@@ -275,7 +275,7 @@ FWCfgState *fw_cfg_init_mem_wide(hwaddr ctl_addr, hwaddr data_addr,
                                  AddressSpace *dma_as);
 
 FWCfgState *fw_cfg_find(void);
-bool fw_cfg_dma_enabled(void *opaque);
+bool fw_cfg_dma_enabled(FWCfgState *opaque);
 
 /**
  * fw_cfg_arch_key_name:

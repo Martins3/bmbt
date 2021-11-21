@@ -27,7 +27,7 @@ typedef struct {
   /*< public >*/
   /* Pointers to devices and objects: */
   RTCState *rtc;
-#ifdef NEED_LATER
+#ifdef BMBT
   GMappedFile *initrd_mapped_file;
 #endif
   qemu_irq *gsi;
@@ -67,5 +67,9 @@ void x86_cpus_init(X86MachineState *pcms, int default_cpu_version);
 
 void x86_machine_class_init(X86MachineClass *x86mc);
 void x86_machine_initfn(X86MachineState *x86ms);
+
+void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
+                    int acpi_data_size, bool pvh_enabled,
+                    bool linuxboot_dma_enabled);
 
 #endif /* end of include guard: X86_H_L9VT3E8K */
