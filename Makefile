@@ -157,8 +157,10 @@ run: all clear_gcda
 	@# only test work in process
 	$(bmbt) -s wip
 
+# use command "bear make compile -j10" to generate compile_comands.json
 compile: all
 	$(MAKE) -C seabios
+	$(MAKE) -C pc-bios
 
 test: all clear_gcda
 	$(bmbt)

@@ -3,7 +3,6 @@
 PROJECT_DIR=$(git rev-parse --show-toplevel)
 cd "$PROJECT_DIR" || exit 1
 
-exit 0
 if make -j10; then
     exit 0
 fi
