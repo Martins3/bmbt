@@ -3,8 +3,6 @@
 当前的整个工作都是基于: 895fdf6776076c7cbb6b18c6703a40c4e03a084e 进行的
 
 ## 复现 xqm 的工作
-- [ ] 编译内核
-
 - 获取 image
   - http://old-releases.ubuntu.com/releases/10.04.0/ 中找到 ubuntu-10.04-server-i386.iso 下载，然后可以安装(tcg / kvm 都可以)
 
@@ -24,7 +22,6 @@ mkdir build
 
 ```
 - [ ] 这里的 ubuntu10s.test.img.full 和 vmlinuz-2.6.32 还没有自己编译过
-
 
 ```sh
 #!/bin/bash
@@ -60,6 +57,7 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 
 ## 调试
 
+### 使用 gdb 调试
 ```gdb
 >>> p /x ((CPUX86State *)current_cpu->env_ptr)->eip
 $1 = 0xe92d6
@@ -71,7 +69,11 @@ disass 0xe92d6
 如果是 seabios，启动 gdb 的方法: gdb out/rom.o
 或者 gdb out/rom16.o
 
-## 配置 5000 的机器
+### 在源码中间添加 log
+- tb_find : 打印 pc 可以知道当前跑到哪里去了
+
+
+## 配置 5000 的机器，让其可以科学上网
 https://github.com/garywill/linux-router
 
 ## 在 Loongarch 上交叉编译内核
@@ -86,4 +88,24 @@ export LD_LIBRARY_PATH=$CC_PREFIX/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$CC_PREFIX/lib64:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/lib64/:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIBRARY_PATH
+```
+
+## 编译 tiny 内核
+- 教程: https://weeraman.com/building-a-tiny-linux-kernel-8c07579ae79d
+  - make tinyconfig 将会输出很多参数确认信息，那并不是问题
+- 内核下载地址 : https://mirrors.edge.kernel.org/pub/linux/kernel/v4.x/
+- 版本 : linux-4.4.142.tar.gz
+
+### 在 x86 运行
+1. 编译出来对应的 qemu
+```c
+mkdir 32bit
+cd 32bit
+../configure --target-list=i386-softmmu
+```
+
+2. 在 alpine.sh 中修改配置
+```sh
+kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142
+qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
 ```

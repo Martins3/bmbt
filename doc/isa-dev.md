@@ -175,3 +175,16 @@ ore/xqm/qom/object.c:1336
 tns3/core/xqm/util/qemu-option.c:1170
 #8  0x000055555582b15c in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at /home/maritns3/core/xqm/vl.c:4372
 ```
+
+## pit
+
+```c
+/*
+#0  i8254_pit_init (base=64, alt_irq=0x555556a04740, isa_irq=-1, bus=0x55555667b1a0) at /home/maritns3/core/xqm/include/hw/timer/i8254.h:57
+#1  pc_basic_device_init (isa_bus=0x55555667b1a0, gsi=<optimized out>, rtc_state=rtc_state@entry=0x7fffffffcf38, create_fdctrl=create_fdctrl@entry=true, no_vmport=<opt
+imized out>, has_pit=<optimized out>, hpet_irqs=4) at /home/maritns3/core/xqm/hw/i386/pc.c:1433
+#2  0x0000555555913c02 in pc_init1 (machine=0x55555659a000, pci_type=0x555555d75e48 "i440FX", host_type=0x555555d74f1b "i440FX-pcihost") at /home/maritns3/core/xqm/hw/
+i386/pc_piix.c:235
+#3  0x0000555555a2c693 in machine_run_board_init (machine=0x55555659a000) at /home/maritns3/core/xqm/hw/core/machine.c:1143
+#4  0x000055555582b0b8 in main (argc=<optimized out>, argv=<optimized out>, envp=<optimized out>) at /home/maritns3/core/xqm/vl.c:4348
+```
