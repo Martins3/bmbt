@@ -30,4 +30,4 @@ all:
 	cc $(CFLAGS) -c -o linuxboot_dma.o linuxboot_dma.c
 	ld -nopie -m elf_i386 -T flat.lds -s -o linuxboot_dma.img linuxboot_dma.o
 	objcopy -O binary -j .text linuxboot_dma.img linuxboot_dma.raw
-	python3 -B signrom.py linuxboot_dma.raw linuxboot_dma.bin
+	python3 -B signrom.py linuxboot_dma.raw ../image/linuxboot_dma.bin
