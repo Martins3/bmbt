@@ -33,9 +33,11 @@ static time_t rtc_ref_start_datetime;
 static int rtc_realtime_clock_offset; /* used only with QEMU_CLOCK_REALTIME */
 static int rtc_host_datetime_offset = -1; /* valid & used only with
                                              RTC_BASE_DATETIME */
+QEMUOptionRom option_rom[MAX_OPTION_ROMS];
+int nb_option_roms;
+bool boot_strict;
 
 bool machine_init_done;
-
 static NotifierList machine_init_done_notifiers =
     NOTIFIER_LIST_INITIALIZER(machine_init_done_notifiers);
 

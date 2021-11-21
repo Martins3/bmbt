@@ -1258,17 +1258,13 @@ void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
   }
 
   if (linux_boot) {
-#ifdef NEED_LATER
     x86_load_linux(x86ms, fw_cfg, pcmc->acpi_data_size, pcmc->pvh_enabled,
                    pcmc->linuxboot_dma_enabled);
-#endif
   }
 
-#ifdef BMBT
   for (i = 0; i < nb_option_roms; i++) {
     rom_add_option(option_rom[i].name, option_rom[i].bootindex);
   }
-#endif
   x86ms->fw_cfg = fw_cfg;
 
   /* Init default IOAPIC address space */

@@ -422,13 +422,14 @@ static const VMStateInfo vmstate_hack_uint32_as_uint16 = {
 static bool is_version_1(void *opaque, int version_id) {
   return version_id == 1;
 }
+#endif
 
-bool fw_cfg_dma_enabled(void *opaque) {
-  FWCfgState *s = opaque;
-
+bool fw_cfg_dma_enabled(FWCfgState *s) {
+  assert(s->dma_enabled);
   return s->dma_enabled;
 }
 
+#ifdef BMBT
 static const VMStateDescription vmstate_fw_cfg_dma = {
     .name = "fw_cfg/dma",
     .needed = fw_cfg_dma_enabled,
