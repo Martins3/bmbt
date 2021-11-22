@@ -15,10 +15,10 @@ compile_commands.json
 *.json.gz
 .vscode/
 
-debug.md
+xdebug.md
 
 kernel.mak
-image/bzImage
+image/
 
 pc-bios/linuxboot_dma.raw
 pc-bios/linuxboot_dma.img
