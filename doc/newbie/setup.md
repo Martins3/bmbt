@@ -1,6 +1,7 @@
 # Doc for newbie
 
 当前的整个工作都是基于: 895fdf6776076c7cbb6b18c6703a40c4e03a084e 进行的
+对应的 qemu 版本: 6cdf8c4efa073eac7d5f9894329e2d07743c2955 (tag: v4.2.1)
 
 ## 复现 xqm 的工作
 - 获取 image
@@ -55,7 +56,7 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 小项目 : sshfs
 大项目 : rsync
 
-## 调试
+## debug
 
 ### 使用 gdb 调试
 ```gdb
@@ -71,6 +72,19 @@ disass 0xe92d6
 
 ### 在源码中间添加 log
 - tb_find : 打印 pc 可以知道当前跑到哪里去了
+
+### 将执行的指令数量变为 1
+target_x86_to_mips_host 的参数 max_insns 替换为 1
+
+### 屏蔽信号
+因为暂时适应的是 signal 来实现 timer 的
+这个会导致 qemu 提前停下来
+
+使用可以屏蔽信号:
+handle SIG127 nostop noprint
+
+
+https://stackoverflow.com/questions/24999208/how-to-handle-all-signals-in-gdb
 
 
 ## 配置 5000 的机器，让其可以科学上网
