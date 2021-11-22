@@ -153,9 +153,11 @@ void machine_initfn(MachineState *ms) {
   ms->enable_graphics = true;
 
   // qemu option is too complex, hard code it here.
-  ms->kernel_filename = "image/bzImage";
+  ms->kernel_filename = "image/vmlinuz-2.6.32";
+  // ms->kernel_filename = "image/bzImage";
+  ms->kernel_filename = "image/bzImage-lixinyu";
   // ms->initrd_filename = "";
-  ms->kernel_cmdline = "";
+  ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial";
 
   if (mc->nvdimm_supported) {
     g_assert_not_reached();
