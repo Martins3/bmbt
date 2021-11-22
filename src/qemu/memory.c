@@ -89,6 +89,12 @@ static inline bool mr_match(const MemoryRegion *mr, hwaddr offset) {
   return offset >= mr->offset && offset < mr->offset + mr->size;
 }
 
+static void show_debug_msg(AddressSpaceDispatch *dispatch, hwaddr offset) {
+  CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
+  printf("guest ip : %x\n", env->segs[R_CS].base + env->eip);
+  printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
+}
+
 static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
                                            hwaddr offset) {
   for (int i = 0; i < dispatch->segment_num; ++i) {
@@ -98,9 +104,7 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
       return mr;
     }
   }
-  CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
-  printf("guest ip : %x\n", env->segs[R_CS].base + env->eip);
-  printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
+  show_debug_msg(dispatch, offset);
   g_assert_not_reached();
 }
 
@@ -152,7 +156,7 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
   }
 
   if (mr == &low_vga) {
-    // no vga in bmbt
+    show_debug_msg(as->dispatch, offset);
     g_assert_not_reached();
   }
 
