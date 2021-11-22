@@ -162,6 +162,14 @@ static inline QEMUTimer *timer_new_full(QEMUTimerListGroup *timer_list_group,
 }
 
 /**
+ * timer_free:
+ * @ts: the timer
+ *
+ * Free a timer (it must not be on the active list)
+ */
+static inline void timer_free(QEMUTimer *ts) { g_free(ts); }
+
+/**
  * timer_new:
  * @type: the clock type to use
  * @scale: the scale value for the timer

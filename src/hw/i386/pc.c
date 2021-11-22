@@ -17,6 +17,7 @@
 #include "acpi-build.h"
 #include "e820_memory_layout.h"
 #include <hw/audio/pcspk.h>
+#include "hw/char/serial.h"
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/timer/i8254.h>
 #include <qemu/log.h>
@@ -1346,7 +1347,11 @@ static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
   DriveInfo *fd[MAX_FD];
   qemu_irq *a20_line;
   ISADevice *i8042, *port92, *vmmouse;
+#endif
 
+  QOM_serial_init(isa_bus);
+
+#ifdef NEED_LATER
   serial_hds_isa_init(isa_bus, 0, MAX_ISA_SERIAL_PORTS);
   parallel_hds_isa_init(isa_bus, MAX_PARALLEL_PORTS);
 
