@@ -1,18 +1,17 @@
 #!/usr/bin/make
 SHELL:=/bin/bash
 
-ARCH_BUILD := build_loongson
-ARCH_PREFIX :=
 ARCH_FLAGS := -DBUILD_ON_LOONGSON
+BASE_DIR := $(shell pwd)
+BUILD_DIR := $(BASE_DIR)/build_loongson
+
 UNAME := $(shell uname -a)
 ifneq (,$(findstring x86_64, $(UNAME)))
-	ARCH_BUILD := build_x86
+	BUILD_DIR := /tmp/build_x86
 	ARCH_FLAGS :=
 endif
 # QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
 
-BASE_DIR := $(shell pwd)
-BUILD_DIR := $(BASE_DIR)/$(ARCH_BUILD)
 bmbt := $(BUILD_DIR)/bmbt.bin
 LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
 
@@ -68,6 +67,7 @@ OBJ_FILES := $(ASSEMBLY_OBJ_FILES) $(C_OBJ_FILES)
 CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use # 暂时不使用 iwyu
 CXX=gcc
 
+ARCH_PREFIX :=
 GCC=$(ARCH_PREFIX)${CXX}
 LD=$(ARCH_PREFIX)ld
 AR=$(ARCH_PREFIX)ar
@@ -94,8 +94,8 @@ check-and-reinit-submodules:
 
 kernel:
 	$(MAKE) -C $(KERNEL_PATH)
-	@mkdir -p image
-	@cp $(KERNEL_PATH)/arch/x86/boot/bzImage image/bzImage
+	mkdir -p image
+	cp $(KERNEL_PATH)/arch/x86/boot/bzImage image/bzImage
 
 CAP_CFLAGS=$(CFLAGS_HEADER)
 CAP_CFLAGS+=-DCAPSTONE_HAS_X86
@@ -131,17 +131,17 @@ $(bmbt) : $(OBJ_FILES) capstone
 
 .PHONY: all clean gdb run gcov clear_gcda test
 
-GCOV_OUT=$(ARCH_BUILD)/gcov
+GCOV_OUT=$(BUILD_DIR)/gcov
 GCOV_INFO=$(GCOV_OUT)/bmbt_coverage.info
 GCOV_MERGE_INFO=$(GCOV_OUT)/bmbt_merge.info
 
 gcov:
 	@mkdir -p $(GCOV_OUT)
-	lcov -capture --directory $(ARCH_BUILD) --output-file $(GCOV_INFO)
+	lcov -capture --directory $(BUILD_DIR) --output-file $(GCOV_INFO)
 	if [[ -e $(GCOV_MERGE_INFO) ]]; then\
-		lcov -a $(GCOV_MERGE_INFO) -a $(GCOV_INFO) -d $(ARCH_BUILD) -o $(gcov_merge_info); \
+		lcov -a $(GCOV_MERGE_INFO) -a $(GCOV_INFO) -d $(BUILD_DIR) -o $(gcov_merge_info); \
 	else \
-		lcov -a $(GCOV_INFO) -d $(ARCH_BUILD) -o $(GCOV_MERGE_INFO); \
+		lcov -a $(GCOV_INFO) -d $(BUILD_DIR) -o $(GCOV_MERGE_INFO); \
 	fi
 	genhtml $(GCOV_MERGE_INFO) --output-directory $(GCOV_OUT)
 	# microsoft-edge $(GCOV_OUT)/index.html
