@@ -69,15 +69,6 @@ void add_boot_device_path(int32_t bootindex, DeviceState *dev,
   QTAILQ_INSERT_TAIL(&fw_boot_order, node, link);
 }
 
-static char *standard_get_boot_devices_list(size_t *size) {
-  const char *linux_dma = "/rom@genroms/linuxboot_dma.bin";
-  *size = strlen(linux_dma) + 1;
-  char *boot_list = g_malloc0(*size);
-  strcpy(boot_list, linux_dma);
-  duck_check(*size == 0x1f);
-  return boot_list;
-}
-
 static char *get_boot_device_path(DeviceState *dev, bool ignore_suffixes,
                                   const char *suffix) {
   char *devpath = NULL, *s = NULL, *d, *bootpath;
@@ -151,10 +142,5 @@ char *get_boot_devices_list(size_t *size) {
     memcpy(&list[total], "HALT", 5);
     *size = total + 5;
   }
-#ifndef RELEASE_VERSION
-  size_t tmp_size;
-  assert(strcmp(list, standard_get_boot_devices_list(&tmp_size)) == 0);
-  assert(*size == tmp_size);
-#endif
   return list;
 }
