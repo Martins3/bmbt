@@ -74,12 +74,12 @@ bool is_interrupt_blocked(void) { return __blocked; }
 void block_interrupt() {
   assert(__blocked == false);
   assert(qemu_cpu_is_self(NULL));
-  __blocked = true;
   sigset_t blocked;
   sigemptyset(&blocked);
   sigaddset(&blocked, TIMER_SIG);
   if (sigprocmask(SIG_SETMASK, &blocked, NULL) == -1)
     error_report("block interrupt failed\n");
+  __blocked = true;
 }
 
 void unblock_interrupt() {
