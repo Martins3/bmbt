@@ -160,7 +160,7 @@ static ADDRX __disasm_one_ir1(IR1_INST *pir1, ADDRX pc)
         if (inst_cache[0] == 0xf3 &&
             inst_cache[1] == 0x0f &&
             inst_cache[2] == 0x1e &&
-            inst_cache[3] == 0xc9) {
+            inst_cache[3] == 0xfb) {
             ir1_make_ins_ILLEGAL(pir1, pc, 4, IR1_FLAGS_GENNOP);
             next_pc = pc + 4;
         } else {
