@@ -8,7 +8,7 @@ FILE *get_logfile(const char *f) {
 #ifdef BUILD_ON_LOONGSON
   char filename[256] = "build_loongson/";
 #else
-  char filename[256] = "build_x86/";
+  char filename[256] = "/tmp/build_x86/";
 #endif
   strcat(filename, f);
   FILE *file = fopen(filename, "w");
