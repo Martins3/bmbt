@@ -26,6 +26,7 @@
 #ifndef HW_SERIAL_H
 #define HW_SERIAL_H
 
+#include "chardev/char-fe.h"
 #include "exec/memory.h"
 #include "hw/irq.h"
 #include "hw/isa/isa.h"
@@ -53,7 +54,7 @@ typedef struct SerialState {
        it can be reset while reading iir */
     int thr_ipending;
     qemu_irq irq;
-    // CharBackend chr;
+    CharBackend chr;
     int last_break_enable;
     int it_shift;
     int baudbase;

@@ -157,7 +157,7 @@ void machine_initfn(MachineState *ms) {
   // ms->kernel_filename = "image/bzImage";
   ms->kernel_filename = "image/bzImage";
   // ms->initrd_filename = "";
-  ms->kernel_cmdline = "console=ttyS0 ";
+  ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial debug";
 
   if (mc->nvdimm_supported) {
     g_assert_not_reached();

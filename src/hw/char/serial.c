@@ -31,6 +31,7 @@
 #include "qemu/osdep.h"
 #include "qemu/timer.h"
 #include "sysemu/reset.h"
+#include <errno.h> // for ENOTSUP
 
 //#define DEBUG_SERIAL
 
@@ -182,7 +183,7 @@ static void serial_update_parameters(SerialState *s)
     ssp.data_bits = data_bits;
     ssp.stop_bits = stop_bits;
     s->char_transmit_time =  (NANOSECONDS_PER_SECOND / speed) * frame_size;
-    // qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_PARAMS, &ssp);
+    qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_PARAMS, &ssp);
 
     DPRINTF("speed=%.2f parity=%c data=%d stop=%d\n",
            speed, parity, data_bits, stop_bits);
@@ -195,11 +196,11 @@ static void serial_update_msl(SerialState *s)
 
     timer_del(s->modem_status_poll);
 
-    // if (qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_GET_TIOCM,
-    //                       &flags) == -ENOTSUP) {
-    //     s->poll_msl = -1;
-    //     return;
-    // }
+    if (qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_GET_TIOCM, &flags) ==
+        -ENOTSUP) {
+      s->poll_msl = -1;
+      return;
+    }
 
     omsr = s->msr;
 
@@ -226,6 +227,7 @@ static void serial_update_msl(SerialState *s)
     }
 }
 
+#ifdef BMBT
 static gboolean serial_watch_cb(GIOChannel *chan, GIOCondition cond,
                                 void *opaque)
 {
@@ -234,6 +236,7 @@ static gboolean serial_watch_cb(GIOChannel *chan, GIOCondition cond,
     serial_xmit(s);
     return FALSE;
 }
+#endif
 
 static void serial_xmit(SerialState *s)
 {
@@ -261,26 +264,26 @@ static void serial_xmit(SerialState *s)
         if (s->mcr & UART_MCR_LOOP) {
             /* in loopback mode, say that we just received a char */
             serial_receive1(s, &s->tsr, 1);
+        } else {
+          assert(fprintf(s->log, "%s", &s->tsr) == 1);
+          fflush(s->log);
+          // we just use serial output to a specify file
+          // int rc = qemu_chr_fe_write(&s->chr, &s->tsr, 1);
+
+          // if ((rc == 0 ||
+          //      (rc == -1 && errno == EAGAIN)) &&
+          //     s->tsr_retry < MAX_XMIT_RETRY) {
+          //     assert(s->watch_tag == 0);
+          //     s->watch_tag =
+          //         qemu_chr_fe_add_watch(&s->chr, G_IO_OUT | G_IO_HUP,
+          //                               serial_watch_cb, s);
+          //     if (s->watch_tag > 0) {
+          //         s->tsr_retry++;
+          //         return;
+          //     }
+          // }
         }
 
-#ifdef BMBT
-        else {
-            int rc = qemu_chr_fe_write(&s->chr, &s->tsr, 1);
-
-            if ((rc == 0 ||
-                 (rc == -1 && errno == EAGAIN)) &&
-                s->tsr_retry < MAX_XMIT_RETRY) {
-                assert(s->watch_tag == 0);
-                s->watch_tag =
-                    qemu_chr_fe_add_watch(&s->chr, G_IO_OUT | G_IO_HUP,
-                                          serial_watch_cb, s);
-                if (s->watch_tag > 0) {
-                    s->tsr_retry++;
-                    return;
-                }
-            }
-        }
-#endif
         s->tsr_retry = 0;
 
         /* Transmit another byte if it is already available. It is only
@@ -325,7 +328,7 @@ static void serial_update_tiocm(SerialState *s)
 {
     int flags;
 
-    // qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_GET_TIOCM, &flags);
+    qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_GET_TIOCM, &flags);
 
     flags &= ~(CHR_TIOCM_RTS | CHR_TIOCM_DTR);
 
@@ -336,7 +339,7 @@ static void serial_update_tiocm(SerialState *s)
         flags |= CHR_TIOCM_DTR;
     }
 
-    // qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_TIOCM, &flags);
+    qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_TIOCM, &flags);
 }
 
 static void serial_ioport_write(void *opaque, hwaddr addr, uint64_t val,
@@ -345,7 +348,7 @@ static void serial_ioport_write(void *opaque, hwaddr addr, uint64_t val,
     SerialState *s = opaque;
 
     addr &= 7;
-#ifdef NEED_LATER
+#ifdef BMBT
     trace_serial_ioport_write(addr, val);
 #endif
     switch(addr) {
@@ -452,8 +455,8 @@ static void serial_ioport_write(void *opaque, hwaddr addr, uint64_t val,
             break_enable = (val >> 6) & 1;
             if (break_enable != s->last_break_enable) {
                 s->last_break_enable = break_enable;
-                // qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_BREAK,
-                //                   &break_enable);
+                qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_BREAK,
+                                  &break_enable);
             }
         }
         break;
@@ -480,8 +483,6 @@ static void serial_ioport_write(void *opaque, hwaddr addr, uint64_t val,
         s->scr = val;
         break;
     }
-    assert(fprintf(s->log, "%c", (int)val) == 1);
-    fflush(s->log);
 }
 
 static uint64_t serial_ioport_read(void *opaque, hwaddr addr, unsigned size)
@@ -512,7 +513,7 @@ static uint64_t serial_ioport_read(void *opaque, hwaddr addr, unsigned size)
             serial_update_irq(s);
             if (!(s->mcr & UART_MCR_LOOP)) {
                 /* in loopback mode, don't receive any data */
-                // qemu_chr_fe_accept_input(&s->chr);
+                qemu_chr_fe_accept_input(&s->chr);
             }
         }
         break;
@@ -566,7 +567,7 @@ static uint64_t serial_ioport_read(void *opaque, hwaddr addr, unsigned size)
         ret = s->scr;
         break;
     }
-#ifdef NEED_LATER
+#ifdef BMBT
     trace_serial_ioport_read(addr, ret);
 #endif
     return ret;
@@ -621,9 +622,10 @@ static void serial_receive1(void *opaque, const uint8_t *buf, int size)
 {
     SerialState *s = opaque;
 
-    // if (s->wakeup) {
-    //     qemu_system_wakeup_request(QEMU_WAKEUP_REASON_OTHER, NULL);
-    // }
+    if (s->wakeup) {
+      g_assert_not_reached();
+      // qemu_system_wakeup_request(QEMU_WAKEUP_REASON_OTHER, NULL);
+    }
     if(s->fcr & UART_FCR_FE) {
         int i;
         for (i = 0; i < size; i++) {
@@ -641,7 +643,6 @@ static void serial_receive1(void *opaque, const uint8_t *buf, int size)
     serial_update_irq(s);
 }
 
-#ifdef BMBT
 static void serial_event(void *opaque, int event)
 {
     SerialState *s = opaque;
@@ -649,7 +650,6 @@ static void serial_event(void *opaque, int event)
     if (event == CHR_EVENT_BREAK)
         serial_receive_break(s);
 }
-#endif
 
 static int serial_pre_save(void *opaque)
 {
@@ -691,6 +691,7 @@ static int serial_post_load(void *opaque, int version_id)
         }
 
         assert(s->watch_tag == 0);
+        g_assert_not_reached();
         // s->watch_tag = qemu_chr_fe_add_watch(&s->chr, G_IO_OUT | G_IO_HUP,
         //                                      serial_watch_cb, s);
     } else {
@@ -763,6 +764,7 @@ static bool serial_poll_needed(void *opaque)
 }
 
 #ifdef BMBT
+// VMStateDescription is use for migrating, we don't need this
 static const VMStateDescription vmstate_serial_thr_ipending = {
     .name = "serial/thr_ipending",
     .version_id = 1,
@@ -919,13 +921,13 @@ static int serial_be_change(void *opaque)
 {
     SerialState *s = opaque;
 
-    // qemu_chr_fe_set_handlers(&s->chr, serial_can_receive1, serial_receive1,
-    //                          serial_event, serial_be_change, s, NULL, true);
+    qemu_chr_fe_set_handlers(&s->chr, serial_can_receive1, serial_receive1,
+                             serial_event, serial_be_change, s, true);
 
     serial_update_parameters(s);
 
-    // qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_BREAK,
-    //                   &s->last_break_enable);
+    qemu_chr_fe_ioctl(&s->chr, CHR_IOCTL_SERIAL_SET_BREAK,
+                      &s->last_break_enable);
 
     s->poll_msl = (s->ier & UART_IER_MSI) ? 1 : 0;
     serial_update_msl(s);
@@ -934,11 +936,12 @@ static int serial_be_change(void *opaque)
         serial_update_tiocm(s);
     }
 
-    // if (s->watch_tag > 0) {
-    //     g_source_remove(s->watch_tag);
-    //     s->watch_tag = qemu_chr_fe_add_watch(&s->chr, G_IO_OUT | G_IO_HUP,
-    //                                          serial_watch_cb, s);
-    // }
+    if (s->watch_tag > 0) {
+      g_assert_not_reached();
+      // g_source_remove(s->watch_tag);
+      // s->watch_tag = qemu_chr_fe_add_watch(&s->chr, G_IO_OUT | G_IO_HUP,
+      //                                      serial_watch_cb, s);
+    }
 
     return 0;
 }
@@ -953,8 +956,8 @@ void serial_realize_core(SerialState *s)
       timer_new_ns(QEMU_CLOCK_VIRTUAL, (QEMUTimerCB *)fifo_timeout_int, s);
   qemu_register_reset(serial_reset, s);
 
-  // qemu_chr_fe_set_handlers(&s->chr, serial_can_receive1, serial_receive1,
-  //                          serial_event, serial_be_change, s, NULL, true);
+  qemu_chr_fe_set_handlers(&s->chr, serial_can_receive1, serial_receive1,
+                           serial_event, serial_be_change, s, true);
   fifo8_create(&s->recv_fifo, UART_FIFO_LENGTH);
   fifo8_create(&s->xmit_fifo, UART_FIFO_LENGTH);
   serial_reset(s);
@@ -962,18 +965,18 @@ void serial_realize_core(SerialState *s)
 
 void serial_exit_core(SerialState *s)
 {
-    // qemu_chr_fe_deinit(&s->chr, false);
+  qemu_chr_fe_deinit(&s->chr, false);
 
-    timer_del(s->modem_status_poll);
-    timer_free(s->modem_status_poll);
+  timer_del(s->modem_status_poll);
+  timer_free(s->modem_status_poll);
 
-    timer_del(s->fifo_timeout_timer);
-    timer_free(s->fifo_timeout_timer);
+  timer_del(s->fifo_timeout_timer);
+  timer_free(s->fifo_timeout_timer);
 
-    fifo8_destroy(&s->recv_fifo);
-    fifo8_destroy(&s->xmit_fifo);
+  fifo8_destroy(&s->recv_fifo);
+  fifo8_destroy(&s->xmit_fifo);
 
-    qemu_unregister_reset(serial_reset, s);
+  qemu_unregister_reset(serial_reset, s);
 }
 
 /* Change the main reference oscillator frequency. */
@@ -994,6 +997,7 @@ const MemoryRegionOps serial_io_ops = {
 };
 
 #ifdef BMBT
+// this function is not use anymore
 SerialState *serial_init(int base, qemu_irq irq, int baudbase,
                          Chardev *chr, MemoryRegion *system_io)
 {
@@ -1031,6 +1035,7 @@ static void serial_mm_write(void *opaque, hwaddr addr,
     serial_ioport_write(s, addr >> s->it_shift, value, 1);
 }
 
+#ifdef BMBT
 static const MemoryRegionOps serial_mm_ops[3] = {
     [DEVICE_NATIVE_ENDIAN] = {
         .read = serial_mm_read,
@@ -1055,7 +1060,7 @@ static const MemoryRegionOps serial_mm_ops[3] = {
     },
 };
 
-#ifdef BMBT
+// this function is not use anymore
 SerialState *serial_mm_init(MemoryRegion *address_space,
                             hwaddr base, int it_shift,
                             qemu_irq irq, int baudbase,
