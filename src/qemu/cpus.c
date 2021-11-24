@@ -49,18 +49,18 @@ static void cpu_handle_guest_debug(CPUState *cpu) {
 void qemu_mutex_lock_iothread_impl(const char *file, int line) {
   // printf("locked %s:%d\n", file, line);
   g_assert(!qemu_mutex_iothread_locked());
-  qemu_mutex_lock(&qemu_global_mutex);
   // [interface 40]
   block_interrupt();
+  qemu_mutex_lock(&qemu_global_mutex);
   iothread_locked = true;
 }
 
 void qemu_mutex_unlock_iothread(void) {
   g_assert(qemu_mutex_iothread_locked());
   qemu_mutex_unlock(&qemu_global_mutex);
+  iothread_locked = false;
   // [interface 40]
   unblock_interrupt();
-  iothread_locked = false;
 }
 
 static void qemu_wait_io_event_common(CPUState *cpu) {
