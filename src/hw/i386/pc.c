@@ -1313,6 +1313,7 @@ DeviceState *pc_vga_init(ISABus *isa_bus, PCIBus *pci_bus) {
   rom_reset_order_override();
   return dev;
 }
+#endif
 
 static const MemoryRegionOps ioport80_io_ops = {
     .write = ioport80_write,
@@ -1335,7 +1336,6 @@ static const MemoryRegionOps ioportF0_io_ops = {
             .max_access_size = 1,
         },
 };
-#endif
 
 static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
                             bool no_vmport) {
@@ -1386,24 +1386,21 @@ void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
                           bool create_fdctrl, bool no_vmport, bool has_pit,
                           uint32_t hpet_irqs) {
 
-  ISADevice *pit = NULL;
-#ifdef NEED_LATER
   int i;
   DeviceState *hpet = NULL;
   int pit_isa_irq = 0;
   qemu_irq pit_alt_irq = NULL;
   qemu_irq rtc_irq = NULL;
+  ISADevice *pit = NULL;
   MemoryRegion *ioport80_io = g_new(MemoryRegion, 1);
   MemoryRegion *ioportF0_io = g_new(MemoryRegion, 1);
 
-  memory_region_init_io(ioport80_io, NULL, &ioport80_io_ops, NULL, "ioport80",
-                        1);
-  memory_region_add_subregion(isa_bus->address_space_io, 0x80, ioport80_io);
+  memory_region_init_io(ioport80_io, &ioport80_io_ops, NULL, "ioport80", 1);
+  io_add_memory_region(0x80, ioport80_io);
+  memory_region_init_io(ioportF0_io, &ioportF0_io_ops, NULL, "ioportF0", 1);
+  io_add_memory_region(0xf0, ioportF0_io);
 
-  memory_region_init_io(ioportF0_io, NULL, &ioportF0_io_ops, NULL, "ioportF0",
-                        1);
-  memory_region_add_subregion(isa_bus->address_space_io, 0xf0, ioportF0_io);
-
+#ifdef NEED_LATER
   /*
    * Check if an HPET shall be created.
    *
