@@ -469,13 +469,11 @@ typedef struct TimersState {
   int64_t cpu_ticks_prev;
   int64_t cpu_ticks_offset;
 
-#ifdef BMBT
   /* Protect fields that can be respectively read outside the
    * BQL, and written from multiple threads.
    */
   QemuSeqLock vm_clock_seqlock;
   QemuSpin vm_clock_lock;
-#endif
 
   int16_t cpu_ticks_enabled;
 
@@ -514,13 +512,6 @@ static int64_t cpu_get_clock_locked(void) {
   return time;
 }
 
-// [interface 39]
-static inline void verify_BQL_held() {
-  if (qemu_cpu_is_self(NULL)) {
-    assert(qemu_mutex_iothread_locked());
-  }
-}
-
 /* Return the monotonic time elapsed in VM, i.e.,
  * the time between vm_start and vm_stop
  */
@@ -528,15 +519,10 @@ int64_t cpu_get_clock(void) {
   int64_t ti;
   unsigned start;
 
-#ifdef BMBT
   do {
     start = seqlock_read_begin(&timers_state.vm_clock_seqlock);
     ti = cpu_get_clock_locked();
   } while (seqlock_read_retry(&timers_state.vm_clock_seqlock, start));
-#else
-  ti = cpu_get_clock_locked();
-  verify_BQL_held();
-#endif
 
   return ti;
 }
@@ -568,14 +554,9 @@ int64_t cpu_get_ticks(void) {
     return cpu_get_icount();
   }
 
-#ifdef BMBT
   qemu_spin_lock(&timers_state.vm_clock_lock);
   ticks = cpu_get_ticks_locked();
   qemu_spin_unlock(&timers_state.vm_clock_lock);
-#else
-  ticks = cpu_get_ticks_locked();
-  verify_BQL_held();
-#endif
   return ticks;
 }
 
@@ -593,18 +574,23 @@ void qemu_start_warp_timer(void) {
  * Caller must hold BQL which serves as mutex for vm_clock_seqlock.
  */
 void cpu_enable_ticks(void) {
-#ifdef BMBT
   seqlock_write_lock(&timers_state.vm_clock_seqlock,
                      &timers_state.vm_clock_lock);
-#endif
   if (!timers_state.cpu_ticks_enabled) {
     timers_state.cpu_ticks_offset -= cpu_get_host_ticks();
     timers_state.cpu_clock_offset -= get_clock();
     timers_state.cpu_ticks_enabled = 1;
   }
-  verify_BQL_held();
-#ifdef BMBT
   seqlock_write_unlock(&timers_state.vm_clock_seqlock,
                        &timers_state.vm_clock_lock);
+}
+
+void cpu_ticks_init(void) {
+  seqlock_init(&timers_state.vm_clock_seqlock);
+  qemu_spin_init(&timers_state.vm_clock_lock);
+#ifdef BMBT
+  vmstate_register(NULL, 0, &vmstate_timers, &timers_state);
+  throttle_timer =
+      timer_new_ns(QEMU_CLOCK_VIRTUAL_RT, cpu_throttle_timer_tick, NULL);
 #endif
 }
