@@ -61,20 +61,19 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 ### 使用 gdb 调试
 ```gdb
 >>> p /x ((CPUX86State *)current_cpu->env_ptr)->eip
-$1 = 0xe92d6
+>>> p /x ((CPUX86State *)current_cpu->env_ptr)->segs[R_CS].base
 ```
-然后在 gdb 中:
-```txt
-disass 0xe92d6
-```
+然后在 gdb 中 disass
+
 如果是 seabios，启动 gdb 的方法: gdb out/rom.o
 或者 gdb out/rom16.o
 
 ### 在源码中间添加 log
 - tb_find : 打印 pc 可以知道当前跑到哪里去了
+- 在 tr_ir2_generate 中打开 ir1_dump 的 log 可以看到将要执行的每条执行的反汇编结果
+- x86_to_mips_before_exec_tb 和 x86_to_mips_after_exec_tb 中分析打开 CONFIG_XTM_TEST 的内容
 
-### 将执行的指令数量变为 1
-target_x86_to_mips_host 的参数 max_insns 替换为 1
+- 错误的 : target_x86_to_mips_host 的参数 max_insns 替换为 1
 
 ### 屏蔽信号
 因为暂时适应的是 signal 来实现 timer 的

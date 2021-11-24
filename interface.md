@@ -52,9 +52,9 @@
     - 现在将所有的 .c 都合并到 log.c 中
     - qemu/log.h exec/log.h 两个合并到 qemu/log.h 中
 30. target/i386/X86toMIPS/tests/run_one_tb.c
-    - 虽然暂时打开了 CONFIG_XTM_TEST，但是实际上 run_one_tb.c 等用户没有移植进来
-31. include/qemu/atomic.h
-    - 当前只是支持单核，所有的 atomic 操作都是简化的
+    - 使用 CONFIG_XTM_TEST 会包含进来 run_one_tb.c
+    - 启动 x86_to_mips_before_exec_tb 和 x86_to_mips_after_exec_tb 中的调试
+    - 暂时不打开
 32. cpu_interrupt
     - 原来通过 cpu_interrupt_handler 全局变量赋值的设计过于鬼畜和充满误导性，让其直接调用 tcg_handle_interrupt
 33. run_on_cpu
