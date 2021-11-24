@@ -41,25 +41,30 @@ static inline void seqlock_write_end(QemuSeqLock *sl) {
   atomic_set(&sl->sequence, sl->sequence + 1);
 }
 
-#ifdef QHT_TODO
+// [interface 48]
+static inline void qemu_lockable_lock(QemuSpin *lock) {
+  assert(lock->lock == false);
+  lock->lock = true;
+}
+
+static inline void qemu_lockable_unlock(QemuSpin *lock) {
+  assert(lock->lock == true);
+  lock->lock = false;
+}
+
 /* Lock out other writers and update the count.  */
-static inline void seqlock_write_lock_impl(QemuSeqLock *sl,
-                                           QemuLockable *lock) {
+static inline void seqlock_write_lock_impl(QemuSeqLock *sl, QemuSpin *lock) {
   qemu_lockable_lock(lock);
   seqlock_write_begin(sl);
 }
-#define seqlock_write_lock(sl, lock)                                           \
-  seqlock_write_lock_impl(sl, QEMU_MAKE_LOCKABLE(lock))
+#define seqlock_write_lock(sl, lock) seqlock_write_lock_impl(sl, lock)
 
 /* Lock out other writers and update the count.  */
-static inline void seqlock_write_unlock_impl(QemuSeqLock *sl,
-                                             QemuLockable *lock) {
+static inline void seqlock_write_unlock_impl(QemuSeqLock *sl, QemuSpin *lock) {
   qemu_lockable_unlock(lock);
   seqlock_write_begin(sl);
 }
-#define seqlock_write_unlock(sl, lock)                                         \
-  seqlock_write_unlock_impl(sl, QEMU_MAKE_LOCKABLE(lock))
-#endif
+#define seqlock_write_unlock(sl, lock) seqlock_write_unlock_impl(sl, lock)
 
 static inline unsigned seqlock_read_begin(const QemuSeqLock *sl) {
   /* Always fail if a write is in progress.  */
@@ -73,6 +78,7 @@ static inline unsigned seqlock_read_begin(const QemuSeqLock *sl) {
 static inline int seqlock_read_retry(const QemuSeqLock *sl, unsigned start) {
   /* Read other fields before reading final sequence.  */
   smp_rmb();
+  assert(atomic_read(&sl->sequence) == start);
   return unlikely(atomic_read(&sl->sequence) != start);
 }
 
