@@ -284,6 +284,22 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
 
   tb = tb_lookup__cpu_state(cpu, &pc, &cs_base, &flags, cf_mask);
 
+#ifdef PC_FIND_DEBUG
+  static int counter;
+  static bool start_counter;
+  printf("huxueshi:%s %x\n", __FUNCTION__, pc);
+  if (pc == 0x1120ff2) {
+    start_counter = true;
+  }
+
+  if (start_counter) {
+    counter++;
+    if (counter > 200) {
+      g_assert_not_reached();
+    }
+  }
+#endif
+
   if (tb == NULL) {
     mmap_lock();
     tb = tb_gen_code(cpu, pc, cs_base, flags, cf_mask);
