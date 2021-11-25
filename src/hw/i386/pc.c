@@ -16,6 +16,7 @@
 #include "../../tcg/glib_stub.h"
 #include "acpi-build.h"
 #include "e820_memory_layout.h"
+#include <hw/audio/pcspk.h>
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/timer/i8254.h>
 
@@ -1453,6 +1454,8 @@ void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
 
   // @todo this is a temporary fix, maybe we need to port hpet later
   pit = i8254_pit_init(isa_bus, 0x40, -1, gsi[0]);
+
+  pcspk_init(isa_bus, pit);
 
   *rtc_state = mc146818_rtc_init(2000, gsi[8]);
 

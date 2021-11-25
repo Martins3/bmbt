@@ -373,7 +373,7 @@ type_init(pit_register_types);
 ISADevice *i8254_pit_init(ISABus *bus, int base, int isa_irq,
                           qemu_irq alt_irq) {
   // DeviceState *dev;
-  ISADevice *d;
+  // ISADevice *d;
   duck_check(isa_irq == -1);
 
 #ifdef BMBT
@@ -393,5 +393,5 @@ ISADevice *i8254_pit_init(ISABus *bus, int base, int isa_irq,
   PIT_COMMON_SET_CLASS(pit, pcc);
 
   qdev_connect_gpio_out(&pit->gpio, 0, alt_irq);
-  return d;
+  return &pit->dev;
 }
