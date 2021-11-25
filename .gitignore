@@ -22,3 +22,4 @@ image/
 
 pc-bios/linuxboot_dma.raw
 pc-bios/linuxboot_dma.img
+*.cpio.gz
