@@ -24,8 +24,6 @@ static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
 #ifndef RELEASE_VERSION
   duck_check(mr_initialized(mr));
 #endif
-  hwaddr offset = mr->offset;
-
   tcg_commit();
 
   struct Gap {
@@ -35,6 +33,7 @@ static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
 
   int i;
   for (i = 0; i < dispatch->segment_num; ++i) {
+    // [ segment n - 1 ] ---- gap ---- [ segment n ]
     gap.left = i > 0 ? dispatch->segments[i - 1]->offset +
                            dispatch->segments[i - 1]->size
                      : 0;
@@ -49,9 +48,9 @@ static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
   if (i == dispatch->segment_num) {
     if (i > 0) {
       MemoryRegion *last_mr = dispatch->segments[i - 1];
-      duck_check(offset >= last_mr->offset + last_mr->size);
+      duck_check(mr->offset >= last_mr->offset + last_mr->size);
     } else {
-      duck_check(offset >= 0);
+      duck_check(mr->offset >= 0);
     }
   }
 #endif
@@ -207,6 +206,38 @@ void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
   mr->opaque = opaque;
   mr->name = name;
   mr->size = size;
+}
+
+static uint64_t unassigned_io_read(void *opaque, hwaddr addr, unsigned size) {
+  printf("huxueshi:%s %lx %d\n", __FUNCTION__, addr, size);
+  return -1ULL;
+}
+
+static void unassigned_io_write(void *opaque, hwaddr addr, uint64_t val,
+                                unsigned size) {
+  printf("huxueshi:%s %lx %d\n", __FUNCTION__, addr, size);
+}
+
+const MemoryRegionOps unassigned_io_ops = {
+    .read = unassigned_io_read,
+    .write = unassigned_io_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+static void register_unassigned_io(const char *name, int offset, int size) {
+  MemoryRegion *unknown = g_new0(MemoryRegion, 1);
+  memory_region_init_io(unknown, &unassigned_io_ops, NULL, name, size);
+  io_add_memory_region(offset, unknown);
+}
+
+static void unassigned_io_setup() {
+  // In QEMU, unassigned io can be accessed sliently.
+  // For debug reason, that's not permitted. Register the ioport used by guest
+  // here explicitly
+  register_unassigned_io("ioportF1", 0xf1, 1);
+  register_unassigned_io("unknow serial 0x2f9", 0x2f9, 1);
+  register_unassigned_io("unknow serial 0x3e9", 0x3e9, 1);
+  register_unassigned_io("unknow serial 0x2e9", 0x2e9, 1);
 }
 
 /**
@@ -877,4 +908,5 @@ void memory_map_init(ram_addr_t size) {
   address_space_smm_memory.smm = true;
 
   ram_init(size);
+  unassigned_io_setup();
 }
