@@ -1349,7 +1349,7 @@ static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
   ISADevice *i8042, *port92, *vmmouse;
 #endif
 
-  QOM_serial_init(isa_bus);
+  serial_hds_isa_init(isa_bus);
 
 #ifdef NEED_LATER
   serial_hds_isa_init(isa_bus, 0, MAX_ISA_SERIAL_PORTS);

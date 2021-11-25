@@ -88,7 +88,7 @@ SerialState __serial[MAX_ISA_SERIAL_PORTS];
 // extern const VMStateDescription vmstate_serial;
 extern const MemoryRegionOps serial_io_ops;
 
-void QOM_serial_init(ISABus *isabus);
+void serial_hds_isa_init(ISABus *isabus);
 // void serial_realize_core(SerialState *s, Error **errp);
 void serial_realize_core(SerialState *s);
 void serial_exit_core(SerialState *s);
