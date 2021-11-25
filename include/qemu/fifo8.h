@@ -1,6 +1,8 @@
 #ifndef QEMU_FIFO8_H
 #define QEMU_FIFO8_H
 
+// adjust header file to above type undefined
+#include "qemu/osdep.h"
 
 typedef struct {
     /* All fields are private */

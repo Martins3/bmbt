@@ -268,20 +268,20 @@ static void serial_xmit(SerialState *s)
           assert(fprintf(s->log, "%s", &s->tsr) == 1);
           fflush(s->log);
           // we just use serial output to a specify file
-          // int rc = qemu_chr_fe_write(&s->chr, &s->tsr, 1);
+#ifdef BMBT
+          int rc = qemu_chr_fe_write(&s->chr, &s->tsr, 1);
 
-          // if ((rc == 0 ||
-          //      (rc == -1 && errno == EAGAIN)) &&
-          //     s->tsr_retry < MAX_XMIT_RETRY) {
-          //     assert(s->watch_tag == 0);
-          //     s->watch_tag =
-          //         qemu_chr_fe_add_watch(&s->chr, G_IO_OUT | G_IO_HUP,
-          //                               serial_watch_cb, s);
-          //     if (s->watch_tag > 0) {
-          //         s->tsr_retry++;
-          //         return;
-          //     }
-          // }
+          if ((rc == 0 || (rc == -1 && errno == EAGAIN)) &&
+              s->tsr_retry < MAX_XMIT_RETRY) {
+            assert(s->watch_tag == 0);
+            s->watch_tag = qemu_chr_fe_add_watch(&s->chr, G_IO_OUT | G_IO_HUP,
+                                                 serial_watch_cb, s);
+            if (s->watch_tag > 0) {
+              s->tsr_retry++;
+              return;
+            }
+          }
+#endif
         }
 
         s->tsr_retry = 0;
@@ -348,9 +348,8 @@ static void serial_ioport_write(void *opaque, hwaddr addr, uint64_t val,
     SerialState *s = opaque;
 
     addr &= 7;
-#ifdef BMBT
-    trace_serial_ioport_write(addr, val);
-#endif
+
+    // fuck_trace_serial_ioport_write(addr, val);
     switch(addr) {
     default:
     case 0:
@@ -567,9 +566,8 @@ static uint64_t serial_ioport_read(void *opaque, hwaddr addr, unsigned size)
         ret = s->scr;
         break;
     }
-#ifdef BMBT
-    trace_serial_ioport_read(addr, ret);
-#endif
+
+    // fuck_trace_serial_ioport_read(addr, ret);
     return ret;
 }
 
@@ -963,6 +961,7 @@ void serial_realize_core(SerialState *s)
   serial_reset(s);
 }
 
+#ifdef BMBT
 void serial_exit_core(SerialState *s)
 {
   qemu_chr_fe_deinit(&s->chr, false);
@@ -978,6 +977,7 @@ void serial_exit_core(SerialState *s)
 
   qemu_unregister_reset(serial_reset, s);
 }
+#endif
 
 /* Change the main reference oscillator frequency. */
 void serial_set_frequency(SerialState *s, uint32_t frequency)

@@ -24,34 +24,6 @@ int qemu_chr_fe_ioctl(CharBackend *be, int cmd, void *arg) {
   return res;
 }
 
-void qemu_chr_fe_deinit(CharBackend *b, bool del) {
-  assert(b);
-
-  if (b->chr) {
-    // we don't use `IOCanReadHandler` and so on variable, so it's always null
-    // qemu_chr_fe_set_handlers(b, NULL, NULL, NULL, NULL, NULL, NULL, true);
-    if (b->chr->be == b) {
-      b->chr->be = NULL;
-    }
-    // `MuxChardev` is unnecessary in bmbt
-    // if (CHARDEV_IS_MUX(b->chr)) {
-    //     MuxChardev *d = MUX_CHARDEV(b->chr);
-    //     d->backends[b->tag] = NULL;
-    // }
-
-    // del is always false for serial
-    // if (del) {
-    //     Object *obj = OBJECT(b->chr);
-    //     if (obj->parent) {
-    //         object_unparent(obj);
-    //     } else {
-    //         object_unref(obj);
-    //     }
-    // }
-    b->chr = NULL;
-  }
-}
-
 void qemu_chr_fe_accept_input(CharBackend *be) {
   Chardev *s = be->chr;
   ChardevClass *class = CHARDEV_GET_CLASS(s);

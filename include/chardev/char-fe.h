@@ -38,17 +38,6 @@ struct CharBackend {
 int qemu_chr_fe_ioctl(CharBackend *be, int cmd, void *arg);
 
 /**
- * qemu_chr_fe_deinit:
- * @b: a CharBackend
- * @del: if true, delete the chardev backend
- *
- * Dissociate the CharBackend from the Chardev.
- *
- * Safe to call without associated Chardev.
- */
-void qemu_chr_fe_deinit(CharBackend *b, bool del);
-
-/**
  * qemu_chr_fe_set_open:
  *
  * Set character frontend open status.  This is an indication that the
