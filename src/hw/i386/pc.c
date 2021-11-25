@@ -19,6 +19,7 @@
 #include <hw/audio/pcspk.h>
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/timer/i8254.h>
+#include <qemu/log.h>
 
 /* debug PC/ISA interrupts */
 #define DEBUG_IRQ
@@ -26,7 +27,7 @@
 #ifdef DEBUG_IRQ
 #define DPRINTF(fmt, ...)                                                      \
   do {                                                                         \
-    printf("CPUIRQ: " fmt, ##__VA_ARGS__);                                     \
+    qemu_log(fmt, ##__VA_ARGS__);                                              \
   } while (0)
 #else
 #define DPRINTF(fmt, ...)
