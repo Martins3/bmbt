@@ -1,5 +1,6 @@
 #include "../../include/qemu/timer.h"
 #include <qemu/error-report.h>
+#include <qemu/log.h>
 #include <qemu/main-loop.h>
 
 /* A QEMUTimerList is a list of timers attached to a clock. More
@@ -433,6 +434,7 @@ int64_t timerlistgroup_deadline_ns(QEMUTimerListGroup *tlg) {
 
 static void timer_interrupt_handler(int sig, siginfo_t *si, void *uc) {
   duck_check(!is_interrupt_blocked());
+  qemu_log("timer interrupt comming");
   enter_interrpt_context();
   int64_t timeout_ns = -1;
 
