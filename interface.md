@@ -108,3 +108,5 @@
     - 在 QOM 中，如果 parent 注册了 realize 的 hook，child 重新注册，默认会覆盖 parent 的 hook
     - 有时候，为了让 realize hook 可以向面向对象一样，首先执行 parent 的，然后执行 child 的，可以调用 device_class_set_parent_realize
     - 然后在 child 的 DeviceClass 中添加一个 DeviceRealize parent_realize，感觉有点丑陋，直接调用，结束了。
+48. seqlock.h
+    - QemuLockable 类型在 seqlock.h 中为了简化实现直接直接修改为 spinlock 类型了
