@@ -17,6 +17,7 @@
 #include "acpi-build.h"
 #include "e820_memory_layout.h"
 #include <hw/audio/pcspk.h>
+#include <hw/char/serial.h>
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/timer/i8254.h>
 #include <qemu/log.h>
@@ -1341,6 +1342,8 @@ static const MemoryRegionOps ioportF0_io_ops = {
 
 static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
                             bool no_vmport) {
+
+  serial_hds_isa_init(isa_bus, 0, MAX_ISA_SERIAL_PORTS);
 #ifdef NEED_LATER
   int i;
   DriveInfo *fd[MAX_FD];

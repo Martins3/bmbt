@@ -5,6 +5,7 @@
 #include "../qemu/notify.h"
 #include "../qemu/uuid.h"
 #include "../types.h"
+#include <chardev/char.h>
 #include <hw/qdev-core.h>
 #include <qemu/timer.h>
 
@@ -43,5 +44,8 @@ static inline void qemu_boot() {
   duck_check(first_cpu != NULL);
   qemu_tcg_rr_cpu_thread_fn(first_cpu);
 }
+
+/* Return the Chardev for serial port i, or NULL if none */
+Chardev *serial_hd(int i);
 
 #endif /* end of include guard: SYSEMU_H_OILREKXF */

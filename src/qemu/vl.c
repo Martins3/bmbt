@@ -152,6 +152,24 @@ void qemu_get_timedate(struct tm *tm, int offset) {
   }
 }
 
+static int num_serial_hds;
+static Chardev **serial_hds;
+Chardev *serial_hd(int i) {
+  assert(i >= 0);
+  if (i < num_serial_hds) {
+    return serial_hds[i];
+  }
+  return NULL;
+}
+
+static void init_serial_chardev() {
+  serial_hds = g_new0(Chardev *, 1);
+  Chardev *serial_stub = g_new(Chardev, 1);
+  serial_stub->log = get_logfile("serial.log");
+  serial_hds[0] = serial_stub;
+  num_serial_hds++;
+}
+
 static PCMachineState __pcms;
 static PCMachineClass __pcmc;
 
@@ -279,6 +297,8 @@ void qemu_init() {
   qemu_mutex_lock_iothread();
 
   cpu_ticks_init();
+
+  init_serial_chardev();
 
   setup_timer_interrupt();
 
