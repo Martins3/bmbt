@@ -1110,7 +1110,7 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
                            CPUIOTLBEntry *iotlbentry, uintptr_t retaddr) {
   ram_addr_t ram_addr = mem_vaddr + iotlbentry->addr;
 
-  // fuck_trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
+  // bmbt_trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
 
   if (!cpu_physical_memory_get_dirty_flag(ram_addr, DIRTY_MEMORY_CODE)) {
     struct page_collection *pages =
@@ -1121,7 +1121,7 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
 
   /* We remove the notdirty callback only if the code has been flushed. */
   if (!cpu_physical_memory_is_clean(ram_addr)) {
-    // fuck_trace_memory_notdirty_set_dirty(mem_vaddr);
+    // bmbt_trace_memory_notdirty_set_dirty(mem_vaddr);
     tlb_set_dirty(cpu, mem_vaddr);
   }
 }

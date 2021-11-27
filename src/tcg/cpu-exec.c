@@ -120,7 +120,7 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
   last_tb = (TranslationBlock *)(ret & ~TB_EXIT_MASK);
   tb_exit = ret & TB_EXIT_MASK;
 
-  // fuck_trace_exec_tb_exit(last_tb, tb_exit);
+  // bmbt_trace_exec_tb_exit(last_tb, tb_exit);
   if (tb_exit > TB_EXIT_IDX1) {
     /* We didn't start executing this TB (eg because the instruction
      * counter hit zero); we must restore the guest PC to the address
@@ -215,7 +215,7 @@ static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
   mmap_unlock();
 
   /* execute the generated code */
-  // fuck_trace_exec_tb_nocache(tb, tb->pc);
+  // bmbt_trace_exec_tb_nocache(tb, tb->pc);
   cpu_tb_exec(cpu, tb);
 
   mmap_lock();
@@ -232,7 +232,7 @@ static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
   uintptr_t ret;
   int32_t insns_left;
 
-  // fuck_trace_exec_tb(tb, tb->pc);
+  // bmbt_trace_exec_tb(tb, tb->pc);
   ret = cpu_tb_exec(cpu, tb);
   tb = (TranslationBlock *)(ret & ~TB_EXIT_MASK);
   *tb_exit = ret & TB_EXIT_MASK;
@@ -612,7 +612,7 @@ void cpu_exec_step_atomic(CPUState *cpu) {
     parallel_cpus = false;
     cc->cpu_exec_enter(cpu);
     /* execute the generated code */
-    // fuck_trace_exec_tb(tb, pc);
+    // bmbt_trace_exec_tb(tb, pc);
     cpu_tb_exec(cpu, tb);
     cc->cpu_exec_exit(cpu);
   } else {

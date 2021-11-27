@@ -57,7 +57,7 @@ static void pic_update_irq(PICCommonState *s) {
 
   irq = pic_get_irq(s);
   if (irq >= 0) {
-    // fuck_trace_pic_update_irq(s->master, s->imr, s->irr, s->priority_add);
+    // bmbt_trace_pic_update_irq(s->master, s->imr, s->irr, s->priority_add);
     qemu_irq_raise(s->int_out[0]);
   } else {
     qemu_irq_lower(s->int_out[0]);
@@ -70,7 +70,7 @@ static void pic_set_irq(void *opaque, int irq, int level) {
   int mask = 1 << irq;
   int irq_index = s->master ? irq : irq + 8;
 
-  // fuck_trace_pic_set_irq(s->master, irq, level);
+  // bmbt_trace_pic_set_irq(s->master, irq, level);
   // [interface 18]
   // pic_stat_update_irq(irq_index, level);
 
@@ -153,7 +153,7 @@ int pic_read_irq(PICCommonState *s) {
              1000000.0 / NANOSECONDS_PER_SECOND);
 #endif
 
-  // fuck_trace_pic_interrupt(irq, intno);
+  // bmbt_trace_pic_interrupt(irq, intno);
   return intno;
 }
 
@@ -174,7 +174,7 @@ static void pic_ioport_write(void *opaque, hwaddr addr64, uint64_t val64,
   uint32_t val = val64;
   int priority, cmd, irq;
 
-  // fuck_trace_pic_ioport_write(s->master, addr, val);
+  // bmbt_trace_pic_ioport_write(s->master, addr, val);
 
   if (addr == 0) {
     if (val & 0x10) {
@@ -285,7 +285,7 @@ static uint64_t pic_ioport_read(void *opaque, hwaddr addr, unsigned size) {
       ret = s->imr;
     }
   }
-  // fuck_trace_pic_ioport_read(s->master, addr, ret);
+  // bmbt_trace_pic_ioport_read(s->master, addr, ret);
   return ret;
 }
 

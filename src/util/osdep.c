@@ -60,7 +60,7 @@ void *qemu_try_memalign(size_t alignment, size_t size) {
 #else
   ptr = memalign(alignment, size);
 #endif
-  // fuck_trace_qemu_memalign(alignment, size, ptr);
+  // bmbt_trace_qemu_memalign(alignment, size, ptr);
   return ptr;
 }
 

@@ -76,7 +76,7 @@ static void ioapic_service(IOAPICCommonState *s) {
           s->irr &= ~mask;
         } else {
           coalesce = s->ioredtbl[i] & IOAPIC_LVT_REMOTE_IRR;
-          // fuck_trace_ioapic_set_remote_irr(i);
+          // bmbt_trace_ioapic_set_remote_irr(i);
           s->ioredtbl[i] |= IOAPIC_LVT_REMOTE_IRR;
         }
 
@@ -124,7 +124,7 @@ static void ioapic_set_irq(void *opaque, int vector, int level) {
    * to GSI 2.  GSI maps to ioapic 1-1.  This is not
    * the cleanest way of doing it but it should work. */
 
-  // fuck_trace_ioapic_set_irq(vector, level);
+  // bmbt_trace_ioapic_set_irq(vector, level);
   // ioapic_stat_update_irq(s, vector, level);
   if (vector == 0) {
     vector = 2;
@@ -189,7 +189,7 @@ void ioapic_eoi_broadcast(int vector) {
   uint64_t entry;
   int i, n;
 
-  // fuck_trace_ioapic_eoi_broadcast(vector);
+  // bmbt_trace_ioapic_eoi_broadcast(vector);
 
   for (i = 0; i < MAX_IOAPICS; i++) {
     s = ioapics[i];
@@ -209,7 +209,7 @@ void ioapic_eoi_broadcast(int vector) {
         continue;
       }
 
-      // fuck_trace_ioapic_clear_remote_irr(n, vector);
+      // bmbt_trace_ioapic_clear_remote_irr(n, vector);
       s->ioredtbl[n] = entry & ~IOAPIC_LVT_REMOTE_IRR;
 
       if (!(entry & IOAPIC_LVT_MASKED) && (s->irr & (1 << n))) {
@@ -226,7 +226,7 @@ void ioapic_eoi_broadcast(int vector) {
           timer_mod_anticipate(s->delayed_ioapic_service_timer,
                                qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
                                    NANOSECONDS_PER_SECOND / 100);
-          // fuck_trace_ioapic_eoi_delayed_reassert(n);
+          // bmbt_trace_ioapic_eoi_delayed_reassert(n);
         } else {
           ioapic_service(s);
         }
@@ -273,7 +273,7 @@ static uint64_t ioapic_mem_read(void *opaque, hwaddr addr, unsigned int size) {
     break;
   }
 
-  // fuck_trace_ioapic_mem_read(addr, s->ioregsel, size, val);
+  // bmbt_trace_ioapic_mem_read(addr, s->ioregsel, size, val);
 
   return val;
 }
@@ -310,7 +310,7 @@ static void ioapic_mem_write(void *opaque, hwaddr addr, uint64_t val,
   int index;
 
   addr &= 0xff;
-  // fuck_trace_ioapic_mem_write(addr, s->ioregsel, size, val);
+  // bmbt_trace_ioapic_mem_write(addr, s->ioregsel, size, val);
 
   switch (addr) {
   case IOAPIC_IOREGSEL:
