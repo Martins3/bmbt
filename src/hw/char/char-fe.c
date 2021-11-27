@@ -35,7 +35,7 @@ void qemu_chr_fe_accept_input(CharBackend *be) {
   if (class->chr_accept_input) {
     class->chr_accept_input(s);
   }
-  g_assert_not_reached();
+  // g_assert_not_reached();
   // qemu_notify_event();
 }
 

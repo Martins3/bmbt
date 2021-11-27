@@ -136,6 +136,7 @@ static void serial_isa_init(SerialState *s, qemu_irq irq, const hwaddr offset,
   Chardev *chardev = &__chardev;
   ChardevClass *chardevclass = &__chardevclass;
   CHARDEV_SET_CLASS(chardev, chardevclass);
+  s->chr.chr = &__chardev;
   serial_realize_core(s);
   memory_region_init_io(&s->io, &serial_io_ops, s, "serial", 8);
   qdev_init_gpio_out(&s->gpio, &s->irq, 1);
@@ -143,8 +144,8 @@ static void serial_isa_init(SerialState *s, qemu_irq irq, const hwaddr offset,
   qdev_connect_gpio_out(&s->gpio, 0, irq);
 }
 
+void serial_hds_isa_init(ISABus *isa_bus) {
 #ifdef BMBT
-void serial_hds_isa_init(ISABus *bus, int from, int to) {
   int i;
 
   assert(from >= 0);
@@ -155,13 +156,9 @@ void serial_hds_isa_init(ISABus *bus, int from, int to) {
       serial_isa_init(bus, i, serial_hd(i));
     }
   }
-}
 #endif
 
-void serial_hds_isa_init(ISABus *isa_bus) {
-  for (int i = 0; i < MAX_ISA_SERIAL_PORTS; i++) {
-    SerialState *serial = &__serial[i];
-    serial_isa_init(serial, isa_bus->irqs[isa_serial_irq[i]], isa_serial_io[i],
-                    i);
-  }
+  SerialState *serial = &__serial[0];
+  serial_isa_init(serial, isa_bus->irqs[isa_serial_irq[0]], isa_serial_io[0],
+                  0);
 }
