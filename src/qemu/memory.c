@@ -238,6 +238,8 @@ static void unassigned_io_setup() {
   register_unassigned_io("unknow serial 0x2f9", 0x2f9, 1);
   register_unassigned_io("unknow serial 0x3e9", 0x3e9, 1);
   register_unassigned_io("unknow serial 0x2e9", 0x2e9, 1);
+  register_unassigned_io("unknow i8042-data", 0x64, 1);
+  register_unassigned_io("unknow i8042-cmd", 0x60, 1);
 }
 
 /**
