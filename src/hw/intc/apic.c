@@ -56,7 +56,7 @@ static void apic_local_deliver(APICCommonState *s, int vector) {
   uint32_t lvt = s->lvt[vector];
   int trigger_mode;
 
-  // fuck_trace_apic_local_deliver(vector, (lvt >> 8) & 7);
+  // bmbt_trace_apic_local_deliver(vector, (lvt >> 8) & 7);
 
   if (lvt & APIC_LVT_MASKED)
     return;
@@ -185,7 +185,7 @@ void apic_deliver_irq(uint8_t dest, uint8_t dest_mode, uint8_t delivery_mode,
                       uint8_t vector_num, uint8_t trigger_mode) {
   uint32_t deliver_bitmask[MAX_APIC_WORDS];
 
-  // fuck_trace_apic_deliver_irq(dest, dest_mode, delivery_mode, vector_num,
+  // bmbt_trace_apic_deliver_irq(dest, dest_mode, delivery_mode, vector_num,
   // trigger_mode);
 
   apic_get_delivery_bitmask(deliver_bitmask, dest, dest_mode);
@@ -614,7 +614,7 @@ static uint64_t apic_mem_read(void *opaque, hwaddr addr, unsigned size) {
     val = 0;
     break;
   }
-  // fuck_trace_apic_mem_readl(addr, val);
+  // bmbt_trace_apic_mem_readl(addr, val);
   return val;
 }
 
@@ -655,7 +655,7 @@ static void apic_mem_write(void *opaque, hwaddr addr, uint64_t val,
     return;
   }
 
-  // fuck_trace_apic_mem_writel(addr, val);
+  // bmbt_trace_apic_mem_writel(addr, val);
 
   switch (index) {
   case 0x02:

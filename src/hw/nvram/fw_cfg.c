@@ -134,7 +134,7 @@ static int fw_cfg_select(FWCfgState *s, uint16_t key) {
     }
   }
 
-  // fuck_trace_fw_cfg_select(s, key, trace_key_name(key), ret);
+  // bmbt_trace_fw_cfg_select(s, key, trace_key_name(key), ret);
   return ret;
 }
 
@@ -164,7 +164,7 @@ static uint64_t fw_cfg_data_read(void *opaque, hwaddr addr, unsigned size) {
     value <<= 8 * size;
   }
 
-  // fuck_trace_fw_cfg_read(s, value);
+  // bmbt_trace_fw_cfg_read(s, value);
   return value;
 }
 
@@ -275,7 +275,7 @@ static void fw_cfg_dma_transfer(FWCfgState *s) {
   stl_be_dma(s->dma_as, dma_addr + offsetof(FWCfgDmaAccess, control),
              dma.control);
 
-  // fuck_trace_fw_cfg_read(s, 0);
+  // bmbt_trace_fw_cfg_read(s, 0);
 }
 
 static uint64_t fw_cfg_dma_mem_read(void *opaque, hwaddr addr, unsigned size) {
@@ -492,14 +492,14 @@ static void *fw_cfg_modify_bytes_read(FWCfgState *s, uint16_t key, void *data,
 }
 
 void fw_cfg_add_bytes(FWCfgState *s, uint16_t key, void *data, size_t len) {
-  // fuck_trace_fw_cfg_add_bytes(key, trace_key_name(key), len);
+  // bmbt_trace_fw_cfg_add_bytes(key, trace_key_name(key), len);
   fw_cfg_add_bytes_callback(s, key, NULL, NULL, NULL, data, len, true);
 }
 
 void fw_cfg_add_string(FWCfgState *s, uint16_t key, const char *value) {
   size_t sz = strlen(value) + 1;
 
-  // fuck_trace_fw_cfg_add_string(key, trace_key_name(key), value);
+  // bmbt_trace_fw_cfg_add_string(key, trace_key_name(key), value);
   fw_cfg_add_bytes(s, key, g_memdup(value, sz), sz);
 }
 
@@ -516,7 +516,7 @@ void fw_cfg_add_i16(FWCfgState *s, uint16_t key, uint16_t value) {
 
   copy = g_malloc(sizeof(value));
   *copy = cpu_to_le16(value);
-  // fuck_trace_fw_cfg_add_i16(key, trace_key_name(key), value);
+  // bmbt_trace_fw_cfg_add_i16(key, trace_key_name(key), value);
   fw_cfg_add_bytes(s, key, copy, sizeof(value));
 }
 
@@ -534,7 +534,7 @@ void fw_cfg_add_i32(FWCfgState *s, uint16_t key, uint32_t value) {
 
   copy = g_malloc(sizeof(value));
   *copy = cpu_to_le32(value);
-  // fuck_trace_fw_cfg_add_i32(key, trace_key_name(key), value);
+  // bmbt_trace_fw_cfg_add_i32(key, trace_key_name(key), value);
   fw_cfg_add_bytes(s, key, copy, sizeof(value));
 }
 
@@ -552,7 +552,7 @@ void fw_cfg_add_i64(FWCfgState *s, uint16_t key, uint64_t value) {
 
   copy = g_malloc(sizeof(value));
   *copy = cpu_to_le64(value);
-  // fuck_trace_fw_cfg_add_i64(key, trace_key_name(key), value);
+  // bmbt_trace_fw_cfg_add_i64(key, trace_key_name(key), value);
   fw_cfg_add_bytes(s, key, copy, sizeof(value));
 }
 
@@ -709,7 +709,7 @@ void fw_cfg_add_file_callback(FWCfgState *s, const char *filename,
   s->files->f[index].size = cpu_to_be32(len);
   s->files->f[index].select = cpu_to_be16(FW_CFG_FILE_FIRST + index);
   s->entry_order[index] = order;
-  // fuck_trace_fw_cfg_add_file(s, index, s->files->f[index].name, len);
+  // bmbt_trace_fw_cfg_add_file(s, index, s->files->f[index].name, len);
 
   s->files->count = cpu_to_be32(count + 1);
 }

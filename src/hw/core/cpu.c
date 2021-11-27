@@ -107,7 +107,7 @@ void cpu_reset(CPUState *cpu) {
     g_assert_not_reached();
   }
 
-  // fuck_trace_guest_cpu_reset(cpu);
+  // bmbt_trace_guest_cpu_reset(cpu);
 }
 
 static void cpu_common_reset(CPUState *cpu) {

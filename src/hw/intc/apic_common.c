@@ -5,7 +5,7 @@ static int apic_irq_delivered;
 bool apic_report_tpr_access;
 
 void cpu_set_apic_base(APICCommonState *s, uint64_t val) {
-  // fuck_trace_cpu_set_apic_base(val);
+  // bmbt_trace_cpu_set_apic_base(val);
 
   if (s) {
     APICCommonClass *info = APIC_COMMON_GET_CLASS(s);
@@ -20,10 +20,10 @@ void cpu_set_apic_base(APICCommonState *s, uint64_t val) {
 
 uint64_t cpu_get_apic_base(APICCommonState *s) {
   if (s) {
-    // fuck_trace_cpu_get_apic_base((uint64_t)s->apicbase);
+    // bmbt_trace_cpu_get_apic_base((uint64_t)s->apicbase);
     return s->apicbase;
   } else {
-    // fuck_trace_cpu_get_apic_base(MSR_IA32_APICBASE_BSP);
+    // bmbt_trace_cpu_get_apic_base(MSR_IA32_APICBASE_BSP);
     return MSR_IA32_APICBASE_BSP;
   }
 }
@@ -69,7 +69,7 @@ void apic_enable_vapic(APICCommonState *s, hwaddr paddr) {
 void apic_report_irq_delivered(int delivered) {
   apic_irq_delivered += delivered;
 
-  // fuck_trace_apic_report_irq_delivered(apic_irq_delivered);
+  // bmbt_trace_apic_report_irq_delivered(apic_irq_delivered);
 }
 
 void apic_reset_irq_delivered(void) {
@@ -78,13 +78,13 @@ void apic_reset_irq_delivered(void) {
    * https://sourceware.org/bugzilla/show_bug.cgi?id=13296
    */
   volatile int a_i_d = apic_irq_delivered;
-  // fuck_trace_apic_reset_irq_delivered(a_i_d);
+  // bmbt_trace_apic_reset_irq_delivered(a_i_d);
 
   apic_irq_delivered = 0;
 }
 
 int apic_get_irq_delivered(void) {
-  // fuck_trace_apic_get_irq_delivered(apic_irq_delivered);
+  // bmbt_trace_apic_get_irq_delivered(apic_irq_delivered);
 
   return apic_irq_delivered;
 }
