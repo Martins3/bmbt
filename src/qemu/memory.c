@@ -209,13 +209,15 @@ void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
 }
 
 static uint64_t unassigned_io_read(void *opaque, hwaddr addr, unsigned size) {
-  printf("huxueshi:%s %lx %d\n", __FUNCTION__, addr, size);
+  MemoryRegion *mr = opaque;
+  printf("%s %s %lx %d\n", __FUNCTION__, mr->name, addr, size);
   return -1ULL;
 }
 
 static void unassigned_io_write(void *opaque, hwaddr addr, uint64_t val,
                                 unsigned size) {
-  printf("huxueshi:%s %lx %d\n", __FUNCTION__, addr, size);
+  MemoryRegion *mr = opaque;
+  printf("%s %s %lx %d\n", __FUNCTION__, mr->name, addr, size);
 }
 
 const MemoryRegionOps unassigned_io_ops = {
@@ -226,7 +228,7 @@ const MemoryRegionOps unassigned_io_ops = {
 
 static void register_unassigned_io(const char *name, int offset, int size) {
   MemoryRegion *unknown = g_new0(MemoryRegion, 1);
-  memory_region_init_io(unknown, &unassigned_io_ops, NULL, name, size);
+  memory_region_init_io(unknown, &unassigned_io_ops, unknown, name, size);
   io_add_memory_region(offset, unknown);
 }
 
@@ -235,11 +237,11 @@ static void unassigned_io_setup() {
   // For debug reason, that's not permitted. Register the ioport used by guest
   // here explicitly
   register_unassigned_io("ioportF1", 0xf1, 1);
-  register_unassigned_io("unknow serial 0x2f9", 0x2f9, 1);
-  register_unassigned_io("unknow serial 0x3e9", 0x3e9, 1);
-  register_unassigned_io("unknow serial 0x2e9", 0x2e9, 1);
-  register_unassigned_io("unknow i8042-data", 0x64, 1);
-  register_unassigned_io("unknow i8042-cmd", 0x60, 1);
+  register_unassigned_io("serial 0x2f9", 0x2f9, 1);
+  register_unassigned_io("serial 0x3e9", 0x3e9, 1);
+  register_unassigned_io("serial 0x2e9", 0x2e9, 1);
+  register_unassigned_io("i8042-data", 0x64, 1);
+  register_unassigned_io("i8042-cmd", 0x60, 1);
 }
 
 /**
