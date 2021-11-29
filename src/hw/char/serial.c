@@ -272,7 +272,7 @@ static void serial_xmit(SerialState *s) {
       serial_receive1(s, &s->tsr, 1);
     } else {
       Chardev *chr = s->chr.chr;
-      assert(fprintf(chr->log, "%s", &s->tsr) == 1);
+      assert(fprintf(chr->log, "%c", s->tsr) == 1);
       fflush(chr->log);
 #ifdef BMBT
       int rc = qemu_chr_fe_write(&s->chr, &s->tsr, 1);
