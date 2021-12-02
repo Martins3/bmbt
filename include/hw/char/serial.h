@@ -33,52 +33,51 @@
 #include "qemu/fifo8.h"
 #include "qemu/timer.h"
 
-#define UART_FIFO_LENGTH    16      /* 16550A Fifo Length */
+#define UART_FIFO_LENGTH 16 /* 16550A Fifo Length */
 
 typedef struct SerialState {
-    uint16_t divider;
-    uint8_t rbr; /* receive register */
-    uint8_t thr; /* transmit holding register */
-    uint8_t tsr; /* transmit shift register */
-    uint8_t ier; /* Interrupt Enable Register */
-    uint8_t iir; /* Interrupt Identification Register */
-    uint8_t lcr; /* Line Control Register */
-    uint8_t mcr; /* Modem Control Register */
-    uint8_t lsr; /* Line Status Register */
-    uint8_t msr; /* Modem Status Register */
-    uint8_t scr;
-    uint8_t fcr;
-    uint8_t fcr_vmstate; /* we can't write directly this value
-                            it has side effects */
-    /* NOTE: this hidden state is necessary for tx irq generation as
-       it can be reset while reading iir */
-    int thr_ipending;
-    qemu_irq irq;
-    CharBackend chr;
-    int last_break_enable;
-    int it_shift;
-    int baudbase;
-    uint32_t tsr_retry;
-    guint watch_tag;
-    uint32_t wakeup;
+  uint16_t divider;
+  uint8_t rbr; /* receive register */
+  uint8_t thr; /* transmit holding register */
+  uint8_t tsr; /* transmit shift register */
+  uint8_t ier; /* Interrupt Enable Register */
+  uint8_t iir; /* Interrupt Identification Register */
+  uint8_t lcr; /* Line Control Register */
+  uint8_t mcr; /* Modem Control Register */
+  uint8_t lsr; /* Line Status Register */
+  uint8_t msr; /* Modem Status Register */
+  uint8_t scr;
+  uint8_t fcr;
+  uint8_t fcr_vmstate; /* we can't write directly this value
+                          it has side effects */
+  /* NOTE: this hidden state is necessary for tx irq generation as
+     it can be reset while reading iir */
+  int thr_ipending;
+  qemu_irq irq;
+  CharBackend chr;
+  int last_break_enable;
+  int it_shift;
+  int baudbase;
+  uint32_t tsr_retry;
+  guint watch_tag;
+  uint32_t wakeup;
 
-    /* Time when the last byte was successfully sent out of the tsr */
-    uint64_t last_xmit_ts;
-    Fifo8 recv_fifo;
-    Fifo8 xmit_fifo;
-    /* Interrupt trigger level for recv_fifo */
-    uint8_t recv_fifo_itl;
+  /* Time when the last byte was successfully sent out of the tsr */
+  uint64_t last_xmit_ts;
+  Fifo8 recv_fifo;
+  Fifo8 xmit_fifo;
+  /* Interrupt trigger level for recv_fifo */
+  uint8_t recv_fifo_itl;
 
-    QEMUTimer *fifo_timeout_timer;
-    int timeout_ipending;           /* timeout interrupt pending state */
+  QEMUTimer *fifo_timeout_timer;
+  int timeout_ipending; /* timeout interrupt pending state */
 
-    uint64_t char_transmit_time;    /* time to transmit a char in ticks */
-    int poll_msl;
+  uint64_t char_transmit_time; /* time to transmit a char in ticks */
+  int poll_msl;
 
-    QEMUTimer *modem_status_poll;
-    MemoryRegion io;
-    GPIOList gpio;
-    FILE *log;
+  QEMUTimer *modem_status_poll;
+  MemoryRegion io;
+  GPIOList gpio;
 } SerialState;
 
 #define MAX_ISA_SERIAL_PORTS 4
@@ -96,11 +95,10 @@ void serial_set_frequency(SerialState *s, uint32_t frequency);
 
 /* legacy pre qom */
 #ifdef BMBT
-SerialState *serial_init(int base, qemu_irq irq, int baudbase,
-                         Chardev *chr, MemoryRegion *system_io);
-SerialState *serial_mm_init(MemoryRegion *address_space,
-                            hwaddr base, int it_shift,
-                            qemu_irq irq, int baudbase,
+SerialState *serial_init(int base, qemu_irq irq, int baudbase, Chardev *chr,
+                         MemoryRegion *system_io);
+SerialState *serial_mm_init(MemoryRegion *address_space, hwaddr base,
+                            int it_shift, qemu_irq irq, int baudbase,
                             Chardev *chr, enum device_endian end);
 
 #endif

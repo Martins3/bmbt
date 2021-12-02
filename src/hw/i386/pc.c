@@ -1399,8 +1399,8 @@ void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
   qemu_irq pit_alt_irq = NULL;
   qemu_irq rtc_irq = NULL;
   ISADevice *pit = NULL;
-  MemoryRegion *ioport80_io = g_new(MemoryRegion, 1);
-  MemoryRegion *ioportF0_io = g_new(MemoryRegion, 1);
+  MemoryRegion *ioport80_io = g_new0(MemoryRegion, 1);
+  MemoryRegion *ioportF0_io = g_new0(MemoryRegion, 1);
 
   memory_region_init_io(ioport80_io, &ioport80_io_ops, NULL, "ioport80", 1);
   io_add_memory_region(0x80, ioport80_io);

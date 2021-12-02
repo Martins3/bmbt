@@ -87,6 +87,7 @@ struct Chardev {
   char *filename;
   int logfd;
   int be_open;
+  FILE *log;
   // GSource *gsource;
   // GMainContext *gcontext;
   DECLARE_BITMAP(features, QEMU_CHAR_FEATURE_LAST);

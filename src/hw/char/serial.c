@@ -270,8 +270,9 @@ static void serial_xmit(SerialState *s) {
       /* in loopback mode, say that we just received a char */
       serial_receive1(s, &s->tsr, 1);
     } else {
-      assert(fprintf(s->log, "%s", &s->tsr) == 1);
-      fflush(s->log);
+      Chardev *chr = s->chr.chr;
+      assert(fprintf(chr->log, "%s", &s->tsr) == 1);
+      fflush(chr->log);
       // we just use serial output to a specify file
 #ifdef BMBT
       int rc = qemu_chr_fe_write(&s->chr, &s->tsr, 1);
@@ -902,7 +903,11 @@ static int serial_be_change(void *opaque) {
 }
 
 void serial_realize_core(SerialState *s) {
-  s->log = get_logfile("serial.log");
+  Chardev *chr = s->chr.chr;
+  // the truely output is CharBackend,
+  // and SerialState is a abstract device for guestos,
+  // so redirecting in CharBackend.
+  chr->log = get_logfile("serial.log");
   s->modem_status_poll =
       timer_new_ns(QEMU_CLOCK_VIRTUAL, (QEMUTimerCB *)serial_update_msl, s);
 
