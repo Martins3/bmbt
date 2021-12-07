@@ -842,8 +842,13 @@ static void serial_reset(void *opaque) {
   SerialState *s = opaque;
 
   if (s->watch_tag > 0) {
+    g_assert_not_reached();
+    // g_source_remove is complex,
+    // and watch_tag is not used almostly.
+#ifdef BMBT
     g_source_remove(s->watch_tag);
     s->watch_tag = 0;
+#endif
   }
 
   s->rbr = 0;

@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> // for strcmp
 
 #define g_assert(expr)                                                         \
   {                                                                            \
@@ -54,4 +55,5 @@
   }                                                                            \
   G_STMT_END
 
+int g_strcmp0(const char *str1, const char *str2);
 #endif /* end of include guard: GTESTUTILS_H_PYMBKDEC */
