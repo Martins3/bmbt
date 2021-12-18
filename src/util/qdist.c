@@ -8,6 +8,8 @@
  *   See the COPYING file in the top-level directory.
  */
 #include "../tcg/glib_stub.h"
+#include <math.h>
+#include <qemu/osdep.h>
 #include <qemu/qdist.h>
 #include <string.h>
 #ifndef NAN
