@@ -62,8 +62,9 @@ gchar *g_strdup(const gchar *str) G_GNUC_MALLOC;
 gint g_vasprintf(gchar **string, gchar const *format, va_list args)
     G_GNUC_PRINTF(2, 0);
 
-extern int vasprintf(char **__restrict __ptr, const char *__restrict __f,
-                     __gnuc_va_list __arg) __THROWNL
-    __attribute__((__format__(__printf__, 2, 0))) __wur;
+// this function is glibc function, it's a mistake
+// extern int vasprintf(char **__restrict __ptr, const char *__restrict __f,
+//                      __gnuc_va_list __arg) __THROWNL
+//     __attribute__((__format__(__printf__, 2, 0))) __wur;
 
 #endif /* end of include guard: GSTRING_H_FRGHS8PS */

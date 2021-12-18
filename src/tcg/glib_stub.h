@@ -12,7 +12,8 @@
 #include "../../glib/gmacros.h"
 #include "../../glib/gmappedfile.h"
 #include "../../glib/gmem.h"
-#include "../../glib/gprintf.h"
+// this header file is useless after i review the code
+// #include "../../glib/gprintf.h"
 #include "../../glib/gstrfuncs.h"
 #include "../../glib/gstring.h"
 #include "../../glib/gtestutils.h"
