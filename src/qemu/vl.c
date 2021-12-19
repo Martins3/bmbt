@@ -164,7 +164,7 @@ Chardev *serial_hd(int i) {
 
 static void init_serial_chardev() {
   serial_hds = g_new0(Chardev *, 1);
-  Chardev *serial_stub = g_new(Chardev, 1);
+  Chardev *serial_stub = g_new0(Chardev, 1);
   serial_stub->log = get_logfile("serial.log");
   serial_hds[0] = serial_stub;
   num_serial_hds++;
