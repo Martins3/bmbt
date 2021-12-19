@@ -110,3 +110,7 @@
     - 然后在 child 的 DeviceClass 中添加一个 DeviceRealize parent_realize，感觉有点丑陋，直接调用，结束了。
 48. seqlock.h
     - QemuLockable 类型在 seqlock.h 中为了简化实现直接直接修改为 spinlock 类型了
+49. gmessages.h
+    - 在 glib 原来的实现中，这里只是警告，在移植的实现中，我们认为只要出现了警告，那么就应该 crash 掉
+50. slice.c
+    - 在 glib/gslice.c 中，为了高性能，实现的库非常的复杂，在这里直接简化为 g_malloc 和 g_free 了
