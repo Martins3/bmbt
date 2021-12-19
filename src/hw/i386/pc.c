@@ -13,7 +13,6 @@
 #include "../../../include/sysemu/sysemu.h"
 #include "../../../include/sysemu/tcg.h"
 #include "../../i386/cpu.h"
-#include "../../tcg/glib_stub.h"
 #include "acpi-build.h"
 #include "e820_memory_layout.h"
 #include <hw/audio/pcspk.h>
@@ -21,6 +20,7 @@
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/timer/i8254.h>
 #include <qemu/log.h>
+#include <uglib.h>
 
 /* debug PC/ISA interrupts */
 #define DEBUG_IRQ

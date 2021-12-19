@@ -1,7 +1,7 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/error-report.h"
-#include "../tcg/glib_stub.h"
 #include <sys/mman.h>
+#include <uglib.h>
 
 static int qemu_mprotect__osdep(void *addr, size_t size, int prot) {
   g_assert(!((uintptr_t)addr & ~qemu_real_host_page_mask));

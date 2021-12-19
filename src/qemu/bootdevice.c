@@ -1,4 +1,3 @@
-#include "../src/tcg/glib_stub.h"
 #include <assert.h>
 #include <hw/boards.h>
 #include <hw/qdev-core.h>
@@ -7,6 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sysemu/sysemu.h>
+#include <uglib.h>
 
 typedef struct FWBootEntry FWBootEntry;
 

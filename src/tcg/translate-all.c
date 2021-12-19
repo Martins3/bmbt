@@ -17,11 +17,11 @@
 #include "../../include/sysemu/replay.h"
 #include "../../include/types.h"
 
-#include "./glib_stub.h"
 #include "./tcg.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <sys/mman.h>
+#include <uglib.h>
 
 int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
                             void *code_hightwater, int *search_size);

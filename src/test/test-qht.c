@@ -1,7 +1,7 @@
-#include "../../src/tcg/glib_stub.h"
 #include <qemu/osdep.h>
 #include <qemu/qht.h>
 #include <qemu/rcu.h>
+#include <uglib.h>
 #include <unitest/greatest.h>
 
 #define N 5000
