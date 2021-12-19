@@ -17,7 +17,7 @@ gint g_tree_nnodes(GTree *tree);
 GTree *g_tree_ref(GTree *tree);
 void g_tree_destroy(GTree *tree);
 
-typedef bool (*GTraverseFunc)(gpointer key, gpointer value, gpointer data);
+typedef gboolean (*GTraverseFunc)(gpointer key, gpointer value, gpointer data);
 
 void g_tree_foreach(GTree *tree, GTraverseFunc func, gpointer user_data);
 

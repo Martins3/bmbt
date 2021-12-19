@@ -125,7 +125,8 @@ int rom_check_and_register_reset(void) {
  */
 static void rom_free_data(Rom *rom) {
   if (rom->mapped_file) {
-    g_mapped_file_unref(rom->mapped_file);
+    g_assert_not_reached();
+    // g_mapped_file_unref(rom->mapped_file);
     rom->mapped_file = NULL;
   } else {
     g_free(rom->data);

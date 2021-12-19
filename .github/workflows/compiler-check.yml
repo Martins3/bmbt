@@ -17,5 +17,7 @@ jobs:
       run: git submodule update --init --recursive --depth=1
     - name: add kernel config
       run: echo "KERNEL_PATH:=github" > kernel.mak
-    - name: make
+    - name: make without glib
       run: make
+    - name: make with glib
+      run: make USE_GLIB=1

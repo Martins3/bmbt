@@ -3213,12 +3213,14 @@ static const char *x86_cpu_feature_name(FeatureWord w, int bitnr) {
   return name;
 }
 
+#ifdef BMBT
 /* Compatibily hack to maintain legacy +-feat semantic,
  * where +-feat overwrites any feature set by
  * feat=on|feat even if the later is parsed after +-feat
  * (i.e. "-x2apic,x2apic=on" will result in x2apic disabled)
  */
 static GList *plus_features, *minus_features;
+#endif
 
 static gint compare_string(gconstpointer a, gconstpointer b) { return 1; }
 
@@ -4364,9 +4366,9 @@ static void x86_cpu_expand_features(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
   FeatureWord w;
   int i;
+#ifdef BMBT
   GList *l;
 
-#ifdef BMBT
   for (l = plus_features; l; l = l->next) {
     const char *prop = l->data;
     object_property_set_bool(OBJECT(cpu), true, prop, &local_err);

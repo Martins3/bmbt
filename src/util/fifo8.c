@@ -15,6 +15,7 @@
 #include "qemu/fifo8.h"
 #include "../tcg/glib_stub.h"
 #include "qemu/osdep.h"
+#include <string.h>
 
 void fifo8_create(Fifo8 *fifo, uint32_t capacity) {
   fifo->data = g_new(uint8_t, capacity);

@@ -1,16 +1,35 @@
 #!/usr/bin/make
 SHELL:=/bin/bash
+CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use # 暂时不使用 iwyu
+CXX=gcc
+GCC=${CXX}
+LD=ld
+AR=ar
+RANLIB=ranlib
 
-ARCH_FLAGS := -DBUILD_ON_LOONGSON
+# ================================= glib =======================================
+ifeq ($(USE_GLIB), 1)
+GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
+GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
+GLIBS= -lglib-2.0
+GLIB_APPENDIX= with_glib
+else
+GLIB_APPENDIX= no_glib
+endif
+# ================================= glib =======================================
+
+ARCH_APPENDIX :=loongson
 BASE_DIR := $(shell pwd)
-BUILD_DIR := $(BASE_DIR)/build_loongson
 
 UNAME := $(shell uname -a)
 ifneq (,$(findstring x86_64, $(UNAME)))
-	BUILD_DIR := /tmp/build_x86
-	ARCH_FLAGS :=
+	ARCH_APPENDIX := x86
 endif
-# QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
+
+
+BUILD_DIR := $(BASE_DIR)/build_$(ARCH_APPENDIX)_$(GLIB_APPENDIX)
+UPPER_CASE = $(shell echo "$1" | tr '[:lower:]' '[:upper:]')
+ARCH_FLAGS := -DBUILD_$(call UPPER_CASE,$(ARCH_APPENDIX))_$(call UPPER_CASE,$(GLIB_APPENDIX))
 
 bmbt := $(BUILD_DIR)/bmbt.bin
 LIBCAPSTONE := $(BUILD_DIR)/capstone/libcapstone.a
@@ -19,23 +38,6 @@ include ./kernel.mak
 ifeq (, $(KERNEL_PATH))
 $(error "kernel path not setup, create kernel.mak and set KERNEL_PATH in it")
 endif
-
-# ================================= glib =======================================
-# lglib=1 to use local glib
-ifeq ($(glib), 0)
-GLIB_LIB     = $(shell pkg-config --libs gthread-2.0) -DUSE_SYSTEM_GLIB
-$(info use system glib)
-else
-$(info use local glib)
-endif
-GLIB_INCLUDE = $(shell pkg-config --cflags glib-2.0)
-# @todo libgcc is absolute path
-# github action will not work with the absolute path
-# -lc : add glibc
-# -lm : add libmath
-GLIBS= -lglib-2.0 -lrt -lm -lc
-
-# ================================= glib =======================================
 
 GCOV_CFLAGS=-fprofile-arcs -ftest-coverage
 GCOV_LFLAGS=-lgcov --coverage
@@ -58,6 +60,7 @@ C_SRC_FILES += $(wildcard src/qemu/*.c)
 C_SRC_FILES += $(wildcard src/util/*.c)
 C_SRC_FILES += $(wildcard src/test/*.c)
 C_SRC_FILES += $(wildcard src/i386/*.c)
+C_SRC_FILES += $(wildcard glib/*.c)
 
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
@@ -69,17 +72,6 @@ ASSEMBLY_OBJ_FILES := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
 C_OBJ_FILES := $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
 
 OBJ_FILES := $(ASSEMBLY_OBJ_FILES) $(C_OBJ_FILES)
-
-CXX=/home/maritns3/core/iwyu/build/bin/include-what-you-use # 暂时不使用 iwyu
-CXX=gcc
-
-ARCH_PREFIX :=
-GCC=$(ARCH_PREFIX)${CXX}
-LD=$(ARCH_PREFIX)ld
-AR=$(ARCH_PREFIX)ar
-RANLIB=ranlib
-
-DEF = ../../qemu_bak/vmlinux
 
 dependency_files = $(OBJ_FILES:%.o=%.d)
 
@@ -130,7 +122,7 @@ $(BUILD_DIR)/%.o: %.S
 $(bmbt) : $(OBJ_FILES) capstone
 		@mkdir -p $(@D)
 		@echo "  Link    $@"
-		@$(GCC) $(OBJ_FILES) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -o $(bmbt)
+		@$(GCC) $(OBJ_FILES) $(LFLAGS) $(LIBCAPSTONE) $(GLIBS) -lm -lrt -o $(bmbt)
 
 # $(LD) $(CFLAGS) -n -T $(linker_script) -o $(bmbt) $(OBJ_FILES)
 
@@ -158,6 +150,10 @@ clean:
 clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
 
+
+QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
+DEF = ../../qemu_bak/vmlinux
+
 run: all clear_gcda
 	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt)
 	@# only test work in process
@@ -170,7 +166,6 @@ compile: all
 
 test: all clear_gcda
 	$(bmbt)
-
 
 gdb: all
 	@#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(DEF)

@@ -24,6 +24,6 @@ typedef guint32 gunichar;
 #define G_MAXSIZE G_MAXULONG
 #define G_MAXULONG ULONG_MAX
 
-#define HAVE_GOOD_PRINTF 1
+#define USE_SYSTEM_PRINTF
 #define HAVE_VASPRINTF 1
 #endif /* end of include guard: GLIBCONFIG_H_QZSYMJDV */
