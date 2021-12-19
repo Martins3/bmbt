@@ -6,11 +6,22 @@ FILE *qemu_logfile;
 int qemu_loglevel;
 
 FILE *get_logfile(const char *f) {
-#ifdef BUILD_ON_LOONGSON
-  char filename[256] = "build_loongson/";
-#else
-  char filename[256] = "/tmp/build_x86/";
+#ifdef BUILD_LOONGSON_NO_GLIB
+  char filename[256] = "./build_loongson_no_glib/";
 #endif
+
+#ifdef BUILD_LOONGSON_WITH_GLIB
+  char filename[256] = "./build_loongson_with_glib";
+#endif
+
+#ifdef BUILD_X86_WITH_GLIB
+  char filename[256] = "./build_x86_with_glib";
+#endif
+
+#ifdef BUILD_X86_NO_GLIB
+  char filename[256] = "./build_x86_no_glib";
+#endif
+
   strcat(filename, f);
   FILE *file = fopen(filename, "w");
   duck_check(file != NULL);

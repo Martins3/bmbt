@@ -495,8 +495,7 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
 
     mapped_file = g_mapped_file_new(initrd_filename, false, &gerr);
     if (!mapped_file) {
-      fprintf(stderr, "qemu: error reading initrd %s: %s\n", initrd_filename,
-              gerr->message);
+      fprintf(stderr, "qemu: error reading initrd %s\n", initrd_filename);
       exit(1);
     }
 #ifdef BMBT

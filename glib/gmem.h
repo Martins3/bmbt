@@ -1,8 +1,8 @@
 #ifndef GMEM_H_JB5SEPOA
 #define GMEM_H_JB5SEPOA
 
-#include "gatomic.h"
 #include "glibconfig.h"
+#include "gmacros.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -93,8 +93,6 @@ gpointer g_realloc_n(gpointer mem, gsize n_blocks,
 gpointer g_try_malloc_n(gsize n_blocks, gsize n_block_bytes) G_GNUC_MALLOC
     G_GNUC_ALLOC_SIZE2(1, 2);
 gpointer g_memdup(gconstpointer mem, guint byte_size) G_GNUC_ALLOC_SIZE(2);
-gpointer g_slice_alloc(gsize block_size) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE(1);
-
 /* Optimise: avoid the call to the (slower) _n function if we can
  * determine at compile-time that no overflow happens.
  */

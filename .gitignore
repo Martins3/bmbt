@@ -4,8 +4,7 @@
 *.bin
 *.d
 *.org
-build_x86
-build_loongson
+build_*/
 
 .ccls-cache/
 
