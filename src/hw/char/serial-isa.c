@@ -23,11 +23,11 @@
  * THE SOFTWARE.
  */
 
-#include "../../tcg/glib_stub.h"
 #include <hw/char/serial.h>
 #include <hw/isa/isa.h>
 #include <qemu/error-report.h>
 #include <sysemu/sysemu.h>
+#include <uglib.h>
 
 #define ISA_SERIAL(obj) OBJECT_CHECK(ISASerialState, (obj), TYPE_ISA_SERIAL)
 

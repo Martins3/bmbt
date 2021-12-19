@@ -7,11 +7,11 @@
  * License: GNU GPL, version 2 or later.
  *   See the COPYING file in the top-level directory.
  */
-#include "../tcg/glib_stub.h"
 #include <math.h>
 #include <qemu/osdep.h>
 #include <qemu/qdist.h>
 #include <string.h>
+#include <uglib.h>
 #ifndef NAN
 #define NAN (0.0 / 0.0)
 #endif

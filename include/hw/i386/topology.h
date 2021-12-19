@@ -38,8 +38,8 @@
  *  CPUID Fn8000_0008_ECX[ApicIdCoreIdSize[3:0]] is set to apicid_core_width().
  */
 
-#include "../../../src/tcg/glib_stub.h"
 #include "../../qemu/host-utils.h"
+#include <uglib.h>
 
 /* APIC IDs can be 32-bit, but beware: APIC IDs > 255 require x2APIC support
  */

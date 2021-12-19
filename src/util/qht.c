@@ -71,8 +71,8 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/rcu.h"
 #include "../../include/qemu/seqloch.h"
-#include "../../src/tcg/glib_stub.h"
 #include <string.h>
+#include <uglib.h>
 
 //#define QHT_DEBUG
 
