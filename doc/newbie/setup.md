@@ -122,3 +122,7 @@ cd 32bit
 kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142
 qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
 ```
+
+## UEFI
+- UEFI 基础准备: https://martins3.github.io/bmbt/uefi-linux.html
+- 将 BMBT 作为 edk2 的一部分需要进行的操作: https://martins3.github.io/bmbt/uefi-in-action.html
