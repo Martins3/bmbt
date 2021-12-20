@@ -13,6 +13,12 @@
 static int counter;
 static int loop_counter;
 
+void soonest_timer(timer_t tid, long s, long ns);
+static void soonest_timer_s(timer_t tid, long s) { soonest_timer(tid, s, 0); }
+static void soonest_timer_ns(timer_t tid, long ns) {
+  soonest_timer(tid, 0, ns);
+}
+
 static void do_something() {
   struct timespec request, remain;
   request.tv_sec = 0;

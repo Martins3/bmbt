@@ -34,7 +34,7 @@ timer_t setup_timer(TimerHandler handler) {
   return interrpt_tid;
 }
 
-static void soonest_timer(timer_t tid, long s, long ns) {
+void soonest_timer(timer_t tid, long s, long ns) {
   struct itimerspec ts;
   ts.it_value.tv_sec = s;
   ts.it_value.tv_nsec = ns;
@@ -57,10 +57,6 @@ static void soonest_timer(timer_t tid, long s, long ns) {
     error_report("timer_settime failed\n");
   }
 }
-
-void soonest_timer_s(timer_t tid, long s) { soonest_timer(tid, s, 0); }
-
-void soonest_timer_ns(timer_t tid, long ns) { soonest_timer(tid, 0, ns); }
 
 void soonest_interrupt_ns(long ns) {
   soonest_timer(interrpt_tid, ns / NANOSECONDS_PER_SECOND,
