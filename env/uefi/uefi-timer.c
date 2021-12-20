@@ -9,30 +9,28 @@
 #include <sys/time.h>
 #include <unitest/greatest.h>
 
-#define INTERVAL 1000 /* number of milliseconds to go off */
-
-/*
- * DoStuff
- */
-void DoStuff(int x) { printf("huxueshi:%s \n", __FUNCTION__); }
-
-int main(int argc, char *argv[]) {
-  struct itimerval it_val; /* for setting itimer */
-
-  /* Upon SIGALRM, call DoStuff().
-   * Set interval timer.  We want frequency in ms,
-   * but the setitimer call needs seconds and useconds. */
-  if (signal(SIGALRM, (void (*)(int))DoStuff) == SIG_ERR) {
+timer_id setup_timer(TimerHandler handler) {
+  if (signal(SIGALRM, handler) == SIG_ERR) {
     perror("Unable to catch SIGALRM");
     exit(1);
   }
 
-  it_val.it_value.tv_sec = INTERVAL / 1000;
-  it_val.it_value.tv_usec = (INTERVAL * 1000) % 1000000;
+  return NULL;
+}
+
+#define NANOSECONDS_PER_SECOND 1000000000LL
+#define MICROSECONDS_PER_SECOND 1000000LL
+
+void soonest_interrupt_ns(long ns) {
+  struct itimerval it_val; /* for setting itimer */
+
+  it_val.it_value.tv_sec = ns / NANOSECONDS_PER_SECOND;
+  // https://stackoverflow.com/questions/2745074/fast-ceiling-of-an-integer-division-in-c-c
+  it_val.it_value.tv_usec =
+      (ns % NANOSECONDS_PER_SECOND + MICROSECONDS_PER_SECOND - 1) %
+      MICROSECONDS_PER_SECOND;
   it_val.it_interval.tv_sec = 0;
   it_val.it_interval.tv_usec = 0;
-
-  printf("huxueshi:%s %d\n", __FUNCTION__, EfiGetCurrentTpl());
 
   EFI_TPL Tpl;
   Tpl = gBS->RaiseTPL(TPL_CALLBACK);
@@ -41,10 +39,4 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   gBS->RestoreTPL(Tpl);
-  printf("huxueshi:%s \n", __FUNCTION__);
-
-  while (1) {
-    asm("hlt");
-  }
-  return 0;
 }
