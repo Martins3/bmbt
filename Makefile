@@ -18,6 +18,16 @@ GLIB_APPENDIX= no_glib
 endif
 # ================================= glib =======================================
 
+ifeq ($(ENV_UEFI), 1)
+	ENV_INCLUDE=env/uefi/include
+else ifeq ($(ENV_BAREMETAL), 1)
+	ENV_INCLUDE=env/baremetal/include
+else
+	ENV_INCLUDE=env/userspace/include
+	C_SRC_FILES += $(wildcard env/userspace/*.c)
+endif
+$(info $(ENV_INCLUDE))
+
 ARCH_APPENDIX :=loongson
 BASE_DIR := $(shell pwd)
 
@@ -25,7 +35,6 @@ UNAME := $(shell uname -a)
 ifneq (,$(findstring x86_64, $(UNAME)))
 	ARCH_APPENDIX := x86
 endif
-
 
 BUILD_DIR := $(BASE_DIR)/build_$(ARCH_APPENDIX)_$(GLIB_APPENDIX)
 UPPER_CASE = $(shell echo "$1" | tr '[:lower:]' '[:upper:]')
@@ -43,7 +52,7 @@ GCOV_CFLAGS=-fprofile-arcs -ftest-coverage
 GCOV_LFLAGS=-lgcov --coverage
 
 
-CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include $(GLIB_INCLUDE) -I$(BASE_DIR)/include
+CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include -I$(ENV_INCLUDE) $(GLIB_INCLUDE) -I$(BASE_DIR)/include
 CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB) $(GCOV_CFLAGS) $(ARCH_FLAGS)
 LFLAGS := -g -Werror $(GCOV_LFLAGS) $(GLIB_LIB)
 

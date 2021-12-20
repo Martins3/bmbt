@@ -2,6 +2,7 @@
 #define TIMER_H_PBGYZKVR
 
 #include "../types.h"
+#include <host-timer.h>
 #include <signal.h>
 #include <sys/time.h>
 #include <time.h>
@@ -257,14 +258,4 @@ static inline int64_t cpu_get_host_ticks(void) { return get_clock(); }
 
 // vl.c
 void qemu_get_timedate(struct tm *tm, int offset);
-
-// used by signal-timer.c / UEFI-timer.c
-typedef void(TimerHandler)(int sig, siginfo_t *si, void *uc);
-timer_t setup_timer(TimerHandler handler);
-void soonest_interrupt_ns(long ns);
-void block_interrupt();
-void unblock_interrupt();
-bool is_interrupt_blocked();
-void fire_timer();
-
 #endif /* end of include guard: TIMER_H_PBGYZKVR */

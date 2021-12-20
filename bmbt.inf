@@ -1,0 +1,123 @@
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = bmbt
+  FILE_GUID                      = 4b584bda-b606-49ba-89c0-86d18c217d99
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 0.1
+  ENTRY_POINT                    = ShellCEntryLib
+
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources]
+   env/uefi/uefi-timer.c
+#  src/main.c
+#  src/tcg/cpu-exec.c
+#  src/tcg/tcg.c
+#  src/tcg/tcg-runtime.c
+#  src/tcg/cpu-exec-common.c
+#  src/tcg/tcg-all.c
+#  src/tcg/memory_ldst.c
+#  src/tcg/translate-all.c
+#  src/tcg/cputlb.c
+#  src/hw/i386/pc.c
+#  src/hw/i386/pc_sysfw.c
+#  src/hw/i386/e820_memory_layout.c
+#  src/hw/i386/acpi.c
+#  src/hw/i386/pc_piix.c
+#  src/hw/i386/x86.c
+#  src/hw/i386/fw_cfg.c
+#  src/hw/pci/pci_host.c
+#  src/hw/pci/pci.c
+#  src/hw/intc/apic.c
+#  src/hw/intc/apic_common.c
+#  src/hw/intc/i8259.c
+#  src/hw/intc/i8259_common.c
+#  src/hw/intc/ioapic.c
+#  src/hw/intc/ioapic_common.c
+#  src/hw/core/machine.c
+#  src/hw/core/numa.c
+#  src/hw/core/reset.c
+#  src/hw/core/irq.c
+#  src/hw/core/loader.c
+#  src/hw/core/sysbus.c
+#  src/hw/core/cpu.c
+#  src/hw/audio/pcspk.c
+#  src/hw/char/debugcon.c
+#  src/hw/char/serial-isa.c
+#  src/hw/char/serial.c
+#  src/hw/nvram/fw_cfg.c
+#  src/hw/timer/i8254.c
+#  src/hw/timer/i8254_common.c
+#  src/hw/rtc/mc146818rtc.c
+#  src/hw/smbios/smbios.c
+#  src/hw/pci-host/i440fx.c
+#  src/hw/pci-host/pam.c
+#  src/hw/isa/isa-bus.c
+#  src/hw/isa/piix3.c
+#  src/fpu/softfloat.c
+#  src/qemu/exec.c
+#  src/qemu/bootdevice.c
+#  src/qemu/cpus.c
+#  src/qemu/vl.c
+#  src/qemu/cpus-common.c
+#  src/qemu/memory.c
+#  src/qemu/dam-helper.c
+#  src/util/pagesize.c
+#  src/util/cutils.c
+#  src/util/osdep.c
+#  src/util/qdist.c
+#  src/util/log.c
+#  src/util/bitops.c
+#  src/util/qemu-error.c
+#  src/util/signal-timer.c
+#  src/util/cacheinfo.c
+#  src/util/bitmap.c
+#  src/util/qht.c
+#  src/util/qemu-timer.c
+#  src/util/fifo8.c
+#  src/util/qemu-option.c
+#  src/test/test-memory-model.c
+#  src/test/test-fwcfg.c
+#  src/test/test-timer.c
+#  src/test/test-intc.c
+#  src/test/test-tcg.c
+#  src/test/test-qht.c
+#  src/i386/int_helper.c
+#  src/i386/excp_helper.c
+#  src/i386/mem_helper.c
+#  src/i386/misc_helper.c
+#  src/i386/cc_helper.c
+#  src/i386/smm_helper.c
+#  src/i386/helper.c
+#  src/i386/fpu_helper.c
+#  src/i386/cpu.c
+#  src/i386/bpt_helper.c
+#  src/i386/seg_helper.c
+#  src/i386/svm_helper.c
+#  glib/gtree.c
+#  glib/gslice.c
+#  glib/gmem.c
+#  glib/gstring.c
+
+[Packages]
+  StdLib/StdLib.dec
+  MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
+  AppPkg/AppPkg.dec
+
+[LibraryClasses]
+  LibC
+  LibStdio
+  LibStdLib
+  LibSignal
+  LibString
+  LibMath
+  LibTime
+  DevShell
+  UefiLib
+  ShellCEntryLib
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DUEFI_APPLICATION
