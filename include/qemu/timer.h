@@ -2,7 +2,7 @@
 #define TIMER_H_PBGYZKVR
 
 #include "../types.h"
-#include <host-timer.h>
+#include <env-timer.h>
 #include <signal.h>
 #include <sys/time.h>
 #include <time.h>

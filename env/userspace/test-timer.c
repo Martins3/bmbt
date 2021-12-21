@@ -41,7 +41,7 @@ static void do_something() {
   }
 }
 
-static void handler(int sig, siginfo_t *si, void *uc) {
+static void handler() {
   printf("execute %s \n", __FUNCTION__);
   loop_counter++;
   if (loop_counter % 1000 == 0) {
@@ -49,8 +49,7 @@ static void handler(int sig, siginfo_t *si, void *uc) {
   }
   assert(atomic_read(&counter) == 0);
 
-  timer_t *tidptr = si->si_value.sival_ptr;
-  soonest_timer_ns(*tidptr, 1000 * 1000 * 100);
+  soonest_interrupt_ns(1000 * 1000 * 100);
 }
 
 static void device_simulation() {
@@ -76,7 +75,7 @@ TEST test_block_and_unblock() {
 }
 
 static bool say_hi;
-static void handler_say_hi(int sig, siginfo_t *si, void *uc) {
+static void handler_say_hi() {
   printf("hi\n");
   say_hi = true;
 }

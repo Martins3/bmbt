@@ -14,12 +14,21 @@
 #define TIMER_SIG SIGRTMAX /* Our timer notification signal */
 
 static timer_t interrpt_tid;
+static TimerHandler signal_timer_handler;
+static void timer_handler(int sig, siginfo_t *si, void *uc) {
+  enter_interrpt_context();
+  signal_timer_handler();
+  leave_interrpt_context();
+}
+
 timer_t setup_timer(TimerHandler handler) {
   struct sigaction sa;
   struct sigevent sev;
 
+  signal_timer_handler = handler;
+
   sa.sa_flags = SA_SIGINFO;
-  sa.sa_sigaction = handler;
+  sa.sa_sigaction = timer_handler;
   sigemptyset(&sa.sa_mask);
   if (sigaction(TIMER_SIG, &sa, NULL) == -1) {
     error_report("set sigaction failed\n");
@@ -86,18 +95,6 @@ void unblock_interrupt() {
   sigemptyset(&blocked);
   if (sigprocmask(SIG_SETMASK, &blocked, NULL) == -1)
     error_report("unblock interrupt failed\n");
-}
-
-static bool __interrupt_context = false;
-bool qemu_cpu_is_self(CPUState *cpu) { return !__interrupt_context; }
-void enter_interrpt_context() {
-  assert(__interrupt_context == false);
-  __interrupt_context = true;
-}
-
-void leave_interrpt_context() {
-  assert(__interrupt_context == true);
-  __interrupt_context = false;
 }
 
 void fire_timer() { kill(getpid(), TIMER_SIG); }
