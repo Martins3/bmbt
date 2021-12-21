@@ -3,6 +3,7 @@
 
 #include <limits.h>
 #include <stdbool.h>
+#include <uapi/env.h>
 
 typedef unsigned long gsize;
 typedef signed long gssize;
@@ -18,8 +19,6 @@ typedef char gchar;
 typedef unsigned int guint32;
 typedef guint32 gunichar;
 
-#define FALSE false
-#define TRUE true
 #define G_GSIZE_FORMAT "lu"
 #define G_MAXSIZE G_MAXULONG
 #define G_MAXULONG ULONG_MAX
