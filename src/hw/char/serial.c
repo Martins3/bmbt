@@ -190,7 +190,6 @@ static void serial_update_parameters(SerialState *s) {
 }
 
 static void serial_update_msl(SerialState *s) {
-  uint8_t omsr;
   int flags;
 
   timer_del(s->modem_status_poll);
@@ -203,6 +202,7 @@ static void serial_update_msl(SerialState *s) {
 
   g_assert_not_reached();
 #ifdef BMBT
+  uint8_t omsr;
   omsr = s->msr;
 
   s->msr =
@@ -569,6 +569,7 @@ static uint64_t serial_ioport_read(void *opaque, hwaddr addr, unsigned size) {
   return ret;
 }
 
+#ifdef BMBT
 static int serial_can_receive(SerialState *s) {
   if (s->fcr & UART_FCR_FE) {
     if (s->recv_fifo.num < UART_FIFO_LENGTH) {
@@ -597,6 +598,7 @@ static void serial_receive_break(SerialState *s) {
   s->lsr |= UART_LSR_BI | UART_LSR_DR;
   serial_update_irq(s);
 }
+#endif
 
 /* There's data in recv_fifo and s->rbr has not been read for 4 char transmit
  * times */
