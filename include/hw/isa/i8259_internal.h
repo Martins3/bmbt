@@ -28,7 +28,7 @@ typedef struct PICClass {
 #define PIC_COMMON_CLASS(pc)                                                   \
   ({                                                                           \
     PICClass *tmp = pc;                                                        \
-    (PICCommonClass *)pc;                                                      \
+    (PICCommonClass *)tmp;                                                     \
   })
 
 struct PICCommonState {

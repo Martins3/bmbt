@@ -12,6 +12,9 @@ typedef jmp_buf sigjmp_buf;
 // PRIx64 is llx
 #define PRIx64 "llx"
 #define PRIu32 "u"
+#define PRIu64 "llu"
+#define PRId64 "lld"
+#define PRIx16 "x"
 #define UEFI_APPLICATION 1
 
 #endif /* end of include guard: ENV_H_RI3Y14ON */

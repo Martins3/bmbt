@@ -18,8 +18,8 @@ static void pc_init1(MachineState *machine, const char *host_type,
   PCIBus *pci_bus;
   ISABus *isa_bus;
   PCII440FXState *i440fx_state;
-  int piix3_devfn = -1;
-  qemu_irq smi_irq;
+  // int piix3_devfn = -1;
+  // qemu_irq smi_irq;
   GSIState *gsi_state;
   // DriveInfo *hd[MAX_IDE_BUS * MAX_IDE_DEVS];
   // BusState *idebus[MAX_IDE_BUS];
@@ -141,7 +141,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
 
     piix3 = piix3_create(pci_bus, &isa_bus);
     piix3->pic = x86ms->gsi;
-    piix3_devfn = piix3->dev.devfn;
+    // piix3_devfn = piix3->dev.devfn;
   } else {
     g_assert_not_reached();
     /*
@@ -251,7 +251,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
 }
 
 static void pc_i440fx_machine_options(MachineClass *m) {
-  PCMachineClass *pcmc = PC_MACHINE_CLASS(m);
+  // PCMachineClass *pcmc = PC_MACHINE_CLASS(m);
   // pcmc->default_nic_model = "e1000";
 
   m->family = "pc_piix";

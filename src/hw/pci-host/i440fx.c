@@ -115,6 +115,7 @@ static void i440fx_write_config(PCIDevice *dev, uint32_t address, uint32_t val,
   }
 }
 
+#ifdef BMBT
 static int i440fx_post_load(void *opaque, int version_id) {
   PCII440FXState *d = opaque;
 
@@ -122,7 +123,6 @@ static int i440fx_post_load(void *opaque, int version_id) {
   return 0;
 }
 
-#ifdef BMBT
 static const VMStateDescription vmstate_i440fx = {
     .name = "I440FX",
     .version_id = 3,
@@ -134,7 +134,6 @@ static const VMStateDescription vmstate_i440fx = {
          * SeaBIOS hardly uses SMM.  SMRAM is now handled by CPU code.
          */
         VMSTATE_UNUSED(1), VMSTATE_END_OF_LIST()}};
-#endif
 
 static uint i440fx_pcihost_get_pci_hole_start(I440FXState *s) {
   // I440FXState *s = I440FX_PCI_HOST_BRIDGE(obj);
@@ -208,6 +207,7 @@ static uint64_t i440fx_pcihost_get_pci_hole64_end(I440FXState *s) {
   return value;
   // visit_type_uint64(v, name, &value, errp);
 }
+#endif
 
 static void i440fx_pcihost_initfn(PCIHostState *s) {
   // PCIHostState *s = PCI_HOST_BRIDGE(obj);
@@ -286,8 +286,8 @@ PCIBus *i440fx_init(const char *host_type, const char *pci_type,
   PCIDevice *d;
   PCIHostState *s;
   PCII440FXState *f;
-  unsigned i;
-  I440FXState *i440fx;
+  // unsigned i;
+  // I440FXState *i440fx;
 
   // host_type : i440FX-pcihost
   // pci_type  : i440FX
