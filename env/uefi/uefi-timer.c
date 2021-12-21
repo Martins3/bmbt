@@ -3,14 +3,13 @@
 
 #include <assert.h>
 #include <env-timer.h>
+#include <hw/core/cpu.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 #include <unitest/greatest.h>
-
-bool qemu_cpu_is_self(CPUState *cpu);
 
 static TimerHandler uefi_timer_handler;
 static void timer_handler(int _unused) {
