@@ -4,7 +4,6 @@
 #include "gmessages.h"
 #include "gslice.h"
 #include "gtestutils.h"
-#include <malloc.h>
 #include <stdlib.h>
 
 #define MAX_GTREE_HEIGHT 40
