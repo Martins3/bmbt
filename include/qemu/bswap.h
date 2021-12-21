@@ -3,6 +3,7 @@
 
 #include "../fpu/softfloat-types.h"
 #include "../types.h"
+#include <uapi/env.h>
 #include <uglib.h>
 
 typedef union {
@@ -34,7 +35,9 @@ typedef union {
   } l;
 } CPU_LDoubleU;
 
-#ifdef CONFIG_MACHINE_BSWAP_H
+#ifdef UEFI_APPLICATION
+#include <sys/bswap.h>
+#elif CONFIG_MACHINE_BSWAP_H
 #include <machine/bswap.h>
 #include <sys/endian.h>
 #elif defined(__FreeBSD__)
