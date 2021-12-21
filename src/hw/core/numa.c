@@ -22,7 +22,7 @@ static int max_numa_nodeid; /* Highest specified NUMA node ID, plus one.
 void numa_complete_configuration(MachineState *ms) {
   int i;
   MachineClass *mc = MACHINE_GET_CLASS(ms);
-  NodeInfo *numa_info = ms->numa_state->nodes;
+  // NodeInfo *numa_info = ms->numa_state->nodes;
   /*
    * If memory hotplug is enabled (slots > 0) but without '-numa'
    * options explicitly on CLI, guestes will break.

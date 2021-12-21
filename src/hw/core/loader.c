@@ -85,10 +85,10 @@ static void rom_reset(void *unused) {
 }
 
 int rom_check_and_register_reset(void) {
-  hwaddr addr = 0;
+  // hwaddr addr = 0;
   // MemoryRegionSection section;
   Rom *rom;
-  AddressSpace *as = NULL;
+  // AddressSpace *as = NULL;
 
   QTAILQ_FOREACH(rom, &roms, next) {
     if (rom->fw_file) {
