@@ -1,9 +1,7 @@
 #include <assert.h>
 #include <env-timer.h>
 #include <stdbool.h>
-#ifndef UEFI_APPLICATION
 #include <hw/core/cpu.h>
-#endif
 
 static bool __interrupt_context = false;
 bool qemu_cpu_is_self(CPUState *cpu) { return !__interrupt_context; }
