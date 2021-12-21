@@ -9,6 +9,7 @@
 
 #include "../types.h"
 #include <inttypes.h>
+#include <uapi/env.h>
 typedef uint64_t hwaddr;
 #define HWADDR_MAX UINT64_MAX
 #define TARGET_FMT_plx "%016" PRIx64

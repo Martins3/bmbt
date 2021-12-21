@@ -8,5 +8,9 @@
  * see musl/include/setjmp.h
  */
 typedef jmp_buf sigjmp_buf;
+// Notice : in glibc, uint64_t is long int, but in edk2, it's long long int, so
+// PRIx64 is llx
+#define PRIx64 "llx"
+#define PRIu32 "u"
 
 #endif /* end of include guard: ENV_H_RI3Y14ON */
