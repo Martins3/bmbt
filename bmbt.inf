@@ -13,6 +13,7 @@
 [Sources]
    env/uefi/uefi-timer.c
    env/uefi/test-timer.c
+   env/uefi/test-libc.c
    src/env-timer.c
 #  src/main.c
 #  src/tcg/cpu-exec.c

@@ -181,12 +181,20 @@ static char *get_image_path(const char *file) {
   return buf;
 }
 
+static inline long get_file_size(FILE *f) {
+  fseek(f, 0L, SEEK_END);
+  long sz = ftell(f);
+  fseek(f, 0L, SEEK_SET);
+  return sz;
+}
+
 int rom_add_file(const char *file, const char *fw_dir, hwaddr addr,
                  int32_t bootindex, bool option_rom, MemoryRegion *mr,
                  AddressSpace *as) {
   MachineClass *mc = MACHINE_GET_CLASS(qdev_get_machine());
   Rom *rom;
-  int rc, fd = -1;
+  int rc;
+  FILE *f;
   char devpath[100];
 
   if (as && mr) {
@@ -204,8 +212,8 @@ int rom_add_file(const char *file, const char *fw_dir, hwaddr addr,
     rom->path = g_strdup(file);
   }
 
-  fd = open(rom->path, O_RDONLY);
-  if (fd == -1) {
+  f = fopen(rom->path, "rb");
+  if (f == NULL) {
     fprintf(stderr, "Could not open option rom '%s': %s\n", rom->path,
             strerror(errno));
     goto err;
@@ -216,7 +224,7 @@ int rom_add_file(const char *file, const char *fw_dir, hwaddr addr,
     rom->fw_file = g_strdup(file);
   }
   rom->addr = addr;
-  rom->romsize = lseek(fd, 0, SEEK_END);
+  rom->romsize = get_file_size(f);
   if (rom->romsize == -1) {
     fprintf(stderr, "rom: file %-20s: get size error: %s\n", rom->name,
             strerror(errno));
@@ -225,14 +233,13 @@ int rom_add_file(const char *file, const char *fw_dir, hwaddr addr,
 
   rom->datasize = rom->romsize;
   rom->data = g_malloc0(rom->datasize);
-  lseek(fd, 0, SEEK_SET);
-  rc = read(fd, rom->data, rom->datasize);
+  rc = fread(rom->data, sizeof(char), rom->datasize, f);
   if (rc != rom->datasize) {
     fprintf(stderr, "rom: file %-20s: read error: rc=%d (expected %zd)\n",
             rom->name, rc, rom->datasize);
     goto err;
   }
-  close(fd);
+  fclose(f);
   rom_insert(rom);
   if (rom->fw_file && fw_cfg) {
     const char *basename;
@@ -270,8 +277,8 @@ int rom_add_file(const char *file, const char *fw_dir, hwaddr addr,
   return 0;
 
 err:
-  if (fd != -1)
-    close(fd);
+  if (f != NULL)
+    fclose(f);
 
   rom_free(rom);
   return -1;

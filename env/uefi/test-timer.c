@@ -65,6 +65,7 @@ SUITE(timer) {
   RUN_TEST(test_self_sent_signal);
   RUN_TEST(basic_test);
 }
+SUITE(libc);
 
 /* Add definitions that need to be in the test runner's main file. */
 GREATEST_MAIN_DEFS();
@@ -76,7 +77,8 @@ int main(int argc, char **argv) {
   /* RUN_TEST(x_should_equal_1); */
 
   /* Tests can also be gathered into test suites. */
-  RUN_SUITE(timer);
+  RUN_SUITE(libc);
+  // RUN_SUITE(timer);
   if (0)
     wait();
 

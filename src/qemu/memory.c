@@ -781,13 +781,11 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
 static char __pc_bios[PC_BIOS_IMG_SIZE];
 
 static ram_addr_t x86_bios_rom_init() {
-  int fd = open("./seabios/out/bios.bin", O_RDONLY);
-  duck_check(fd != -1);
-
-  lseek(fd, 0, SEEK_SET);
-  int rc = read(fd, __pc_bios, PC_BIOS_IMG_SIZE);
+  FILE * f = fopen("./seabios/out/bios.bin", "r");
+  duck_check(f != NULL);
+  int rc = fread(__pc_bios, sizeof(char), PC_BIOS_IMG_SIZE, f);
   duck_check(rc == PC_BIOS_IMG_SIZE);
-  close(fd);
+  fclose(f);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->host = (void *)(&__pc_bios[0]);
