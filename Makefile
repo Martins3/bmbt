@@ -20,13 +20,13 @@ endif
 
 ifeq ($(ENV_UEFI), 1)
 	ENV_INCLUDE=env/uefi/include
+	C_SRC_FILES += $(wildcard env/env/*.c)
 else ifeq ($(ENV_BAREMETAL), 1)
 	ENV_INCLUDE=env/baremetal/include
 else
 	ENV_INCLUDE=env/userspace/include
 	C_SRC_FILES += $(wildcard env/userspace/*.c)
 endif
-$(info $(ENV_INCLUDE))
 
 ARCH_APPENDIX :=loongson
 BASE_DIR := $(shell pwd)
@@ -70,6 +70,11 @@ C_SRC_FILES += $(wildcard src/util/*.c)
 C_SRC_FILES += $(wildcard src/test/*.c)
 C_SRC_FILES += $(wildcard src/i386/*.c)
 C_SRC_FILES += $(wildcard glib/*.c)
+
+$(info $(C_SRC_FILES))
+# use this command to generate bmbt.inf's [Sources] section
+# ➜  bmbt git:(main) make ENV_UEFI=1 | sed 's/\.c /.c\n/g'
+
 
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
