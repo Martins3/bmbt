@@ -281,7 +281,7 @@ PCIBus *i440fx_init(const char *host_type, const char *pci_type,
                     MemoryRegion *address_space_io, ram_addr_t ram_size,
                     ram_addr_t below_4g_mem_size, ram_addr_t above_4g_mem_size,
                     MemoryRegion *pci_address_space, MemoryRegion *ram_memory) {
-  DeviceState *dev;
+  // DeviceState *dev;
   PCIBus *b;
   PCIDevice *d;
   PCIHostState *s;
@@ -297,7 +297,7 @@ PCIBus *i440fx_init(const char *host_type, const char *pci_type,
   s = PCI_HOST_BRIDGE(dev);
 #endif
   s = QOM_init_pci_host_bridge();
-  b = pci_root_bus_new(dev, NULL, pci_address_space, address_space_io, 0,
+  b = pci_root_bus_new(NULL, NULL, pci_address_space, address_space_io, 0,
                        TYPE_PCI_BUS);
 #ifdef BMBT
   object_property_add_child(qdev_get_machine(), "i440fx", OBJECT(dev), NULL);
