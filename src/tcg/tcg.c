@@ -217,6 +217,9 @@ typedef enum {
   ALIAS_PADDI = sizeof(void *) == 4 ? OPC_ADDIW : OPC_ADDI,
 } LoongarchInsn;
 
+static TCGContext **tcg_ctxs;
+static unsigned int n_tcg_ctxs;
+
 static struct tcg_region_state region;
 /*
  * This is an array of struct tcg_region_tree's, with padding.

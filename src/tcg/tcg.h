@@ -368,9 +368,6 @@ void tcg_region_reset_all(void);
 
 void tcg_context_init(TCGContext *s);
 
-static TCGContext **tcg_ctxs;
-static unsigned int n_tcg_ctxs;
-
 /**
  * make_memop_idx
  * @op: memory operation
