@@ -52,7 +52,9 @@ static uint64_t get_guest_rtc_ns(RTCState *s) {
          s->offset;
 }
 
+#ifdef BMBT
 static void rtc_coalesced_timer_update(RTCState *s) { g_assert_not_reached(); }
+#endif
 
 static QLIST_HEAD(, RTCState) rtc_devices = QLIST_HEAD_INITIALIZER(rtc_devices);
 
@@ -70,9 +72,9 @@ static bool rtc_policy_slew_deliver_irq(RTCState *s) {
   qemu_irq_raise(s->irq);
   return apic_get_irq_delivered();
 }
-#endif
 
 static void rtc_coalesced_timer(void *opaque) { g_assert_not_reached(); }
+#endif
 #else
 static bool rtc_policy_slew_deliver_irq(RTCState *s) {
   assert(0);
@@ -677,7 +679,6 @@ static const VMStateDescription vmstate_rtc = {
                                VMSTATE_END_OF_LIST()},
     .subsections = (const VMStateDescription *[]){
         &vmstate_rtc_irq_reinject_on_ack_count, NULL}};
-#endif
 
 /* set CMOS shutdown status register (index 0xF) as S3_resume(0xFE)
    BIOS will read it and start S3 resume at POST Entry */
@@ -685,6 +686,7 @@ static void rtc_notify_suspend(Notifier *notifier, void *data) {
   RTCState *s = container_of(notifier, RTCState, suspend_notifier);
   rtc_set_memory(s, 0xF, 0xFE);
 }
+#endif
 
 static void rtc_reset(void *opaque) {
   RTCState *s = opaque;
@@ -712,14 +714,14 @@ static const MemoryRegionOps cmos_ops = {
     .endianness = DEVICE_LITTLE_ENDIAN,
 };
 
-static void rtc_get_date(RTCState *s, struct tm *current_tm) {
 #ifdef BMBT
+static void rtc_get_date(RTCState *s, struct tm *current_tm) {
   RTCState *s = MC146818_RTC(obj);
 
   rtc_update_time(s);
   rtc_get_time(s, current_tm);
-#endif
 }
+#endif
 
 static void rtc_realizefn(RTCState *s) {
   int base = 0x70;
