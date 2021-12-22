@@ -30,4 +30,9 @@ struct tm *localtime_r(const time_t *t, struct tm *tm);
 int qemu_mprotect_none(void *addr, size_t size);
 
 void *qemu_memalign(size_t alignment, size_t size);
+
+static inline int getpagesize(void) {
+  // 16k
+  return 0x4000;
+}
 #endif /* end of include guard: ENV_H_RI3Y14ON */
