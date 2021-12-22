@@ -290,6 +290,8 @@ void qemu_init() {
 
   init_xtm_options();
 
+  configure_rtc();
+
   ram_size = 128 * MiB;
   duck_check(first_cpu == NULL);
 
