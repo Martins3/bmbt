@@ -11,6 +11,7 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef BMBT
 /* modulo 9 table */
 static const uint8_t rclb_table[32] = {
     0, 1, 2, 3, 4, 5, 6, 7,
@@ -26,6 +27,7 @@ static const uint8_t rclw_table[32] = {
     16, 0, 1, 2, 3, 4, 5, 6,
     7, 8, 9, 10, 11, 12, 13, 14,
 };
+#endif
 
 /* division, flags are undefined */
 

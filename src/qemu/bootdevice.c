@@ -71,7 +71,8 @@ void add_boot_device_path(int32_t bootindex, DeviceState *dev,
 
 static char *get_boot_device_path(DeviceState *dev, bool ignore_suffixes,
                                   const char *suffix) {
-  char *devpath = NULL, *s = NULL, *d, *bootpath;
+  // char *d;
+  char *devpath = NULL, *s = NULL, *bootpath;
   duck_check(dev == NULL);
 
   if (dev) {

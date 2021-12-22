@@ -561,8 +561,8 @@ int64_t cpu_get_ticks(void) {
 }
 
 void qemu_start_warp_timer(void) {
-  int64_t clock;
-  int64_t deadline;
+  // int64_t clock;
+  // int64_t deadline;
 
   if (!use_icount) {
     return;
