@@ -20,7 +20,7 @@ endif
 
 ifeq ($(ENV_UEFI), 1)
 	ENV_INCLUDE=env/uefi/include
-	C_SRC_FILES += $(wildcard env/env/*.c)
+	C_SRC_FILES += $(wildcard env/uefi/*.c)
 else ifeq ($(ENV_BAREMETAL), 1)
 	ENV_INCLUDE=env/baremetal/include
 else
