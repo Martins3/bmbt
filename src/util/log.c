@@ -11,15 +11,19 @@ FILE *get_logfile(const char *f) {
 #endif
 
 #ifdef BUILD_LOONGSON_WITH_GLIB
-  char filename[256] = "./build_loongson_with_glib";
+  char filename[256] = "./build_loongson_with_glib/";
 #endif
 
 #ifdef BUILD_X86_WITH_GLIB
-  char filename[256] = "./build_x86_with_glib";
+  char filename[256] = "./build_x86_with_glib/";
 #endif
 
 #ifdef BUILD_X86_NO_GLIB
-  char filename[256] = "./build_x86_no_glib";
+  char filename[256] = "./build_x86_no_glib/";
+#endif
+
+#ifdef UEFI_APPLICATION
+  char filename[256] = "./";
 #endif
 
   strcat(filename, f);

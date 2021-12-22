@@ -1,6 +1,7 @@
 #include "../../include/qemu/option.h"
 #include "../../src/i386/LATX/x86tomips-config-sys.h"
 #include <inttypes.h>
+#include <uapi/env.h>
 #include <stdio.h>
 
 /* print value, escaping any commas in value */

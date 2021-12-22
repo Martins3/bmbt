@@ -311,7 +311,7 @@ void qemu_init() {
 
   qemu_set_log(0);
 
-  PCMachineState *pcms = machine_init();
+  machine_init();
   tcg_init();
 
   current_machine = MACHINE(&__pcms);

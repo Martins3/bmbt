@@ -34,7 +34,7 @@ typedef struct SyncClocks {
 int icount_align_option;
 
 static void align_clocks(SyncClocks *sc, CPUState *cpu) {
-  int64_t cpu_icount;
+  // int64_t cpu_icount;
 
   if (!icount_align_option) {
     return;

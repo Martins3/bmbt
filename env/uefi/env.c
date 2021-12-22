@@ -11,6 +11,7 @@ void *alloc_ram(hwaddr size) {
 
 __attribute__((__noreturn__)) void siglongjmp(sigjmp_buf buf, int ret) {
   longjmp(buf, ret);
+  abort();
 }
 
 int sigsetjmp(sigjmp_buf buf, int mask) {

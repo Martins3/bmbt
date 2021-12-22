@@ -19,6 +19,7 @@ __attribute__((__noreturn__)) void siglongjmp(sigjmp_buf, int);
 #define PRIu64 "llu"
 #define PRId64 "lld"
 #define PRIx16 "x"
+#define PRIx64 "llx"
 #define UEFI_APPLICATION 1
 
 struct tm *gmtime_r(const time_t *t, struct tm *tm);

@@ -229,7 +229,7 @@ bool timerlist_run_timers(QEMUTimerList *timer_list) {
   bool progress = false;
   QEMUTimerCB *cb;
   void *opaque;
-  bool need_replay_checkpoint = false;
+  // bool need_replay_checkpoint = false;
 
   if (!atomic_read(&timer_list->active_timers)) {
     return false;
@@ -469,7 +469,7 @@ static void qemu_clock_notify(QEMUClockType type) {
  */
 void qemu_clock_enable(QEMUClockType type, bool enabled) {
   QEMUClock *clock = qemu_clock_ptr(type);
-  QEMUTimerList *tl;
+  // QEMUTimerList *tl;
   bool old = clock->enabled;
   clock->enabled = enabled;
   if (enabled && !old) {

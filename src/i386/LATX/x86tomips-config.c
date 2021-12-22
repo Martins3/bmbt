@@ -10,7 +10,6 @@
 #include "include/shadow_stack.h"
 #include "include/profile.h"
 #include <signal.h>
-#include <ucontext.h>
 #include <string.h>
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
@@ -835,8 +834,10 @@ void qm_tb_clr_ir1(TranslationBlock *tb)
 
 #define XTM_SIGINT_SIGNAL 63
 
+#ifdef BMBT
 static uint64_t code_buffer_lo = 0;
 static uint64_t code_buffer_hi = 0;
+#endif
 
 void xtm_tb_unlink(TranslationBlock *ctb)
 {
@@ -881,13 +882,13 @@ void xtm_tb_relink(TranslationBlock *utb)
     }
 }
 
+#if BMBT
 static
 void xtm_interrupt_signal_handler(
         int n, siginfo_t *siginfo, void *ctx)
 {
     if (!xtm_sigint_opt()) return;
 
-#if BMBT
     ucontext_t *uc = ctx;
 
 #if defined(CONFIG_LATX)
@@ -913,8 +914,8 @@ void xtm_interrupt_signal_handler(
         lsenv->sigint_data.tb_unlinked = ctb;
         xtm_tb_unlink(ctb);
     }
-#endif
 }
+#endif
 
 void x86_to_mips_init_thread_signal(CPUState *cpu)
 {
