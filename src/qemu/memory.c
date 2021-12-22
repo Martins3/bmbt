@@ -3,10 +3,8 @@
 #include "../../include/hw/southbridge/piix.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/units.h"
-#include <fcntl.h> // for open
 #include <hw/pci-host/pam.h>
 #include <stdio.h>
-#include <unistd.h>
 
 static bool mr_initialized(const MemoryRegion *mr) {
   duck_check(mr != NULL);

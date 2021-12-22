@@ -1,9 +1,7 @@
 #include "../../../include/hw/nvram/fw_cfg.h"
 #include <errno.h>
-#include <fcntl.h>
 #include <qemu/error-report.h>
 #include <sysemu/reset.h>
-#include <unistd.h>
 
 static FWCfgState *fw_cfg;
 static QTAILQ_HEAD(, Rom) roms = QTAILQ_HEAD_INITIALIZER(roms);
