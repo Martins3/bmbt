@@ -32,7 +32,7 @@ int qemu_mprotect_none(void *addr, size_t size);
 
 void *qemu_memalign(size_t alignment, size_t size);
 
-static inline int getpagesize(void) {
+static inline int env_getpagesize(void) {
   // 16k
   return 0x4000;
 }

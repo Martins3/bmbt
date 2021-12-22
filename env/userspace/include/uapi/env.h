@@ -6,4 +6,6 @@
 #define FALSE false
 #define TRUE true
 
+int env_getpagesize();
+
 #endif /* end of include guard: ENV_H_AQKWTB1D */

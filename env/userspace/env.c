@@ -2,6 +2,7 @@
 #include <exec/hwaddr.h>
 #include <sys/mman.h>
 #include <uapi/env.h>
+#include <unistd.h>
 
 void *alloc_ram(hwaddr size) {
   // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
@@ -10,3 +11,5 @@ void *alloc_ram(hwaddr size) {
   assert(host != (void *)-1);
   return host;
 }
+
+int env_getpagesize() { return getpagesize(); }
