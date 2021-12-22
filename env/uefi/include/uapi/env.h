@@ -9,6 +9,9 @@
  * see musl/include/setjmp.h
  */
 typedef jmp_buf sigjmp_buf;
+int sigsetjmp(sigjmp_buf, int);
+__attribute__((__noreturn__)) void siglongjmp(sigjmp_buf, int);
+
 // Notice : in glibc, uint64_t is long int, but in edk2, it's long long int, so
 // PRIx64 is llx
 #define PRIx64 "llx"
@@ -18,10 +21,8 @@ typedef jmp_buf sigjmp_buf;
 #define PRIx16 "x"
 #define UEFI_APPLICATION 1
 
-static inline struct tm *gmtime_r(const time_t *t, struct tm *tm) {
-  struct tm *rtm = gmtime(t);
-  *tm = *rtm;
-  return tm;
-}
+struct tm *gmtime_r(const time_t *t, struct tm *tm);
+
+struct tm *localtime_r(const time_t *t, struct tm *tm);
 
 #endif /* end of include guard: ENV_H_RI3Y14ON */
