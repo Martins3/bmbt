@@ -25,4 +25,5 @@ struct tm *gmtime_r(const time_t *t, struct tm *tm);
 
 struct tm *localtime_r(const time_t *t, struct tm *tm);
 
+#define alloca(size) __builtin_alloca(size)
 #endif /* end of include guard: ENV_H_RI3Y14ON */
