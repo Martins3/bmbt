@@ -26,4 +26,8 @@ struct tm *gmtime_r(const time_t *t, struct tm *tm);
 struct tm *localtime_r(const time_t *t, struct tm *tm);
 
 #define alloca(size) __builtin_alloca(size)
+
+int qemu_mprotect_none(void *addr, size_t size);
+
+void *qemu_memalign(size_t alignment, size_t size);
 #endif /* end of include guard: ENV_H_RI3Y14ON */

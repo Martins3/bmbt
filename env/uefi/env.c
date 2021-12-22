@@ -37,3 +37,7 @@ struct tm *localtime_r(const time_t *t, struct tm *tm) {
   *tm = *rtm;
   return tm;
 }
+
+int qemu_mprotect_none(void *addr, size_t size) { return 0; }
+
+void *qemu_memalign(size_t alignment, size_t size) { return malloc(size); }
