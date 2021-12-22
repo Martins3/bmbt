@@ -71,16 +71,15 @@ C_SRC_FILES += $(wildcard src/test/*.c)
 C_SRC_FILES += $(wildcard src/i386/*.c)
 C_SRC_FILES += $(wildcard glib/*.c)
 
-$(info $(C_SRC_FILES))
-# use this command to generate bmbt.inf's [Sources] section
-# ➜  bmbt git:(main) make ENV_UEFI=1 | sed 's/\.c /.c\n/g'
-
-
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
 include ./src/i386/Makefile.objs
 LATX_SRC=$(addprefix src/i386/, $(obj-y))
 C_SRC_FILES += $(LATX_SRC)
+
+$(info $(C_SRC_FILES))
+# use this command to generate bmbt.inf's [Sources] section
+# ➜  bmbt git:(main) make ENV_UEFI=1 | sed 's/\.c /.c\n/g'
 
 ASSEMBLY_OBJ_FILES := $(assembly_source_files:%.S=$(BUILD_DIR)/%.o)
 C_OBJ_FILES := $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
