@@ -2,6 +2,7 @@
 #define ENV_H_AQKWTB1D
 
 #include <stdbool.h>
+#include <sys/mman.h>
 #define FALSE false
 #define TRUE true
 

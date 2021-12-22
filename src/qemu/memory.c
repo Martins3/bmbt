@@ -6,7 +6,6 @@
 #include <fcntl.h> // for open
 #include <hw/pci-host/pam.h>
 #include <stdio.h>
-#include <sys/mman.h>
 #include <unistd.h>
 
 static bool mr_initialized(const MemoryRegion *mr) {
@@ -794,13 +793,7 @@ static ram_addr_t x86_bios_rom_init() {
   return PC_BIOS_IMG_SIZE;
 }
 
-static void *alloc_ram(hwaddr size) {
-  // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
-  void *host = mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
-                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  duck_check(host != (void *)-1);
-  return host;
-}
+void *alloc_ram(hwaddr size);
 
 static inline void init_ram_block(const char *name, unsigned int index,
                                   bool readonly, hwaddr offset, uint64_t size) {
