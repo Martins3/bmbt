@@ -52,7 +52,8 @@ GCOV_CFLAGS=-fprofile-arcs -ftest-coverage
 GCOV_LFLAGS=-lgcov --coverage
 
 
-CFLAGS_HEADER=-I$(BASE_DIR)/capstone/include -I$(ENV_INCLUDE) $(GLIB_INCLUDE) -I$(BASE_DIR)/include
+CAPSTONE_HEADER=-I$(BASE_DIR)/capstone/include
+CFLAGS_HEADER=$(CAPSTONE_HEADER) -I$(ENV_INCLUDE) $(GLIB_INCLUDE) -I$(BASE_DIR)/include
 CFLAGS := -g -Werror $(CFLAGS_HEADER) $(GLIB_LIB) $(GCOV_CFLAGS) $(ARCH_FLAGS)
 LFLAGS := -g -Werror $(GCOV_LFLAGS) $(GLIB_LIB)
 
@@ -108,8 +109,7 @@ kernel:
 	mkdir -p image
 	cp $(KERNEL_PATH)/arch/x86/boot/bzImage image/bzImage
 
-CAP_CFLAGS=$(CFLAGS_HEADER)
-CAP_CFLAGS+=-DCAPSTONE_HAS_X86
+CAP_CFLAGS=$(CAPSTONE_HEADER) -DCAPSTONE_HAS_X86
 capstone:
 	@mkdir -p $(@D)
 	@$(MAKE) -C ./capstone CAPSTONE_SHARED=no BUILDDIR="$(BUILD_DIR)/capstone" CC="$(CXX)" AR="$(AR)" LD="$(LD)" RANLIB="$(RANLIB)" CFLAGS="$(CAP_CFLAGS)" --no-print-directory --quiet BUILD_DIR=$(BUILD_DIR) $(LIBCAPSTONE)
