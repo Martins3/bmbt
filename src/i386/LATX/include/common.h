@@ -36,10 +36,6 @@
     (((addr) + MIPS_PAGE_SIZE - 1) & MIPS_PAGE_MASK)
 #define MIPS_PAGE_ALIGN_FLOOR(addr) ((addr)(&MIPS_PAGE_MASK))
 
-#ifndef offsetof
-#define offsetof(st, m) __builtin_offsetof(st, m)
-#endif
-
 #ifndef _Bool
 #define _Bool char
 #endif
