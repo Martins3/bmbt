@@ -781,7 +781,7 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
 static char __pc_bios[PC_BIOS_IMG_SIZE];
 
 static ram_addr_t x86_bios_rom_init() {
-  FILE * f = fopen("./seabios/out/bios.bin", "r");
+  FILE *f = fopen("./seabios/out/bios.bin", "r");
   duck_check(f != NULL);
   int rc = fread(__pc_bios, sizeof(char), PC_BIOS_IMG_SIZE, f);
   duck_check(rc == PC_BIOS_IMG_SIZE);
