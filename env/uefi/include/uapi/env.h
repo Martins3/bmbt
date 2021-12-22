@@ -2,6 +2,7 @@
 #define ENV_H_RI3Y14ON
 
 #include <setjmp.h>
+#include <time.h>
 /**
  * jmp_buf and sigjmp_buf are actually the same thing
  *
@@ -16,5 +17,11 @@ typedef jmp_buf sigjmp_buf;
 #define PRId64 "lld"
 #define PRIx16 "x"
 #define UEFI_APPLICATION 1
+
+static inline struct tm *gmtime_r(const time_t *t, struct tm *tm) {
+  struct tm *rtm = gmtime(t);
+  *tm = *rtm;
+  return tm;
+}
 
 #endif /* end of include guard: ENV_H_RI3Y14ON */
