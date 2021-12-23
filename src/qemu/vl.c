@@ -196,15 +196,13 @@ PCMachineState *QOM_machine_init() {
 
   machine_class_init(mc);
   machine_class_base_init(mc);
-  machine_initfn(ms);
-
   x86_machine_class_init(x86mc);
-  x86_machine_initfn(x86ms);
-
   pc_machine_class_init(pcmc);
-  pc_machine_initfn(pcms);
-
   pc_machine_v4_2_class_init(mc);
+
+  machine_initfn(ms);
+  x86_machine_initfn(x86ms);
+  pc_machine_initfn(pcms);
 
   machine_inited = true;
   return pcms;
