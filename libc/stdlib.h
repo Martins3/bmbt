@@ -22,4 +22,9 @@ void *bsearch(const void *, const void *, size_t, size_t,
               int (*)(const void *, const void *));
 
 int rand(void);
+
+#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+#include <alloca.h>
+#endif
+
 #endif /* end of include guard: STDLIB_H_HT0XBCOT */

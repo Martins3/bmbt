@@ -72,6 +72,6 @@ struct itimerspec {
   struct timespec it_interval;
   struct timespec it_value;
 };
+#endif
 
 #endif /* end of include guard: TIME_H_NQOKK2GV */
-#endif

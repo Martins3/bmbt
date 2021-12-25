@@ -24,4 +24,8 @@
 
 #include <bits/alltypes.h>
 
+#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+int getpagesize(void);
+#endif
+
 #endif /* end of include guard: UNISTD_H_8IPA2YR7 */

@@ -24,4 +24,5 @@
 #define _Noreturn
 #endif
 
+#define _GNU_SOURCE
 #endif /* end of include guard: FEATURES_H_OQWGZPCM */

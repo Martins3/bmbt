@@ -72,4 +72,8 @@ char *strrchr(const char *, int);
 
 int putchar(int);
 
+#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+int vasprintf(char **, const char *, __isoc_va_list);
+#endif
+
 #endif /* end of include guard: STDIO_H_EAMYF57U */
