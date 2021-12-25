@@ -11,5 +11,3 @@ void *alloc_ram(hwaddr size) {
   assert(host != (void *)-1);
   return host;
 }
-
-int env_getpagesize() { return getpagesize(); }
