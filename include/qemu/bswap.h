@@ -35,9 +35,8 @@ typedef union {
   } l;
 } CPU_LDoubleU;
 
-#ifdef UEFI_APPLICATION
-#include <sys/bswap.h>
-#elif CONFIG_MACHINE_BSWAP_H
+#undef CONFIG_BYTESWAP_H
+#ifdef CONFIG_MACHINE_BSWAP_H
 #include <machine/bswap.h>
 #include <sys/endian.h>
 #elif defined(__FreeBSD__)
@@ -50,6 +49,9 @@ static inline uint16_t bswap16(uint16_t x) { return bswap_16(x); }
 static inline uint32_t bswap32(uint32_t x) { return bswap_32(x); }
 
 static inline uint64_t bswap64(uint64_t x) { return bswap_64(x); }
+#else
+#ifdef USE_UEFI_LIBC
+#include <sys/bswap.h>
 #else
 static inline uint16_t bswap16(uint16_t x) {
   return (((x & 0x00ff) << 8) | ((x & 0xff00) >> 8));
@@ -69,6 +71,7 @@ static inline uint64_t bswap64(uint64_t x) {
       ((x & 0x00ff000000000000ULL) >> 40) |
       ((x & 0xff00000000000000ULL) >> 56));
 }
+#endif
 #endif /* ! CONFIG_MACHINE_BSWAP_H */
 
 static inline void bswap16s(uint16_t *s) { *s = bswap16(*s); }
