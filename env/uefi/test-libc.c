@@ -7,7 +7,7 @@ TEST test_mmap() {
   // alloc 1Gb
   char *x = malloc(1024LL * 1024 * 1024);
   if (x == NULL)
-    perror("unbale to allocate such a big memory");
+    printf("unbale to allocate such a big memory");
   ASSERT_NEQ(x, NULL);
   PASS();
 }

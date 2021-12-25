@@ -28,7 +28,7 @@ VOID EFIAPI signalTimer(IN EFI_EVENT Event, IN VOID *Context) {
 void setup_timer(TimerHandler handler) {
   uefi_timer_handler = handler;
   if (signal(SIGALRM, timer_handler) == SIG_ERR) {
-    perror("Unable to catch SIGALRM");
+    printf("Unable to catch SIGALRM");
     exit(1);
   }
   assert(EfiGetCurrentTpl() == TPL_APPLICATION);
@@ -40,7 +40,7 @@ void setup_timer(TimerHandler handler) {
                             EventPointer);
 
   if (EFI_ERROR(Status)) {
-    perror("Unable to create signal event for fire_timer");
+    printf("Unable to create signal event for fire_timer");
     exit(1);
   }
 }
@@ -65,7 +65,7 @@ void soonest_interrupt_ns(long ns) {
     Tpl = gBS->RaiseTPL(TPL_CALLBACK);
     assert(Tpl == TPL_APPLICATION);
     if (setitimer(ITIMER_REAL, &it_val, NULL) == -1) {
-      perror("error calling setitimer()");
+      printf("error calling setitimer()");
       exit(1);
     }
     gBS->RestoreTPL(Tpl);
