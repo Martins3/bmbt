@@ -1,18 +1,21 @@
 #ifndef LIBC_H_VVRJ7LJM
 #define LIBC_H_VVRJ7LJM
 
+#ifndef USE_UEFI_LIBC
 #include <features.h>
 
 #define __NEED_float_t
 #define __NEED_double_t
 #include <bits/alltypes.h>
 
-#ifndef USE_UEFI_LIBC
 #define FP_NAN 0
 #define FP_INFINITE 1
 #define FP_ZERO 2
 #define FP_SUBNORMAL 3
 #define FP_NORMAL 4
+#else
+typedef float float_t;
+typedef double double_t;
 #endif
 
 int __fpclassify(double);
