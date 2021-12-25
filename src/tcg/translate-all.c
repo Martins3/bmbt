@@ -2166,6 +2166,7 @@ struct tb_tree_stats {
   size_t cross_page;
 };
 
+#ifdef BMBT
 static gboolean tb_tree_stats_iter(gpointer key, gpointer value,
                                    gpointer data) {
   const TranslationBlock *tb = value;
@@ -2210,6 +2211,7 @@ static gboolean tb_tree_stats_iter(gpointer key, gpointer value,
   }
   return false;
 }
+#endif
 
 #if 0
 void dump_exec_info(void)
