@@ -1,5 +1,6 @@
 #ifndef ENV_H_RI3Y14ON
 #define ENV_H_RI3Y14ON
+#include <stdlib.h>
 
 #define USE_UEFI_LIBC
 #ifdef USE_UEFI_LIBC
