@@ -20,7 +20,7 @@
 #include "./tcg.h"
 #include <assert.h>
 #include <stdbool.h>
-#include <sys/mman.h>
+#include <uapi/env.h>
 #include <uglib.h>
 
 int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
@@ -975,9 +975,6 @@ static inline void *alloc_code_gen_buffer(void) {
 }
 #else
 static inline void *alloc_code_gen_buffer(void) {
-  int prot = PROT_WRITE | PROT_READ | PROT_EXEC;
-  int flags = MAP_PRIVATE | MAP_ANONYMOUS;
-  uintptr_t start = 0;
   size_t size = tcg_ctx->code_gen_buffer_size;
   void *buf;
 
@@ -1010,15 +1007,24 @@ static inline void *alloc_code_gen_buffer(void) {
 #endif
 #endif
 
+#ifdef UEFI_APPLICATION
+  buf = malloc(size);
+  if (buf == NULL)
+    return NULL;
+#else
+  uintptr_t start = 0;
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
   start = 0x70000000ul;
 #endif
 
+  int prot = PROT_WRITE | PROT_READ | PROT_EXEC;
+  int flags = MAP_PRIVATE | MAP_ANONYMOUS;
   buf = mmap((void *)start, size, prot, flags, -1, 0);
 
   if (buf == MAP_FAILED) {
     return NULL;
   }
+#endif
 #ifdef __mips__
   if (cross_256mb(buf, size)) {
     /* Try again, with the original still mapped, to avoid re-acquiring
