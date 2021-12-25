@@ -1,12 +1,11 @@
 #ifndef HOST_TIMER_H_H8PV4PLO
 #define HOST_TIMER_H_H8PV4PLO
 
-#include <signal.h>
 #include <stdbool.h>
 #include <uapi/timer-def.h>
 
 typedef void (*TimerHandler)();
-timer_id setup_timer(TimerHandler handler);
+void setup_timer(TimerHandler handler);
 void soonest_interrupt_ns(long ns);
 void block_interrupt();
 void unblock_interrupt();

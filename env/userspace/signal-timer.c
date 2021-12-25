@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
+
 #include <time.h>
 #include <unistd.h>
 
@@ -21,7 +21,7 @@ static void timer_handler(int sig, siginfo_t *si, void *uc) {
   leave_interrpt_context();
 }
 
-timer_t setup_timer(TimerHandler handler) {
+void setup_timer(TimerHandler handler) {
   struct sigaction sa;
   struct sigevent sev;
 
@@ -40,10 +40,9 @@ timer_t setup_timer(TimerHandler handler) {
   if (timer_create(CLOCK_REALTIME, &sev, &interrpt_tid) == -1) {
     error_report("timer_create failed\n");
   }
-  return interrpt_tid;
 }
 
-void soonest_timer(timer_t tid, long s, long ns) {
+static void soonest_timer(timer_t tid, long s, long ns) {
   struct itimerspec ts;
   ts.it_value.tv_sec = s;
   ts.it_value.tv_nsec = ns;

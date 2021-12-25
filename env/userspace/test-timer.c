@@ -5,19 +5,13 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
+
 #include <time.h>
 #include <unistd.h>
 #include <unitest/greatest.h>
 
 static int counter;
 static int loop_counter;
-
-void soonest_timer(timer_t tid, long s, long ns);
-static void soonest_timer_s(timer_t tid, long s) { soonest_timer(tid, s, 0); }
-static void soonest_timer_ns(timer_t tid, long ns) {
-  soonest_timer(tid, 0, ns);
-}
 
 static void do_something() {
   struct timespec request, remain;
@@ -68,8 +62,8 @@ static void loop() {
 }
 
 TEST test_block_and_unblock() {
-  timer_t tid = setup_timer(handler);
-  soonest_timer_ns(tid, 1000 * 1000 * 100);
+  setup_timer(handler);
+  soonest_interrupt_ns(1000 * 1000 * 100);
   loop();
   PASS();
 }
@@ -82,9 +76,9 @@ static void handler_say_hi() {
 
 TEST test_block() {
   say_hi = false;
-  timer_t tid = setup_timer(handler_say_hi);
+  setup_timer(handler_say_hi);
   block_interrupt();
-  soonest_timer_ns(tid, 1000 * 1000 * 100);
+  soonest_interrupt_ns(1000 * 1000 * 100);
   // wait for timer to expire
   sleep(1);
   // handler not executed
@@ -97,14 +91,14 @@ TEST test_block() {
 
 TEST test_rearm_timer() {
   say_hi = false;
-  timer_t tid = setup_timer(handler_say_hi);
-  soonest_timer_s(tid, 100);
+  setup_timer(handler_say_hi);
+  soonest_interrupt_ns(100 * NANOSECONDS_PER_SECOND);
   // verify we can reprogram the timer
-  soonest_timer_ns(tid, 1000);
+  soonest_interrupt_ns(1000);
   sleep(1);
   assert(say_hi == true);
   say_hi = false;
-  soonest_timer_s(tid, 100);
+  soonest_interrupt_ns(100 * NANOSECONDS_PER_SECOND);
   sleep(1);
   assert(say_hi == false);
 
@@ -125,8 +119,8 @@ static void handler_self_sent(int sig, siginfo_t *si, void *uc) {
 
 // fire timer in unblocked context, blocked context and signal handler
 TEST test_self_sent_signal() {
-  timer_t tid = setup_timer(handler_self_sent);
-  soonest_timer_ns(tid, 1000 * 1000 * 500);
+  setup_timer(handler_self_sent);
+  soonest_interrupt_ns(1000 * 1000 * 500);
   fire_timer();
   sleep(1);
   ASSERT_EQ(counter, 2);

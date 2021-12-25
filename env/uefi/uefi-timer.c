@@ -25,7 +25,7 @@ VOID EFIAPI signalTimer(IN EFI_EVENT Event, IN VOID *Context) {
   raise(SIGALRM);
 }
 
-timer_id setup_timer(TimerHandler handler) {
+void setup_timer(TimerHandler handler) {
   uefi_timer_handler = handler;
   if (signal(SIGALRM, timer_handler) == SIG_ERR) {
     perror("Unable to catch SIGALRM");
@@ -43,8 +43,6 @@ timer_id setup_timer(TimerHandler handler) {
     perror("Unable to create signal event for fire_timer");
     exit(1);
   }
-
-  return NULL;
 }
 
 #define NANO_PER_SECOND 1000000000LL
