@@ -2,7 +2,6 @@
 #define HOST_TIMER_H_H8PV4PLO
 
 #include <stdbool.h>
-#include <uapi/timer-def.h>
 
 typedef void (*TimerHandler)();
 void setup_timer(TimerHandler handler);
