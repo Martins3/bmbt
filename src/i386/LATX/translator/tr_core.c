@@ -13,7 +13,9 @@
 #include "../include/flag_pattern.h"
 #include "../include/shadow_stack.h"
 #include <assert.h>
-
+#ifndef USE_UEFI_LIBC
+#include <alloca.h>
+#endif
 
 #include <string.h>
 
