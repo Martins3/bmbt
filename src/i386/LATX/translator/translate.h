@@ -1272,7 +1272,7 @@ void reverse_ir2_ireg_opnd_endian(IR2_OPND *opnd, int size_in_bit);
 
 /* load/store Integer Registers */
 void load_imm32_to_ir2(IR2_OPND*, uint32, EXTENSION_MODE);
-void load_imm64_to_ir2(IR2_OPND*, uint64);
+void load_imm64_to_ir2(IR2_OPND*, uint64_t);
 void load_addrx_to_ir2(IR2_OPND*, ADDRX);
 void load_addr_to_ir2(IR2_OPND*, ADDR);
 
