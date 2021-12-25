@@ -1,0 +1,59 @@
+diff --git a/SStream.c b/SStream.c
+index 5ae237fd..6bdc7ab5 100644
+--- a/SStream.c
++++ b/SStream.c
+@@ -14,6 +14,10 @@
+
+ #include <capstone/platform.h>
+
++#ifdef UEFI_APPLICATION
++#include "../env/uefi/include/uapi/env.h"
++#endif
++
+ #include "SStream.h"
+ #include "cs_priv.h"
+ #include "utils.h"
+diff --git a/arch/X86/X86ATTInstPrinter.c b/arch/X86/X86ATTInstPrinter.c
+index a89159d9..17f4e177 100644
+--- a/arch/X86/X86ATTInstPrinter.c
++++ b/arch/X86/X86ATTInstPrinter.c
+@@ -45,6 +45,10 @@
+ #include "X86Mapping.h"
+ #include "X86BaseInfo.h"
+
++#ifdef UEFI_APPLICATION
++#include "../../env/uefi/include/uapi/env.h"
++#endif
++
+
+ #define GET_INSTRINFO_ENUM
+ #ifdef CAPSTONE_X86_REDUCE
+diff --git a/arch/X86/X86IntelInstPrinter.c b/arch/X86/X86IntelInstPrinter.c
+index 3158e706..8d49e01e 100644
+--- a/arch/X86/X86IntelInstPrinter.c
++++ b/arch/X86/X86IntelInstPrinter.c
+@@ -41,6 +41,10 @@
+ #include "../../SStream.h"
+ #include "../../MCRegisterInfo.h"
+
++#ifdef UEFI_APPLICATION
++#include "../../env/uefi/include/uapi/env.h"
++#endif
++
+ #include "X86Mapping.h"
+
+ #define GET_INSTRINFO_ENUM
+diff --git a/utils.h b/utils.h
+index d8fe2cb3..b777c95d 100644
+--- a/utils.h
++++ b/utils.h
+@@ -56,7 +56,9 @@ unsigned int count_positive8(const unsigned char *list);
+
+ char *cs_strdup(const char *str);
+
++#ifndef MIN
+ #define MIN(x, y) ((x) < (y) ? (x) : (y))
++#endif
+
+ // we need this since Windows doesn't have snprintf()
+ int cs_snprintf(char *buffer, size_t size, const char *fmt, ...);

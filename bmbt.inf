@@ -11,6 +11,8 @@
 #
 
 [Sources]
+env/uefi/env.c
+env/uefi/uefi-timer.c
 src/main.c
 src/env-timer.c
 src/tcg/cpu-exec.c
@@ -66,7 +68,7 @@ src/qemu/memory.c
 src/qemu/dam-helper.c
 src/util/pagesize.c
 src/util/cutils.c
-src/util/osdep.c
+# src/util/osdep.c
 src/util/qdist.c
 src/util/log.c
 src/util/bitops.c
@@ -94,14 +96,84 @@ glib/gtree.c
 glib/gslice.c
 glib/gmem.c
 glib/gstring.c
+src/i386/LATX/x86tomips-config.c
+src/i386/LATX/ir1/ir1.c
+src/i386/LATX/ir2/ir2.c
+src/i386/LATX/ir2/ir2_assemble.c
+src/i386/LATX/optimization/njc.c
+src/i386/LATX/optimization/flag_lbt.c
+src/i386/LATX/optimization/ir2_optimization.c
+src/i386/LATX/optimization/ibtc.c
+src/i386/LATX/optimization/shadow_stack.c
+src/i386/LATX/optimization/lsfpu.c
+src/i386/LATX/optimization/cam.c
+src/i386/LATX/etb.c
+src/i386/LATX/env.c
+src/i386/LATX/mem.c
+src/i386/LATX/translator/flag_usedef.c
+src/i386/LATX/translator/translate.c
+src/i386/LATX/translator/fpu.c
+src/i386/LATX/translator/tr_disasm.c
+src/i386/LATX/translator/tr_core.c
+src/i386/LATX/translator/tr_static_code.c
+src/i386/LATX/translator/lsenv_offset.c
+src/i386/LATX/translator/extension.c
+src/i386/LATX/translator/reg_alloc.c
+src/i386/LATX/translator/tr_opnd_process.c
+src/i386/LATX/translator/tr_eflag.c
+src/i386/LATX/translator/tr_eflag_process.c
+src/i386/LATX/translator/tr_farith.c
+src/i386/LATX/translator/tr_fctrl.c
+src/i386/LATX/translator/tr_fcmovcc.c
+src/i386/LATX/translator/tr_fldst.c
+src/i386/LATX/translator/tr_jcc.c
+src/i386/LATX/translator/tr_sse.c
+src/i386/LATX/translator/tr_simd.c
+src/i386/LATX/translator/tr_setcc.c
+src/i386/LATX/translator/tr_mov.c
+src/i386/LATX/translator/tr_misc.c
+src/i386/LATX/x86tomips-options.c
+# src/i386/LATX/error.c
+src/i386/LATX/translator/cross-page-check.c
+src/i386/LATX/translator/tr_softmmu.c
+src/i386/LATX/translator/tr_sys.c
+src/i386/LATX/translator/tr_excp.c
+src/i386/LATX/translator/tr_sys_eflags.c
+src/i386/LATX/translator/tr_sys_eob.c
+src/i386/LATX/translator/tr_sys_helper.c
+src/i386/LATX/translator/tr_sys_string.c
+src/i386/LATX/translator/tr_sys_fp.c
+src/i386/LATX/translator/tr_arith_sys.c
+src/i386/LATX/translator/tr_arith_sys_byhand.c
+src/i386/LATX/translator/tr_logic_sys.c
+src/i386/LATX/translator/tr_logic_sys_byhand.c
+src/i386/LATX/x86tomips-profile-sys.c
+src/i386/LATX/translator/tr_mov_byhand.c
+
+capstone/cs.c
+capstone/utils.c
+capstone/SStream.c
+capstone/MCInstrDesc.c
+capstone/MCRegisterInfo.c
+capstone/arch/X86/X86DisassemblerDecoder.c
+capstone/arch/X86/X86Disassembler.c
+capstone/arch/X86/X86IntelInstPrinter.c
+capstone/arch/X86/X86ATTInstPrinter.c
+capstone/arch/X86/X86Mapping.c
+capstone/arch/X86/X86Module.c
+capstone/MCInst.c
 
 [Packages]
-  StdLib/StdLib.dec
+  # temporary hacking
+  # StdLib/StdLib.dec
   MdePkg/MdePkg.dec
   ShellPkg/ShellPkg.dec
   AppPkg/AppPkg.dec
 
 [LibraryClasses]
+  DevShell
+  UefiLib
+  ShellCEntryLib
   LibC
   LibStdio
   LibStdLib
@@ -109,9 +181,7 @@ glib/gstring.c
   LibString
   LibMath
   LibTime
-  DevShell
-  UefiLib
-  ShellCEntryLib
 
+# CAPSTONE_HAS_X86 is used by castone
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DUEFI_APPLICATION
+  GCC:*_*_*_CC_FLAGS = -DUEFI_APPLICATION -DCAPSTONE_HAS_X86
