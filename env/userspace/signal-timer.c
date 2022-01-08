@@ -27,6 +27,7 @@ void setup_timer(TimerHandler handler) {
   signal_timer_handler = handler;
 
   sa.sa_handler = timer_handler;
+  sa.sa_flags = SA_SIGINFO;
   sigemptyset(&sa.sa_mask);
   if (sigaction(TIMER_SIG, &sa, NULL) == -1) {
     error_report("set sigaction failed\n");
