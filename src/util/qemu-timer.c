@@ -102,7 +102,6 @@ static bool timer_mod_ns_locked(QEMUTimerList *timer_list, QEMUTimer *ts,
 
 // [interface 37]
 void timerlist_notify(QEMUTimerList *timer_list) {
-  duck_check(qemu_mutex_iothread_locked());
 #ifdef BMBT
   if (timer_list->notify_cb) {
     timer_list->notify_cb(timer_list->notify_opaque, timer_list->clock->type);

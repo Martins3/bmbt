@@ -6,7 +6,7 @@ FILE *qemu_logfile;
 int qemu_loglevel;
 
 FILE *get_logfile(const char *f) {
-  char filename[] = "output/";
+  char filename[200] = "output/";
   strcat(filename, f);
   FILE *file = fopen(filename, "w");
   duck_check(file != NULL);
