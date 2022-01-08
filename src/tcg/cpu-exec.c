@@ -34,7 +34,7 @@ typedef struct SyncClocks {
 int icount_align_option;
 
 static void align_clocks(SyncClocks *sc, CPUState *cpu) {
-  int64_t cpu_icount;
+  // int64_t cpu_icount;
 
   if (!icount_align_option) {
     return;
@@ -277,10 +277,10 @@ static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
 }
 
 static inline TranslationBlock *
-tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, u32 cf_mask) {
+tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, uint32_t cf_mask) {
   TranslationBlock *tb;
   target_ulong cs_base, pc;
-  u32 flags;
+  uint32_t flags;
 
   tb = tb_lookup__cpu_state(cpu, &pc, &cs_base, &flags, cf_mask);
 
@@ -558,7 +558,7 @@ int cpu_exec(CPUState *cpu) {
     int tb_exit = 0;
 
     while (!cpu_handle_interrupt(cpu, &last_tb)) {
-      u32 cflags = cpu->cflags_next_tb;
+      uint32_t cflags = cpu->cflags_next_tb;
       TranslationBlock *tb;
 
       /* When requested, use an exact setting for cflags for the next

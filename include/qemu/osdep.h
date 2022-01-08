@@ -3,6 +3,7 @@
 
 #include "../types.h"
 #include <stdint.h>
+#include <stddef.h>
 
 /* Round number up to multiple. Requires that d be a power of 2 (see
  * QEMU_ALIGN_UP for a safer but slower version on arbitrary

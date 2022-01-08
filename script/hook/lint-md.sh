@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ $(uname -m) == 'loongarch64' ];then
+    echo "unable to install lint-md in loongarch64, skip"
+    exit 0
+fi
+
 lint_md_output=$(lint-md ./*.md doc/ -c .lintmdrc.json)
 echo "$lint_md_output"
 

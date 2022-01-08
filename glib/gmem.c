@@ -2,7 +2,6 @@
 #include "glibconfig.h"
 #include "gmacros.h"
 #include "gmessages.h"
-#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 

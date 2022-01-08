@@ -77,7 +77,7 @@ void apic_reset_irq_delivered(void) {
    * register for a sys/sdt.h marker.  For details on this workaround, see:
    * https://sourceware.org/bugzilla/show_bug.cgi?id=13296
    */
-  volatile int a_i_d = apic_irq_delivered;
+  // volatile int a_i_d = apic_irq_delivered;
   // bmbt_trace_apic_reset_irq_delivered(a_i_d);
 
   apic_irq_delivered = 0;
@@ -203,7 +203,7 @@ static const VMStateDescription vmstate_apic_common;
 void apic_common_realize(APICCommonState *s) {
   APICCommonClass *info;
   static VAPICROMState *vapic;
-  int instance_id = s->id;
+  // int instance_id = s->id;
 
   info = APIC_COMMON_GET_CLASS(s);
   info->realize(s);
@@ -220,10 +220,10 @@ void apic_common_realize(APICCommonState *s) {
     info->enable_tpr_reporting(s, true);
   }
 
+#ifdef BMBT
   if (s->legacy_instance_id) {
     instance_id = -1;
   }
-#ifdef BMBT
   vmstate_register_with_alias_id(NULL, instance_id, &vmstate_apic_common, s, -1,
                                  0, NULL);
 #endif

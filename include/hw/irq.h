@@ -44,7 +44,7 @@ typedef struct {
 static inline void qdev_init_gpio_in(GPIOList *dev_gpio,
                                      qemu_irq_handler handler, void *opaque,
                                      int n) {
-  dev_gpio->in = g_new(qemu_irq, n);
+  dev_gpio->in = g_new0(qemu_irq, n);
   for (int i = 0; i < n; i++) {
     dev_gpio->in[i] = qemu_allocate_irq(handler, opaque, i);
   }

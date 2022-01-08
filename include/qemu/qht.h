@@ -10,6 +10,7 @@
 #include "../types.h"
 #include "qdist.h"
 #include "thread.h"
+#include <stddef.h>
 
 typedef bool (*qht_cmp_func_t)(const void *a, const void *b);
 

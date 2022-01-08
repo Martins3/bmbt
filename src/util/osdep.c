@@ -1,5 +1,6 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/error-report.h"
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <uglib.h>
 
@@ -34,7 +35,7 @@ int qemu_mprotect_none(void *addr, size_t size) {
 }
 
 // ------------- originally defined in /util/oslib-posix.c begin --------------
-void *qemu_oom_check(void *ptr) {
+static void *qemu_oom_check(void *ptr) {
   if (ptr == NULL) {
     fprintf(stderr, "Failed to allocate memory\n");
     abort();
@@ -42,7 +43,7 @@ void *qemu_oom_check(void *ptr) {
   return ptr;
 }
 
-void *qemu_try_memalign(size_t alignment, size_t size) {
+static void *qemu_try_memalign(size_t alignment, size_t size) {
   void *ptr;
 
   if (alignment < sizeof(void *)) {

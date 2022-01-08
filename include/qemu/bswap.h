@@ -34,6 +34,7 @@ typedef union {
   } l;
 } CPU_LDoubleU;
 
+#undef CONFIG_BYTESWAP_H
 #ifdef CONFIG_MACHINE_BSWAP_H
 #include <machine/bswap.h>
 #include <sys/endian.h>

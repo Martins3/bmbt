@@ -164,6 +164,7 @@ static void piix3_reset(void *opaque) {
   d->rcr = 0;
 }
 
+#ifdef BMBT
 static int piix3_post_load(void *opaque, int version_id) {
   PIIX3State *piix3 = opaque;
   int pirq;
@@ -203,7 +204,6 @@ static bool piix3_rcr_needed(void *opaque) {
   return (piix3->rcr != 0);
 }
 
-#ifdef BMBT
 static const VMStateDescription vmstate_piix3_rcr = {
     .name = "PIIX3/rcr",
     .version_id = 1,
@@ -224,7 +224,6 @@ static const VMStateDescription vmstate_piix3 = {
                                                PIIX3State, PIIX_NUM_PIRQS, 3),
                          VMSTATE_END_OF_LIST()},
     .subsections = (const VMStateDescription *[]){&vmstate_piix3_rcr, NULL}};
-#endif
 
 static void rcr_write(void *opaque, hwaddr addr, uint64_t val, unsigned len) {
   PIIX3State *d = opaque;
@@ -245,6 +244,7 @@ static uint64_t rcr_read(void *opaque, hwaddr addr, unsigned len) {
 
 static const MemoryRegionOps rcr_ops = {
     .read = rcr_read, .write = rcr_write, .endianness = DEVICE_LITTLE_ENDIAN};
+#endif
 
 static void piix3_realize(PCIDevice *dev) {
   dynamic_type_check(dev, TYPE_PIIX3_DEVICE);

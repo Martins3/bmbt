@@ -702,14 +702,13 @@ ISADevice *pc_find_fdc0(void) {
 static void pc_cmos_init_late(void *opaque) {
   pc_cmos_init_late_arg *arg = opaque;
   RTCState *s = arg->rtc_state;
+  int val = 0;
+#ifdef BMBT
   int16_t cylinders;
   int8_t heads, sectors;
-  int val;
   int i, trans;
 
-  val = 0;
   // idebus is empty, started from pc_cmos_init
-#ifdef BMBT
   if (arg->idebus[0] &&
       ide_get_geometry(arg->idebus[0], 0, &cylinders, &heads, &sectors) >= 0) {
     cmos_init_hd(s, 0x19, 0x1b, cylinders, heads, sectors);
@@ -1037,12 +1036,12 @@ static void pc_machine_done(Notifier *notifier, void *data) {
   PCMachineState *pcms = container_of(notifier, PCMachineState, machine_done);
   X86MachineState *x86ms = X86_MACHINE(pcms);
 
-  PCIBus *bus = pcms->bus;
-
   /* set the number of CPUs */
   rtc_set_cpus_count(x86ms->rtc, x86ms->boot_cpus);
 
 #ifdef BMBT
+  PCIBus *bus = pcms->bus;
+
   if (bus) {
     int extra_hosts = 0;
 
@@ -1129,8 +1128,10 @@ void xen_load_linux(PCMachineState *pcms) {
 void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
                     MemoryRegion *rom_memory, MemoryRegion **ram_memory) {
   int linux_boot, i;
+#ifdef BMBT
   MemoryRegion *ram, *option_rom_mr;
   MemoryRegion *ram_below_4g, *ram_above_4g;
+#endif
   FWCfgState *fw_cfg;
   MachineState *machine = MACHINE(pcms);
   MachineClass *mc = MACHINE_GET_CLASS(machine);
@@ -1390,15 +1391,16 @@ static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
 void pc_basic_device_init(ISABus *isa_bus, qemu_irq *gsi, RTCState **rtc_state,
                           bool create_fdctrl, bool no_vmport, bool has_pit,
                           uint32_t hpet_irqs) {
-
+#ifdef BMBT
   int i;
   DeviceState *hpet = NULL;
   int pit_isa_irq = 0;
   qemu_irq pit_alt_irq = NULL;
   qemu_irq rtc_irq = NULL;
+#endif
   ISADevice *pit = NULL;
-  MemoryRegion *ioport80_io = g_new(MemoryRegion, 1);
-  MemoryRegion *ioportF0_io = g_new(MemoryRegion, 1);
+  MemoryRegion *ioport80_io = g_new0(MemoryRegion, 1);
+  MemoryRegion *ioportF0_io = g_new0(MemoryRegion, 1);
 
   memory_region_init_io(ioport80_io, &ioport80_io_ops, NULL, "ioport80", 1);
   io_add_memory_region(0x80, ioport80_io);

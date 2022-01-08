@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 
 /* Set to 0 to disable all use of time.h / clock(). */
 #ifndef GREATEST_USE_TIME
-#define GREATEST_USE_TIME 1
+#define GREATEST_USE_TIME 0
 #endif
 
 #if GREATEST_USE_TIME
@@ -354,7 +354,7 @@ void greatest_set_test_suffix(const char *suffix);
 
 /* Start defining a test function.
  * The arguments are not included, to allow parametric testing. */
-#define GREATEST_TEST static enum greatest_test_res
+#define GREATEST_TEST static  enum greatest_test_res __attribute__((unused))
 
 /* PASS/FAIL/SKIP result from a test. Used internally. */
 typedef enum greatest_test_res {

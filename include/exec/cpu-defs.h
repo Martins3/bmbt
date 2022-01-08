@@ -115,7 +115,7 @@ typedef struct CPUIOTLBEntry {
    *       number is PHYS_SECTION_NOTDIRTY or PHYS_SECTION_ROM)
    *     + the offset within the target MemoryRegion (otherwise)
    */
-  u64 addr;
+  uint64_t addr;
   MemTxAttrs attrs;
 } CPUIOTLBEntry;
 

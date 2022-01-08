@@ -2539,6 +2539,7 @@ void host_vendor_fms(char *vendor, int *family, int *model, int *stepping) {
 
 /* CPU class name definitions: */
 
+#ifdef BMBT
 /* Return type name for a given CPU model name
  * Caller is responsible for freeing the returned string.
  */
@@ -2562,6 +2563,7 @@ static char *x86_cpu_class_get_model_name(X86CPUClass *cc) {
   g_assert_not_reached();
   return NULL;
 }
+#endif
 
 typedef struct PropValue {
   const char *prop, *value;
@@ -2609,6 +2611,7 @@ struct X86CPUModel {
 #endif
 };
 
+#ifdef BMBT
 /* Get full model name for CPU version */
 static char *x86_cpu_versioned_model_name(X86CPUDefinition *cpudef,
                                           X86CPUVersion version) {
@@ -2678,6 +2681,7 @@ static CPUCaches epyc_cache_info = {
             .complex_indexing = true,
         },
 };
+#endif
 
 /* The following VMX features are not supported by KVM and are left out in the
  * CPU definitions:
@@ -2722,6 +2726,7 @@ static X86CPUDefinition builtin_x86_defs[] = {
     },
 };
 
+#ifdef BMBT
 /* KVM-specific features that are automatically added/removed
  * from all CPU models when KVM is enabled.
  */
@@ -2733,6 +2738,7 @@ static PropValue kvm_default_props[] = {
     {"monitor", "off"},    {"svm", "off"},
     {NULL, NULL},
 };
+#endif
 
 /* TCG-specific defaults that override all CPU models when using TCG
  */
@@ -2755,6 +2761,7 @@ void x86_cpu_set_default_version(X86CPUVersion version) {
   default_cpu_version = version;
 }
 
+#ifdef BMBT
 static X86CPUVersion x86_cpu_model_last_version(const X86CPUModel *model) {
   g_assert_not_reached();
   return default_cpu_version;
@@ -2781,9 +2788,6 @@ void x86_cpu_change_kvm_default(const char *prop, const char *value) {
   assert(pv->prop);
 }
 
-static uint64_t x86_cpu_get_supported_feature_word(FeatureWord w,
-                                                   bool migratable_only);
-
 static bool lmce_supported(void) {
   uint64_t mce_cap = 0;
 
@@ -2795,9 +2799,14 @@ static bool lmce_supported(void) {
 
   return !!(mce_cap & MCG_LMCE_P);
 }
+#endif
+
+static uint64_t x86_cpu_get_supported_feature_word(FeatureWord w,
+                                                   bool migratable_only);
 
 #define CPUID_MODEL_ID_SZ 48
 
+#ifdef BMBT
 /**
  * cpu_x86_fill_model_id:
  * Get CPUID model ID string from host CPU.
@@ -2820,6 +2829,7 @@ static int cpu_x86_fill_model_id(char *str) {
   }
   return 0;
 }
+#endif
 
 // max x86 cpu model is useless
 #ifdef BMBT
@@ -2956,9 +2966,9 @@ static bool x86_cpu_have_filtered_features(X86CPU *cpu) {
 static void mark_unavailable_features(X86CPU *cpu, FeatureWord w, uint64_t mask,
                                       const char *verbose_prefix) {
   CPUX86State *env = &cpu->env;
-  FeatureWordInfo *f = &feature_word_info[w];
+  // FeatureWordInfo *f = &feature_word_info[w];
   int i;
-  char *feat_word_str;
+  // char *feat_word_str;
 
   if (!cpu->force_features) {
     env->features[w] &= ~mask;
@@ -2983,6 +2993,7 @@ static void mark_unavailable_features(X86CPU *cpu, FeatureWord w, uint64_t mask,
   }
 }
 
+#ifdef BMBT
 static int64_t x86_cpuid_version_get_family(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
   int64_t value = (env->cpuid_version >> 8) & 0xf;
@@ -2991,6 +3002,7 @@ static int64_t x86_cpuid_version_get_family(X86CPU *cpu) {
   }
   return value;
 }
+#endif
 
 static void x86_cpuid_version_set_family(X86CPU *cpu, int64_t value) {
   CPUX86State *env = &cpu->env;
@@ -3011,12 +3023,14 @@ static void x86_cpuid_version_set_family(X86CPU *cpu, int64_t value) {
   }
 }
 
+#ifdef BMBT
 static int64_t x86_cpuid_version_get_model(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
   int64_t value = (env->cpuid_version >> 4) & 0xf;
   value |= ((env->cpuid_version >> 16) & 0xf) << 4;
   return value;
 }
+#endif
 
 static void x86_cpuid_version_set_model(X86CPU *cpu, int64_t value) {
   CPUX86State *env = &cpu->env;
@@ -3033,11 +3047,13 @@ static void x86_cpuid_version_set_model(X86CPU *cpu, int64_t value) {
   env->cpuid_version |= ((value & 0xf) << 4) | ((value >> 4) << 16);
 }
 
+#ifdef BMBT
 static int64_t x86_cpuid_version_get_stepping(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
   int64_t value = value = env->cpuid_version & 0xf;
   return value;
 }
+#endif
 
 static void x86_cpuid_version_set_stepping(X86CPU *cpu, int64_t value) {
   CPUX86State *env = &cpu->env;
@@ -3052,6 +3068,7 @@ static void x86_cpuid_version_set_stepping(X86CPU *cpu, int64_t value) {
   env->cpuid_version |= value & 0xf;
 }
 
+#ifdef BMBT
 static char *x86_cpuid_get_vendor(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
   char *value;
@@ -3061,6 +3078,7 @@ static char *x86_cpuid_get_vendor(X86CPU *cpu) {
                            env->cpuid_vendor3);
   return value;
 }
+#endif
 
 static void x86_cpuid_set_vendor(X86CPU *cpu, const char *value) {
   CPUX86State *env = &cpu->env;
@@ -3080,6 +3098,7 @@ static void x86_cpuid_set_vendor(X86CPU *cpu, const char *value) {
   }
 }
 
+#ifdef BMBT
 static char *x86_cpuid_get_model_id(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
   char *value;
@@ -3092,6 +3111,7 @@ static char *x86_cpuid_get_model_id(X86CPU *cpu) {
   value[48] = '\0';
   return value;
 }
+#endif
 
 static void x86_cpuid_set_model_id(X86CPU *cpu, const char *model_id) {
   CPUX86State *env = &cpu->env;
@@ -3187,7 +3207,6 @@ static inline void feat2prop(char *s) {
     *s = '-';
   }
 }
-#endif
 
 /* Return the feature property name for a feature flag bit */
 static const char *x86_cpu_feature_name(FeatureWord w, int bitnr) {
@@ -3213,14 +3232,12 @@ static const char *x86_cpu_feature_name(FeatureWord w, int bitnr) {
   return name;
 }
 
-#ifdef BMBT
 /* Compatibily hack to maintain legacy +-feat semantic,
  * where +-feat overwrites any feature set by
  * feat=on|feat even if the later is parsed after +-feat
  * (i.e. "-x2apic,x2apic=on" will result in x2apic disabled)
  */
 static GList *plus_features, *minus_features;
-#endif
 
 static gint compare_string(gconstpointer a, gconstpointer b) { return 1; }
 
@@ -3229,16 +3246,19 @@ static gint compare_string(gconstpointer a, gconstpointer b) { return 1; }
 static void x86_cpu_parse_featurestr(const char *typename, char *features) {
   g_assert_not_reached();
 }
+#endif
 
 static void x86_cpu_expand_features(X86CPU *cpu);
 static void x86_cpu_filter_features(X86CPU *cpu, bool verbose);
 
+#ifdef BMBT
 /* Build a list with the name of all features on a feature word array */
 static void x86_cpu_list_feature_names(FeatureWordArray features) {
   g_assert_not_reached();
 }
 
 static void x86_cpu_get_unavailable_features() { g_assert_not_reached(); }
+#endif
 
 // used by qmp
 #ifdef BMBT
@@ -4194,7 +4214,7 @@ static void x86_cpu_apic_create(X86CPU *cpu) {
 
 static void x86_cpu_apic_realize(X86CPU *cpu) {
   APICCommonState *apic;
-  MemoryRegion *mr;
+  // MemoryRegion *mr;
   static bool apic_mmio_map_once;
 
   if (cpu->apic_state == NULL) {
@@ -4221,8 +4241,8 @@ static void x86_cpu_apic_realize(X86CPU *cpu) {
   }
 }
 
-static void x86_cpu_machine_done(Notifier *n, void *unused) {
 #ifdef BMBT
+static void x86_cpu_machine_done(Notifier *n, void *unused) {
   X86CPU *cpu = container_of(n, X86CPU, machine_done);
   MemoryRegion *smram =
       (MemoryRegion *)object_resolve_path("/machine/smram", NULL);
@@ -4234,8 +4254,8 @@ static void x86_cpu_machine_done(Notifier *n, void *unused) {
     memory_region_set_enabled(cpu->smram, true);
     memory_region_add_subregion_overlap(cpu->cpu_as_root, 0, cpu->smram, 1);
   }
-#endif
 }
+#endif
 #else
 static void x86_cpu_apic_realize(X86CPU *cpu, Error **errp) {}
 #endif
@@ -4364,7 +4384,7 @@ static void x86_cpu_enable_xsave_components(X86CPU *cpu) {
  */
 static void x86_cpu_expand_features(X86CPU *cpu) {
   CPUX86State *env = &cpu->env;
-  FeatureWord w;
+  // FeatureWord w;
   int i;
 #ifdef BMBT
   GList *l;
@@ -4775,9 +4795,8 @@ out:
   check_features(cpu);
 }
 
-static void x86_cpu_unrealizefn(X86CPU *cpu) {
-  g_assert_not_reached();
 #if BMBT
+static void x86_cpu_unrealizefn(X86CPU *cpu) {
   X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
 
 #ifndef CONFIG_USER_ONLY
@@ -4795,8 +4814,8 @@ static void x86_cpu_unrealizefn(X86CPU *cpu) {
     error_propagate(errp, local_err);
     return;
   }
-#endif
 }
+#endif
 
 // access feature bit directly
 #ifdef BMBT
@@ -4941,7 +4960,7 @@ static void x86_cpu_get_crash_info_qom(Object *obj, Visitor *v,
 static void x86_cpu_initfn(X86CPU *cpu) {
   X86CPUClass *xcc = X86_CPU_GET_CLASS(cpu);
   CPUX86State *env = &cpu->env;
-  FeatureWord w;
+  // FeatureWord w;
 
   env->nr_dies = 1;
   cpu_set_cpustate_pointers(cpu);

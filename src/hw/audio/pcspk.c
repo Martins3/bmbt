@@ -51,8 +51,8 @@ typedef struct {
   bool migrate;
 } PCSpkState;
 
-static const char *s_spk = "pcspk";
 #ifdef BMBT
+static const char *s_spk = "pcspk";
 static PCSpkState *pcspk_state;
 
 static inline void generate_samples(PCSpkState *s) {
@@ -184,11 +184,13 @@ static void pcspk_realizefn(PCSpkState *s) {
   io_add_memory_region(s->iobase, &s->ioport);
 }
 
+#ifdef BMBT
 static bool migrate_needed(void *opaque) {
   PCSpkState *s = opaque;
 
   return s->migrate;
 }
+#endif
 
 static PCSpkState __pcspk;
 

@@ -1,6 +1,7 @@
 #ifndef CPU_COMMON_H_OF49R186
 #define CPU_COMMON_H_OF49R186
 #include "../types.h"
+#include <stdint.h>
 
 enum device_endian {
   DEVICE_NATIVE_ENDIAN,

@@ -19,7 +19,7 @@ TEST test_env_setup(void) {
     end = block->mr->size + block->mr->offset;
   }
 
-  MemTxAttrs attrs;
+  MemTxAttrs attrs = {.secure = 1};
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -37,13 +37,13 @@ TEST test_env_setup(void) {
 }
 
 static uint64_t ops_read(void *opaque, hwaddr addr, unsigned size) {
-  MemoryRegion *mr = (MemoryRegion *)opaque;
+  // MemoryRegion *mr = (MemoryRegion *)opaque;
   return 0x12345678abcdef12;
 }
 
 static void ops_write(void *opaque, hwaddr addr, uint64_t value,
                       unsigned size) {
-  MemoryRegion *mr = (MemoryRegion *)opaque;
+  // MemoryRegion *mr = (MemoryRegion *)opaque;
   duck_check(value == 0x12345678);
 }
 
@@ -63,7 +63,7 @@ TEST test_rw(void) {
 
   // initialize
   qemu_init_cpu_loop();
-  struct MemTxAttrs attrs;
+  MemTxAttrs attrs = {.secure = 1};
   CPUX86State env;
   env.hflags = 0;
   MemoryRegion *mr1 = g_malloc0(sizeof(MemoryRegion));
@@ -90,10 +90,7 @@ TEST test_rw(void) {
 }
 
 TEST test_dirty_memory(void) {
-  struct MemTxAttrs attrs;
-  CPUX86State env;
-  MemTxResult mem;
-  env.hflags = 0;
+  MemTxAttrs attrs = {.secure = 1};
   hwaddr addr = 0x100000;
   uint32_t msg_size = 0x100;
   char *msg = (char *)g_malloc0(msg_size + 1);
@@ -102,21 +99,17 @@ TEST test_dirty_memory(void) {
     msg[i] = 'x';
   }
 
-  mem = address_space_rw(&address_space_memory, addr, attrs, (void *)msg,
-                         msg_size, true);
-  mem = address_space_rw(&address_space_io, addr, attrs, (void *)msg2, 8, true);
+  address_space_rw(&address_space_memory, addr, attrs, (void *)msg, msg_size,
+                   true);
+  address_space_rw(&address_space_io, addr, attrs, (void *)msg2, 8, true);
   for (int i = 0; i < msg_size; ++i) {
     ASSERT_EQ(msg[i], msg2[i]);
   }
   PASS();
 }
 
-TEST test_smc(void) { PASS(); }
-
-TEST test_pam(void) { PASS(); }
-
 SUITE(memory_model_test) {
   RUN_TEST(test_env_setup);
   RUN_TEST(test_rw);
-  // RUN_TEST(test_dirty_memory);
+  RUN_TEST(test_dirty_memory);
 }

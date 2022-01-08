@@ -12,10 +12,9 @@
 // #include "../../src/i386/LATX/include/cross-page-check.h"
 #endif
 
-static inline TranslationBlock *tb_lookup__cpu_state(CPUState *cpu,
-                                                     target_ulong *pc,
-                                                     target_ulong *cs_base,
-                                                     u32 *flags, u32 cf_mask) {
+static inline TranslationBlock *
+tb_lookup__cpu_state(CPUState *cpu, target_ulong *pc, target_ulong *cs_base,
+                     uint32_t *flags, uint32_t cf_mask) {
   CPUArchState *env = (CPUArchState *)cpu->env_ptr;
   TranslationBlock *tb;
   uint32_t hash;

@@ -388,10 +388,12 @@ void x86_cpu_dump_state(CPUState *cs, FILE *f, int flags) {
     }
   }
   if (flags & CPU_DUMP_CODE) {
+#ifdef NEED_LATER
     target_ulong base = env->segs[R_CS].base + env->eip;
     target_ulong offs = MIN(env->eip, DUMP_CODE_BYTES_BACKWARD);
     uint8_t code;
     char codestr[3];
+#endif
 
     qemu_fprintf(f, "Code=");
 #ifdef NEED_LATER

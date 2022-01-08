@@ -164,7 +164,7 @@ Chardev *serial_hd(int i) {
 
 static void init_serial_chardev() {
   serial_hds = g_new0(Chardev *, 1);
-  Chardev *serial_stub = g_new(Chardev, 1);
+  Chardev *serial_stub = g_new0(Chardev, 1);
   serial_stub->log = get_logfile("serial.log");
   serial_hds[0] = serial_stub;
   num_serial_hds++;
@@ -196,15 +196,13 @@ PCMachineState *QOM_machine_init() {
 
   machine_class_init(mc);
   machine_class_base_init(mc);
-  machine_initfn(ms);
-
   x86_machine_class_init(x86mc);
-  x86_machine_initfn(x86ms);
-
   pc_machine_class_init(pcmc);
-  pc_machine_initfn(pcms);
-
   pc_machine_v4_2_class_init(mc);
+
+  machine_initfn(ms);
+  x86_machine_initfn(x86ms);
+  pc_machine_initfn(pcms);
 
   machine_inited = true;
   return pcms;
@@ -290,6 +288,8 @@ void qemu_init() {
 
   init_xtm_options();
 
+  configure_rtc();
+
   ram_size = 128 * MiB;
   duck_check(first_cpu == NULL);
 
@@ -311,7 +311,7 @@ void qemu_init() {
 
   qemu_set_log(0);
 
-  PCMachineState *pcms = machine_init();
+  machine_init();
   tcg_init();
 
   current_machine = MACHINE(&__pcms);

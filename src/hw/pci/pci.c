@@ -192,8 +192,8 @@ static const TypeInfo pcie_bus_info = {
 static PCIBus *pci_find_bus_nr(PCIBus *bus, int bus_num);
 static void pci_update_mappings(PCIDevice *d);
 static void pci_irq_handler(void *opaque, int irq_num, int level);
-static void pci_add_option_rom(PCIDevice *pdev, bool is_default_rom);
-static void pci_del_option_rom(PCIDevice *pdev);
+// static void pci_add_option_rom(PCIDevice *pdev, bool is_default_rom);
+// static void pci_del_option_rom(PCIDevice *pdev);
 
 static uint16_t pci_default_sub_vendor_id = PCI_SUBVENDOR_ID_REDHAT_QUMRANET;
 static uint16_t pci_default_sub_device_id = PCI_SUBDEVICE_ID_QEMU;
@@ -1048,7 +1048,7 @@ void pci_register_bar(PCIDevice *pci_dev, int region_num, uint8_t type,
 #endif
 
 static void pci_update_vga(PCIDevice *pci_dev) {
-  uint16_t cmd;
+  // uint16_t cmd;
 
   if (!pci_dev->has_vga) {
     return;
@@ -1189,7 +1189,7 @@ static pcibus_t pci_bar_address(PCIDevice *d, int reg, uint8_t type,
 static void pci_update_mappings(PCIDevice *d) {
   PCIIORegion *r;
   int i;
-  pcibus_t new_addr;
+  // pcibus_t new_addr;
 
   for (i = 0; i < PCI_NUM_REGIONS; i++) {
     r = &d->io_regions[i];
@@ -1928,11 +1928,11 @@ PCIDevice *pci_find_device(PCIBus *bus, int bus_num, uint8_t devfn) {
 
 static void pci_qdev_realize(PCIDevice *pci_dev, const char *name) {
   PCIDeviceClass *pc = PCI_DEVICE_GET_CLASS(pci_dev);
-  // ObjectClass *klass = OBJECT_CLASS(pc);
+#ifdef BMBT
+  ObjectClass *klass = OBJECT_CLASS(pc);
   bool is_default_rom;
   uint16_t class_id;
 
-#ifdef BMBT
   /* initialize cap_present for pci_is_express() and pci_config_size(),
    * Note that hybrid PCIs are not set automatically and need to manage
    * QEMU_PCI_CAP_EXPRESS manually */
