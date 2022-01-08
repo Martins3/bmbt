@@ -99,11 +99,11 @@ typedef struct TranslationBlock {
   /* simulated PC corresponding to this block (EIP + CS base) */
   target_ulong pc;
   target_ulong cs_base; /* CS base for this block */
-  u32 flags; /* flags defining in which context the code was generated */
-  u16 size;  /* size of target code for this block (1 <=
+  uint32_t flags; /* flags defining in which context the code was generated */
+  uint16_t size;  /* size of target code for this block (1 <=
                      size <= TARGET_PAGE_SIZE) */
   uint16_t icount;
-  u32 cflags; /* compile flags */
+  uint32_t cflags; /* compile flags */
 
 #define CF_COUNT_MASK 0x00007fff
 #define CF_LAST_IO 0x00008000 /* Last insn may be an IO access.  */
@@ -134,7 +134,7 @@ typedef struct TranslationBlock {
    * setting one of the jump targets (or patching the jump instruction). Only
    * two of such jumps are supported.
    */
-  u16 jmp_reset_offset[2];                 /* offset of original jump target */
+  uint16_t jmp_reset_offset[2];            /* offset of original jump target */
 #define TB_JMP_RESET_OFFSET_INVALID 0xffff /* indicates no jump generated */
   uintptr_t jmp_target_arg[2];             /* target address or offset */
 
@@ -174,7 +174,7 @@ typedef struct TranslationBlock {
 extern bool parallel_cpus;
 
 /* current cflags for hashing/comparison */
-static inline u32 curr_cflags(void) {
+static inline uint32_t curr_cflags(void) {
   return (parallel_cpus ? CF_PARALLEL : 0) | (use_icount ? CF_USE_ICOUNT : 0);
 }
 

@@ -10,10 +10,10 @@ unsigned long tcg_tb_size;
 
 /* mask must never be zero, except for A20 change call */
 void tcg_handle_interrupt(CPUState *cpu, int mask) {
-  int old_mask;
+  // int old_mask;
   g_assert(qemu_mutex_iothread_locked() || !qemu_cpu_is_self(cpu));
 
-  old_mask = cpu->interrupt_request;
+  // old_mask = cpu->interrupt_request;
   cpu->interrupt_request |= mask;
 
   /*

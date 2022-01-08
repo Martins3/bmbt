@@ -60,12 +60,12 @@ typedef uint64_t tcg_insn_unit;
 typedef struct TCGContext {
   /* goto_tb support */
   tcg_insn_unit *code_buf;
-  u16 *tb_jmp_reset_offset;      /* tb->jmp_reset_offset */
+  uint16_t *tb_jmp_reset_offset; /* tb->jmp_reset_offset */
   uintptr_t *tb_jmp_insn_offset; /* tb->jmp_target_arg if direct_jump */
   uintptr_t *tb_jmp_target_addr; /* tb->jmp_target_arg if !direct_jump */
 
   // xqm doesn't need it
-  // u32 tb_cflags; /* cflags of the current TB */
+  // uint32_t tb_cflags; /* cflags of the current TB */
 
   /* Code generation.  Note that we specifically do not use tcg_insn_unit
      here, because there's too much arithmetic throughout that relies
@@ -367,9 +367,6 @@ void tcg_region_init(void);
 void tcg_region_reset_all(void);
 
 void tcg_context_init(TCGContext *s);
-
-static TCGContext **tcg_ctxs;
-static unsigned int n_tcg_ctxs;
 
 /**
  * make_memop_idx

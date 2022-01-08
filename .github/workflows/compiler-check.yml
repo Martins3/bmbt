@@ -15,9 +15,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive --depth=1
-    - name: add kernel config
-      run: echo "KERNEL_PATH:=github" > kernel.mak
     - name: make without glib
-      run: make
+      run: make USE_LIBC=1
     - name: make with glib
-      run: make USE_GLIB=1
+      run: make USE_GLIB=1 USE_LIBC=1

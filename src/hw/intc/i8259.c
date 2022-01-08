@@ -68,7 +68,7 @@ static void pic_update_irq(PICCommonState *s) {
 static void pic_set_irq(void *opaque, int irq, int level) {
   PICCommonState *s = opaque;
   int mask = 1 << irq;
-  int irq_index = s->master ? irq : irq + 8;
+  // int irq_index = s->master ? irq : irq + 8;
 
   // bmbt_trace_pic_set_irq(s->master, irq, level);
   // [interface 18]
@@ -162,10 +162,12 @@ void pic_init_reset(PICCommonState *s) {
   pic_update_irq(s);
 }
 
+#ifdef BMBT
 static void pic_reset(PICCommonState *s) {
   s->elcr = 0;
   pic_init_reset(s);
 }
+#endif
 
 static void pic_ioport_write(void *opaque, hwaddr addr64, uint64_t val64,
                              unsigned size) {

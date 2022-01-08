@@ -4,6 +4,8 @@
 #include "../types.h"
 #include "./queue.h"
 #include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 enum QemuOptType {
   QEMU_OPT_STRING = 0, /* no parsing (use string as-is) */

@@ -1,5 +1,6 @@
 #ifndef MEMOP_H_BRBWZAQH
 #define MEMOP_H_BRBWZAQH
+#include <stdbool.h>
 #include "../qemu/host-utils.h"
 
 #define NEED_CPU_H

@@ -306,7 +306,7 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
   unsigned long end, page;
   bool dirty = false;
   RAMBlock *ramblock;
-  uint64_t mr_offset, mr_size;
+  // uint64_t mr_offset, mr_size;
 
   if (length == 0) {
     return false;
@@ -332,11 +332,10 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
       page += num;
     }
 
-    mr_offset = (ram_addr_t)(page << TARGET_PAGE_BITS) - ramblock->offset;
-    mr_size = (end - page) << TARGET_PAGE_BITS;
-
     // related with MemoryListener::log_clear, as is empty in tcg mode
 #ifdef BMTB
+    mr_offset = (ram_addr_t)(page << TARGET_PAGE_BITS) - ramblock->offset;
+    mr_size = (end - page) << TARGET_PAGE_BITS;
     memory_region_clear_dirty_bitmap(ramblock->mr, mr_offset, mr_size);
 #endif
   }

@@ -16,7 +16,10 @@
   }
 
 #define g_assert_not_reached()                                                 \
-  { exit(1); }
+  {                                                                            \
+    printf("%s:%d: g_assert_not_reached", __func__, __LINE__);                 \
+    exit(1);                                                                   \
+  }
 
 #define g_assert_true(expr)                                                    \
   G_STMT_START {                                                               \

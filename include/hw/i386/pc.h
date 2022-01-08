@@ -188,7 +188,7 @@ static inline X86MachineState *MS_TO_X86_MACHINE(const MachineState *x) {
 #define MACHINE(pcms)                                                          \
   ({                                                                           \
     PCMachineState *tmp = pcms;                                                \
-    (MachineState *)pcms;                                                      \
+    (MachineState *)tmp;                                                       \
   })
 
 #define X86_MACHINE(pcms)                                                      \

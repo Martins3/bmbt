@@ -32,6 +32,7 @@ struct FWCfgEntry {
   FWCfgWriteCallback write_cb;
 };
 
+#ifdef BMBT
 /**
  * key_name:
  *
@@ -79,6 +80,7 @@ static const char *key_name(uint16_t key) {
 
   return NULL;
 }
+#endif
 
 static FWCfgIoState __fw_state;
 
@@ -94,7 +96,7 @@ static void fw_cfg_bootsplash(FWCfgState *s) {
 }
 
 static void fw_cfg_reboot(FWCfgState *s) {
-  const char *reboot_timeout = NULL;
+  // const char *reboot_timeout = NULL;
   uint64_t rt_val = -1;
   uint32_t rt_le32;
 
@@ -168,6 +170,7 @@ static uint64_t fw_cfg_data_read(void *opaque, hwaddr addr, unsigned size) {
   return value;
 }
 
+#ifdef BMBT
 static void fw_cfg_data_mem_write(void *opaque, hwaddr addr, uint64_t value,
                                   unsigned size) {
   FWCfgState *s = opaque;
@@ -177,6 +180,7 @@ static void fw_cfg_data_mem_write(void *opaque, hwaddr addr, uint64_t value,
     fw_cfg_write(s, value >> (8 * --i));
   } while (i);
 }
+#endif
 
 static void fw_cfg_dma_transfer(FWCfgState *s) {
   dma_addr_t len;
@@ -308,6 +312,7 @@ static bool fw_cfg_dma_mem_valid(void *opaque, hwaddr addr, unsigned size,
          ((size == 4 && (addr == 0 || addr == 4)) || (size == 8 && addr == 0));
 }
 
+#ifdef BMBT
 static bool fw_cfg_data_mem_valid(void *opaque, hwaddr addr, unsigned size,
                                   bool is_write, MemTxAttrs attrs) {
   return addr == 0;
@@ -326,6 +331,7 @@ static bool fw_cfg_ctl_mem_valid(void *opaque, hwaddr addr, unsigned size,
                                  bool is_write, MemTxAttrs attrs) {
   return is_write && size == 2;
 }
+#endif
 
 static void fw_cfg_comb_write(void *opaque, hwaddr addr, uint64_t value,
                               unsigned size) {

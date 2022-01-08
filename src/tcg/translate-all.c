@@ -1630,7 +1630,8 @@ static TranslationBlock *tb_link_page(TranslationBlock *tb,
 
 /* Called with mmap_lock held for user mode emulation.  */
 TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
-                              target_ulong cs_base, u32 flags, int cflags) {
+                              target_ulong cs_base, uint32_t flags,
+                              int cflags) {
 
   CPUArchState *env = cpu->env_ptr;
   TranslationBlock *tb, *existing_tb;
@@ -2166,6 +2167,7 @@ struct tb_tree_stats {
   size_t cross_page;
 };
 
+#ifdef BMBT
 static gboolean tb_tree_stats_iter(gpointer key, gpointer value,
                                    gpointer data) {
   const TranslationBlock *tb = value;
@@ -2210,6 +2212,7 @@ static gboolean tb_tree_stats_iter(gpointer key, gpointer value,
   }
   return false;
 }
+#endif
 
 #if 0
 void dump_exec_info(void)

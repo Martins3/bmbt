@@ -899,7 +899,7 @@ static void iotlb_check(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                         target_ulong vaddr) {
   target_ulong vaddr_page = vaddr & TARGET_PAGE_MASK;
   duck_check(iotlbentry->addr + vaddr_page == IOTLB_MAGIC);
-  CPUState *cpu = env_cpu(env);
+  // CPUState *cpu = env_cpu(env);
   MemTxAttrs cur_attrs = cpu_get_mem_attrs(env);
   if (cur_attrs.secure != iotlbentry->attrs.secure) {
     g_assert_not_reached();

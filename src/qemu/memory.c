@@ -3,11 +3,8 @@
 #include "../../include/hw/southbridge/piix.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/units.h"
-#include <fcntl.h> // for open
 #include <hw/pci-host/pam.h>
 #include <stdio.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
 static bool mr_initialized(const MemoryRegion *mr) {
   duck_check(mr != NULL);
@@ -781,13 +778,11 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
 static char __pc_bios[PC_BIOS_IMG_SIZE];
 
 static ram_addr_t x86_bios_rom_init() {
-  int fd = open("./seabios/out/bios.bin", O_RDONLY);
-  duck_check(fd != -1);
-
-  lseek(fd, 0, SEEK_SET);
-  int rc = read(fd, __pc_bios, PC_BIOS_IMG_SIZE);
+  FILE *f = fopen("./seabios/out/bios.bin", "r");
+  duck_check(f != NULL);
+  int rc = fread(__pc_bios, sizeof(char), PC_BIOS_IMG_SIZE, f);
   duck_check(rc == PC_BIOS_IMG_SIZE);
-  close(fd);
+  fclose(f);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->host = (void *)(&__pc_bios[0]);
@@ -796,13 +791,7 @@ static ram_addr_t x86_bios_rom_init() {
   return PC_BIOS_IMG_SIZE;
 }
 
-static void *alloc_ram(hwaddr size) {
-  // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
-  void *host = mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
-                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  duck_check(host != (void *)-1);
-  return host;
-}
+void *alloc_ram(hwaddr size);
 
 static inline void init_ram_block(const char *name, unsigned int index,
                                   bool readonly, hwaddr offset, uint64_t size) {

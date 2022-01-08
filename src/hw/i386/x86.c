@@ -7,7 +7,7 @@
 #define BIOS_FILENAME "bios.bin"
 
 /* Physical Address of PVH entry point read from kernel ELF NOTE */
-static size_t pvh_start_addr;
+// static size_t pvh_start_addr;
 
 /*
  * Calculates initial APIC ID for a specific CPU index
@@ -22,7 +22,7 @@ uint32_t x86_cpu_apic_id_from_index(X86MachineState *x86ms,
   MachineState *ms = X86_TO_MACHINE(x86ms);
   X86MachineClass *x86mc = X86_MACHINE_GET_CLASS(x86ms);
   uint32_t correct_id;
-  static bool warned;
+  // static bool warned;
 
   correct_id = x86_apicid_from_cpu_idx(x86ms->smp_dies, ms->smp.cores,
                                        ms->smp.threads, cpu_index);
@@ -272,14 +272,14 @@ void x86_load_linux(X86MachineState *x86ms, FWCfgState *fw_cfg,
                     bool linuxboot_dma_enabled) {
   uint16_t protocol;
   int setup_size, kernel_size, cmdline_size;
-  int dtb_size, setup_data_offset;
+  // int dtb_size, setup_data_offset;
   uint32_t initrd_max;
   uint8_t header[8192], *setup, *kernel;
   hwaddr real_addr, prot_addr, cmdline_addr, initrd_addr = 0;
   FILE *f;
   char *vmode;
   MachineState *machine = X86_TO_MACHINE(x86ms);
-  struct setup_data *setup_data;
+  // struct setup_data *setup_data;
   // initialized in machine_set_kernel
   const char *kernel_filename = machine->kernel_filename;
   const char *initrd_filename = machine->initrd_filename;

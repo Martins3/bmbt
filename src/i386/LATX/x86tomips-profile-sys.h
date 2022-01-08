@@ -2,6 +2,8 @@
 #define _X86toMIPS_PROFILE_SYS_H_
 
 #include <capstone/capstone.h>
+#include <sys/time.h>
+#include <time.h>
 
 struct ps_entry {
     uintptr_t guest_pc;

@@ -7,6 +7,7 @@
 #include "../../sysemu/dma.h"
 #include "../../sysemu/sysemu.h"
 #include "../../types.h"
+#include <unistd.h>
 
 #define TYPE_FW_CFG "fw_cfg"
 #define TYPE_FW_CFG_IO "fw_cfg_io"

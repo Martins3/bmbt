@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "../include/xtm-qemu-config.h"
 
 void print_stack_trace(void);

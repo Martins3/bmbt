@@ -217,6 +217,9 @@ typedef enum {
   ALIAS_PADDI = sizeof(void *) == 4 ? OPC_ADDIW : OPC_ADDI,
 } LoongarchInsn;
 
+static TCGContext **tcg_ctxs;
+static unsigned int n_tcg_ctxs;
+
 static struct tcg_region_state region;
 /*
  * This is an array of struct tcg_region_tree's, with padding.
@@ -356,7 +359,9 @@ static void tcg_target_qemu_prologue(TCGContext *s) {
 #endif
 }
 
+#ifdef BMBT
 static int32_t encode_imm12(uint32_t imm) { return (imm & 0xfff) << 10; }
+#endif
 
 /*
  * Allocate TBs right before their corresponding translated code, making
@@ -826,7 +831,8 @@ void tcg_region_init(void) {
 void tcg_register_thread(void) {
   MachineState *ms = qdev_get_machine();
   TCGContext *s = g_malloc(sizeof(*s));
-  unsigned int i, n;
+  // unsigned int i;
+  unsigned int n;
   bool err;
 
   *s = tcg_init_ctx;

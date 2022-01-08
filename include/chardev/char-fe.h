@@ -34,7 +34,7 @@ struct CharBackend {
  *          associated Chardev, -ENOTSUP, otherwise the return
  *          value depends on the semantics of @cmd
  */
-static int qemu_chr_fe_ioctl(CharBackend *be, int cmd, void *arg) {
+static inline int qemu_chr_fe_ioctl(CharBackend *be, int cmd, void *arg) {
   return -ENOTSUP;
 }
 

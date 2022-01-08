@@ -42,3 +42,8 @@ void tcg_register_thread(void) {
 
 ## 多核编程需要增加考虑的事情
 - soft tlb 的访问
+- 将 libc 的锁被简化了
+- errno
+
+## 出现需要 lock 的位置会被标记出来
+BMBT_MTTCG

@@ -228,7 +228,7 @@ bool timerlist_run_timers(QEMUTimerList *timer_list) {
   bool progress = false;
   QEMUTimerCB *cb;
   void *opaque;
-  bool need_replay_checkpoint = false;
+  // bool need_replay_checkpoint = false;
 
   if (!atomic_read(&timer_list->active_timers)) {
     return false;
@@ -432,10 +432,8 @@ int64_t timerlistgroup_deadline_ns(QEMUTimerListGroup *tlg) {
   return deadline;
 }
 
-static void timer_interrupt_handler(int sig, siginfo_t *si, void *uc) {
-  duck_check(!is_interrupt_blocked());
+static void timer_interrupt_handler() {
   qemu_log("timer interrupt comming");
-  enter_interrpt_context();
   int64_t timeout_ns = -1;
 
   qemu_clock_run_all_timers();
@@ -446,7 +444,6 @@ static void timer_interrupt_handler(int sig, siginfo_t *si, void *uc) {
     warn_report("no timer to fire");
   }
   soonest_interrupt_ns(timeout_ns);
-  leave_interrpt_context();
 }
 
 void setup_timer_interrupt() {
@@ -454,7 +451,7 @@ void setup_timer_interrupt() {
   setup_timer(timer_interrupt_handler);
 }
 
-void qemu_clock_notify(QEMUClockType type) {
+static void qemu_clock_notify(QEMUClockType type) {
   QEMUTimerList *timer_list;
   QEMUClock *clock = qemu_clock_ptr(type);
   QLIST_FOREACH(timer_list, &clock->timerlists, list) {
@@ -471,7 +468,7 @@ void qemu_clock_notify(QEMUClockType type) {
  */
 void qemu_clock_enable(QEMUClockType type, bool enabled) {
   QEMUClock *clock = qemu_clock_ptr(type);
-  QEMUTimerList *tl;
+  // QEMUTimerList *tl;
   bool old = clock->enabled;
   clock->enabled = enabled;
   if (enabled && !old) {

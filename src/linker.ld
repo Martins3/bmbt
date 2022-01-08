@@ -1,4 +1,4 @@
-ENTRY(kernel_entry)
+ENTRY(main)
 
 SECTIONS {
     . = 0x9000000000200000;

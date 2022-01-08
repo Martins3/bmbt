@@ -14,10 +14,9 @@ compile_commands.json
 *.json.gz
 .vscode/
 
-xdebug.md
-
 kernel.mak
 image/
+output
 
 pc-bios/linuxboot_dma.raw
 pc-bios/linuxboot_dma.img

@@ -1,7 +1,9 @@
 #ifndef QEMU_FIFO8_H
 #define QEMU_FIFO8_H
 
+#include <stdint.h>
 #include <types.h>
+#include <stdbool.h>
 
 typedef struct {
   /* All fields are private */

@@ -20,6 +20,7 @@ typedef guint32 gunichar;
 
 #define FALSE false
 #define TRUE true
+
 #define G_GSIZE_FORMAT "lu"
 #define G_MAXSIZE G_MAXULONG
 #define G_MAXULONG ULONG_MAX

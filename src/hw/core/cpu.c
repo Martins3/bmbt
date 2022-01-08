@@ -38,9 +38,9 @@ bool cpu_paging_enabled(const CPUState *cpu) {
   return cc->get_paging_enabled(cpu);
 }
 
+#ifdef BMBT
 static bool cpu_common_get_paging_enabled(const CPUState *cpu) { return false; }
 
-#ifdef BMBT
 void cpu_get_memory_mapping(CPUState *cpu, MemoryMappingList *list,
                             Error **errp) {
   CPUClass *cc = CPU_GET_CLASS(cpu);
@@ -137,9 +137,9 @@ static void cpu_common_reset(CPUState *cpu) {
   }
 }
 
+#ifdef BMBT
 static bool cpu_common_has_work(CPUState *cs) { return false; }
 
-#ifdef BMBT
 static void cpu_common_realizefn(DeviceState *dev, Error **errp) {
   CPUState *cpu = CPU(dev);
   Object *machine = qdev_get_machine();
@@ -169,8 +169,6 @@ static void cpu_common_realizefn(DeviceState *dev, Error **errp) {
 #endif
 
 void cpu_common_initfn(CPUState *cpu) {
-  CPUClass *cc = CPU_GET_CLASS(cpu);
-
   cpu->cpu_index = UNASSIGNED_CPU_INDEX;
   cpu->cluster_index = UNASSIGNED_CLUSTER_INDEX;
   // cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
@@ -186,41 +184,46 @@ void cpu_common_initfn(CPUState *cpu) {
   cpu_exec_initfn(cpu);
 }
 
+#ifdef BMBT
 static int64_t cpu_common_get_arch_id(CPUState *cpu) { return cpu->cpu_index; }
 
 static vaddr cpu_adjust_watchpoint_address(CPUState *cpu, vaddr addr, int len) {
   return addr;
 }
+#endif
 
 void cpu_class_init(CPUClass *k) {
-  // k->parse_features = cpu_common_parse_features;
+#ifdef BMBT
+  k->parse_features = cpu_common_parse_features;
   k->reset = cpu_common_reset;
-  // k->get_arch_id = cpu_common_get_arch_id;
-  // k->has_work = cpu_common_has_work;
-  // k->get_paging_enabled = cpu_common_get_paging_enabled;
-  // k->get_memory_mapping = cpu_common_get_memory_mapping;
-  // k->write_elf32_qemunote = cpu_common_write_elf32_qemunote;
-  // k->write_elf32_note = cpu_common_write_elf32_note;
-  // k->write_elf64_qemunote = cpu_common_write_elf64_qemunote;
-  // k->write_elf64_note = cpu_common_write_elf64_note;
-  // k->gdb_read_register = cpu_common_gdb_read_register;
-  // k->gdb_write_register = cpu_common_gdb_write_register;
-  // k->virtio_is_big_endian = cpu_common_virtio_is_big_endian;
-  // k->debug_excp_handler = cpu_common_noop;
-  // k->debug_check_watchpoint = cpu_common_debug_check_watchpoint;
-  // k->cpu_exec_enter = cpu_common_noop;
-  // k->cpu_exec_exit = cpu_common_noop;
-  // k->cpu_exec_interrupt = cpu_common_exec_interrupt;
-  // k->adjust_watchpoint_address = cpu_adjust_watchpoint_address;
-  // set_bit(DEVICE_CATEGORY_CPU, dc->categories);
-  // dc->realize = cpu_common_realizefn;
-  // dc->unrealize = cpu_common_unrealizefn;
-  // dc->props = cpu_common_props;
+  k->get_arch_id = cpu_common_get_arch_id;
+  k->has_work = cpu_common_has_work;
+  k->get_paging_enabled = cpu_common_get_paging_enabled;
+  k->get_memory_mapping = cpu_common_get_memory_mapping;
+  k->write_elf32_qemunote = cpu_common_write_elf32_qemunote;
+  k->write_elf32_note = cpu_common_write_elf32_note;
+  k->write_elf64_qemunote = cpu_common_write_elf64_qemunote;
+  k->write_elf64_note = cpu_common_write_elf64_note;
+  k->gdb_read_register = cpu_common_gdb_read_register;
+  k->gdb_write_register = cpu_common_gdb_write_register;
+  k->virtio_is_big_endian = cpu_common_virtio_is_big_endian;
+  k->debug_excp_handler = cpu_common_noop;
+  k->debug_check_watchpoint = cpu_common_debug_check_watchpoint;
+  k->cpu_exec_enter = cpu_common_noop;
+  k->cpu_exec_exit = cpu_common_noop;
+  k->cpu_exec_interrupt = cpu_common_exec_interrupt;
+  k->adjust_watchpoint_address = cpu_adjust_watchpoint_address;
+  set_bit(DEVICE_CATEGORY_CPU, dc->categories);
+  dc->realize = cpu_common_realizefn;
+  dc->unrealize = cpu_common_unrealizefn;
+  dc->props = cpu_common_props;
   /*
    * Reason: CPUs still need special care by board code: wiring up
    * IRQs, adding reset handlers, halting non-first CPUs, ...
    */
-  // dc->user_creatable = false;
+  dc->user_creatable = false;
+#endif
+  k->reset = cpu_common_reset;
 }
 
 #ifdef BMBT
