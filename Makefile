@@ -88,7 +88,7 @@ DEF = ../../qemu_bak/vmlinux
 run: clear_gcda all
 	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt)
 	@# only test work in process
-	$(bmbt) -s timer
+	$(bmbt) -s wip
 
 test: all clear_gcda
 	$(bmbt)
