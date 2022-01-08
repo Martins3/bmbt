@@ -9,17 +9,12 @@
 3. 一个优雅的 commit[^5] 应该是什么样子的
 
 ## 使用 [pre-commit](https://pre-commit.com/) 来进行常规检查
-```sh
-pre-commit --version
-pre-commit install
-```
 > If you want to manually run all pre-commit hooks on a repository, run
 >  `pre-commit run --all-files`. To run individual hooks use `pre-commit run <hook_id>`.
 
 我希望尽量不要出现 typo fix, code format 之类的提交，这对于 reviewer 和 commiter 都是毫无意义的精力浪费。
 
-pre-commit 会在进行 commit 之前执行一些脚本做出检查，如果检查不通过，
-就会提示出来, GitKraken[^2] 的教程图文并茂，非常不错。
+pre-commit 会在进行 commit 之前执行一些脚本做出检查，如果检查不通过，就会提示出来, GitKraken[^2] 的教程图文并茂，非常不错。
 
 实际上，很多 hook 都是通用的，于是乎就有了 pre-commit 项目，可以安装一些常用的 hook, 具体配置在 .pre-commit-config.yaml 中
 而且，我还添加了一些新的规则:
@@ -63,7 +58,7 @@ type(scope?): subject  #scope is optional; multiple scopes are supported (curren
 规则具体含义参考[这里](https://github.com/conventional-changelog/commitlint/blob/master/%40commitlint/config-conventional/index.js)
 
 husky 有点烦人的地方在于其会修改 `git config core.hooksPath`[^6] 的路径为 `.husky`，这会导致 .git/hooks/pre-commit 失效
-暂时的方法将 `.git/hooks/pre-commit` 拷贝到 `.husky` 中
+暂时的方法将 `.git/hooks/pre-commit` 拷贝到 `.husky` 中，所以无需使用 `pre-commit install` 了。
 
 ## 记录一下疑惑
 - 一般来说，使用 rebase and merge

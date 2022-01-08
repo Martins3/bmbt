@@ -5,6 +5,10 @@
     <img src = "https://github.com/martins3/BMBT/actions/workflows/lint-md.yml/badge.svg?branch=dev">
   </p>
 </p>
+## 开始
+```sh
+git clone https://github.com/Martins3/bmbt --recursive --shallow-submodules
+```
 
 ## 报告
 - [裸金属二进制翻译器](https://martins3.github.io/ppt/repo/2021-8-24/index.html)

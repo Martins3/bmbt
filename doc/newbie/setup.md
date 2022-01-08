@@ -2,6 +2,17 @@
 
 当前的整个工作都是基于: 895fdf6776076c7cbb6b18c6703a40c4e03a084e 进行的
 对应的 qemu 版本: 6cdf8c4efa073eac7d5f9894329e2d07743c2955 (tag: v4.2.1)
+musl version : 1e4204d522670a1d8b8ab85f1cfefa960547e8af
+glibc version : 8b0a2fa8312cad636060cf04fbb3d3d29a26322f
+glib version  : 979da1da482cfd11e20f0fc6b9c23dcbc2cd0017 2.70.2
+
+## 编译 Loongarch64 Host 的内核
+huxueshi@172.17.103.58 linux-4.19-loongson
+5cc11160aaf9e6904aa14f8ebc00597d028447cc
+但是需要修复一个问题:
+- 打开 SCHEDSTATS 的选项
+  - kernel hacking : collect schedular statistics
+- 打开 CONFIG_PCIE_LOONGSON
 
 ## 复现 xqm 的工作
 - 获取 image
@@ -122,3 +133,7 @@ cd 32bit
 kernel_dir=/home/maritns3/core/ld/guest-src/linux-4.4.142
 qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
 ```
+
+## UEFI
+- UEFI 基础准备: https://martins3.github.io/bmbt/uefi-linux.html
+- 将 BMBT 作为 edk2 的一部分需要进行的操作: https://martins3.github.io/bmbt/uefi-in-action.html
