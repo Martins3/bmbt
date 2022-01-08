@@ -92,6 +92,9 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 
 使用可以屏蔽信号:
 handle SIG127 nostop noprint
+在 x86 上是
+handle SIG64 nostop noprint
+(因为两个架构的 SIGRTMAX 不同)
 
 
 https://stackoverflow.com/questions/24999208/how-to-handle-all-signals-in-gdb
@@ -117,8 +120,16 @@ export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIB
 ## 编译 tiny 内核
 - 教程: https://weeraman.com/building-a-tiny-linux-kernel-8c07579ae79d
   - make tinyconfig 将会输出很多参数确认信息，那并不是问题
+  - 需要打开的选项
+    - TTY
+    - prink
+    - ELF
+    - init RAM disk (initrd)
+
 - 内核下载地址 : https://mirrors.edge.kernel.org/pub/linux/kernel/v4.x/
 - 版本 : linux-4.4.142.tar.gz
+
+在 arch/x86/boot/main.c 中将 set_video 注释掉就可以继续向下运行了。
 
 ### 在 x86 运行
 1. 编译出来对应的 qemu
