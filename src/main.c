@@ -190,3 +190,11 @@ int main(int argc, char **argv) {
 
   GREATEST_MAIN_END(); /* display results */
 }
+
+#ifndef USE_SYSTEM_LIBC
+void _start() {
+  char *argv[] = {NULL};
+  main(0, argv);
+  exit(0);
+}
+#endif

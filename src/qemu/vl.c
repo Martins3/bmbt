@@ -147,7 +147,8 @@ void qemu_get_timedate(struct tm *tm, int offset) {
     gmtime_r(&ti, tm);
     break;
   case RTC_BASE_LOCALTIME:
-    localtime_r(&ti, tm);
+    g_assert_not_reached();
+    // localtime_r(&ti, tm);
     break;
   }
 }

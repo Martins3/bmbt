@@ -1,10 +1,10 @@
 #ifndef TIMER_H_PBGYZKVR
 #define TIMER_H_PBGYZKVR
 
-#include <stdint.h>
 #include "../types.h"
 #include <env-timer.h>
 #include <signal.h>
+#include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
 #include <uglib.h>

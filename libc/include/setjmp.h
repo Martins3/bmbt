@@ -1,8 +1,8 @@
 #ifndef SETJMP_H_TRPCQU6N
 #define SETJMP_H_TRPCQU6N
 
-#include <features.h>
 #include <bits/setjmp.h>
+#include <features.h>
 
 typedef struct __jmp_buf_tag {
   __jmp_buf __jb;

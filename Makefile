@@ -67,6 +67,14 @@ check-pre-commit:
 		# exit 1; \
 	fi
 
+capstone:
+	$(MAKE) -f capstone.mk
+
+libc:
+	@if [ $(USE_LIBC) != 1 ]; then \
+		$(MAKE) -f libc/libc.mk; \
+	fi
+
 CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I./include
 $(BUILD_DIR)/%.o : %.c
 	@mkdir -p $(@D)
@@ -77,17 +85,16 @@ $(BUILD_DIR)/image/%.o : image/%.bin
 	@mkdir -p $(@D)
 	ld -r -b binary -o $@ $<
 
-$(bmbt) : $(OBJ_FILES)
-		@$(MAKE) -f capstone.mk
+# @todo -T src/linker.ld
+$(bmbt) : $(OBJ_FILES) libc capstone
 		@if [ $(USE_LIBC) != 1 ]; then \
-			$(MAKE) -f libc/libc.mk; \
-			ld $(FS_SYSCALL_WRAP) -T src/linker.ld -o $(bmbt) $(OBJ_FILES) $(LIB_CAPSTONE) $(LIB_C) /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a; \
+			ld $(FS_SYSCALL_WRAP) -o $(bmbt) $(OBJ_FILES) $(LIB_CAPSTONE) $(LIB_C) /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a; \
 		else \
 			gcc $(FS_SYSCALL_WRAP) $(OBJ_FILES) $(LIB_CAPSTONE) -o $(bmbt) $(LFLAGS) ;\
 		fi
 		@echo "Link      $@"
 
-.PHONY: all clean gdb run gcov clear_gcda test
+.PHONY: all clean gdb run gcov clear_gcda test libc capstone
 
 GCOV_OUT=$(BUILD_DIR)/gcov
 GCOV_INFO=$(GCOV_OUT)/bmbt_coverage.info
@@ -117,7 +124,7 @@ DEF = ../../qemu_bak/vmlinux
 run: clear_gcda all
 	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt)
 	@# only test work in process
-	$(bmbt) -s wip
+	$(bmbt)
 
 test: all clear_gcda
 	$(bmbt)
