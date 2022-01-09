@@ -101,23 +101,23 @@ struct system_loongson {
 } __attribute__((packed));
 
 struct irq_source_routing_table {
-    u16 vers;
-    u16 size;
-    u16 rtr_bus;
-    u16 rtr_devfn;
-    u32 vendor;
-    u32 device;
-    u32 PIC_type;   /* conform use HT or PCI to route to CPU-PIC */
-    u64 ht_int_bit; /* 3A: 1<<24; 3B: 1<<16 */
-    u64 ht_enable;  /* irqs used in this PIC */
-    u32 node_id;    /* node id: 0x0-0; 0x1-1; 0x10-2; 0x11-3 */
-    u64 pci_mem_start_addr;
-    u64 pci_mem_end_addr;
-    u64 pci_io_start_addr;
-    u64 pci_io_end_addr;
-    u64 pci_config_addr;
-    u16 dma_mask_bits;
-    u16 dma_noncoherent;/* 0:cache DMA ; 1:uncache DMA */
+  u16 vers;
+  u16 size;
+  u16 rtr_bus;
+  u16 rtr_devfn;
+  u32 vendor;
+  u32 device;
+  u32 PIC_type;   /* conform use HT or PCI to route to CPU-PIC */
+  u64 ht_int_bit; /* 3A: 1<<24; 3B: 1<<16 */
+  u64 ht_enable;  /* irqs used in this PIC */
+  u32 node_id;    /* node id: 0x0-0; 0x1-1; 0x10-2; 0x11-3 */
+  u64 pci_mem_start_addr;
+  u64 pci_mem_end_addr;
+  u64 pci_io_start_addr;
+  u64 pci_io_end_addr;
+  u64 pci_config_addr;
+  u16 dma_mask_bits;
+  u16 dma_noncoherent; /* 0:cache DMA ; 1:uncache DMA */
 } __attribute__((packed));
 
 struct smbios_tables {
@@ -151,35 +151,37 @@ struct boot_params {
 };
 
 struct interface_info {
-    u16 vers; /* version of the specificition */
-    u16 size;
-    u8  flag;
-    char description[64];
+  u16 vers; /* version of the specificition */
+  u16 size;
+  u8 flag;
+  char description[64];
 } __attribute__((packed));
 
 #define MAX_RESOURCE_NUMBER 128
 struct resource_loongson {
-    u64 start; /* resource start address */
-    u64 end;   /* resource end address */
-    char name[64];
-    u32 flags;
+  u64 start; /* resource start address */
+  u64 end;   /* resource end address */
+  char name[64];
+  u32 flags;
 };
 
-struct archdev_data {};  /* arch specific additions */
+struct archdev_data {}; /* arch specific additions */
 
-struct board_devices{
-    char name[64];    /* hold the device name */
-    u32 num_resources; /* number of device_resource */
-    struct resource_loongson resource[MAX_RESOURCE_NUMBER]; /* for each device's resource */
-    /* arch specific additions */
-    struct archdev_data archdata;
+struct board_devices {
+  char name[64];     /* hold the device name */
+  u32 num_resources; /* number of device_resource */
+  struct resource_loongson
+      resource[MAX_RESOURCE_NUMBER]; /* for each device's resource */
+  /* arch specific additions */
+  struct archdev_data archdata;
 };
 
-struct loongson_special_attribute{
-    u16 vers;                   /* version of this special */
-    char special_name[64];      /* special_atribute_name */
-    u32 loongson_special_type;  /* type of special device */
-    struct resource_loongson resource[MAX_RESOURCE_NUMBER]; /* for each device's resource */
+struct loongson_special_attribute {
+  u16 vers;                  /* version of this special */
+  char special_name[64];     /* special_atribute_name */
+  u32 loongson_special_type; /* type of special device */
+  struct resource_loongson
+      resource[MAX_RESOURCE_NUMBER]; /* for each device's resource */
 };
 
 extern struct efi_memory_map_loongson *loongson_mem_map;
