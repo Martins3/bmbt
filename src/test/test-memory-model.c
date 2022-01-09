@@ -21,7 +21,9 @@ TEST test_env_setup(void) {
 
   MemTxAttrs attrs = {.secure = 1};
 
-  for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
+  // pam extend and system bios are originally mapped to pc.bios, so we can't
+  // test all the block ram with following loop
+  for (int i = 0; i < PAM_EXBIOS_INDEX; ++i) {
     MemoryRegion *mr = &ram_list.blocks[i].mr;
     hwaddr addr = mr->offset + rand() % PAM_EXBIOS_SIZE;
     hwaddr xlat;
@@ -89,7 +91,7 @@ TEST test_rw(void) {
   PASS();
 }
 
-TEST test_dirty_memory(void) {
+TEST test_memory_rw(void) {
   MemTxAttrs attrs = {.secure = 1};
   hwaddr addr = 0x100000;
   uint32_t msg_size = 0x100;
@@ -101,7 +103,8 @@ TEST test_dirty_memory(void) {
 
   address_space_rw(&address_space_memory, addr, attrs, (void *)msg, msg_size,
                    true);
-  address_space_rw(&address_space_io, addr, attrs, (void *)msg2, 8, true);
+  address_space_rw(&address_space_memory, addr, attrs, (void *)msg2, msg_size,
+                   false);
   for (int i = 0; i < msg_size; ++i) {
     ASSERT_EQ(msg[i], msg2[i]);
   }
@@ -111,5 +114,5 @@ TEST test_dirty_memory(void) {
 SUITE(memory_model_test) {
   RUN_TEST(test_env_setup);
   RUN_TEST(test_rw);
-  RUN_TEST(test_dirty_memory);
+  RUN_TEST(test_memory_rw);
 }
