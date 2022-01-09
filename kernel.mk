@@ -19,4 +19,4 @@ kernel:
 	cd $(KERNEL_PATH) || exit 1
 	make -j
 	cd $(BASE_DIR)
-	cp $(KERNEL_PATH)/arch/x86/boot/bzImage  $(BASE_DIR)/image/bzImage
+	cp $(KERNEL_PATH)/arch/x86/boot/bzImage  $(BASE_DIR)/image/bzImage.bin

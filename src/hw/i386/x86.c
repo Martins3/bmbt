@@ -150,19 +150,6 @@ static void x86_nmi(NMIState *n, int cpu_index, Error **errp) {
 }
 #endif
 
-static long get_file_size(FILE *f) {
-  long where, size;
-
-  /* XXX: on Unix systems, using fstat() probably makes more sense */
-
-  where = ftell(f);
-  fseek(f, 0, SEEK_END);
-  size = ftell(f);
-  fseek(f, where, SEEK_SET);
-
-  return size;
-}
-
 #ifdef BMBT
 struct setup_data {
   uint64_t next;

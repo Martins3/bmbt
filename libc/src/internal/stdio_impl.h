@@ -51,6 +51,9 @@ struct _IO_FILE {
   struct __locale_struct *locale;
 };
 
+hidden FILE **__ofl_lock(void);
+hidden void __ofl_unlock(void);
+
 hidden void __unlockfile(FILE *);
 hidden int __lockfile(FILE *);
 hidden size_t __fwritex(const unsigned char *, size_t, FILE *);

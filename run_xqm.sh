@@ -6,7 +6,7 @@ run_tiny_kernel=true
 kernel=~/xqm_images/vmlinuz-2.6.32
 
 kernel=${BASE_DIR}/image/bzImage
-initrd=${BASE_DIR}/image/test.cpio.gz
+initrd=${BASE_DIR}/image/initrd.bin
 qemu=~/ld/x86-qemu-mips/build/i386-softmmu/qemu-system-i386
 bios=${BASE_DIR}/seabios/out/bios.bin
 

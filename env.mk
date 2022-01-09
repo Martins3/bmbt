@@ -7,6 +7,7 @@ CFLAGS := -g -Wall -O0 -Werror
 USE_LIBC ?= 0
 USE_GLIB ?= 0
 ENV_BAREMETAL ?= 0
+USE_ULIBC_FILE ?= 1
 
 ifeq ($(USE_LIBC), 1)
   LIBC_APPENDIX=libc
@@ -18,6 +19,19 @@ else
   LIBC_CFLAGS=-nostdinc -nostdlib
   LIBC_HEADER=-I$(BASE_DIR)/libc/include
   LIB_C=$(BUILD_DIR)/libc/libc.a
+  ifeq ($(USE_ULIBC_FILE), 0)
+	  $(error ulibc doesn't implement fread,fwrite,etc. )
+  endif
+endif
+
+# gcov use file related syscall
+ifeq ($(USE_ULIBC_FILE), 1)
+	ENV_SRC_FILES += file/ulibc-file.c
+  GCOV_CFLAGS=
+  GCOV_LFLAGS=
+	CFLAGS += -DUSE_ULIBC_FILE
+else
+	ENV_SRC_FILES += file/glibc-file.c
 endif
 
 ifeq ($(USE_GLIB), 1)
@@ -25,7 +39,7 @@ ifeq ($(USE_GLIB), 1)
   GLIB_HEADER  = $(shell pkg-config --cflags glib-2.0)
   GLIB_APPENDIX=glib
   ifneq ($(USE_LIBC), 1)
-  	$(info glib depends on libc)
+  	$(error glib depends on libc)
   endif
 endif
 

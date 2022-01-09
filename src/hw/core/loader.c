@@ -1,5 +1,6 @@
 #include "../../../include/hw/nvram/fw_cfg.h"
 #include <errno.h>
+#include <file.h>
 #include <qemu/error-report.h>
 #include <sysemu/reset.h>
 
@@ -177,13 +178,6 @@ static char *get_image_path(const char *file) {
   char *buf = g_malloc0(bufsize * sizeof(char));
   assert(snprintf(buf, bufsize, "image/%s", file) < bufsize);
   return buf;
-}
-
-static inline long get_file_size(FILE *f) {
-  fseek(f, 0L, SEEK_END);
-  long sz = ftell(f);
-  fseek(f, 0L, SEEK_SET);
-  return sz;
 }
 
 int rom_add_file(const char *file, const char *fw_dir, hwaddr addr,
