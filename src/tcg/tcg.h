@@ -315,7 +315,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
   ((uintptr_t(*)(void *, void *))context_switch_bt_to_native)(tb_ptr, env);    \
   if (current_cpu->exception_index == EXCP_DEBUG) {                            \
     current_cpu->can_do_io = 1;                                                \
-    siglongjmp(current_cpu->jmp_env, 1);                                       \
+    longjmp(current_cpu->jmp_env, 1);                                          \
   }
 #else
 #define tcg_qemu_tb_exec(env, tb_ptr)                                          \

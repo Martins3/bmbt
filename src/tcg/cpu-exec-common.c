@@ -70,7 +70,7 @@ void cpu_loop_exit(CPUState *cpu) {
 #endif
   /* Undo the setting in cpu_tb_exec.  */
   cpu->can_do_io = 1;
-  siglongjmp(cpu->jmp_env, 1);
+  longjmp(cpu->jmp_env, 1);
 }
 
 void cpu_loop_exit_restore(CPUState *cpu, uintptr_t pc) {
