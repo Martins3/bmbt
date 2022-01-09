@@ -143,7 +143,7 @@ void siglongjmp_cpu_jmp_env(void)
     x86_to_mips_after_exec_tb(env, last_tb);
 
     CPUState *cs = env_cpu(env);
-    siglongjmp(cs->jmp_env, 1);
+    longjmp(cs->jmp_env, 1);
 }
 
 /* Functions to access QEMU's TB */

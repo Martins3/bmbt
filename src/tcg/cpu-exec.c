@@ -541,7 +541,7 @@ int cpu_exec(CPUState *cpu) {
    */
   init_delay_params(&sc, cpu);
 
-  if (sigsetjmp(cpu->jmp_env, 0) != 0) {
+  if (setjmp(cpu->jmp_env) != 0) {
     g_assert(cpu == current_cpu);
     g_assert(cc == CPU_GET_CLASS(cpu));
     if (qemu_mutex_iothread_locked()) {
@@ -598,7 +598,7 @@ void cpu_exec_step_atomic(CPUState *cpu) {
   uint32_t cflags = 1;
   uint32_t cf_mask = cflags & CF_HASH_MASK;
 
-  if (sigsetjmp(cpu->jmp_env, 0) == 0) {
+  if (setjmp(cpu->jmp_env) == 0) {
     tb = tb_lookup__cpu_state(cpu, &pc, &cs_base, &flags, cf_mask);
     if (tb == NULL) {
       mmap_lock();
