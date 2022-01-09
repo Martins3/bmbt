@@ -6,11 +6,15 @@ FILE *qemu_logfile;
 int qemu_loglevel;
 
 FILE *get_logfile(const char *f) {
+#ifdef USE_ULIBC_FILE
+  return stderr;
+#else
   char filename[200] = "output/";
   strcat(filename, f);
   FILE *file = fopen(filename, "w");
   duck_check(file != NULL);
   return file;
+#endif
 }
 
 /* Return the number of characters emitted.  */

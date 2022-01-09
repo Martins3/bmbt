@@ -154,9 +154,8 @@ void machine_initfn(MachineState *ms) {
 
   // qemu option is too complex, hard code it here.
   ms->kernel_filename = "image/vmlinuz-2.6.32";
-  // ms->kernel_filename = "image/bzImage";
-  ms->kernel_filename = "image/bzImage";
-  ms->initrd_filename = "image/test.cpio.gz";
+  ms->kernel_filename = "image/bzImage.bin";
+  ms->initrd_filename = "image/initrd.bin";
   ms->kernel_cmdline =
       "console=ttyS0 earlyprintk=serial debug root=/dev/ram rdinit=/hello.out";
 

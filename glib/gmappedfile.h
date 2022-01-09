@@ -3,6 +3,7 @@
 #include "glibconfig.h"
 #include "gmem.h"
 #include <assert.h>
+#include <file.h>
 #include <stdio.h>
 
 typedef struct _GMappedFile GMappedFile;
@@ -46,14 +47,7 @@ struct _GMappedFile {
 static inline GMappedFile *
 g_mapped_file_new(const gchar *filename, gboolean writable, GError **error) {
   FILE *f = fopen(filename, "rb");
-
-  // this is duplicated with get_file_size in x86.c, but we will clear code
-  // related with file operation later.
-  long where, size;
-  where = ftell(f);
-  fseek(f, 0, SEEK_END);
-  size = ftell(f);
-  fseek(f, where, SEEK_SET);
+  long size = get_file_size(f);
 
   GMappedFile *file = g_new0(GMappedFile, 1);
   file->contents = g_malloc(size);

@@ -9,6 +9,7 @@
 
 #ifndef QEMU_UNITS_H
 #define QEMU_UNITS_H
+#include <stdint.h>
 
 #define KiB (INT64_C(1) << 10)
 #define MiB (INT64_C(1) << 20)
