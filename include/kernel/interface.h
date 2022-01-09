@@ -1,11 +1,10 @@
 #ifndef INTERFACE_H_I5WZDPYD
 #define INTERFACE_H_I5WZDPYD
 
-#include "types.h"
 #include "panic.h"
+#include "types.h"
 
 void early_console_write(const char *s, unsigned n);
-
 
 /*
  * Registers a0, a1, a3 and a4 as passed to the kernel entry by firmware

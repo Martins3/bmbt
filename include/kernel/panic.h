@@ -2,11 +2,10 @@
 #define PANIC_H_KHEFPWVT
 #include "interface.h"
 
-
 #define BUG_ON(conditon)                                                       \
   do {                                                                         \
     if (conditon) {                                                            \
-      duck_printf("%s:%d failed\n", __FUNCTION__, __LINE__);                        \
+      duck_printf("%s:%d failed\n", __FUNCTION__, __LINE__);                   \
       while (1)                                                                \
         ;                                                                      \
     }                                                                          \
