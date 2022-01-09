@@ -107,14 +107,22 @@ TEST test_rearm_timer() {
 
 static int counter = 0;
 static bool fire_in_handler = false;
+static bool in_handler = false;
 
 static void handler_self_sent(int sig, siginfo_t *si, void *uc) {
   printf("huxueshi:%s \n", __FUNCTION__);
+  if (in_handler) {
+    assert(false);
+  }
+  in_handler = true;
+
   counter++;
   if (fire_in_handler) {
     fire_timer();
     fire_in_handler = false;
   }
+
+  in_handler = false;
 }
 
 // fire timer in unblocked context, blocked context and signal handler

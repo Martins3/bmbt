@@ -4,6 +4,7 @@ include env.mk
 C_SRC_FILES+=$(wildcard libc/src/*/*.c)
 C_SRC_FILES+=$(wildcard libc/src/malloc/mallocng/*.c)
 ASM_SRC_FILES := $(wildcard libc/src/bits/loongarch/*.S)
+ASM_SRC_FILES += $(wildcard libc/src/signal/loongarch/restore.S)
 
 
 C_OBJ_FILES = $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)

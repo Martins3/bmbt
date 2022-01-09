@@ -43,12 +43,16 @@ typedef struct RAMBlock {
 #define X86_BIOS_MEM_SIZE (PAM_BIOS_END + 1)
 
 #define PC_BIOS_IMG_SIZE (256 * KiB)
-// pc.ram low  * 1
-// smram       * 1
-// 0x40000 pam * 12
-// system bios * 1
-// pc.ram      * 1
-// pc.bios     * 1
+/**
+ * pc.ram low  * 1
+ * smram       * 1
+ * 0x4000 pam  * 12
+ *  * pam expan  * 8
+ *  * pam extend * 4 ----\ pc.bios 128k
+ * system bios * 1   ----/
+ * pc.ram      * 1
+ * pc.bios     * 1
+ */
 QEMU_BUILD_BUG_ON(RAM_BLOCK_NUM != (1 + 1 + 12 + 1 + 1 + 1));
 QEMU_BUILD_BUG_ON(PAM_EXBIOS_SIZE * 4 + PAM_BIOS_SIZE != 128 * KiB);
 
