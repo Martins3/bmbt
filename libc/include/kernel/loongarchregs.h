@@ -1,7 +1,7 @@
 #ifndef LOONGARCHREGS_H_TJ8URLGY
 #define LOONGARCHREGS_H_TJ8URLGY
+#include "addrspace.h"
 #include "config.h"
-#include "types.h"
 /* Loongson csr registers */
 
 /* Basic CSR registers */

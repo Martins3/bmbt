@@ -14,9 +14,10 @@
  * it."
  *
  */
-#include "../include/interface.h"
-#include "../include/types.h"
+#include <kernel/addrspace.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <string.h>
 
 static inline int isdigit(int ch) { return (ch >= '0') && (ch <= '9'); }
 
@@ -116,7 +117,7 @@ static char *number(char *str, long num, int base, int size, int precision,
   return str;
 }
 
-int vsprintf(char *buf, const char *fmt, va_list args) {
+int duck_vsprintf(char *buf, const char *fmt, va_list args) {
   int len;
   unsigned long num;
   int i, base;
@@ -209,7 +210,7 @@ int vsprintf(char *buf, const char *fmt, va_list args) {
 
     case 's':
       s = va_arg(args, char *);
-      len = duck_strnlen(s, precision);
+      len = strnlen(s, precision);
 
       if (!(flags & LEFT))
         while (len < field_width--)
@@ -284,14 +285,28 @@ int vsprintf(char *buf, const char *fmt, va_list args) {
   return str - buf;
 }
 
-int sprintf(char *buf, const char *fmt, ...) {
+int duck_sprintf(char *buf, const char *fmt, ...) {
   va_list args;
   int i;
 
   va_start(args, fmt);
-  i = vsprintf(buf, fmt, args);
+  i = duck_vsprintf(buf, fmt, args);
   va_end(args);
   return i;
+}
+
+void prom_putchar(char c) {
+#define LOONGSON_REG_BASE 0x1fe00000
+  *(char *)(TO_UNCAC(LOONGSON_REG_BASE + 0x1e0)) = c;
+}
+
+void early_console_write(const char *s, unsigned n) {
+  while (n-- && *s) {
+    if (*s == '\n')
+      prom_putchar('\r');
+    prom_putchar(*s);
+    s++;
+  }
 }
 
 int duck_printf(const char *fmt, ...) {
@@ -300,7 +315,7 @@ int duck_printf(const char *fmt, ...) {
   int printed;
 
   va_start(args, fmt);
-  printed = vsprintf(printf_buf, fmt, args);
+  printed = duck_vsprintf(printf_buf, fmt, args);
   va_end(args);
 
   early_console_write(printf_buf, 1024);

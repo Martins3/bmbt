@@ -25,6 +25,7 @@
 #define t6 $r18
 #define t7 $r19
 #define t8 $r20
+// @todo 好像这个 x 被重新设计过
 #define x $r21
 #define fp $r22
 #define s0 $r23
