@@ -433,7 +433,7 @@ int64_t timerlistgroup_deadline_ns(QEMUTimerListGroup *tlg) {
 }
 
 static void timer_interrupt_handler() {
-  qemu_log("timer interrupt comming");
+  // qemu_log("timer interrupt comming\n");
   int64_t timeout_ns = -1;
 
   qemu_clock_run_all_timers();

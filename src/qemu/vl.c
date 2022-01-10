@@ -110,7 +110,7 @@ void qemu_system_reset(MachineClass *mc, MachineState *current_machine) {
 #endif
 }
 
-static void configure_rtc() {
+__attribute__((unused)) static void configure_rtc() {
   /* Set defaults */
   rtc_clock = QEMU_CLOCK_HOST;
 }
@@ -289,7 +289,7 @@ void qemu_init() {
 
   init_xtm_options();
 
-  configure_rtc();
+  // configure_rtc();
 
   ram_size = 128 * MiB;
   duck_check(first_cpu == NULL);

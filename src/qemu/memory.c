@@ -5,6 +5,7 @@
 #include "../../include/qemu/units.h"
 #include <hw/pci-host/pam.h>
 #include <stdio.h>
+#include <sys/mman.h>
 
 static bool mr_initialized(const MemoryRegion *mr) {
   duck_check(mr != NULL);
@@ -91,6 +92,7 @@ static void unimplemented_io(AddressSpaceDispatch *dispatch, hwaddr offset) {
   printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
 }
 
+// [BMBT_OPTIMIZE 0]
 static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
                                            hwaddr offset) {
   for (int i = 0; i < dispatch->segment_num; ++i) {
@@ -204,17 +206,22 @@ void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
   mr->name = name;
   mr->size = size;
 }
+// #define DEBUG_UNASSIGNED
 
 static uint64_t unassigned_io_read(void *opaque, hwaddr addr, unsigned size) {
+#ifdef DEBUG_UNASSIGNED
   MemoryRegion *mr = opaque;
-  printf("%s %s %lx %d\n", __FUNCTION__, mr->name, addr, size);
+  printf("%s [%s] %lx %d\n", __FUNCTION__, mr->name, addr, size);
+#endif
   return -1ULL;
 }
 
 static void unassigned_io_write(void *opaque, hwaddr addr, uint64_t val,
                                 unsigned size) {
+#ifdef DEBUG_UNASSIGNED
   MemoryRegion *mr = opaque;
   printf("%s %s %lx %d\n", __FUNCTION__, mr->name, addr, size);
+#endif
 }
 
 const MemoryRegionOps unassigned_io_ops = {
@@ -223,10 +230,32 @@ const MemoryRegionOps unassigned_io_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
 
+static uint64_t kbd_read_data(void *opaque, hwaddr addr, unsigned size) {
+  // printf("%s \n", __FUNCTION__);
+  return 0xfa;
+}
+
+static const MemoryRegionOps i8042_data_ops = {
+    .read = kbd_read_data,
+    .write = unassigned_io_write,
+    .impl =
+        {
+            .min_access_size = 1,
+            .max_access_size = 1,
+        },
+    .endianness = DEVICE_LITTLE_ENDIAN,
+};
+
 static void register_unassigned_io(const char *name, int offset, int size) {
   MemoryRegion *unknown = g_new0(MemoryRegion, 1);
   memory_region_init_io(unknown, &unassigned_io_ops, unknown, name, size);
   io_add_memory_region(offset, unknown);
+}
+
+static void register_keyboard_stub() {
+  MemoryRegion *keyboard = g_new0(MemoryRegion, 1);
+  memory_region_init_io(keyboard, &i8042_data_ops, keyboard, "i8042-data", 1);
+  io_add_memory_region(0x64, keyboard);
 }
 
 static void unassigned_io_setup() {
@@ -237,7 +266,8 @@ static void unassigned_io_setup() {
   register_unassigned_io("serial 0x2f9", 0x2f9, 1);
   register_unassigned_io("serial 0x3e9", 0x3e9, 1);
   register_unassigned_io("serial 0x2e9", 0x2e9, 1);
-  register_unassigned_io("i8042-data", 0x64, 1);
+  // register_unassigned_io("i8042-data", 0x64, 1);
+  register_keyboard_stub();
   register_unassigned_io("i8042-cmd", 0x60, 1);
 }
 
@@ -791,7 +821,13 @@ static ram_addr_t x86_bios_rom_init() {
   return PC_BIOS_IMG_SIZE;
 }
 
-void *alloc_ram(hwaddr size);
+static void *alloc_ram(hwaddr size) {
+  // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
+  void *host = mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  assert(host != (void *)-1);
+  return host;
+}
 
 static inline void init_ram_block(const char *name, unsigned int index,
                                   bool readonly, hwaddr offset, uint64_t size) {
