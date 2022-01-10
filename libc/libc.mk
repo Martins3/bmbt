@@ -6,6 +6,9 @@ C_SRC_FILES+=$(wildcard libc/src/malloc/mallocng/*.c)
 ASM_SRC_FILES := $(wildcard libc/src/bits/loongarch/*.S)
 ASM_SRC_FILES += $(wildcard libc/src/signal/loongarch/restore.S)
 
+ifeq ($(ENV_KERNEL), 1)
+  C_SRC_FILES+=$(wildcard libc/kernel/*.c)
+endif
 
 C_OBJ_FILES = $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
 C_OBJ_FILES += $(ASM_SRC_FILES:%.S=$(BUILD_DIR)/%.o)

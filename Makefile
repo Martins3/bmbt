@@ -2,7 +2,7 @@
 include env.mk
 
 bmbt := $(BUILD_DIR)/bmbt.bin
-LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
+GGC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
 
 # @todo it's so ugly to define two options out of the gcc option --coverage
 # https://gcc.gnu.org/onlinedocs/gcc-9.3.0/gcc/Instrumentation-Options.html
@@ -20,8 +20,6 @@ else
   FS_SYSCALL_WRAP+=--wrap=ftell
   FS_SYSCALL_WRAP+=--wrap=fseek
 endif
-
-# ASM_SRC_FILES := src/head.S
 
 C_SRC_FILES = $(ENV_SRC_FILES)
 C_SRC_FILES += $(wildcard src/*.c)
@@ -88,9 +86,9 @@ $(BUILD_DIR)/image/%.o : image/%.bin
 # @todo -T src/linker.ld
 $(bmbt) : $(OBJ_FILES) libc capstone
 		@if [ $(USE_LIBC) != 1 ]; then \
-			ld $(FS_SYSCALL_WRAP) -o $(bmbt) $(OBJ_FILES) $(LIB_CAPSTONE) $(LIB_C) /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a; \
+			ld $(LDFLAGS) $(FS_SYSCALL_WRAP) -o $(bmbt) $(OBJ_FILES) $(LIB_CAPSTONE) $(LIB_C) /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a; \
 		else \
-			gcc $(FS_SYSCALL_WRAP) $(OBJ_FILES) $(LIB_CAPSTONE) -o $(bmbt) $(LFLAGS) ;\
+			gcc $(FS_SYSCALL_WRAP) $(OBJ_FILES) $(LIB_CAPSTONE) -o $(bmbt) $(GCC_LFLAGS) ;\
 		fi
 		@echo "Link      $@"
 
@@ -121,10 +119,17 @@ clear_gcda:
 QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
 DEF = ../../qemu_bak/vmlinux
 
-run: clear_gcda all
+QEMU_DIR=/home/loongson/core/qemu/
+LA_BIOS=$(QEMU_DIR)/pc-bios/loongarch_bios.bin
+LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
+
+run: all clear_gcda
+	if [[ $(ENV_KERNEL) == 1 ]];then \
+		 $(LA_QEMU) -nographic -m 2G -cpu Loongson-3A5000 -serial mon:stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a,kernel_irqchip=off -kernel $(bmbt); \
+	else \
+		$(bmbt); \
+	fi
 	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt)
-	@# only test work in process
-	$(bmbt)
 
 test: all clear_gcda
 	$(bmbt)
@@ -135,3 +140,9 @@ gdb: all
 
 defrun: $(bmbt)
 	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt) $(DEF)
+
+# dubug:
+	# qemu-system-loongarch64 -nographic -m 2G -cpu Loongson-3A5000 -serial mon:stdio -bios ~/research/qemu-la/pc-bios/loongarch_bios.bin --enalbe-kvm -M loongson7a,kernel_irqchip=off -kernel ~/research/bmbt/timer-interrupt/hello_period.elf -s -S
+#
+# gdb:
+	# loongarch64-linux-gnu-gdb $(hello_period) -ex "target remote:1234" -ex "b start_entry" -ex "continue"
