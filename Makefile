@@ -2,7 +2,7 @@
 include env.mk
 
 bmbt := $(BUILD_DIR)/bmbt.bin
-GGC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
+GCC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
 
 # @todo it's so ugly to define two options out of the gcc option --coverage
 # https://gcc.gnu.org/onlinedocs/gcc-9.3.0/gcc/Instrumentation-Options.html

@@ -26,12 +26,12 @@ endif
 
 # gcov use file related syscall
 ifeq ($(USE_ULIBC_FILE), 1)
-	ENV_SRC_FILES += file/ulibc-file.c
   GCOV_CFLAGS=
   GCOV_LFLAGS=
-	CFLAGS += -DUSE_ULIBC_FILE
+  CFLAGS += -DUSE_ULIBC_FILE
+  ENV_SRC_FILES += file/ulibc-file.c
 else
-	ENV_SRC_FILES += file/glibc-file.c
+  ENV_SRC_FILES += file/glibc-file.c
 endif
 
 ifeq ($(USE_GLIB), 1)
@@ -74,6 +74,7 @@ ifeq ($(DEBUG), 1)
   $(info CAPSTONE_HEADER=$(CAPSTONE_HEADER))
   $(info LIBC_CFLAGS=$(LIBC_CFLAGS))
   $(info GCOV_CFLAGS=$(GCOV_CFLAGS))
+  $(info GCOV_LFLAGS=$(GCOV_LFLAGS))
 endif
 
 $(BUILD_DIR)/%.o: %.S

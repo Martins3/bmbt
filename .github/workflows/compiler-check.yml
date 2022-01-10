@@ -15,7 +15,11 @@ jobs:
     - uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive --depth=1
-    - name: make without glib
-      run: make USE_LIBC=1 USE_ULIBC_FILE=0 ENV_KERNEL=0
-    - name: make with glib
-      run: make USE_GLIB=1 USE_LIBC=1 USE_ULIBC_FILE=0 ENV_KERNEL=0
+    - name: 00
+      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=0
+    - name: 01
+      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=1
+    - name: 10
+      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=1 USE_ULIBC_FILE=0
+    - name: 11
+      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=1 USE_ULIBC_FILE=1
