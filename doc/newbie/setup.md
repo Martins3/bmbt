@@ -148,3 +148,12 @@ qemu=/home/maritns3/core/xqm/32bit/i386-softmmu/qemu-system-i386
 ## UEFI
 - UEFI 基础准备: https://martins3.github.io/bmbt/uefi-linux.html
 - 将 BMBT 作为 edk2 的一部分需要进行的操作: https://martins3.github.io/bmbt/uefi-in-action.html
+
+## kvm 环境搭建
+./configure --target-list=loongarch64-softmmu --enable-debug --enable-profiler --disable-rdma --disable-pvrdma --disable-libiscsi --disable-libnfs --disable-libpmem --disable-glusterfs --disable-opengl --disable-xen --disable-werror --disable-capstone --disable-spice --disable-libusb --disable-usb-redir --audio-drv-list='' --enable-kvm --enable-tcg-interpreter
+
+也许无法更新 submodule:
+https://stackoverflow.com/questions/21181231/server-certificate-verification-failed-cafile-etc-ssl-certs-ca-certificates-c
+
+@todo
+在 qemu 中这个选项的含义没有分析过 -DCAPSTONE_USE_SYS_DYN_MEM

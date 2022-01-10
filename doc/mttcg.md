@@ -45,5 +45,4 @@ void tcg_register_thread(void) {
 - 将 libc 的锁被简化了
 - errno
 
-## 出现需要 lock 的位置会被标记出来
-BMBT_MTTCG
+## 出现需要 lock 的位置会被 BMBT_MTTCG 标记出来
