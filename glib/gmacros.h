@@ -3,12 +3,14 @@
 
 #define TRACE(probe)
 
-#ifndef __GI_SCANNER__ /* The static assert macro really confuses the introspection parser */
-#define G_STATIC_ASSERT(expr) _Static_assert (expr, "Expression evaluates to false")
+#ifndef __GI_SCANNER__ /* The static assert macro really confuses the          \
+                          introspection parser */
+#define G_STATIC_ASSERT(expr)                                                  \
+  _Static_assert(expr, "Expression evaluates to false")
 #endif /* !__GI_SCANNER__ */
 
-#define G_STRINGIFY(macro_or_string)	G_STRINGIFY_ARG (macro_or_string)
-#define	G_STRINGIFY_ARG(contents)	#contents
+#define G_STRINGIFY(macro_or_string) G_STRINGIFY_ARG(macro_or_string)
+#define G_STRINGIFY_ARG(contents) #contents
 /*
  * Note: Clang (but not clang-cl) defines __GNUC__ and __GNUC_MINOR__.
  * Both Clang 11.1 on current Arch Linux and Apple's Clang 12.0 define

@@ -16,6 +16,6 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init --recursive --depth=1
     - name: make without glib
-      run: make USE_LIBC=1 USE_ULIBC_FILE=0
+      run: make USE_LIBC=1 USE_ULIBC_FILE=0 ENV_KERNEL=0
     - name: make with glib
-      run: make USE_GLIB=1 USE_LIBC=1 USE_ULIBC_FILE=0
+      run: make USE_GLIB=1 USE_LIBC=1 USE_ULIBC_FILE=0 ENV_KERNEL=0
