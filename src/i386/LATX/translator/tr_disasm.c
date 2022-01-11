@@ -280,7 +280,7 @@ IR1_INST *get_ir1_list(ETB* etb, ADDRX pc, int *p_ir1_num)
 
     } while (!ir1_is_tb_ending(pir1));
 
-    ir1_list = (IR1_INST *)mm_realloc(ir1_list, ir1_num * sizeof(IR1_INST));
+    // ir1_list = (IR1_INST *)mm_realloc(ir1_list, ir1_num * sizeof(IR1_INST));
     *p_ir1_num = ir1_num;
     return ir1_list;
 

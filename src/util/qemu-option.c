@@ -60,6 +60,7 @@ static QemuOpt options[] = {
     {.name = "tblink", .value.boolean = true},
     {.name = "lbt", .value.boolean = true},
     {.name = "verbose", .value.boolean = false},
+    // {.name = "dump", .str = "11111"},
     {.name = "optm", .str = "select"},
 };
 

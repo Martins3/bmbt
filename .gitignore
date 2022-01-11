@@ -4,20 +4,19 @@
 *.bin
 *.d
 *.org
-build_*/
-
 .ccls-cache/
-
 *.gdb_history
 
-compile_commands.json
 *.json.gz
 .vscode/
+compile_commands.json
 
 kernel.mak
+build_*/
 image/
-output
-
+output/
 pc-bios/linuxboot_dma.raw
 pc-bios/linuxboot_dma.img
 *.cpio.gz
+
+*.qcow2

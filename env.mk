@@ -52,15 +52,16 @@ ifeq ($(ENV_KERNEL), 1)
   ENV_SRC_FILES += $(wildcard env/kernel/main.c)
   ENV_SRC_FILES += $(wildcard env/kernel/interrupt-timer.c)
   ASM_SRC_FILES += $(wildcard env/kernel/*.S)
-	CFLAGS += -DENV_KERNEL
+  CFLAGS += -DENV_KERNEL
 else
+  CFLAGS += -DENV_USERSPACE
   ENV_APPENDIX=userspace
   ENV_SRC_FILES += $(wildcard env/userspace/*.c)
 endif
 
 UNAME := $(shell uname -a)
 ifneq (,$(findstring x86_64, $(UNAME)))
-	ARCH_APPENDIX := x86
+  ARCH_APPENDIX := x86
 endif
 
 BUILD_DIR := $(BASE_DIR)/build_$(ARCH_APPENDIX)_$(ENV_APPENDIX)_$(LIBC_APPENDIX)_$(GLIB_APPENDIX)
