@@ -24,7 +24,6 @@ algorithm:
 
 */
 
-#include "../../include/features.h"
 #include "asm.h"
 
 #define L_ADDIU  addi.d

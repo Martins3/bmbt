@@ -1,4 +1,6 @@
 #include "stdio_impl.h"
+#include <assert.h>
+#include <stdbool.h>
 
 /* stdout.c will override this if linked */
 static FILE *volatile dummy = 0;
@@ -36,8 +38,11 @@ int fflush(FILE *f) {
   }
 
   /* If reading, sync position, per POSIX */
-  if (f->rpos != f->rend)
-    f->seek(f, f->rpos - f->rend, SEEK_CUR);
+  if (f->rpos != f->rend) {
+    // bmbt: there's no read in bmbt
+    assert(false);
+    // f->seek(f, f->rpos - f->rend, SEEK_CUR);
+  }
 
   /* Clear read and write modes */
   f->wpos = f->wbase = f->wend = 0;

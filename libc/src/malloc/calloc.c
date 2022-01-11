@@ -24,7 +24,7 @@ static size_t mal0_clear(char *p, size_t n) {
   }
 }
 
-int __malloc_allzerop(void *p); // originally put dynlink.h
+int __malloc_allzerop(void *p); // originally in dynlink.h
 static int allzerop(void *p) { return 0; }
 weak_alias(allzerop, __malloc_allzerop);
 

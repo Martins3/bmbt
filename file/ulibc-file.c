@@ -71,7 +71,9 @@ static inline ULIBC_FILE *get_uflie(FILE *f) {
 
 long get_file_size(FILE *f) {
   ULIBC_FILE *uf = get_uflie(f);
-  return uf->end - uf->start;
+  long sz = uf->end - uf->start;
+  assert(sz != 0);
+  return sz;
 }
 
 FILE *__wrap_fopen(const char *__restrict filename, const char *__restrict f2) {
