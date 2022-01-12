@@ -11,7 +11,7 @@ hidden FILE __stderr_FILE = {
     .lbf = -1,
     .write = __stdio_write,
     // .seek = __stdio_seek,
-    .close = __stdio_close,
+    // .close = __stdio_close,
     .lock = -1,
 };
 FILE *const stderr = &__stderr_FILE;

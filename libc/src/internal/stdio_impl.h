@@ -60,8 +60,6 @@ hidden size_t __fwritex(const unsigned char *, size_t, FILE *);
 hidden int __towrite(FILE *);
 
 hidden size_t __stdio_write(FILE *, const unsigned char *, size_t);
-hidden off_t __stdio_seek(FILE *, off_t, int);
-hidden int __stdio_close(FILE *);
 
 int __overflow(FILE *, int);
 #define putc_unlocked(c, f)                                                    \

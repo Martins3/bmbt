@@ -46,13 +46,20 @@ deps = $(TEST_OBJ_FILES:%.o=%.d)
 -include $(deps)
 
 test_bin=$(BUILD_DIR)/libc/test.out
+
+check_env:
+	@if [[ $(ENV_KERNEL) == 1 ]]; then \
+		echo "please test libc in userspace"; \
+		exit 1;\
+	fi
+
 run: build
 	$(test_bin)
 
 gdb: build
 	gdb $(test_bin) -ex 'run'
 
-build: $(LIB_C) $(TEST_OBJ_FILES)
+build: check_env $(LIB_C) $(TEST_OBJ_FILES)
 	@ld -o $(test_bin) $(TEST_OBJ_FILES) $(LIB_C) /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a;
 	@echo "Link      $<"
 
