@@ -4,9 +4,10 @@ BASE_DIR := $(shell pwd)
 ARCH_APPENDIX :=loongson
 CFLAGS := -g -Wall -O0 -Werror
 
+ENV_KERNEL ?= 1
+
 USE_LIBC ?= 0
 USE_GLIB ?= 0
-ENV_KERNEL ?= 0
 USE_ULIBC_FILE ?= 1
 
 ifeq ($(USE_LIBC), 1)
@@ -49,9 +50,7 @@ ifeq ($(ENV_KERNEL), 1)
   	$(error there's no glibc in baremetal)
   endif
   LDFLAGS = -T env/loongarch/linker.ld
-  ENV_SRC_FILES += $(wildcard env/loongarch/main.c)
-  ENV_SRC_FILES += $(wildcard env/loongarch/interrupt-timer.c)
-  ENV_SRC_FILES += $(wildcard env/loongarch/syscall/*.c)
+  ENV_SRC_FILES += $(wildcard env/loongarch/*/*.c)
 
   ASM_SRC_FILES += $(wildcard env/loongarch/*.S)
   ENV_CFLAGS += -DENV_KERNEL -I./env/loongarch/include/

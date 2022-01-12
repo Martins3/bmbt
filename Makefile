@@ -124,7 +124,7 @@ LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
 
 run: all clear_gcda
 	if [[ $(ENV_KERNEL) == 1 ]];then \
-		 $(LA_QEMU) -nographic -m 2G -cpu Loongson-3A5000 -serial mon:stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a,kernel_irqchip=off -kernel $(bmbt); \
+		 $(LA_QEMU) -nographic -m 4G -cpu Loongson-3A5000 -serial mon:stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a,kernel_irqchip=off -kernel $(bmbt); \
 	else \
 		$(bmbt); \
 	fi
