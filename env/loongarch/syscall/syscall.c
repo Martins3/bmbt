@@ -1,6 +1,6 @@
 #include "internal.h"
+#include <asm/config.h>
 #include <bits/syscall.h>
-#include <kernel/config.h>
 #include <stdint.h>
 #include <unistd.h>
 

@@ -118,7 +118,7 @@ clear_gcda:
 QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
 DEF = ../../qemu_bak/vmlinux
 
-QEMU_DIR=/home/loongson/core/qemu/
+QEMU_DIR=/home/loongson/core/centos-qemu
 LA_BIOS=$(QEMU_DIR)/pc-bios/loongarch_bios.bin
 LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
 

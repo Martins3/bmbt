@@ -4,7 +4,7 @@
 int duck_printf(const char *fmt, ...);
 
 void __duck_assert_fail(const char *expr, const char *file, int line,
-                             const char *func);
+                        const char *func);
 #define duck_assert(x)                                                         \
   ((void)((x) || (__duck_assert_fail(#x, __FILE__, __LINE__, __func__), 0)))
 
