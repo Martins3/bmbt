@@ -6,7 +6,7 @@ CFLAGS := -g -Wall -O0 -Werror
 
 USE_LIBC ?= 0
 USE_GLIB ?= 0
-ENV_KERNEL ?= 1
+ENV_KERNEL ?= 0
 USE_ULIBC_FILE ?= 1
 
 ifeq ($(USE_LIBC), 1)
@@ -48,13 +48,15 @@ ifeq ($(ENV_KERNEL), 1)
   ifeq ($(USE_LIBC), 1)
   	$(error there's no glibc in baremetal)
   endif
-  LDFLAGS = -T env/kernel/linker.ld
-  ENV_SRC_FILES += $(wildcard env/kernel/main.c)
-  ENV_SRC_FILES += $(wildcard env/kernel/interrupt-timer.c)
-  ASM_SRC_FILES += $(wildcard env/kernel/*.S)
-  CFLAGS += -DENV_KERNEL
+  LDFLAGS = -T env/loongarch/linker.ld
+  ENV_SRC_FILES += $(wildcard env/loongarch/main.c)
+  ENV_SRC_FILES += $(wildcard env/loongarch/interrupt-timer.c)
+  ENV_SRC_FILES += $(wildcard env/loongarch/syscall/*.c)
+
+  ASM_SRC_FILES += $(wildcard env/loongarch/*.S)
+  ENV_CFLAGS += -DENV_KERNEL -I./env/loongarch/include/
 else
-  CFLAGS += -DENV_USERSPACE
+  ENV_CFLAGS += -DENV_USERSPACE
   ENV_APPENDIX=userspace
   ENV_SRC_FILES += $(wildcard env/userspace/*.c)
 endif
@@ -68,7 +70,7 @@ BUILD_DIR := $(BASE_DIR)/build_$(ARCH_APPENDIX)_$(ENV_APPENDIX)_$(LIBC_APPENDIX)
 CAPSTONE_HEADER=-I$(BASE_DIR)/capstone/include
 LIB_CAPSTONE=$(BUILD_DIR)/capstone/libcapstone.a
 
-CFLAGS += $(LIBC_CFLAGS) $(LIBC_HEADER)
+CFLAGS += $(LIBC_CFLAGS) $(LIBC_HEADER) $(ENV_CFLAGS)
 ifeq ($(DEBUG), 1)
   $(info LIBC_HEADER=$(LIBC_HEADER))
   $(info GLIB_HEADER=$(GLIB_HEADER))

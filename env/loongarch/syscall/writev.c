@@ -1,11 +1,6 @@
 #include "internal.h"
 #include <sys/uio.h>
 
-// struct iovec {
-// void *iov_base;
-// size_t iov_len;
-// };
-
 long kernel_writev(long arg0, long arg1, long arg2, long arg3, long arg4,
                    long arg5, long arg6) {
   int fd = (int)arg0;

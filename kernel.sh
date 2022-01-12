@@ -7,7 +7,7 @@ img_name=Loongnix-20.mini.loongarch64.rc1.b2.qcow2
 
 # ----------- config ---------------
 kernel_dir=~/core/linux-4.19-loongson
-qemu_dir=~/core/qemu
+qemu_dir=~/core/centos-qemu
 initrd=~/core/bmbt/initrd.bin
 # ----------- config ---------------
 
@@ -40,7 +40,7 @@ if [ $launch_gdb = true ]; then
 	exit 0
 fi
 
-machine_arg="-m 8192M -nographic -cpu Loongson-3A5000 -serial mon:stdio -enable-kvm -M loongson7a_v1.0,kernel_irqchip=off,accel=kvm"
+machine_arg="-m 8192M -nographic -cpu Loongson-3A5000 -enable-kvm -M loongson7a_v1.0,kernel_irqchip=off,accel=kvm"
 kernel_arg="-kernel ${kernel} -append \"console=ttyS0 earlyprintk root=/dev/ram rdinit=/hello.out\" -initrd ${initrd}"
 img_arg="-drive file=${img},if=virtio -bios ${bios}"
 img_arg="-bios ${bios}"

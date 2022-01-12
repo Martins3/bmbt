@@ -14,7 +14,7 @@
  * it."
  *
  */
-#include <kernel/addrspace.h>
+#include <asm/addrspace.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
