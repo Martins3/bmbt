@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define DEBUG_KERNEL_SYSCALL
+// #define DEBUG_KERNEL_SYSCALL
 
 static inline long *r_fp() {
   long *x;
@@ -38,10 +38,29 @@ void backtrace(void) {
   }
 }
 
-void kernel_dump() { backtrace(); }
+static _Noreturn void idle() {
+  for (;;) {
+  }
+}
 
+_Noreturn void kernel_dump() {
+  backtrace();
+  idle();
+}
+
+void __duck_assert_fail(const char *expr, const char *file, int line,
+                        const char *func) {
+  duck_printf("Assertion failed: %s (%s: %s: %d)\n", expr, file, func, line);
+  kernel_dump();
+}
+
+static int syscall_counter = 0;
 long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
                     long arg5, long arg6, long sysno) {
+  // no recursive sycall
+  duck_assert(syscall_counter == 0);
+  syscall_counter++;
+  int ret;
 #ifdef DEBUG_KERNEL_SYSCALL
   duck_printf("%ld: [0x%016lx], [0x%016lx], [0x%016lx], [0x%016lx], "
               "[0x%016lx], [0x%016lx]\n",
@@ -49,10 +68,17 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
 #endif
   switch (sysno) {
   case SYS_writev /* variable case */:
+    ret = kernel_writev(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+    break;
+  case SYS_exit_group:
+  case SYS_exit:
+    duck_printf("!!! bmbt never call exit !!!\n");
+    kernel_dump();
     break;
   default:
     duck_printf("unsported syscall\n");
     kernel_dump();
   }
-  return 0;
+  syscall_counter--;
+  return ret;
 }
