@@ -1010,10 +1010,6 @@ static inline void *alloc_code_gen_buffer(void) {
 #endif
 #endif
 
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-  start = 0x70000000ul;
-#endif
-
   buf = mmap((void *)start, size, prot, flags, -1, 0);
 
   if (buf == MAP_FAILED) {
