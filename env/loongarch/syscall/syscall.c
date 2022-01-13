@@ -12,6 +12,7 @@ static inline long *r_fp() {
   return x;
 }
 
+// TMP_TODO move it into header
 extern unsigned char kernel_stack[_THREAD_SIZE];
 
 void backtrace(void) {
@@ -54,6 +55,8 @@ void __duck_assert_fail(const char *expr, const char *file, int line,
   kernel_dump();
 }
 
+
+
 static int syscall_counter = 0;
 long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
                     long arg5, long arg6, long sysno) {
@@ -75,6 +78,14 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
     duck_printf("!!! bmbt never call exit !!!\n");
     kernel_dump();
     break;
+  case SYS_brk:
+    // if SYS_brk failed, musl malloc will use mmap
+    // see libc/src/malloc/mallocng/malloc.c
+    ret = 0;
+  case SYS_mmap:
+    ret = kernel_mmap(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+  case SYS_munmap:
+    ret = kernel_unmmap(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
   default:
     duck_printf("unsported syscall\n");
     kernel_dump();
