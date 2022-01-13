@@ -26,10 +26,11 @@ void fw_init_memory(void) {
         break;
       num_physpages += (mem_size >> PAGE_SHIFT);
       total_mem += mem_size;
-      duck_printf("mem_start:0x%lx, mem_size:0x%lx Bytes\n", mem_start,
-                  mem_size);
+      // duck_printf("mem_start:0x%lx, mem_size:0x%lx Bytes\n", mem_start,
+      // mem_size);
       duck_printf("start_pfn:0x%lx, end_pfn:0x%lx\n", mem_start >> PAGE_SHIFT,
                   (mem_start + mem_size) >> PAGE_SHIFT);
+      duck_printf("pfn number %lx\n", mem_size >> PAGE_SHIFT);
 
       // add_memory_region(mem_start, mem_size, BOOT_MEM_RAM);
       // memblock_set_node(mem_start, mem_size, &memblock.memory, 0);

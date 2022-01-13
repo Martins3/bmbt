@@ -11,6 +11,12 @@ void __duck_assert_fail(const char *expr, const char *file, int line,
 long kernel_writev(long arg0, long arg1, long arg2, long arg3, long arg4,
                    long arg5, long arg6);
 
+long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
+                   long arg5, long arg6);
+
+long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
+                   long arg5, long arg6);
+
 void early_console_write(const char *s, unsigned n);
 
 #endif /* end of include guard: INTERNAL_H_IMYZ2RLB */

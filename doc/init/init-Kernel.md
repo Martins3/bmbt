@@ -120,4 +120,7 @@
 - acpi_subsystem_init
 - rest_init
 
+## notes
+- parse_mem
+
 [^1]: P66

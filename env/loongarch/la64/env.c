@@ -163,7 +163,7 @@ void fw_init_env(void) {
   efi_bp = (struct boot_params *)TO_CAC((unsigned long)_fw_envp);
   /// TMP_TODO ??
   // loongson_sysconf.bpi_version = get_bpi_version(&efi_bp->signature);
-  duck_printf("BPI%d with boot flags %llx.\n", loongson_sysconf.bpi_version,
+  duck_printf("BPI%d with boot flags %lx.\n", loongson_sysconf.bpi_version,
               efi_bp->flags);
   if (loongson_sysconf.bpi_version == BPI_VERSION_NONE)
     duck_printf("Fatal error, incorrect BPI version: %d\n",
