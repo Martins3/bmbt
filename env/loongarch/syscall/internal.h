@@ -19,4 +19,7 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
 
 void early_console_write(const char *s, unsigned n);
 
+long kernel_clock_gettime(long arg0, long arg1, long arg2, long arg3, long arg4,
+                          long arg5, long arg6);
+
 #endif /* end of include guard: INTERNAL_H_IMYZ2RLB */
