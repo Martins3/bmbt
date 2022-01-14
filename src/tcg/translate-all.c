@@ -894,7 +894,7 @@ static inline size_t size_code_gen_buffer(size_t tb_size) {
     /* ??? If we relax the requirement that CONFIG_USER_ONLY use the
        static buffer, we could size this on RESERVED_VA, on the text
        segment size of the executable, or continue to use the default.  */
-    tb_size = (unsigned long)(ram_size / 4);
+    tb_size = (unsigned long)(CONFIG_GUEST_RAM_SIZE / 4);
 #endif
   }
   if (tb_size < MIN_CODE_GEN_BUFFER_SIZE) {

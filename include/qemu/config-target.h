@@ -12,4 +12,7 @@
 #define CONFIG_I386_DIS 1
 #define CONFIG_I386_DIS 1
 
+#define CONFIG_GUEST_RAM_SIZE (128 * 1024 * 1024)
+#define CONFIG_GUEST_BIOS_SIZE (256 * 1024)
+
 #endif /* end of include guard: CONFIG_TARGET_H_N17QLW9C */

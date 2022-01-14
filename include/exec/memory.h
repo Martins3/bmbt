@@ -248,7 +248,7 @@ static inline bool memory_access_is_direct(MemoryRegion *mr, bool is_write) {
  */
 uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr);
 
-void memory_map_init(ram_addr_t size);
+void memory_map_init();
 void tcg_commit();
 
 void smram_region_set_enabled(bool en);
