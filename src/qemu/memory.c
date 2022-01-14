@@ -789,10 +789,8 @@ uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr) {
 }
 
 // originally defined in dirty_memory_extend
-static void setup_dirty_memory(hwaddr total_ram_size) {
-  ram_addr_t new_num_blocks =
-      DIV_ROUND_UP(total_ram_size, DIRTY_MEMORY_BLOCK_SIZE);
-
+static void setup_dirty_memory() {
+  ram_addr_t new_num_blocks = 1;
   DirtyMemoryBlocks *new_blocks = g_malloc(
       sizeof(*new_blocks) + sizeof(new_blocks->blocks[0]) * new_num_blocks);
 
@@ -801,24 +799,23 @@ static void setup_dirty_memory(hwaddr total_ram_size) {
   }
   ram_list.dirty_memory[DIRTY_MEMORY_CODE] = new_blocks;
 
-  cpu_physical_memory_set_dirty_range(0, total_ram_size,
+  cpu_physical_memory_set_dirty_range(0, DIRTY_MEMORY_BLOCK_SIZE,
                                       1 << DIRTY_MEMORY_CODE);
 }
 
-static char __pc_bios[PC_BIOS_IMG_SIZE];
+static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
 
-static ram_addr_t x86_bios_rom_init() {
+static void x86_bios_rom_init() {
   FILE *f = fopen("image/bios.bin", "r");
   duck_check(f != NULL);
-  int rc = fread(__pc_bios, sizeof(char), PC_BIOS_IMG_SIZE, f);
-  duck_check(rc == PC_BIOS_IMG_SIZE);
+  int rc = fread(__pc_bios, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
+  duck_check(rc == CONFIG_GUEST_BIOS_SIZE);
   fclose(f);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->host = (void *)(&__pc_bios[0]);
 
   // isa-bios is handled in function isa_bios_access
-  return PC_BIOS_IMG_SIZE;
 }
 
 static void *alloc_ram(hwaddr size) {
@@ -849,9 +846,8 @@ static inline void init_ram_block(const char *name, unsigned int index,
  * in cpu_address_space_init
  *  - smm
  */
-static void ram_init(ram_addr_t total_ram_size) {
-  ram_addr_t rom_size;
-  void *host = alloc_ram(total_ram_size);
+static void ram_init() {
+  void *host = alloc_ram(CONFIG_GUEST_RAM_SIZE);
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -885,9 +881,9 @@ static void ram_init(ram_addr_t total_ram_size) {
              X86_BIOS_MEM_SIZE);
 
   init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
-                 total_ram_size - X86_BIOS_MEM_SIZE);
-  init_ram_block("pc.bios", PC_BIOS_INDEX, true, 4 * GiB - PC_BIOS_IMG_SIZE,
-                 PC_BIOS_IMG_SIZE);
+                 CONFIG_GUEST_RAM_SIZE - X86_BIOS_MEM_SIZE);
+  init_ram_block("pc.bios", PC_BIOS_INDEX, true,
+                 4 * GiB - CONFIG_GUEST_BIOS_SIZE, CONFIG_GUEST_BIOS_SIZE);
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
@@ -900,7 +896,7 @@ static void ram_init(ram_addr_t total_ram_size) {
 
   // pc.bios's block::offset is not same with it's mr.offset
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
-  block->offset = total_ram_size;
+  block->offset = CONFIG_GUEST_RAM_SIZE;
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -908,14 +904,14 @@ static void ram_init(ram_addr_t total_ram_size) {
   }
 
   // isa-bios / pc.bios's host point to file
-  rom_size = x86_bios_rom_init();
-  setup_dirty_memory(total_ram_size + rom_size);
+  x86_bios_rom_init();
+  setup_dirty_memory();
 }
 
 static AddressSpaceDispatch __memory_dispatch = {.name = "memory dispatch"};
 static AddressSpaceDispatch __io_dispatch = {.name = "io dispatch"};
 
-void memory_map_init(ram_addr_t size) {
+void memory_map_init() {
 #ifdef BMBT
   system_memory = g_malloc(sizeof(*system_memory));
 
@@ -936,6 +932,6 @@ void memory_map_init(ram_addr_t size) {
   address_space_smm_memory.dispatch = &__memory_dispatch;
   address_space_smm_memory.smm = true;
 
-  ram_init(size);
+  ram_init();
   unassigned_io_setup();
 }

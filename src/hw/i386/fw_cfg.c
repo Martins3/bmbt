@@ -97,7 +97,7 @@ FWCfgState *fw_cfg_arch_create(MachineState *ms, uint16_t boot_cpus,
    * "etc/max-cpus" actually being apic_id_limit
    */
   fw_cfg_add_i16(fw_cfg, FW_CFG_MAX_CPUS, apic_id_limit);
-  fw_cfg_add_i64(fw_cfg, FW_CFG_RAM_SIZE, (uint64_t)ram_size);
+  fw_cfg_add_i64(fw_cfg, FW_CFG_RAM_SIZE, (uint64_t)CONFIG_GUEST_RAM_SIZE);
 #ifdef NEED_LATER
   fw_cfg_add_bytes(fw_cfg, FW_CFG_ACPI_TABLES, acpi_tables, acpi_tables_len);
 #endif
