@@ -1,7 +1,7 @@
 #include "syscall.h"
 #include <errno.h>
 
-long __syscall_ret(unsigned long r) {
+long libc_syscall_ret(unsigned long r) {
   if (r > -4096UL) {
     errno = -r;
     return -1;

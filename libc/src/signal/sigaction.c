@@ -36,7 +36,7 @@ int __libc_sigaction(int sig, const struct sigaction *restrict sa,
        * blocked) as part of the ucontext_t passed
        * to the signal handler. */
       if (!libc.threaded && !unmask_done) {
-        __syscall(SYS_rt_sigprocmask, SIG_UNBLOCK, SIGPT_SET, 0, _NSIG / 8);
+        libc_syscall(SYS_rt_sigprocmask, SIG_UNBLOCK, SIGPT_SET, 0, _NSIG / 8);
         unmask_done = 1;
       }
 
@@ -49,14 +49,14 @@ int __libc_sigaction(int sig, const struct sigaction *restrict sa,
     ksa.restorer = (sa->sa_flags & SA_SIGINFO) ? __restore_rt : __restore;
     memcpy(&ksa.mask, &sa->sa_mask, _NSIG / 8);
   }
-  int r = __syscall(SYS_rt_sigaction, sig, sa ? &ksa : 0, old ? &ksa_old : 0,
-                    _NSIG / 8);
+  int r = libc_syscall(SYS_rt_sigaction, sig, sa ? &ksa : 0, old ? &ksa_old : 0,
+                       _NSIG / 8);
   if (old && !r) {
     old->sa_handler = ksa_old.handler;
     old->sa_flags = ksa_old.flags;
     memcpy(&old->sa_mask, &ksa_old.mask, _NSIG / 8);
   }
-  return __syscall_ret(r);
+  return libc_syscall_ret(r);
 }
 
 int __sigaction(int sig, const struct sigaction *restrict sa,

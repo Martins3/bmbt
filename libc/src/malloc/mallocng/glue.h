@@ -40,7 +40,7 @@
 #include <assert.h>
 #endif
 
-#define brk(p) ((uintptr_t)__syscall(SYS_brk, p))
+#define brk(p) ((uintptr_t)libc_syscall(SYS_brk, p))
 
 // [interface 53]
 #ifdef BMBT
