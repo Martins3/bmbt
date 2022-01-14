@@ -73,7 +73,7 @@ libc:
 		$(MAKE) -f libc/libc.mk; \
 	fi
 
-CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I./include
+CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include
 $(BUILD_DIR)/%.o : %.c
 	@mkdir -p $(@D)
 	@gcc $(CFLAGS) -MMD -c $< -o $@
@@ -138,7 +138,7 @@ gdb: all
 	if [[ $(ENV_KERNEL) == 1 ]];then \
 		$(LA_QEMU) -nographic -m 2G -cpu Loongson-3A5000 -serial mon:stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a,kernel_irqchip=off -kernel $(bmbt) -S -s; \
 	else \
-		gdb -ex "handle SIG127 nostop noprint" -ex "run" --args $(bmbt); \
+		gdb -ex "handle SIG127 nostop noprint" --args $(bmbt); \
 	fi
 
 debug: all

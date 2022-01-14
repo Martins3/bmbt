@@ -5,7 +5,6 @@
 #define SYS_brk 214
 #define SYS_mmap 222
 #define SYS_munmap 215
-#define SYS_mremap 216
 #define SYS_mprotect 226
 #define SYS_madvise 233
 

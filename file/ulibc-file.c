@@ -7,7 +7,7 @@
 #include <string.h>
 // https://stackoverflow.com/questions/4158900/embedding-resources-in-executable-using-gcc
 
-#define DEBUG_UFILE
+// #define DEBUG_UFILE
 
 typedef struct {
   FILE *_f;

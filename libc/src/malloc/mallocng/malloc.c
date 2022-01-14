@@ -23,7 +23,7 @@ static const uint8_t small_cnt_tab[][3] = {
 
 static const uint8_t med_cnt_tab[4] = {28, 24, 20, 32};
 
-struct malloc_context ctx = {0};
+struct malloc_context ctx = {.brk = -1};
 
 struct meta *alloc_meta(void) {
   struct meta *m;

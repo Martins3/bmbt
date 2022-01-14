@@ -1,9 +1,8 @@
 #ifndef PAGE_H_WY7U6KLT
 #define PAGE_H_WY7U6KLT
 
+#include <asm/loongarchregs.h>
 #include <const.h>
-
-#define CONFIG_PAGE_SIZE_16KB
 
 #ifdef CONFIG_PAGE_SIZE_4KB
 #define PAGE_SHIFT 12
@@ -16,5 +15,6 @@
 #endif
 #define PAGE_SIZE (_AC(1, UL) << PAGE_SHIFT)
 #define PAGE_MASK (~(PAGE_SIZE - 1))
+#define PAGE_OFFSET_MASK (PAGE_SIZE - 1)
 
 #endif /* end of include guard: PAGE_H_WY7U6KLT */

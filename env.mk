@@ -54,6 +54,7 @@ ifeq ($(ENV_KERNEL), 1)
 
   ASM_SRC_FILES += $(wildcard env/loongarch/*.S)
   ENV_CFLAGS += -DENV_KERNEL -I./env/loongarch/include/
+	ENV_CFLAGS += -isystem /usr/lib/gcc/loongarch64-linux-gnu/8/include
 else
   ENV_CFLAGS += -DENV_USERSPACE
   ENV_APPENDIX=userspace

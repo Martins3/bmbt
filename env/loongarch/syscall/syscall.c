@@ -1,6 +1,7 @@
 #include "internal.h"
 #include <asm/config.h>
 #include <bits/syscall.h>
+#include <stack.h>
 #include <stdint.h>
 #include <unistd.h>
 
@@ -11,9 +12,6 @@ static inline long *r_fp() {
   asm volatile("move %0, $fp" : "=r"(x));
   return x;
 }
-
-// TMP_TODO move it into header
-extern unsigned char kernel_stack[_THREAD_SIZE];
 
 void backtrace(void) {
   duck_printf("backtrace:\n");
@@ -54,8 +52,6 @@ void __duck_assert_fail(const char *expr, const char *file, int line,
   duck_printf("Assertion failed: %s (%s: %s: %d)\n", expr, file, func, line);
   kernel_dump();
 }
-
-
 
 static int syscall_counter = 0;
 long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,

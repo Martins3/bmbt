@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/mman.h>
 
+// [BMBT_OPTIMIZE 2]
 void *realloc(void *p, size_t n) {
   if (!p)
     return malloc(n);
@@ -26,6 +27,8 @@ void *realloc(void *p, size_t n) {
     return p;
   }
 
+  // [interface 55]
+#ifdef BMBT
   // use mremap if old and new size are both mmap-worthy
   if (g->sizeclass >= 48 && n >= MMAP_THRESHOLD) {
     assert(g->sizeclass == 63);
@@ -44,6 +47,7 @@ void *realloc(void *p, size_t n) {
       return p;
     }
   }
+#endif
 
   new = malloc(n);
   if (!new)
