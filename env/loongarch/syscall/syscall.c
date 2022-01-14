@@ -78,10 +78,17 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
     // if SYS_brk failed, musl malloc will use mmap
     // see libc/src/malloc/mallocng/malloc.c
     ret = 0;
+    break;
+  case SYS_mprotect:
+  case SYS_madvise:
+    ret = 0;
+    break;
   case SYS_mmap:
     ret = kernel_mmap(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+    break;
   case SYS_munmap:
     ret = kernel_unmmap(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+    break;
   default:
     duck_printf("unsported syscall\n");
     kernel_dump();
