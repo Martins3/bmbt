@@ -12,18 +12,11 @@
 #include <test/test.h>
 #include <unitest/greatest.h>
 
-/* A test runs various assertions, then calls PASS(), FAIL(), or SKIP(). */
-TEST testx_should_equal_1(void) {
-  int x = 1;
-  /* Compare, with an automatic "1 != x" failure message */
-  ASSERT_EQ(1, x);
-
-  /* Compare, with a custom failure message */
-  ASSERT_EQm("Yikes, x doesn't equal 1", 1, x);
-
-  /* Compare, and if they differ, print both values,
-   * formatted like `printf("Expected: %d\nGot: %d\n", 1, x);` */
-  ASSERT_EQ_FMT(1, x, "%d");
+TEST test_float(void) {
+  printf("huxueshi:%s \n", __FUNCTION__);
+  float x = 2.0;
+  float y = 3.0;
+  printf("huxueshi:%s %f\n", __FUNCTION__, x + y);
   PASS();
 }
 
@@ -162,7 +155,7 @@ TEST test_qemu_init() {
 
 /* Suites can group multiple tests with common setup. */
 SUITE(basic_test) {
-  RUN_TEST(testx_should_equal_1);
+  RUN_TEST(test_float);
   RUN_TEST(test_atomic);
   RUN_TEST(test_cpu_list);
   RUN_TEST(test_ram_block);
@@ -182,11 +175,11 @@ int main(int argc, char **argv) {
   /* RUN_TEST(x_should_equal_1); */
 
   /* Tests can also be gathered into test suites. */
+  RUN_SUITE(basic_test);
   RUN_SUITE(wip);
   RUN_SUITE(timer);
   RUN_SUITE(basic_test);
   RUN_SUITE(memory_model_test);
-  // RUN_SUITE(fw_cfg_test);
 
   GREATEST_MAIN_END(); /* display results */
 }

@@ -884,7 +884,7 @@ static void page_lock_pair(PageDesc **ret_p1, tb_page_addr_t phys1,
        ? DEFAULT_CODE_GEN_BUFFER_SIZE_1                                        \
        : MAX_CODE_GEN_BUFFER_SIZE)
 
-static inline size_t size_code_gen_buffer(size_t tb_size) {
+size_t size_code_gen_buffer(size_t tb_size) {
   /* Size the buffer.  */
   if (tb_size == 0) {
 #ifdef USE_STATIC_CODE_GEN_BUFFER

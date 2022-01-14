@@ -2,7 +2,6 @@
 #include <asm/fw.h>
 #include <asm/mach-la64/boot_param.h>
 #include <errno.h>
-#include <internal.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -46,7 +45,7 @@ static u8 ext_listhdr_checksum(u8 *buffer, u32 length) {
 static int parse_mem(struct _extention_list_hdr *head) {
   loongson_mem_map = (struct loongsonlist_mem_map *)head;
   if (ext_listhdr_checksum((u8 *)loongson_mem_map, head->length)) {
-    duck_printf("mem checksum error\n");
+    printf("mem checksum error\n");
     return -EPERM;
   }
   return 0;
@@ -57,7 +56,7 @@ static int parse_vbios(struct _extention_list_hdr *head) {
   pvbios = (struct loongsonlist_vbios *)head;
 
   if (ext_listhdr_checksum((u8 *)pvbios, head->length)) {
-    duck_printf("vbios_addr checksum error\n");
+    printf("vbios_addr checksum error\n");
     return -EPERM;
   }
   loongson_sysconf.vgabios_addr = (unsigned long)early_memremap_ro(
@@ -71,7 +70,7 @@ static int parse_screeninfo(struct _extention_list_hdr *head) {
 
   pscreeninfo = (struct loongsonlist_screeninfo *)head;
   if (ext_listhdr_checksum((u8 *)pscreeninfo, head->length)) {
-    duck_printf("screeninfo_addr checksum error\n");
+    printf("screeninfo_addr checksum error\n");
     return -EPERM;
   }
 
@@ -92,34 +91,34 @@ static int list_find(struct boot_params *bp) {
     fhead = bp->ext_location.extlist;
 
   if (!fhead) {
-    duck_printf("the bp ext struct empty!\n");
+    printf("the bp ext struct empty!\n");
     return -1;
   }
 
   do {
     if (memcmp(&(fhead->signature), LOONGSON_MEM_SIGNATURE, 3) == 0) {
       if (parse_mem(fhead) != 0) {
-        duck_printf("parse mem failed\n");
+        printf("parse mem failed\n");
         return -EPERM;
       }
     } else if (memcmp(&(fhead->signature), LOONGSON_VBIOS_SIGNATURE, 5) == 0) {
 #ifdef BMBT
       if (parse_vbios(fhead) != 0) {
-        duck_printf("parse vbios failed\n");
+        printf("parse vbios failed\n");
         return -EPERM;
       }
 #else
-      duck_printf("parse vbios failed\n");
+      printf("parse vbios failed\n");
 #endif
     } else if (memcmp(&(fhead->signature), LOONGSON_SCREENINFO_SIGNATURE, 5) ==
                0) {
 #ifdef BMBT
       if (parse_screeninfo(fhead) != 0) {
-        duck_printf("parse screeninfo failed\n");
+        printf("parse screeninfo failed\n");
         return -EPERM;
       }
 #else
-      duck_printf("parse screeninfo failed\n");
+      printf("parse screeninfo failed\n");
 #endif
     }
     if (loongson_sysconf.bpi_version >= BPI_VERSION_V3) {
@@ -163,11 +162,11 @@ void fw_init_env(void) {
   efi_bp = (struct boot_params *)TO_CAC((unsigned long)_fw_envp);
   /// TMP_TODO ??
   // loongson_sysconf.bpi_version = get_bpi_version(&efi_bp->signature);
-  duck_printf("BPI%d with boot flags %lx.\n", loongson_sysconf.bpi_version,
-              efi_bp->flags);
+  printf("BPI%d with boot flags %lx.\n", loongson_sysconf.bpi_version,
+         efi_bp->flags);
   if (loongson_sysconf.bpi_version == BPI_VERSION_NONE)
-    duck_printf("Fatal error, incorrect BPI version: %d\n",
-                loongson_sysconf.bpi_version);
+    printf("Fatal error, incorrect BPI version: %d\n",
+           loongson_sysconf.bpi_version);
 
   else if (loongson_sysconf.bpi_version >= BPI_VERSION_V2) {
     // TMP_TODO ???
@@ -197,7 +196,7 @@ void fw_init_env(void) {
 #endif
 
   if (list_find(efi_bp))
-    duck_printf("Scan bootparm failed\n");
+    printf("Scan bootparm failed\n");
 }
 
 #ifdef BMBT
