@@ -14,46 +14,44 @@ huxueshi@172.17.103.58 linux-4.19-loongson
   - kernel hacking : collect schedular statistics
 - 打开 CONFIG_PCIE_LOONGSON
 
+### 调试
+- kernel hacking -> Compile-time checkes and compiler options 打开 DEBUG_INFO 选项
+
+### 修复
+实际上这个内核有两个问题需要修复增加两个 patch
+- hwbreak.patch
+- non_lazy_lbt.patch
+
+### 找一个可以正确运行 KVM 的 QEMU
+clone 这个项目 http://rd.loongson.cn:8081/#/admin/projects/kernel/qemu
+
+branch : centos8-4.2.0
+commit-id : bc0f70533ca89cc275cfb5b7ab486e45fb70e041
+使用项目中的 ./compile_loongarch_kvm.sh 或者下面的(主要是删掉了几个无聊的选项，实际上可以更简单)
+```c
+mkdir build && cd build
+../configure --target-list="loongarch64-softmmu"  --enable-werror --enable-kvm \
+            --enable-tcg-interpreter --enable-spice --prefix=/usr --enable-libusb \
+            --enable-debug \
+            --enable-libiscsi --enable-vnc --enable-vnc-jpeg --enable-vnc-png \
+            --enable-libssh --disable-capstone --disable-seccomp --disable-virglrenderer \
+            --enable-virtfs
+```
+
+
 ## 复现 xqm 的工作
 - 获取 image
   - http://old-releases.ubuntu.com/releases/10.04.0/ 中找到 ubuntu-10.04-server-i386.iso 下载，然后可以安装(tcg / kvm 都可以)
 
 - 编译参数
-```plain
+```sh
 mkdir build
 ../configure --target-list=i386-softmmu --enable-latx --disable-werror
 ```
-
-- 运行参数
+- 运行
 ```sh
-#!/bin/bash
-/home/loongson/ld/x86-qemu-mips/build/i386-softmmu/qemu-system-i386 \
--hda ~/xqm_images/ubuntu10s.test.img.full -xtm select,tblink,lbt -kernel \
-~/xqm_images/vmlinuz-2.6.32 -append "console=ttyS0 root=/dev/sda1 ro init=/bin/bash tsc=reliable rw" --nographic \
--chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ~/xqm_images/bios.bin
-
+./run_xqm.sh
 ```
-- [ ] 这里的 ubuntu10s.test.img.full 和 vmlinuz-2.6.32 还没有自己编译过
-
-```sh
-#!/bin/bash
-
-xqm="qemu-system-i386"
-DISKIMG=ubuntu10s.img
-
-taskset -c 1 ./${xqm} -hda ${DISKIMG} \
-    -kernel vmlinuz-2.6.32 \
-    -m 2048 \
-    --nographic \
-    -xtm select,tblink,lbt \
-    -append "console=ttyS0 root=/dev/sda1 ro tsc=reliable init=/bin/bash rw"
-
-# all optimizations option for xtm
-# -xtm select,tblink,lbt,trbh,staticcs,njc,lsfpu
-```
-
-## 调试环境搭建
-[如何增大 dmesg buffer 的大小](https://unix.stackexchange.com/questions/412182/how-to-increase-dmesg-buffer-size-in-centos-7-2)
 
 ## 处理 QEMU 的 macro
 
@@ -64,10 +62,19 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 但是这似乎导致无法 `make -j10`, 只能串行编译
 
 ## 开发环境
-小项目 : sshfs
-大项目 : rsync
+- sshfs
+- rsync : 使用下面的脚本可以
+```c
+#!/bin/bash
+if [ $# -eq 0 ];then
+  echo "need parameter"
+  exit 0
+fi
+echo "sync $1"
+rsync --delete -avzh --exclude='/.git' --filter="dir-merge,- .gitignore" maritns3@10.90.50.149:/home/maritns3/core/ld/"$1" /home/loongson/ld
+```
 
-## debug
+## debug 技巧
 
 ### 使用 gdb 调试
 ```gdb
@@ -85,19 +92,6 @@ taskset -c 1 ./${xqm} -hda ${DISKIMG} \
 - x86_to_mips_before_exec_tb 和 x86_to_mips_after_exec_tb 中分析打开 CONFIG_XTM_TEST 的内容
 
 - 错误的 : target_x86_to_mips_host 的参数 max_insns 替换为 1
-
-### 屏蔽信号
-因为暂时适应的是 signal 来实现 timer 的
-这个会导致 qemu 提前停下来
-
-使用可以屏蔽信号:
-handle SIG127 nostop noprint
-在 x86 上是
-handle SIG64 nostop noprint
-(因为两个架构的 SIGRTMAX 不同)
-
-
-https://stackoverflow.com/questions/24999208/how-to-handle-all-signals-in-gdb
 
 ## 在 Loongarch 上交叉编译内核
 ```c
@@ -127,7 +121,7 @@ export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIB
 
 在 arch/x86/boot/main.c 中将 set_video 注释掉就可以继续向下运行了。
 
-### 在 x86 运行
+### x86 上运行运行 32bit 内核
 1. 编译出来对应的 qemu
 ```c
 mkdir 32bit

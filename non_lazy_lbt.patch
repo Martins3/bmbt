@@ -1,0 +1,166 @@
+diff --git a/arch/loongarch/include/asm/switch_to.h b/arch/loongarch/include/asm/switch_to.h
+index 87c53e1bc119..5ffe789e6c2a 100644
+--- a/arch/loongarch/include/asm/switch_to.h
++++ b/arch/loongarch/include/asm/switch_to.h
+@@ -46,7 +46,6 @@ extern asmlinkage struct task_struct *resume(struct task_struct *prev,
+ #define switch_to(prev, next, last)							\
+ do {											\
+ 	lose_fpu_inatomic(1, prev);							\
+-	lose_lbt_inatomic(1, prev);							\
+ 	vdso_per_cpu_switch_thread(prev, next);						\
+ 	__process_watch(prev, next);							\
+ 	(last) = resume(prev, next, task_thread_info(next),				\
+diff --git a/arch/loongarch/kernel/signal.c b/arch/loongarch/kernel/signal.c
+index 56ca054d76f0..97670c84004a 100644
+--- a/arch/loongarch/kernel/signal.c
++++ b/arch/loongarch/kernel/signal.c
+@@ -234,6 +234,8 @@ static int restore_lsx_context(struct sigcontext __user *sc)
+ }
+
+ #if defined(CONFIG_CPU_HAS_LBT)
++
++#if 0
+ static int copy_lbt_to_sigcontext(struct sigcontext __user *sc)
+ {
+ 	uint64_t __user *scrregs = (uint64_t *)&sc->sc_scr;
+@@ -343,6 +345,22 @@ static int protected_restore_lbt_context(struct sigcontext __user *sc)
+ }
+ #endif
+
++static void inline save_scr_context(struct sigcontext __user *sc)
++{
++	uint64_t __user *scr = (uint64_t *)&sc->sc_scr;
++	uint32_t __user *eflags = (uint32_t *)&sc->sc_reserved;
++	_save_scr_context(scr, eflags);
++}
++
++static void inline restore_scr_context(struct sigcontext __user *sc)
++{
++	uint64_t __user *scr = (uint64_t *)&sc->sc_scr;
++	uint32_t __user *eflags = (uint32_t *)&sc->sc_reserved;
++	_restore_scr_context(scr, eflags);
++}
++
++#endif
++
+ /*
+  * Extended context handling.
+  */
+@@ -528,7 +546,8 @@ static int setup_sigcontext(struct pt_regs *regs, struct sigcontext __user *sc)
+ 	err |= protected_save_fp_context(sc);
+
+ #if defined(CONFIG_CPU_HAS_LBT)
+-	err |= protected_save_lbt_context(sc);
++	save_scr_context(sc);
++	//err |= protected_save_lbt_context(sc);
+ #endif
+
+ 	return err;
+@@ -585,7 +604,8 @@ static int restore_sigcontext(struct pt_regs *regs, struct sigcontext __user *sc
+ 		err |= __get_user(regs->regs[i], &sc->sc_regs[i]);
+
+ #if defined(CONFIG_CPU_HAS_LBT)
+-	err |= protected_restore_lbt_context(sc);
++	//err |= protected_restore_lbt_context(sc);
++	restore_scr_context(sc);
+ #endif
+ 	return err ?: protected_restore_fp_context(sc);
+ }
+diff --git a/arch/loongarch/kernel/switch.S b/arch/loongarch/kernel/switch.S
+index 1e316121409c..b7754bda8755 100644
+--- a/arch/loongarch/kernel/switch.S
++++ b/arch/loongarch/kernel/switch.S
+@@ -27,6 +27,27 @@
+  */
+ 	.align	5
+ SYM_FUNC_START(resume)
++
++#if defined(CONFIG_CPU_HAS_LBT)
++	csrrd   t1, LOONGARCH_CSR_EUEN
++	stptr.d t1, a0, THREAD_CSREUEN
++
++	li.d     t2, CSR_EUEN_LBTEN
++	and     t1, t1, t2
++	beqz    t1, 1f
++	scr2gr  t1, $scr0
++	stptr.d t1, a0, THREAD_SCR0
++	scr2gr  t1, $scr1
++	stptr.d t1, a0, THREAD_SCR1
++	scr2gr  t1, $scr2
++	stptr.d t1, a0, THREAD_SCR2
++	scr2gr  t1, $scr3
++	stptr.d t1, a0, THREAD_SCR3
++1:
++	csrxchg t2, t2, LOONGARCH_CSR_EUEN
++	.word 0x17 << 18 | 0x3f << 10 | 0xd
++	stptr.d t1, a0, THREAD_EFLAG
++#endif
+ 	cpu_save_nonscratch a0
+ 	stptr.d	ra, a0, THREAD_REG01
+ 	stptr.d a3, a0, THREAD_SCHED_RA
+@@ -49,5 +70,26 @@ SYM_FUNC_START(resume)
+ 	PTR_ADDU	t0, t0, tp
+ 	set_saved_sp	t0, t1, t2
+
++#if defined(CONFIG_CPU_HAS_LBT)
++	ldptr.d t1, a1, THREAD_CSREUEN
++	or      t3, t1, zero
++	csrwr   t1, LOONGARCH_CSR_EUEN
++	li.d     t2, CSR_EUEN_LBTEN
++	and     t3, t3, t2
++	beqz    t3, 1f
++	ldptr.d t1, a1, THREAD_SCR0
++	gr2scr  $scr0, t1
++	ldptr.d t1, a1, THREAD_SCR1
++	gr2scr  $scr1, t1
++	ldptr.d t1, a1, THREAD_SCR2
++	gr2scr  $scr2, t1
++	ldptr.d t1, a1, THREAD_SCR3
++	gr2scr  $scr3, t1
++1:
++	csrxchg t2, t2, LOONGARCH_CSR_EUEN
++	ldptr.d t1, a1, THREAD_EFLAG
++	.word 0x17 << 18 | 0x3f << 10 | 0x2d
++#endif
++
+ 	jr	ra
+ SYM_FUNC_END(resume)
+diff --git a/arch/loongarch/kernel/traps.c b/arch/loongarch/kernel/traps.c
+index 5f4c420627ab..fe8f5567e1cf 100644
+--- a/arch/loongarch/kernel/traps.c
++++ b/arch/loongarch/kernel/traps.c
+@@ -690,6 +690,7 @@ asmlinkage void do_lasx(struct pt_regs *regs)
+ 	exception_exit(prev_state);
+ }
+
++#if 0
+ static void init_restore_lbt(void)
+ {
+ 	if (!thread_lbt_context_live()) {
+@@ -701,6 +702,10 @@ static void init_restore_lbt(void)
+ 		own_lbt_inatomic(1);
+ 	}
+ }
++#endif
++
++unsigned long do_lbt_counter = 0;
++EXPORT_SYMBOL(do_lbt_counter);
+
+ asmlinkage void do_lbt(struct pt_regs *regs)
+ {
+@@ -712,9 +717,12 @@ asmlinkage void do_lbt(struct pt_regs *regs)
+ 		goto out;
+ 	}
+
+-	preempt_disable();
+-	init_restore_lbt();
+-	preempt_enable();
++	csr_xchgl(CSR_EUEN_LBTEN, CSR_EUEN_LBTEN, LOONGARCH_CSR_EUEN);
++
++	do_lbt_counter++;
++	//preempt_disable();
++	//init_restore_lbt();
++	//preempt_enable();
+ out:
+ 	exception_exit(prev_state);
+ }

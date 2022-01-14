@@ -59,7 +59,7 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
   // no recursive sycall
   duck_assert(syscall_counter == 0);
   syscall_counter++;
-  int ret;
+  long ret;
 #ifdef DEBUG_KERNEL_SYSCALL
   duck_printf("%ld: [0x%016lx], [0x%016lx], [0x%016lx], [0x%016lx], "
               "[0x%016lx], [0x%016lx]\n",
@@ -85,6 +85,9 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
     break;
   case SYS_mmap:
     ret = kernel_mmap(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+    break;
+  case SYS_clock_gettime:
+    ret = kernel_clock_gettime(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
     break;
   case SYS_munmap:
     ret = kernel_unmmap(arg0, arg1, arg2, arg3, arg4, arg5, arg6);

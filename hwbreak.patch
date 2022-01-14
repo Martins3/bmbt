@@ -1,0 +1,14 @@
+diff --git a/arch/loongarch/kvm/entry.S b/arch/loongarch/kvm/entry.S
+index c84d0ff0f391..063e001ae3a1 100644
+--- a/arch/loongarch/kvm/entry.S
++++ b/arch/loongarch/kvm/entry.S
+@@ -99,6 +99,9 @@
+ 	ori	\tmp, zero, CSR_PRMD_PIE
+ 	csrxchg	\tmp, \tmp, LOONGARCH_CSR_PRMD
+
++	ori	\tmp, zero, CSR_PRMD_PWE
++	csrxchg	\tmp, \tmp, LOONGARCH_CSR_PRMD
++
+ 	/* Set PVM bit to setup ertn to VZ guest context */
+ 	ori	\tmp, zero, CSR_GSTAT_PVM
+ 	csrxchg	\tmp, \tmp, LOONGARCH_CSR_GSTAT
