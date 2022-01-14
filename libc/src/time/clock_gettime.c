@@ -15,7 +15,7 @@ int __clock_gettime(clockid_t clk, struct timespec *ts) {
     if (!r)
       return r;
     if (r == -EINVAL)
-      return __syscall_ret(r);
+      return libc_syscall_ret(r);
     /* Fall through on errors other than EINVAL. Some buggy
      * vdso implementations return ENOSYS for clocks they
      * can't handle, rather than making the syscall. This
@@ -27,13 +27,13 @@ int __clock_gettime(clockid_t clk, struct timespec *ts) {
 #ifdef SYS_clock_gettime64
   r = -ENOSYS;
   if (sizeof(time_t) > 4)
-    r = __syscall(SYS_clock_gettime64, clk, ts);
+    r = libc_syscall(SYS_clock_gettime64, clk, ts);
   if (SYS_clock_gettime == SYS_clock_gettime64 || r != -ENOSYS)
-    return __syscall_ret(r);
+    return libc_syscall_ret(r);
   long ts32[2];
-  r = __syscall(SYS_clock_gettime, clk, ts32);
+  r = libc_syscall(SYS_clock_gettime, clk, ts32);
   if (r == -ENOSYS && clk == CLOCK_REALTIME) {
-    r = __syscall(SYS_gettimeofday, ts32, 0);
+    r = libc_syscall(SYS_gettimeofday, ts32, 0);
     ts32[1] *= 1000;
   }
   if (!r) {
@@ -41,18 +41,18 @@ int __clock_gettime(clockid_t clk, struct timespec *ts) {
     ts->tv_nsec = ts32[1];
     return r;
   }
-  return __syscall_ret(r);
+  return libc_syscall_ret(r);
 #else
-  r = __syscall(SYS_clock_gettime, clk, ts);
+  r = libc_syscall(SYS_clock_gettime, clk, ts);
   if (r == -ENOSYS) {
     if (clk == CLOCK_REALTIME) {
-      __syscall(SYS_gettimeofday, ts, 0);
+      libc_syscall(SYS_gettimeofday, ts, 0);
       ts->tv_nsec = (int)ts->tv_nsec * 1000;
       return 0;
     }
     r = -EINVAL;
   }
-  return __syscall_ret(r);
+  return libc_syscall_ret(r);
 #endif
 }
 

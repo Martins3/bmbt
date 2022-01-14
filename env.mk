@@ -4,7 +4,7 @@ BASE_DIR := $(shell pwd)
 ARCH_APPENDIX :=loongson
 CFLAGS := -g -Wall -O0 -Werror
 
-ENV_KERNEL ?= 1
+ENV_KERNEL ?= 0
 
 USE_LIBC ?= 0
 USE_GLIB ?= 0

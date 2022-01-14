@@ -15,7 +15,7 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
 #error unspecified env
 #endif
 
-static inline long __syscall0(long number) {
+static inline long libc_syscall0(long number) {
   long int _sys_result;
 
   {
@@ -30,7 +30,7 @@ static inline long __syscall0(long number) {
   return _sys_result;
 }
 
-static inline long __syscall1(long number, long arg0) {
+static inline long libc_syscall1(long number, long arg0) {
   long int _sys_result;
 
   {
@@ -46,7 +46,7 @@ static inline long __syscall1(long number, long arg0) {
   return _sys_result;
 }
 
-static inline long __syscall2(long number, long arg0, long arg1) {
+static inline long libc_syscall2(long number, long arg0, long arg1) {
   long int _sys_result;
 
   {
@@ -64,7 +64,7 @@ static inline long __syscall2(long number, long arg0, long arg1) {
   return _sys_result;
 }
 
-static inline long __syscall3(long number, long arg0, long arg1, long arg2) {
+static inline long libc_syscall3(long number, long arg0, long arg1, long arg2) {
   long int _sys_result;
 
   {
@@ -84,8 +84,8 @@ static inline long __syscall3(long number, long arg0, long arg1, long arg2) {
   return _sys_result;
 }
 
-static inline long __syscall4(long number, long arg0, long arg1, long arg2,
-                              long arg3) {
+static inline long libc_syscall4(long number, long arg0, long arg1, long arg2,
+                                 long arg3) {
   long int _sys_result;
 
   {
@@ -107,8 +107,8 @@ static inline long __syscall4(long number, long arg0, long arg1, long arg2,
   return _sys_result;
 }
 
-static inline long __syscall5(long number, long arg0, long arg1, long arg2,
-                              long arg3, long arg4) {
+static inline long libc_syscall5(long number, long arg0, long arg1, long arg2,
+                                 long arg3, long arg4) {
   long int _sys_result;
 
   {
@@ -132,8 +132,8 @@ static inline long __syscall5(long number, long arg0, long arg1, long arg2,
   return _sys_result;
 }
 
-static inline long __syscall6(long number, long arg0, long arg1, long arg2,
-                              long arg3, long arg4, long arg5) {
+static inline long libc_syscall6(long number, long arg0, long arg1, long arg2,
+                                 long arg3, long arg4, long arg5) {
   long int _sys_result;
 
   {
@@ -160,8 +160,8 @@ static inline long __syscall6(long number, long arg0, long arg1, long arg2,
   return _sys_result;
 }
 
-static inline long __syscall7(long number, long arg0, long arg1, long arg2,
-                              long arg3, long arg4, long arg5, long arg6) {
+static inline long libc_syscall7(long number, long arg0, long arg1, long arg2,
+                                 long arg3, long arg4, long arg5, long arg6) {
   long int _sys_result;
 
   {
