@@ -34,7 +34,7 @@ ENTRY(start_entry)
 	# Enable PG
 	li.w	t0, 0xb0		# PLV=0, IE=0, PG
 	csrwr	t0, LOONGARCH_CSR_CRMD
-	li.w    t0, 0x15                # enable FP SXE ASXE BTE
+	li.w    t0, 0xf                # enable FP SXE ASXE BTE
 	csrwr   t0, LOONGARCH_CSR_EUEN
 
 	# init sp
