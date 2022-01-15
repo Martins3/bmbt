@@ -5,12 +5,17 @@
 #include <qemu/queue.h>
 #include <qemu/units.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 
 size_t size_code_gen_buffer(size_t tb_size);
 
-#define DEBUG_MEM
+long unsigned long len_pagesize_up(unsigned long len) {
+  return PFN_UP(len) << PAGE_SHIFT;
+}
+
+// #define DEBUG_MEM
 /**
  * pages:
  *
@@ -28,15 +33,16 @@ typedef struct FreeMem {
 QLIST_HEAD(, FreeMem) free_mem;
 QLIST_HEAD(, FreeMem) free_nodes;
 
-// TMP_TODO 真的需要这么大吗
-// 将 pages 清理一下
-#define POOL_SIZE 1000
+// TMP_TODO : 如果需要这么大的 pool size
+// 那么我们需要重新分析一下了这种模型真的好吗 至少搞一些简单优化吧
+#define POOL_SIZE (100)
 static FreeMem node_pool[POOL_SIZE];
 
 static void init_node_pool() {
   QLIST_INIT(&free_nodes);
   for (int i = 0; i < POOL_SIZE; ++i) {
     QLIST_INSERT_HEAD(&free_nodes, node_pool + i, mem_next);
+    node_pool[i].idx = i;
   }
 }
 
@@ -46,17 +52,23 @@ static FreeMem *get_mem_node(unsigned long start, unsigned long size) {
   node->start = start;
   node->len = size;
   QLIST_REMOVE(node, mem_next);
+#ifdef DEBUG_MEM
+  duck_printf("huxueshi:%s %d\n", __FUNCTION__, node->idx);
+#endif
   return node;
 }
 
 static void free_mem_node(FreeMem *node) {
+#ifdef DEBUG_MEM
+  duck_printf("huxueshi:%s %d \n", __FUNCTION__, node->idx);
+#endif
   QLIST_REMOVE(node, mem_next);
   QLIST_INSERT_HEAD(&free_nodes, node, mem_next);
 }
 
 static void add_head_sentinel() {
-  FreeMem *sentinel = get_mem_node(0, 0);
   if (QLIST_EMPTY(&free_mem) || QLIST_FIRST(&free_mem)->len != 0) {
+    FreeMem *sentinel = get_mem_node(0, 0);
     QLIST_INSERT_HEAD(&free_mem, sentinel, mem_next);
   }
 }
@@ -88,23 +100,21 @@ long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   duck_assert(!(flags & (~valid_flags)));
   duck_assert(!(prot & (~valid_prot)));
 
-  unsigned long pages = PFN_UP(len);
-  pages = pages << PAGE_SHIFT;
-  duck_printf("huxueshi:%s %lx\n", __FUNCTION__, pages);
+  len = len_pagesize_up(len);
 
   FreeMem *mem;
   QLIST_FOREACH(mem, &free_mem, mem_next) {
-    duck_printf("len :%s %lx\n", __FUNCTION__, mem->len);
-    if (pages > mem->len) {
+    if (len > mem->len) {
       continue;
     }
 
-    if (pages == mem->len) {
+    if (len == mem->len) {
       free_mem_node(mem);
+      memset((void *)mem->start, 0, mem->len);
       return mem->start;
     }
-    mem->len -= pages;
-    duck_printf("return mem : [%lx]\n", mem->start + mem->len);
+    mem->len -= len;
+    memset((void *)mem->start + mem->len, 0, len);
     return mem->start + mem->len;
   }
   duck_assert(false);
@@ -119,11 +129,21 @@ static FreeMem *merge(FreeMem *left, FreeMem *node) {
   }
   return node;
 }
+
 void print_freemem() {
   FreeMem *mem = NULL;
   QLIST_FOREACH(mem, &free_mem, mem_next) {
-    duck_printf("%016lx -- %016lx\n", mem->start, mem->start + mem->len);
+    duck_printf("idx=%d  %016lx -- %016lx %08lx\n", mem->idx,
+                TO_PHYS(mem->start) >> PAGE_SHIFT,
+                TO_PHYS((mem->start + mem->len)) >> PAGE_SHIFT,
+                mem->len >> PAGE_SHIFT);
   }
+}
+
+void print_freenodes() {
+  FreeMem *mem = NULL;
+  QLIST_FOREACH(mem, &free_nodes, mem_next) { duck_printf("%d ", mem->idx); }
+  duck_printf("\n");
 }
 
 long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
@@ -131,11 +151,9 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   unsigned long addr = arg0;
   unsigned long len = arg1;
   duck_assert(!(addr & PAGE_OFFSET_MASK));
-  duck_printf("---> %lx", len);
-  // duck_assert(!(len & PAGE_OFFSET_MASK));
+  // duck_assert(!(len & PAGE_OFFSET_MASK)); // no alignment guarantee
 
-  unsigned long pages = PFN_UP(len);
-  pages = pages << PAGE_SHIFT;
+  len = len_pagesize_up(len);
 
   FreeMem *right = NULL;
   FreeMem *left = NULL;
@@ -148,14 +166,17 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   duck_assert(right != NULL);
   duck_assert(left != NULL);
   duck_assert(left->start + left->len <= addr);
+  duck_assert(right->start >= addr + len);
 
-  FreeMem *node = get_mem_node(addr, pages);
+  FreeMem *node = get_mem_node(addr, len);
   QLIST_INSERT_AFTER(left, node, mem_next);
 
   merge(merge(left, node), right);
   add_head_sentinel();
 #ifdef DEBUG_MEM
+  duck_printf("after free\n");
   print_freemem();
+  print_freenodes();
 #endif
   return 0;
 }
