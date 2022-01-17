@@ -15,6 +15,13 @@ jobs:
     - uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive --depth=1
+    - name: env setup
+      run: |
+        mkdir -p image
+        touch image/bios.bin
+        touch image/initrd.bin
+        touch image/linuxboot_dma.bin
+        touch image/bzImage.bin
     - name: 00
       run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=0
     - name: 01
