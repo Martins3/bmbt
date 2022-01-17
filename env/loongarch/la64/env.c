@@ -79,7 +79,6 @@ static int parse_screeninfo(struct _extention_list_hdr *head) {
 }
 #endif
 
-// TMP_TODO what the fuck is BPI ?
 static int list_find(struct boot_params *bp) {
   struct _extention_list_hdr *fhead = NULL;
   unsigned long index;
@@ -135,7 +134,7 @@ static int list_find(struct boot_params *bp) {
   return 0;
 }
 
-#ifdef NEED_LATER
+#ifdef BPI_TODO
 static int get_bpi_version(u64 *signature) {
   u8 data[9];
   int version = BPI_VERSION_NONE;
@@ -160,7 +159,7 @@ static void parse_bpi_flags(void) {
 
 void fw_init_env(void) {
   efi_bp = (struct boot_params *)TO_CAC((unsigned long)_fw_envp);
-  /// TMP_TODO ??
+  /// BPI_TODO
   // loongson_sysconf.bpi_version = get_bpi_version(&efi_bp->signature);
   printf("BPI%d with boot flags %lx.\n", loongson_sysconf.bpi_version,
          efi_bp->flags);
@@ -169,7 +168,7 @@ void fw_init_env(void) {
            loongson_sysconf.bpi_version);
 
   else if (loongson_sysconf.bpi_version >= BPI_VERSION_V2) {
-    // TMP_TODO ???
+    // BPI_TODO
     // parse_bpi_flags();
   }
 
