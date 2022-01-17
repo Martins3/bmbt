@@ -1,7 +1,7 @@
 #ifndef STACK_H_WBBVTY6S
 #define STACK_H_WBBVTY6S
 
-#include <page.h>
+#include <linux/page.h>
 #define _THREAD_SIZE (4 * PAGE_SIZE)
 
 #ifndef __ASSEMBLY__

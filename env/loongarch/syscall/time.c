@@ -10,6 +10,6 @@ long kernel_clock_gettime(long arg0, long arg1, long arg2, long arg3, long arg4,
   duck_assert(clk_id == CLOCK_REALTIME);
   struct timespec *res = (struct timespec *)arg1;
   res->tv_nsec = 0;
-  res->tv_sec = counter ++;
+  res->tv_sec = counter++;
   return 0;
 }

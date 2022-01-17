@@ -2,7 +2,7 @@
 #include <asm/regdef.h>
 #include <asm/config.h>
 #include <asm/asm.h>
-#include <stack.h>
+#include <linux/stack.h>
 .section .text
 
 ENTRY(start_entry)

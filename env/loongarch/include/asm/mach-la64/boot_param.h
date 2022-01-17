@@ -1,6 +1,6 @@
 #ifndef BOOT_PARAM_H_UOQ1F6AT
 #define BOOT_PARAM_H_UOQ1F6AT
-#include <kernel-type.h>
+#include <linux/type.h>
 
 #define ADDRESS_TYPE_SYSRAM 1
 #define ADDRESS_TYPE_RESERVED 2

@@ -4,6 +4,7 @@
 
 - [tcg_register_thread](#tcg_register_thread)
 - [多核编程需要增加考虑的事情](#多核编程需要增加考虑的事情)
+- [出现需要 lock 的位置会被 BMBT_MTTCG 标记出来](#出现需要-lock-的位置会被-bmbt_mttcg-标记出来)
 
 <!-- vim-markdown-toc -->
 
@@ -44,5 +45,7 @@ void tcg_register_thread(void) {
 - soft tlb 的访问
 - 将 libc 的锁被简化了
 - errno
+- qht
+- 没有再考虑内核中的 mttcg 中的问题
 
 ## 出现需要 lock 的位置会被 BMBT_MTTCG 标记出来
