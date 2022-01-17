@@ -1,9 +1,11 @@
 #include <asm/mach-la64/boot_param.h>
-#include <pfn.h>
+#include <linux/pfn.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 void fw_add_mem(unsigned long addr, unsigned long len);
 void init_pages();
+extern bool mmap_ready;
 
 void fw_init_memory(void) {
   int i;
@@ -64,5 +66,6 @@ void fw_init_memory(void) {
       break;
     }
   }
+  mmap_ready = true;
   printf("total_mem %lx bytes\n", total_mem);
 }

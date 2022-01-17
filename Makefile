@@ -34,6 +34,14 @@ C_SRC_FILES += $(wildcard glib/*.c)
 
 BIN_FILES = $(wildcard image/*.bin)
 
+# kernel files need extra flags "-O2" to eliminate the error
+# "invalid argument to built-in function"
+ifeq ($(ENV_KERNEL), 1)
+  KERNEL_SRC_FILES += $(wildcard env/loongarch/*/*.c)
+  KERNEL_OBJS_FILES=$(KERNEL_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
+  $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O2
+endif
+
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
 include ./src/i386/Makefile.objs
@@ -42,6 +50,7 @@ C_SRC_FILES += $(LATX_SRC)
 
 OBJ_FILES := $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
 OBJ_FILES += $(ASM_SRC_FILES:%.S=$(BUILD_DIR)/%.o)
+OBJ_FILES += $(KERNEL_OBJS_FILES)
 dependency_files = $(OBJ_FILES:%.o=%.d)
 
 ifeq ($(USE_ULIBC_FILE), 1)
@@ -76,7 +85,7 @@ libc:
 CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include
 $(BUILD_DIR)/%.o : %.c
 	@mkdir -p $(@D)
-	@gcc $(CFLAGS) -MMD -c $< -o $@
+	@gcc $(CFLAGS) $(EXTRA_FLAGS) -MMD -c $< -o $@
 	@echo "CC      $<"
 
 $(BUILD_DIR)/image/%.o : image/%.bin
@@ -143,12 +152,3 @@ gdb: all
 
 s: all
 		$(LA_QEMU) -nographic -m 2G -cpu Loongson-3A5000 -serial mon:stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a,kernel_irqchip=off -kernel $(bmbt) -S -s;
-
-defrun: $(bmbt)
-	 $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt) $(DEF)
-
-# dubug:
-	# qemu-system-loongarch64 -nographic -m 2G -cpu Loongson-3A5000 -serial mon:stdio -bios ~/research/qemu-la/pc-bios/loongarch_bios.bin --enalbe-kvm -M loongson7a,kernel_irqchip=off -kernel ~/research/bmbt/timer-interrupt/hello_period.elf -s -S
-#
-# gdb:
-	# loongarch64-linux-gnu-gdb $(hello_period) -ex "target remote:1234" -ex "b start_entry" -ex "continue"

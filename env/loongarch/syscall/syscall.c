@@ -1,7 +1,7 @@
 #include "internal.h"
 #include <asm/config.h>
 #include <bits/syscall.h>
-#include <stack.h>
+#include <linux/stack.h>
 #include <stdint.h>
 #include <unistd.h>
 

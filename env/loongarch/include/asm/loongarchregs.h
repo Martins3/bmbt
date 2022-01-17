@@ -10,8 +10,8 @@
 #define _ASM_LOONGARCHREGS_H
 #include "addrspace.h"
 #include "config.h"
-#include <bits.h>
-#include <kernel-type.h>
+#include <linux/bits.h>
+#include <linux/type.h>
 
 #ifdef __clang__
 static inline u32 __cpucfg(u32 reg) { return 0; }

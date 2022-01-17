@@ -1,6 +1,6 @@
 #include "internal.h"
 #include <asm/addrspace.h>
-#include <pfn.h>
+#include <linux/pfn.h>
 #include <qemu/config-target.h>
 #include <qemu/queue.h>
 #include <qemu/units.h>
@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+
+bool mmap_ready = false;
 
 size_t size_code_gen_buffer(size_t tb_size);
 
@@ -87,6 +89,7 @@ static const unsigned long valid_flags = (MAP_PRIVATE | MAP_ANON);
 long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
                  long arg5, long arg6) {
 
+  duck_assert(mmap_ready);
   unsigned long addr = arg0;
   unsigned long len = arg1;
   unsigned long prot = arg2;

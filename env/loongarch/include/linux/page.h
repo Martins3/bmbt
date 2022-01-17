@@ -2,8 +2,9 @@
 #define PAGE_H_WY7U6KLT
 
 #include <asm/loongarchregs.h>
-#include <const.h>
+#include <linux/const.h>
 
+// TMP_TODO : 这个文件在 asm 下面的
 #ifdef CONFIG_PAGE_SIZE_4KB
 #define PAGE_SHIFT 12
 #endif

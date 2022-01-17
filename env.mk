@@ -50,11 +50,9 @@ ifeq ($(ENV_KERNEL), 1)
   	$(error there's no glibc in baremetal)
   endif
   LDFLAGS = -T env/loongarch/linker.ld
-  ENV_SRC_FILES += $(wildcard env/loongarch/*/*.c)
-
-  ASM_SRC_FILES += $(wildcard env/loongarch/*.S)
+  ASM_SRC_FILES += $(wildcard env/loongarch/kernel/*.S)
   ENV_CFLAGS += -DENV_KERNEL -I./env/loongarch/include/
-	ENV_CFLAGS += -isystem /usr/lib/gcc/loongarch64-linux-gnu/8/include
+  ENV_CFLAGS += -isystem /usr/lib/gcc/loongarch64-linux-gnu/8/include
 else
   ENV_CFLAGS += -DENV_USERSPACE
   ENV_APPENDIX=userspace
