@@ -4,9 +4,9 @@
 
 #include <asm/mach-la64/boot_param.h>
 #include <asm/mach-la64/loongson.h>
+#include <autoconf.h>
 #include <stdbool.h>
 
-#define CONFIG_CPU_LOONGSON64
 #ifdef CONFIG_CPU_LOONGSON64
 
 #define MSI_IRQ_BASE_DEFAULT 64
@@ -106,8 +106,8 @@ extern struct pch_pic_irq *pch_pic_irq_routing(int pch_pic);
 extern void register_pch_pic(int id, u32 address, u32 irq_base);
 #ifdef TMP_TODO
 extern int liointc_init(struct resource *res, int parent_irq_num,
-                               u32 *parent_irq, u32 *parent_int_map,
-                               struct fwnode_handle *domain_handle, int model);
+                        u32 *parent_irq, u32 *parent_int_map,
+                        struct fwnode_handle *domain_handle, int model);
 extern int pch_msi_init(struct fwnode_handle *irq_handle,
                         struct fwnode_handle *parent_handle, u64 msg_address,
                         bool ext, int start, int count);

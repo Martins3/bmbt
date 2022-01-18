@@ -11,7 +11,12 @@
 #define MAKE_64BIT_MASK(shift, length) (((~0ULL) >> (64 - (length))) << (shift))
 
 #define BITS_PER_BYTE CHAR_BIT
+#ifdef ENV_KERNEL
+#include <autoconf.h>
+#define BITS_PER_LONG _LOONGARCH_SZLONG
+#else
 #define BITS_PER_LONG (sizeof(unsigned long) * BITS_PER_BYTE)
+#endif
 #define BIT_WORD(nr) ((nr) / BITS_PER_LONG)
 #define BIT_WORD(nr) ((nr) / BITS_PER_LONG)
 #define BITS_TO_LONGS(nr) DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
