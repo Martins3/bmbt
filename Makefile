@@ -103,7 +103,7 @@ $(bmbt) : $(OBJ_FILES) libc capstone
 		@if [ $(USE_LIBC) != 1 ]; then \
 			ld $(LDFLAGS) $(FS_SYSCALL_WRAP) -o $(bmbt) $(OBJ_FILES) $(LIB_CAPSTONE) $(LIB_C) /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a; \
 		else \
-			gcc $(GCC_LFLAGS) $(FS_SYSCALL_WRAP) $(OBJ_FILES) $(LIB_CAPSTONE) -o $(bmbt);\
+			gcc $(FS_SYSCALL_WRAP) $(OBJ_FILES) $(LIB_CAPSTONE) $(GCC_LFLAGS) -o $(bmbt);\
 		fi
 		@echo "Link      $@"
 

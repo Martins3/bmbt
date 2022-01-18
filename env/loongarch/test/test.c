@@ -80,7 +80,7 @@ TEST test_interrupt(void) {
   PASS();
 }
 
-SUITE(kvm_env) {
+SUITE(env_test) {
   // RUN_TEST(test_mmap);
   RUN_TEST(test_float);
   RUN_TEST(test_interrupt);
