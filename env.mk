@@ -62,6 +62,13 @@ endif
 UNAME := $(shell uname -a)
 ifneq (,$(findstring x86_64, $(UNAME)))
   ARCH_APPENDIX := x86
+  ifeq ($(ENV_KERNEL), 1)
+  	$(error "x86 doesn't support kernel mode")
+  endif
+
+  ifeq ($(USE_LIBC), 0)
+  	$(error "x86 need libc to compile")
+  endif
 endif
 
 BUILD_DIR := $(BASE_DIR)/build_$(ARCH_APPENDIX)_$(ENV_APPENDIX)_$(LIBC_APPENDIX)_$(GLIB_APPENDIX)
