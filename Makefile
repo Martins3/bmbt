@@ -59,6 +59,8 @@ endif
 
 all: check-and-reinit-submodules check-pre-commit $(bmbt)
 
+-include $(dependency_files)
+
 # https://stackoverflow.com/questions/52337010/automatic-initialization-and-update-of-submodules-in-makefile
 .PHONY: check-and-reinit-submodules check-pre-commit
 check-and-reinit-submodules:
@@ -81,6 +83,11 @@ libc:
 	@if [ $(USE_LIBC) != 1 ]; then \
 		$(MAKE) -f libc/libc.mk; \
 	fi
+
+env/loongarch/include/generated/asm-offset.h: env/loongarch/include/asm/ptrace.h
+	@echo "GENERATE $<"
+	@gcc -Ienv/loongarch/include env/loongarch/asm-offset.c -o $(BUILD_DIR)/asm-offset.out
+	@$(BUILD_DIR)/asm-offset.out
 
 CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include
 $(BUILD_DIR)/%.o : %.c
@@ -123,10 +130,6 @@ clean:
 clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
 
-
-QEMU=~/core/ld/qemu_bak/mybuild/loongson-softmmu/qemu-system-loongson
-DEF = ../../qemu_bak/vmlinux
-
 QEMU_DIR=/home/loongson/core/centos-qemu
 LA_BIOS=$(QEMU_DIR)/pc-bios/loongarch_bios.bin
 LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
@@ -137,13 +140,11 @@ run: all clear_gcda
 	else \
 		$(bmbt); \
 	fi
-	@# $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(bmbt)
 
 test: all clear_gcda
 	$(bmbt)
 
 gdb: all
-	@#gdb --args $(QEMU) -m 1024 -M ls3a5k -d in_asm,out_asm -D log.txt -monitor stdio -bmbt $(DEF)
 	if [[ $(ENV_KERNEL) == 1 ]];then \
 		gdb $(bmbt) -ex "target remote :1234"; \
 	else \

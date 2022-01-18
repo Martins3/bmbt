@@ -4,7 +4,7 @@ BASE_DIR := $(shell pwd)
 ARCH_APPENDIX :=loongson
 CFLAGS := -g -Wall -O0 -Werror
 
-ENV_KERNEL ?= 1
+ENV_KERNEL ?= 0
 
 USE_LIBC ?= 0
 USE_GLIB ?= 0
@@ -25,8 +25,8 @@ else
   endif
 endif
 
-# gcov use file related syscall
 ifeq ($(USE_ULIBC_FILE), 1)
+  # gcov use file related syscall
   GCOV_CFLAGS=
   GCOV_LFLAGS=
   CFLAGS += -DUSE_ULIBC_FILE
@@ -50,7 +50,7 @@ ifeq ($(ENV_KERNEL), 1)
   	$(error there's no glibc in baremetal)
   endif
   LDFLAGS = -T env/loongarch/linker.ld
-  ASM_SRC_FILES += $(wildcard env/loongarch/kernel/*.S)
+  ASM_SRC_FILES += $(wildcard env/loongarch/*/*.S)
   ENV_CFLAGS += -DENV_KERNEL -I./env/loongarch/include/
   ENV_CFLAGS += -isystem /usr/lib/gcc/loongarch64-linux-gnu/8/include
 else

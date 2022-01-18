@@ -1,11 +1,11 @@
 #include <asm/loongarchregs.h>
 #include <asm/regdef.h>
-#include <asm/config.h>
 #include <asm/asm.h>
 #include <linux/stack.h>
+#include <linux/linkage.h>
 .section .text
 
-ENTRY(start_entry)
+SYM_CODE_START(start_entry)
 	la t0, __bss_start		# clear .bss
 	st.d		zero, t0, 0
 	la.abs t1, __bss_stop - LONGSIZE
@@ -30,7 +30,6 @@ ENTRY(start_entry)
 	# 0x9000 xxxx xxxx xxxx
 	li.d	t0, CSR_DMW1_INIT	# CA, PLV0
 	csrwr	t0, LOONGARCH_CSR_DMWIN1
-	// @todo enable PG?
 	# Enable PG
 	li.w	t0, 0xb0		# PLV=0, IE=0, PG
 	csrwr	t0, LOONGARCH_CSR_CRMD
@@ -46,4 +45,4 @@ ENTRY(start_entry)
 	li.d fp, 0
 
 	b start_kernel
-END(start_entry)
+SYM_CODE_END(start_entry)

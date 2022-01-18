@@ -1,7 +1,9 @@
 #ifndef ADDRSPACE_H_JZKUY25P
 #define ADDRSPACE_H_JZKUY25P
 
-#include "./loongarchregs.h"
+#include <asm/loongarchregs.h>
+
+#define DMW_PABITS 48
 
 #ifndef UNCAC_BASE
 #define UNCAC_BASE CSR_DMW0_BASE

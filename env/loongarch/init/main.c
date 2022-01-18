@@ -1,5 +1,4 @@
 #include <asm/addrspace.h>
-#include <asm/config.h>
 #include <linux/cpu.h>
 #include <linux/page.h>
 #include <linux/stack.h>
