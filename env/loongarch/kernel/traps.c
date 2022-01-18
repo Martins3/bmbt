@@ -5,6 +5,7 @@
 
 #include <asm/cacheflush.h>
 #include <asm/loongarchregs.h>
+#include <asm/ptrace.h>
 #include <asm/setup.h>
 #include <larchintrin.h>
 #include <linux/compiler_types.h>
@@ -13,44 +14,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern void handle_ade(void);
-extern void handle_ale(void);
-extern void handle_sys(void);
-extern void handle_sys_wrap(void);
-extern void handle_bp(void);
-extern void handle_ri(void);
-extern void handle_fpu(void);
-extern void handle_fpe(void);
-extern void handle_lbt(void);
-extern void handle_lsx(void);
-extern void handle_lasx(void);
 extern void handle_reserved(void);
-extern void handle_watch(void);
-extern void tlb_do_page_fault_protect(void);
 extern void *vector_table[];
 
 void *exception_table[EXCCODE_INT_START] = {
-#ifdef TMP_TODO
     [0 ... EXCCODE_INT_START - 1] = handle_reserved,
-
-    [EXCCODE_TLBL] = handle_tlb_load,
-    [EXCCODE_TLBS] = handle_tlb_store,
-    [EXCCODE_TLBI] = handle_tlb_load,
-    [EXCCODE_TLBM] = handle_tlb_modify,
-    [EXCCODE_TLBRI... EXCCODE_TLBPE] = tlb_do_page_fault_protect,
-    [EXCCODE_ADE] = handle_ade,
-    [EXCCODE_ALE] = handle_ale,
-    [EXCCODE_SYS] = handle_sys_wrap,
-    [EXCCODE_BP] = handle_bp,
-    [EXCCODE_INE] = handle_ri,
-    [EXCCODE_IPE] = handle_ri,
-    [EXCCODE_FPDIS] = handle_fpu,
-    [EXCCODE_LSXDIS] = handle_lsx,
-    [EXCCODE_LASXDIS] = handle_lasx,
-    [EXCCODE_FPE] = handle_fpe,
-    [EXCCODE_WATCH] = handle_watch,
-    [EXCCODE_BTDIS] = handle_lbt,
-#endif
 };
 
 static inline void setup_vint_size(unsigned int size) {
@@ -91,6 +59,7 @@ void set_vi_handler(int n, vi_handler_t addr) {
 }
 
 extern void kernel_tlb_init(int cpu);
+extern void cache_error_setup(void);
 
 long exception_handlers[VECSIZE * 128 / sizeof(long)] __aligned(SZ_64K);
 
@@ -117,6 +86,20 @@ void set_handler(unsigned long offset, void *addr, unsigned long size) {
   local_flush_icache_range(eentry + offset, eentry + offset + size);
 }
 
+/*
+ * Install uncached CPU exception handler.
+ * This is suitable only for the cache error exception which is the only
+ * exception handler that is being run uncached.
+ */
+void set_merr_handler(unsigned long offset, void *addr, unsigned long size) {
+  unsigned long uncached_eentry = TO_UNCAC(TO_PHYS(eentry));
+
+  if (!addr)
+    abort();
+
+  memcpy((void *)(uncached_eentry + offset), addr, size);
+}
+
 void set_tlb_handler(void) {
   int i;
 
@@ -141,6 +124,57 @@ void trap_init(void) {
   for (i = EXCCODE_ADE; i <= EXCCODE_WATCH; i++)
     set_handler(i * VECSIZE, exception_table[i], VECSIZE);
 
-  // TMP_TODO 暂时不去处理的函数，当
-  // cache_error_setup();
+  cache_error_setup();
+}
+
+static void show_regs(struct pt_regs *regs) {
+  const int field = 2 * sizeof(unsigned long);
+  unsigned int excsubcode;
+  unsigned int exccode;
+  int i;
+
+  /*
+   * Saved main processor registers
+   */
+  for (i = 0; i < 32;) {
+    if ((i % 4) == 0)
+      printf("$%2d   :", i);
+    printf(" %0*lx", field, regs->regs[i]);
+
+    i++;
+    if ((i % 4) == 0)
+      printf("\n");
+  }
+
+  /*
+   * Saved csr registers
+   */
+  printf("era   : %0*lx %pS\n", field, regs->csr_era, (void *)regs->csr_era);
+  printf("ra    : %0*lx %pS\n", field, regs->regs[1], (void *)regs->regs[1]);
+
+  printf("CSR crmd: %08lx	", regs->csr_crmd);
+  printf("CSR prmd: %08lx	", regs->csr_prmd);
+  printf("CSR ecfg: %08lx	", csr_readq(LOONGARCH_CSR_ECFG));
+  printf("CSR estat: %08lx	", regs->csr_estat);
+  printf("CSR euen: %08lx	", regs->csr_euen);
+
+  printf("\n");
+
+  exccode = ((regs->csr_estat) & CSR_ESTAT_EXC) >> CSR_ESTAT_EXC_SHIFT;
+  excsubcode =
+      ((regs->csr_estat) & CSR_ESTAT_ESUBCODE) >> CSR_ESTAT_ESUBCODE_SHIFT;
+  printf("ExcCode : %x (SubCode %x)\n", exccode, excsubcode);
+
+  if (exccode >= EXCCODE_TLBL && exccode <= EXCCODE_ALE)
+    printf("BadVA : %0*lx\n", field, regs->csr_badv);
+}
+
+void do_reserved(struct pt_regs *regs) {
+  /*
+   * Game over - no way to handle this if it ever occurs.	 Most probably
+   * caused by a new unknown cpu type or after another deadly
+   * hard/software error.
+   */
+  show_regs(regs);
+  abort();
 }

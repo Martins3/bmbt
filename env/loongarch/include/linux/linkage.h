@@ -2,9 +2,16 @@
 #define LINKAGE_H_1RQOMEAD
 #include <asm/linkage.h>
 
+#define ALIGN __ALIGN
+
 /* Some toolchains use other characters (e.g. '`') to mark new line in macro */
 #ifndef ASM_NL
 #define ASM_NL ;
+#endif
+
+/* SYM_T_FUNC -- type used by assembler to mark functions */
+#ifndef SYM_T_FUNC
+#define SYM_T_FUNC				STT_FUNC
 #endif
 
 /* SYM_A_* -- align the symbol? */

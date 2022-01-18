@@ -9,7 +9,6 @@
 #ifndef _ASM_LOONGARCHREGS_H
 #define _ASM_LOONGARCHREGS_H
 #include "addrspace.h"
-#include "config.h"
 #include <linux/bits.h>
 #include <linux/type.h>
 

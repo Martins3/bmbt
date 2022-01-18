@@ -20,3 +20,4 @@ pc-bios/linuxboot_dma.img
 *.cpio.gz
 
 *.qcow2
+env/loongarch/include/generated

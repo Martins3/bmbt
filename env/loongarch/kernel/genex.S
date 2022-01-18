@@ -1,4 +1,11 @@
 #include <linux/linkage.h>
+#include <asm/unwind_hints.h>
+#include <asm/stackframe.h>
+
+SYM_FUNC_START(except_vec_cex)
+	b	handle_reserved
+	nop
+SYM_FUNC_END(except_vec_cex)
 
 	.macro	__build_clear_sti
 	STI
