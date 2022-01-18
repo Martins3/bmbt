@@ -1,0 +1,18 @@
+// @todo design a better way to include
+
+#ifndef AUTOCONF_H_PX8WHTBN
+#define AUTOCONF_H_PX8WHTBN
+
+#define CONFIG_L1_CACHE_SHIFT 6
+#define CONFIG_PAGE_SIZE_16KB 1
+#define CONFIG_CPU_LOONGSON64 1
+#define CONFIG_CPU_HAS_LSX 1
+#define CONFIG_CPU_HAS_LASX 1
+#define CONFIG_CPU_HAS_LBT 1
+#define CONFIG_NR_CPUS 1
+#define CONFIG_64BIT 1
+
+#define _LOONGARCH_SZLONG 64
+#define _LOONGARCH_SZPTR 64
+
+#endif /* end of include guard: AUTOCONF_H_PX8WHTBN */

@@ -1,27 +1,32 @@
 #include "../../include/qemu/host-utils.h"
 #include <assert.h>
+#include <unistd.h>
 
 int qemu_icache_linesize = 0;
 int qemu_icache_linesize_log;
 int qemu_dcache_linesize = 0;
 int qemu_dcache_linesize_log;
 
+#ifdef ENV_KERNEL
+#include <autoconf.h>
 static void sys_cache_info(int *isize, int *dsize) {
-  // @todo reimplement cache info in kernle mode
-  // typically icache size and dcache size are 64 byte
-  // get cache info in bare metal is difficult
+  *isize = 1 << CONFIG_L1_CACHE_SHIFT;
+  *dsize = 1 << CONFIG_L1_CACHE_SHIFT;
+}
+
+#elif defined(ENV_USERSPACE)
+static void sys_cache_info(int *isize, int *dsize) {
 #ifdef _SC_LEVEL1_ICACHE_LINESIZE
   *isize = sysconf(_SC_LEVEL1_ICACHE_LINESIZE);
-#else
-  *isize = 64;
 #endif
 
 #ifdef _SC_LEVEL1_DCACHE_LINESIZE
   *dsize = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-#else
-  *isize = 64;
 #endif
 }
+#else
+#error unknown env
+#endif
 
 static void arch_cache_info(int *isize, int *dsize) {}
 

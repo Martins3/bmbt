@@ -1,8 +1,7 @@
 #ifndef ASM_H_LOAQNS21
 #define ASM_H_LOAQNS21
 
-#define _LOONGARCH_SZLONG 64
-#define _LOONGARCH_SZPTR 64
+#include <autoconf.h>
 
 #if (_LOONGARCH_SZLONG == 64)
 #define LONG_ADDU add.d

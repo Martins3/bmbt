@@ -11,6 +11,7 @@
 #include "addrspace.h"
 #include <linux/bits.h>
 #include <linux/type.h>
+#include <autoconf.h>
 
 #ifdef __clang__
 static inline u32 __cpucfg(u32 reg) { return 0; }
@@ -1587,8 +1588,6 @@ __BUILD_GCSR_OP(tlbidx)
 
 #define PS_MASK 0x3f000000
 #define PS_SHIFT 24
-
-#define CONFIG_PAGE_SIZE_16KB
 
 /*
  * Default page size for a given kernel configuration
