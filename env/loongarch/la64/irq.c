@@ -1,0 +1,168 @@
+#include <asm/loongarchregs.h>
+#include <asm/mach-la64/irq.h>
+#include <asm/mach-la64/loongson-pch.h>
+#include <asm/setup.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int nr_pch_pics;
+#define for_each_pch_pic(idx) for ((idx) = 0; (idx) < nr_pch_pics; (idx)++)
+#define MSI_IRQ_NR_64 64
+#define MSI_IRQ_NR_192 192
+#define MSI_IRQ_NR_224 224
+#define LIOINTC_MEM_SIZE 0x80
+#define LIOINTC_VECS_TO_IP2 0x00FFFFFE /* others */
+#define LIOINTC_VECS_TO_IP3 0xFF000000 /* HT1 0-7 */
+#define PCH_PIC_SIZE 0x400
+extern const struct plat_smp_ops *mp_ops;
+u64 liointc_base = LIOINTC_DEFAULT_PHYS_BASE;
+static int msi_irqbase;
+
+static enum pch_irq_route_model_id pch_irq_route_model = PCH_IRQ_ROUTE_EXT;
+enum pch_irq_route_model_id get_irq_route_model(void) {
+  return pch_irq_route_model;
+}
+
+static struct pch_pic {
+  /*
+   * # of IRQ routing registers
+   */
+  int nr_registers;
+
+  /* pch pic config */
+  struct pch_pic_config config;
+  /* pch pic irq routing info */
+  struct pch_pic_irq irq_config;
+} pch_pics[MAX_PCH_PICS];
+
+struct pch_pic_irq *pch_pic_irq_routing(int pch_pic_idx) {
+  return &pch_pics[pch_pic_idx].irq_config;
+}
+
+int pch_pic_id(int pch_pic_idx) {
+  return pch_pics[pch_pic_idx].config.pch_pic_id;
+}
+
+unsigned long pch_pic_addr(int pch_pic_idx) {
+  return pch_pics[pch_pic_idx].config.pch_pic_addr;
+}
+
+static int bad_pch_pic(unsigned long address) {
+  if (nr_pch_pics >= MAX_PCH_PICS) {
+    printf(
+        "WARNING: Max # of I/O PCH_PICs (%d) exceeded (found %d), skipping\n",
+        MAX_PCH_PICS, nr_pch_pics);
+    abort();
+    return 1;
+  }
+  if (!address) {
+    printf("WARNING: Bogus (zero) I/O PCH_PIC address found in table, "
+           "skipping!\n");
+    abort();
+    return 1;
+  }
+  return 0;
+}
+#define pch_pic_ver(pch_pic_idx) pch_pics[pch_pic_idx].config.pch_pic_ver
+
+void register_pch_pic(int id, u32 address, u32 irq_base) {
+  int idx = 0;
+  int entries;
+  struct pch_pic_irq *irq_cfg;
+
+  if (bad_pch_pic(address))
+    return;
+
+  idx = nr_pch_pics;
+
+  pch_pics[idx].config.pch_pic_addr = address;
+  if (id) {
+    abort(); // bmbt : no support for numa
+    // pch_pics[idx].config.pch_pic_addr |= nid_to_addrbase(id) | HT1LO_OFFSET;
+  }
+  pch_pics[idx].config.pch_pic_id = id;
+  pch_pics[idx].config.pch_pic_ver = 0;
+
+  /*
+   * Build basic GSI lookup table to facilitate lookups
+   * and to prevent reprogramming of PCH_PIC pins (PCI GSIs).
+   */
+  /* irq_base is 32 bit address with acpi method */
+  entries = (((unsigned long)ls7a_readq(pch_pic_addr(idx)) >> 48) & 0xff) + 1;
+
+  irq_cfg = pch_pic_irq_routing(idx);
+  irq_cfg->irq_base = irq_base;
+  irq_cfg->irq_end = irq_base + entries - 1;
+  /*
+   * The number of PCH_PIC IRQ registers (== #pins):
+   */
+  pch_pics[idx].nr_registers = entries;
+
+  printf("PCH_PIC[%d]: pch_pic_id %d, version %d, address 0x%lx, IRQ %d-%d\n",
+         idx, pch_pic_id(idx), pch_pic_ver(idx), pch_pic_addr(idx),
+         irq_cfg->irq_base, irq_cfg->irq_end);
+
+  nr_pch_pics++;
+  msi_irqbase = entries;
+}
+
+static void irqchip_init_default(void) {
+#ifdef BMBT
+  loongarch_cpu_irq_init();
+  liointc_domain_init();
+  printf("Support EXT interrupt.\n");
+#ifdef CONFIG_LOONGARCH_EXTIOI
+  eiointc_domain_init();
+  pch_msi_domain_init(msi_irqbase, 256 - msi_irqbase);
+#endif
+  pch_pic_domains_init();
+  pch_lpc_domain_init();
+#endif
+}
+
+void setup_IRQ(void) {
+#ifdef TMP_TODO
+  // 这也太难了吧!
+  u64 node;
+
+  // TMP_TODO 所以正确的 model 是什么呀
+  // 暂时使用下面哪一个了
+  if (loongson_sysconf.is_soc_cpu)
+    pch_irq_route_model = PCH_IRQ_ROUTE_EXT_SOC;
+  else {
+    // TMP_TODO 这 TM 也太 hacking 了吧k
+    for_each_node(node) writel(
+        0x40000000 | (node << 12),
+        (volatile void __iomem *)(((node << 44) | LOONGSON_HT1_CFG_BASE) +
+                                  0x274));
+  }
+  if (!acpi_disabled) {
+    if (loongson_sysconf.bpi_version > BPI_VERSION_V1) {
+      irqchip_init();
+    } else {
+      irqchip_init_default();
+    }
+  } else if (loongson_fdt_blob != NULL) {
+    irqchip_init();
+  } else {
+    register_pch_pic(0, LS7A_PCH_REG_BASE, LOONGSON_PCH_IRQ_BASE);
+    irqchip_init_default();
+  }
+#endif
+  register_pch_pic(0, LS7A_PCH_REG_BASE, LOONGSON_PCH_IRQ_BASE);
+  irqchip_init_default();
+}
+
+void arch_init_irq(void) {
+  /*
+   * Clear all of the interrupts while we change the able around a bit.
+   * int-handler is not on bootstrap
+   */
+  clear_csr_ecfg(ECFG0_IM);
+  clear_csr_estat(ESTATF_IP);
+
+  /* machine specific irq init */
+  setup_IRQ();
+
+  set_csr_ecfg(ECFG0_IM);
+}

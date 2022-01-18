@@ -1,8 +1,8 @@
 #include <asm/cacheflush.h>
 #include <asm/loongarchregs.h>
+#include <asm/page.h>
 #include <asm/setup.h>
 #include <asm/tlb.h>
-#include <linux/page.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

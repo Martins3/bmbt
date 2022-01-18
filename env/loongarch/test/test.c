@@ -4,51 +4,84 @@
 #include <sys/mman.h>
 #include <unitest/greatest.h>
 
-void *alloc_pages(int x) {
-  void *p =
-      mmap(0, x << 14, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+typedef struct AllocatedMem {
+  QLIST_ENTRY(AllocatedMem) mem_next;
+  void *p;
+  int pages;
+} AllocatedMem;
+
+QLIST_HEAD(, AllocatedMem) free_nodes;
+QLIST_HEAD(, AllocatedMem) allocated_pool;
+
+#define NODE_NUM 1000
+#define MAX_SIZE 10
+static AllocatedMem nodes[NODE_NUM];
+
+static void *mmap_pages(int x) {
+  void *p = mmap(0, x << PAGE_SHIFT, PROT_READ | PROT_WRITE,
+                 MAP_PRIVATE | MAP_ANON, -1, 0);
   assert(p != NULL);
   return p;
 }
 
-void free_pages(void *addr, size_t x) { munmap(addr, x); }
+static AllocatedMem *alloc_pages(int num) {
+  AllocatedMem *node = QLIST_FIRST(&free_nodes);
+  if (node == NULL)
+    return NULL;
 
-typedef struct AllocatedMem {
-  QLIST_ENTRY(AllocatedMem) mem_next;
-  void *p;
-} AllocatedMem;
-
-QLIST_HEAD(, AllocatedMem) pool;
-// AllocatedMem nodes[1000];
-TEST test_mmap(void) {
-  QLIST_INIT(&pool);
-
-  printf("huxueshi:%s before \n", __FUNCTION__);
-  char *p = (char *)alloc_pages(2);
-  for (int i = 0; i < 2; ++i) {
+  char *p = (char *)mmap_pages(num);
+  for (int i = 0; i < num; ++i) {
     p[PAGE_SIZE * i] = '0';
   }
-  printf("huxueshi:%s after \n", __FUNCTION__);
 
-  // for (int i = 0; i < 1000; ++i) {
-  // int x = rand();
-  // void *p = alloc_pages(x % 1000);
-  // QLIST_INSERT_HEAD(&pool, elm, field)
-  // if (x % 7 == 1) {
-  // }
-  // }
+  QLIST_INSERT_HEAD(&allocated_pool, node, mem_next);
+  return node;
+}
+
+static void free_pages() {
+  if (QLIST_EMPTY(&allocated_pool)) {
+  }
+
+  AllocatedMem *node;
+  QLIST_FOREACH(node, &allocated_pool, mem_next) {}
+}
+
+static void init_pools() {
+  QLIST_INIT(&free_nodes);
+  QLIST_INIT(&allocated_pool);
+  for (int i = 0; i < NODE_NUM; ++i) {
+    QLIST_INSERT_HEAD(&free_nodes, &nodes[i], mem_next);
+  }
+}
+
+// TMP_TODO it's unfinished
+TEST test_mmap(void) {
+  init_pools();
+
+  for (int i = 0; i < NODE_NUM; ++i) {
+    alloc_pages(rand() % MAX_SIZE);
+    if (i % 7 == 1) {
+      free_pages();
+    }
+  }
   PASS();
 }
 
 TEST test_float(void) {
-  printf("huxueshi:%s \n", __FUNCTION__);
   float x = 2.0;
   float y = 3.0;
-  printf("huxueshi:%s %f\n", __FUNCTION__, x + y);
+  printf("%s %f\n", __FUNCTION__, x + y);
+  PASS();
+}
+
+TEST test_interrupt(void) {
+  printf("CSR ecfg: %08lx	", csr_readq(LOONGARCH_CSR_ECFG));
+  ASSERT_EQ(csr_readq(LOONGARCH_CSR_ECFG), 0x70000);
   PASS();
 }
 
 SUITE(kvm_env) {
-  RUN_TEST(test_mmap);
+  // RUN_TEST(test_mmap);
   RUN_TEST(test_float);
+  RUN_TEST(test_interrupt);
 }

@@ -83,5 +83,6 @@ struct loongsonlist_mem_map {
 } __attribute__((packed));
 
 extern struct loongsonlist_mem_map *loongson_mem_map;
+extern struct loongson_system_configuration loongson_sysconf;
 
 #endif /* end of include guard: BOOT_PARAM_H_UOQ1F6AT */
