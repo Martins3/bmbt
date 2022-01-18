@@ -26,7 +26,7 @@ else
 endif
 
 ifeq ($(USE_ULIBC_FILE), 1)
-  # gcov use file related syscall
+  # gcov use file related syscall, but ulibc file implementation rewrite them
   GCOV_CFLAGS=
   GCOV_LFLAGS=
   CFLAGS += -DUSE_ULIBC_FILE

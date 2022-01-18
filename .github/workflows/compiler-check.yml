@@ -23,10 +23,18 @@ jobs:
         touch image/linuxboot_dma.bin
         touch image/bzImage.bin
     - name: 00
-      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=0
+      run: |
+        make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=0
+        make clean
     - name: 01
-      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=1
+      run: |
+        make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=1
+        make clean
     - name: 10
-      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=1 USE_ULIBC_FILE=0
+      run: |
+        make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=1 USE_ULIBC_FILE=0
+        make clean
     - name: 11
-      run: make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=1 USE_ULIBC_FILE=1
+      run: |
+        make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=1 USE_ULIBC_FILE=1
+        make clean
