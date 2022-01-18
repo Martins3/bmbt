@@ -35,9 +35,7 @@ typedef struct FreeMem {
 QLIST_HEAD(, FreeMem) free_mem;
 QLIST_HEAD(, FreeMem) free_nodes;
 
-// TMP_TODO : 如果需要这么大的 pool size
-// 那么我们需要重新分析一下了这种模型真的好吗 至少搞一些简单优化吧
-#define POOL_SIZE (100)
+#define POOL_SIZE (20)
 static FreeMem node_pool[POOL_SIZE];
 
 static void init_node_pool() {
