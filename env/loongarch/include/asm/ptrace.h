@@ -23,6 +23,7 @@ struct pt_regs {
   unsigned long orig_a0;
 
   unsigned long csr_tlbera;
+  unsigned long csr_tlbrprmd;
 
   unsigned long __last[0];
 } __attribute__((aligned(8)));

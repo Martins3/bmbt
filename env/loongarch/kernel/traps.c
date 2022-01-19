@@ -56,6 +56,8 @@ void set_vi_handler(int n, vi_handler_t addr) {
     return;
   }
 
+  printf("vi handler[%d] installed\n", n - EXCCODE_INT_START);
+
   ip_handlers[n - EXCCODE_INT_START] = addr;
 }
 
@@ -163,7 +165,11 @@ static void show_regs(struct pt_regs *regs, long is_tlbr) {
 
   printf("ra    : %0*lx %pS\n", field, regs->regs[1], (void *)regs->regs[1]);
   printf("CSR crmd: %08lx	", regs->csr_crmd);
-  printf("CSR prmd: %08lx	", regs->csr_prmd);
+  if (is_tlbr) {
+    printf("CSR tlbprmd: %08lx	", regs->csr_tlbrprmd);
+  } else {
+    printf("CSR prmd: %08lx	", regs->csr_prmd);
+  }
   printf("CSR ecfg: %08lx	", regs->csr_ecfg);
   printf("CSR estat: %08lx	", regs->csr_estat);
   printf("CSR euen: %08lx	", regs->csr_euen);

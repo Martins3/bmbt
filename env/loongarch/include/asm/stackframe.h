@@ -93,6 +93,7 @@
 		csrrd	t0, LOONGARCH_CSR_PRMD
 		LONG_S	t0, sp, PT_PRMD
 
+    // [BMBT_OPTIMIZE 3]
 		csrrd	t0, LOONGARCH_CSR_CRMD
 		LONG_S	t0, sp, PT_CRMD
 
@@ -110,6 +111,9 @@
 
 		csrrd	t0, LOONGARCH_CSR_TLBRERA
 		LONG_S	t0, sp, PT_TLBERA
+
+		csrrd	t0, LOONGARCH_CSR_TLBRPRMD
+		LONG_S	t0, sp, PT_TLBRPRMD
 
 		cfi_st	$r6, PT_R6, \docfi
 		cfi_st	ra, PT_R1, \docfi
@@ -170,7 +174,6 @@
 		LONG_L	v1, sp, PT_PRMD
     csrwr	v1, LOONGARCH_CSR_PRMD
 		LONG_L	v1, sp, PT_ERA
-    LONG_ADDIU v1, zero, 4
     csrwr	v1, LOONGARCH_CSR_ERA
 		cfi_ld	$r1, PT_R1, \docfi
 		cfi_ld	$r11, PT_R11, \docfi
