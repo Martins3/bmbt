@@ -1,11 +1,13 @@
 #include "internal.h"
 #include <bits/syscall.h>
+#include <linux/irqflags.h>
 #include <linux/stack.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
 
 // #define DEBUG_KERNEL_SYSCALL
+#define CHECK_SYSCALL_RECURSIVE
 
 static inline long *r_fp() {
   long *x;
@@ -62,12 +64,19 @@ void __duck_assert_fail(const char *expr, const char *file, int line,
   kernel_dump();
 }
 
+#ifdef CHECK_SYSCALL_RECURSIVE
 static int syscall_counter = 0;
+#endif
 long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
                     long arg5, long arg6, long sysno) {
-  // no recursive sycall
+#ifdef CHECK_SYSCALL_RECURSIVE
+  unsigned long flags;
+  // Of course, we can call printf in interrupt handler that interrupts printf.
+  // But it cause assert fail in recursive syscall checker
+  local_irq_save(flags);
   duck_assert(syscall_counter == 0);
   syscall_counter++;
+#endif
   long ret;
 #ifdef DEBUG_KERNEL_SYSCALL
   duck_printf("%ld: [0x%016lx], [0x%016lx], [0x%016lx], [0x%016lx], "
@@ -105,6 +114,10 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
     duck_printf("unsported syscall\n");
     kernel_dump();
   }
+#ifdef CHECK_SYSCALL_RECURSIVE
   syscall_counter--;
+  asm volatile("" ::: "memory");
+  local_irq_restore(flags);
+#endif
   return ret;
 }

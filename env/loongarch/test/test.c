@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <env-timer.h>
 #include <limits.h>
+#include <linux/irqflags.h>
 #include <qemu/queue.h>
 #include <sys/mman.h>
 #include <unitest/greatest.h>
@@ -91,11 +93,24 @@ TEST test_segmentfault(void) {
   PASS();
 }
 
+void hello() { printf("huxueshi:%s \n", __FUNCTION__); }
+
+TEST test_timer(void) {
+  setup_timer(hello);
+  printf("huxueshi:%s \n", __FUNCTION__);
+  local_irq_enable();
+
+  while (1)
+    ;
+  PASS();
+}
+
 SUITE(env_test) {
   printf("huxueshi:%s \n", __FUNCTION__);
   // RUN_TEST(test_mmap);
   // RUN_TEST(test_syscall);
   // RUN_TEST(test_segmentfault);
+  RUN_TEST(test_timer);
   RUN_TEST(test_float);
   RUN_TEST(test_interrupt);
 }

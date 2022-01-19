@@ -50,6 +50,7 @@ void output_ptreg_defines(FILE *f) {
   OFFSET(PT_ORIG_A0, pt_regs, orig_a0);
 
   OFFSET(PT_TLBERA, pt_regs, csr_tlbera);
+  OFFSET(PT_TLBRPRMD, pt_regs, csr_tlbrprmd);
   DEFINE(PT_SIZE, sizeof(struct pt_regs));
 }
 

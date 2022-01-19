@@ -1,6 +1,32 @@
+#include <asm/loongarchregs.h>
+#include <asm/mach-la64/irq.h>
+#include <asm/setup.h>
+#include <assert.h>
 #include <env-timer.h>
+#include <stdio.h>
 
-void setup_timer(TimerHandler handler) {}
+// TMP_TODO 现在都是仿照中写的 const timer 的，但是这种写法有问题
+// /home/maritns3/core/linux-4.19-loongson/arch/loongarch/kernel/time.c
+
+static TimerHandler signal_timer_handler;
+static void timer_handler(int irq) {
+  // TMP_TODO don't use hardcoded 11
+  assert(irq == 11);
+
+  /* Clear Timer Interrupt */
+  write_csr_tintclear(CSR_TINTCLR_TI);
+  enter_interrpt_context();
+  signal_timer_handler();
+  leave_interrpt_context();
+}
+
+void setup_timer(TimerHandler handler) {
+  signal_timer_handler = handler;
+  // TMP_TODO : 根本没有搞清楚 LOONGSON_TIMER_IRQ 和 11 之间的映射
+  // LOONGARCH_CPU_IRQ_BASE 为什么是 50，nmd!
+  set_vi_handler(64 + 11, timer_handler);
+}
+
 void soonest_interrupt_ns(long ns) {}
 void block_interrupt() {}
 void unblock_interrupt() {}
