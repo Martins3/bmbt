@@ -22,10 +22,7 @@ void start_kernel(void) {
   setup_arch(&command_line);
   trap_init();
   init_IRQ();
-
-  local_irq_enable();
-  while (1)
-    ;
+  // local_irq_enable();
 
   char *argv[] = {NULL};
   main(0, argv);

@@ -33,9 +33,9 @@ SYM_CODE_START(start_entry)
 	# Enable PG
 	li.w	t0, 0xb0		# PLV=0, IE=0, PG
 	csrwr	t0, LOONGARCH_CSR_CRMD
-	li.w    t0, 0xf                 # enable FP SXE ASXE BTE
+	li.d    t0, 0xf                 # enable FP SXE ASXE BTE
 	csrwr   t0, LOONGARCH_CSR_EUEN
-	li.w    t0, 0x0                 # clear all int and set vintsize=0
+	li.d    t0, 0x0                 # clear all int and set vintsize=0
 	csrwr   t0, LOONGARCH_CSR_ECFG
 
 	# init sp

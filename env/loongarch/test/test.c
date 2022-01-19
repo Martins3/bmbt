@@ -76,12 +76,26 @@ TEST test_float(void) {
 
 TEST test_interrupt(void) {
   printf("CSR ecfg: %08lx	", csr_readq(LOONGARCH_CSR_ECFG));
-  ASSERT_EQ(csr_readq(LOONGARCH_CSR_ECFG), 0x70000);
+  ASSERT_EQ(csr_readq(LOONGARCH_CSR_ECFG), 0x71fff);
+  PASS();
+}
+
+TEST test_syscall(void) {
+  asm volatile("syscall 0");
+  PASS();
+}
+
+TEST test_segmentfault(void) {
+  int *a = (void *)NULL;
+  a[0] = 12;
   PASS();
 }
 
 SUITE(env_test) {
+  printf("huxueshi:%s \n", __FUNCTION__);
   // RUN_TEST(test_mmap);
+  // RUN_TEST(test_syscall);
+  // RUN_TEST(test_segmentfault);
   RUN_TEST(test_float);
   RUN_TEST(test_interrupt);
 }

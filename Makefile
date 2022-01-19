@@ -39,7 +39,7 @@ BIN_FILES = $(wildcard image/*.bin)
 ifeq ($(ENV_KERNEL), 1)
   KERNEL_SRC_FILES += $(wildcard env/loongarch/*/*.c)
   KERNEL_OBJS_FILES=$(KERNEL_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
-  $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O2
+  $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O2 -fno-omit-frame-pointer
 endif
 
 CONFIG_LATX=y

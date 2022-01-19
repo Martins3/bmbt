@@ -12,6 +12,7 @@ extern void set_vi_handler(int n, vi_handler_t addr);
 
 extern unsigned long eentry;
 extern unsigned long tlbrentry;
+extern unsigned long tlbrentry_end;
 extern void cpu_cache_init(void);
 extern void per_cpu_trap_init(int cpu);
 extern void set_tlb_handler(void);

@@ -1,6 +1,7 @@
 #include "internal.h"
 #include <bits/syscall.h>
 #include <linux/stack.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
 
@@ -12,26 +13,34 @@ static inline long *r_fp() {
   return x;
 }
 
-void backtrace(void) {
-  duck_printf("backtrace:\n");
-  long *fp = r_fp();
+static inline bool in_stack(void *fp) {
+  return fp < (void *)kernel_stack + _THREAD_SIZE && fp >= (void *)kernel_stack;
+}
+
+void backtrace(long *fp) {
+  if (fp == NULL) {
+    fp = r_fp();
+  }
 
   while (fp != NULL) {
     void *fp_1 = (void *)*(fp - 1);
     void *fp_2 = (void *)*(fp - 2);
     void *ip = NULL;
     long *real_fp = NULL;
-    if (fp_1 < (void *)kernel_stack + _THREAD_SIZE &&
-        fp_1 >= (void *)kernel_stack) {
+    // if compiler think it's a leaf function
+    // ra register will not be preserved
+    if (in_stack(fp_1)) {
       real_fp = fp_1;
-    } else {
+    } else if (in_stack(fp_2)) {
       real_fp = fp_2;
       ip = fp_1;
+    } else {
+      duck_printf("---------------------\n");
+      break;
     }
 
     if (ip != NULL)
       duck_printf("%lx\n", ip);
-    // duck_printf("%lx\n", real_fp);
     fp = real_fp;
   }
 }
@@ -42,7 +51,8 @@ static _Noreturn void idle() {
 }
 
 _Noreturn void kernel_dump() {
-  backtrace();
+  long *fp = r_fp();
+  backtrace(fp);
   idle();
 }
 

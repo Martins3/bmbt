@@ -21,7 +21,11 @@ struct pt_regs {
   unsigned long csr_ecfg;
   unsigned long csr_estat;
   unsigned long orig_a0;
+
+  unsigned long csr_tlbera;
+
   unsigned long __last[0];
 } __attribute__((aligned(8)));
 
+void backtrace(long *fp);
 #endif /* end of include guard: PTRACE_H_RNPV8KSH */
