@@ -9,9 +9,9 @@
 #ifndef _ASM_LOONGARCHREGS_H
 #define _ASM_LOONGARCHREGS_H
 #include "addrspace.h"
+#include <autoconf.h>
 #include <linux/bits.h>
 #include <linux/type.h>
-#include <autoconf.h>
 
 #ifdef __clang__
 static inline u32 __cpucfg(u32 reg) { return 0; }

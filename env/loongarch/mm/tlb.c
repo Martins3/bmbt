@@ -12,9 +12,9 @@ void local_flush_tlb_all(void) { invtlb_all_atomic(INVTLB_CURRENT_ALL, 0, 0); }
 static void build_tlb_handler(int cpu) {
 
   if (cpu == 0) {
-
-    memcpy((void *)tlbrentry, handle_tlb_refill, 0x80);
-    local_flush_icache_range(tlbrentry, tlbrentry + 0x80);
+    long len = tlbrentry_end - tlbrentry;
+    memcpy((void *)tlbrentry, handle_tlb_refill, len);
+    local_flush_icache_range(tlbrentry, tlbrentry + len);
     set_tlb_handler();
 
 #ifdef BMBT

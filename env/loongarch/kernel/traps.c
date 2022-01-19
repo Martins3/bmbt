@@ -34,6 +34,7 @@ static inline void setup_vint_size(unsigned int size) {
 
 unsigned long eentry;
 unsigned long tlbrentry;
+unsigned long tlbrentry_end;
 
 static vi_handler_t ip_handlers[EXCCODE_INT_NUM];
 void do_vi(int irq) {
@@ -66,6 +67,8 @@ long exception_handlers[VECSIZE * 128 / sizeof(long)] __aligned(SZ_64K);
 static void configure_exception_vector(void) {
   eentry = (unsigned long)exception_handlers;
   tlbrentry = (unsigned long)exception_handlers + 80 * VECSIZE;
+  tlbrentry_end =
+      (unsigned long)exception_handlers + sizeof(exception_handlers);
 
   csr_writeq(eentry, LOONGARCH_CSR_EENTRY);
   csr_writeq(tlbrentry, LOONGARCH_CSR_TLBRENTRY);
@@ -127,11 +130,23 @@ void trap_init(void) {
   cache_error_setup();
 }
 
-static void show_regs(struct pt_regs *regs) {
+static void show_regs(struct pt_regs *regs, long is_tlbr) {
   const int field = 2 * sizeof(unsigned long);
   unsigned int excsubcode;
   unsigned int exccode;
   int i;
+
+  if (is_tlbr) {
+    printf("TLB refill exception\n");
+  } else {
+    exccode = ((regs->csr_estat) & CSR_ESTAT_EXC) >> CSR_ESTAT_EXC_SHIFT;
+    excsubcode =
+        ((regs->csr_estat) & CSR_ESTAT_ESUBCODE) >> CSR_ESTAT_ESUBCODE_SHIFT;
+    printf("ExcCode : %x (SubCode %x)\n", exccode, excsubcode);
+
+    if (exccode >= EXCCODE_TLBL && exccode <= EXCCODE_ALE)
+      printf("BadVA : %0*lx\n", field, regs->csr_badv);
+  }
 
   /*
    * Saved main processor registers
@@ -146,35 +161,29 @@ static void show_regs(struct pt_regs *regs) {
       printf("\n");
   }
 
-  /*
-   * Saved csr registers
-   */
-  printf("era   : %0*lx %pS\n", field, regs->csr_era, (void *)regs->csr_era);
   printf("ra    : %0*lx %pS\n", field, regs->regs[1], (void *)regs->regs[1]);
-
   printf("CSR crmd: %08lx	", regs->csr_crmd);
   printf("CSR prmd: %08lx	", regs->csr_prmd);
-  printf("CSR ecfg: %08lx	", csr_readq(LOONGARCH_CSR_ECFG));
+  printf("CSR ecfg: %08lx	", regs->csr_ecfg);
   printf("CSR estat: %08lx	", regs->csr_estat);
   printf("CSR euen: %08lx	", regs->csr_euen);
-
   printf("\n");
 
-  exccode = ((regs->csr_estat) & CSR_ESTAT_EXC) >> CSR_ESTAT_EXC_SHIFT;
-  excsubcode =
-      ((regs->csr_estat) & CSR_ESTAT_ESUBCODE) >> CSR_ESTAT_ESUBCODE_SHIFT;
-  printf("ExcCode : %x (SubCode %x)\n", exccode, excsubcode);
-
-  if (exccode >= EXCCODE_TLBL && exccode <= EXCCODE_ALE)
-    printf("BadVA : %0*lx\n", field, regs->csr_badv);
+  void backtrace(long *fp);
+  if (is_tlbr) {
+    printf("%08lx\n", regs->csr_tlbera);
+  } else {
+    printf("%08lx\n", regs->csr_era);
+  }
+  backtrace((long *)regs->regs[22]);
 }
 
-void do_reserved(struct pt_regs *regs) {
+void do_reserved(struct pt_regs *regs, long is_tlbr) {
   /*
    * Game over - no way to handle this if it ever occurs.	 Most probably
    * caused by a new unknown cpu type or after another deadly
    * hard/software error.
    */
-  show_regs(regs);
+  show_regs(regs, is_tlbr);
   abort();
 }

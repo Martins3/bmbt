@@ -7,24 +7,14 @@ SYM_FUNC_START(except_vec_cex)
 	nop
 SYM_FUNC_END(except_vec_cex)
 
-	.macro	__build_clear_sti
-	STI
-	.endm
-
-	.macro	__BUILD_verbose nexception
-	LONG_L	a1, sp, PT_ERA
-	PRINT("Got \nexception at %016lx\012")
-	.endm
-
 	.macro	__BUILD_HANDLER exception handler clear verbose ext
 	.align	5
 	SYM_FUNC_START(handle_\exception)
 	csrwr	t0, LOONGARCH_CSR_KS0
 	csrwr	t1, LOONGARCH_CSR_KS1
 	SAVE_ALL
-	__build_clear_\clear
-	__BUILD_\verbose \exception
 	move	a0, sp
+	li.d	a1, 0
 	la.abs	t0, do_\handler
 	jirl    ra, t0, 0
 	la.abs	t0, ret_from_exception

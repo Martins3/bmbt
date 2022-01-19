@@ -43,16 +43,4 @@
 #define PTRSIZE 8
 #define PTRLOG 3
 #endif
-
-#define PRINT(string)					\
-		la	a0, 8f;				 \
-		la.abs	t0, duck_printf;		\
-		jirl	ra, t0, 0;		\
-		TEXT(string)
-
-#define TEXT(msg)					\
-		.pushsection .data;			\
-8:		.asciz msg;				\
-		.popsection;
-
 #endif /* end of include guard: ASM_H_LOAQNS21 */

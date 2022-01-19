@@ -75,6 +75,7 @@
 		.endm
 
 		.macro	SAVE_SOME docfi=0
+		move	t0, sp
 		PTR_ADDIU sp, sp, -PT_SIZE
 		.if \docfi
 		.cfi_def_cfa 3,0
@@ -91,6 +92,25 @@
 		cfi_st	$r5, PT_R5, \docfi
 		csrrd	t0, LOONGARCH_CSR_PRMD
 		LONG_S	t0, sp, PT_PRMD
+
+		csrrd	t0, LOONGARCH_CSR_CRMD
+		LONG_S	t0, sp, PT_CRMD
+
+		csrrd	t0, LOONGARCH_CSR_EUEN
+		LONG_S	t0, sp, PT_EUEN
+
+		csrrd	t0, LOONGARCH_CSR_ECFG
+		LONG_S	t0, sp, PT_ECFG
+
+		csrrd	t0, LOONGARCH_CSR_ESTAT
+		LONG_S	t0, sp, PT_ESTAT
+
+		csrrd	t0, LOONGARCH_CSR_BADV
+		LONG_S	t0, sp, PT_BVADDR
+
+		csrrd	t0, LOONGARCH_CSR_TLBRERA
+		LONG_S	t0, sp, PT_TLBERA
+
 		cfi_st	$r6, PT_R6, \docfi
 		cfi_st	ra, PT_R1, \docfi
 		cfi_st	$r7, PT_R7, \docfi
@@ -105,6 +125,7 @@
 		.endif
 		cfi_st	tp, PT_R2, \docfi
 		cfi_st	fp, PT_R22, \docfi
+		cfi_st	$r21, PT_R21, \docfi
 
 		UNWIND_HINT_REGS
 		.endm
@@ -145,15 +166,12 @@
 		.endm
 
 		.macro	RESTORE_SOME docfi=0
+    cfi_ld  $r21, PT_R21, \docfi
 		LONG_L	v1, sp, PT_PRMD
-		/* coming from user mode should restore r21 */
-		andi    $r4, v1, 0x3
-		beqz    $r4, 1f
-		cfi_ld  $r21, PT_R21, \docfi
-		1 :
-		csrwr	v1, LOONGARCH_CSR_PRMD
+    csrwr	v1, LOONGARCH_CSR_PRMD
 		LONG_L	v1, sp, PT_ERA
-		csrwr	v1, LOONGARCH_CSR_ERA
+    LONG_ADDIU v1, zero, 4
+    csrwr	v1, LOONGARCH_CSR_ERA
 		cfi_ld	$r1, PT_R1, \docfi
 		cfi_ld	$r11, PT_R11, \docfi
 		cfi_ld	$r10, PT_R10, \docfi
