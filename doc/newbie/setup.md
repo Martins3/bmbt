@@ -25,6 +25,14 @@
 - hwbreak.patch
 - non_lazy_lbt.patch
 
+## 调试 kvm
+- kvm 修改为 modulus
+- sudo make install && sudo make modules_install
+- 重启
+- lsmod 查看 kvm 模块
+- sudo rmmod kvm 删除已经存在的 kvm 模块
+- sudo insmod ./arch/loongarch/kvm/kvm.ko 重新安装
+
 ### 找一个可以正确运行 KVM 的 QEMU
 clone 这个项目 http://rd.loongson.cn:8081/#/admin/projects/kernel/qemu
 

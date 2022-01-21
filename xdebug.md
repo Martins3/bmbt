@@ -5,11 +5,14 @@
 - [ ] 无法理解 cpu_probe 中为什么需要读取 csr_readq(LOONGARCH_CSR_ASID)
 - [ ] set_merr_handler 中的作用是什么?
 - [ ] 清理掉 #253
-
-在
-/home/maritns3/core/linux-4.19-loongson/arch/loongarch/kernel/genex.S 只是 exception 的入口而已
-
 - [ ] 给 kernel_stack 增加一个 canary 防止溢出
+
+## 基本的执行流程
+整个初始化的路径奇怪:
+
+- set_tlb_handler : 初始化部分
+- trap_init : 初始化所有的
+
 
 - [x] 6727ad9e206cc08b80d8000a4d67f8417e53539d : 好强的技巧
   - 将 cpu_idle 相关的函数放到一起的
@@ -24,10 +27,7 @@
 #5  0x9000000000203414 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
 ```
 ## 需要调整的东西
-- 分析一下 RESTORE_SP_AND_RET : 其中 eret 从而从而打开中断
-- get_saved_sp 中通过访问 kernelsp 获取每一个 core 的内核 stack
-- 内核什么时候初始化的 ECFG
-
+- [ ] 内核什么时候初始化的 ECFG
 
 ## 深入理解一下 interrupt 的过程
 - SAME_SOME : 如果当前是在用户态，那么需要首先切换到内核 stack 上，否则不用切换
@@ -141,3 +141,53 @@ static inline struct thread_info *task_thread_info(struct task_struct *task)
 
 - [x] 找到上下文切换的时候，tp 寄存器的切换
   - 在 loongarch/kernel/switch.S 中的确处理了
+
+## 记录
+正常状态的 crmd : b0 1011 0000
+进入到 tlb 的 crmd : a8 1010 1000
+
+正好是 PA 和 GA 之间的切换
+## 总结
+- tlb 拷贝长度不够
+- 对于内核的代码删除不够
+- macro 实际上修改了某些代码
+- 在 TLB refill 的时候不能 0x9000000006000080 这种虚拟地址
+  - 调用函数不能直接使用 b，而是 tlbera
+  - SAVE_ALL 之前需要修改 sp 的数值为物理数值
+- 使用 ertn 而不是 jmp 从而回复正常状态
+- 在 TLB refill 中的 era 是无意义的数值
+
+## one shot timer 被多次注入了
+- kvm_acquire_timer 总是会 enable hardware timer
+- 但是同时 lvz_irq_deliver 也是在注入中断的，我怀疑两个是互相冲突了发
+
+## 总是在注入中断
+```c
+/*
+kernel_syscall at /home/loongson/core/bmbt/env/loongarch/syscall/syscall.c:115
+libc_syscall1 at /home/loongson/core/bmbt/libc/src/internal/../bits/loongarch/syscall_arch.h:40
+_Exit at /home/loongson/core/bmbt/libc/src/exit/_Exit.c:5
+__assert_fail at ??:?
+a_ctz_32 at realloc.c:?
+time_init at /home/loongson/core/bmbt/env/loongarch/kernel/time.c:28
+timerlist_notify at /home/loongson/core/bmbt/src/util/qemu-timer.c:113
+timerlist_rearm at /home/loongson/core/bmbt/src/util/qemu-timer.c:121
+timer_mod_ns at /home/loongson/core/bmbt/src/util/qemu-timer.c:137
+timer_mod at /home/loongson/core/bmbt/src/util/qemu-timer.c:141
+check_update_timer at /home/loongson/core/bmbt/src/hw/rtc/mc146818rtc.c:159
+
+rtc_realizefn at /home/loongson/core/bmbt/src/hw/rtc/mc146818rtc.c:766 (discriminator 1)
+mc146818_rtc_init at /home/loongson/core/bmbt/src/hw/rtc/mc146818rtc.c:820 (discriminator 1)
+pc_basic_device_init at /home/loongson/core/bmbt/src/hw/i386/pc.c:1466
+pc_init1 at /home/loongson/core/bmbt/src/hw/i386/pc_piix.c:179 (discriminator 1)
+pc_init_v4_2 at /home/loongson/core/bmbt/src/hw/i386/pc_piix.c:274
+machine_run_board_init at /home/loongson/core/bmbt/src/hw/core/machine.c:222
+qemu_init at /home/loongson/core/bmbt/src/qemu/vl.c:317 (discriminator 1)
+test_qemu_init at /home/loongson/core/bmbt/src/main.c:148
+wip at /home/loongson/core/bmbt/src/main.c:161 (discriminator 3)
+greatest_run_suite at /home/loongson/core/bmbt/src/main.c:164 (discriminator 1)
+main at /home/loongson/core/bmbt/src/main.c:177
+start_kernel at /home/loongson/core/bmbt/env/loongarch/init/main.c:31
+*/
+```
+- [ ] 实际上，backtrace 有问题啊

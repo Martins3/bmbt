@@ -46,6 +46,8 @@ void tcg_register_thread(void) {
 - 将 libc 的锁被简化了
 - errno
 - qht
-- 没有再考虑内核中的 mttcg 中的问题
+- 没有再考虑内核中多核
+  - 没有多核启动
+  - head.S 和 genex.S 中的 entry 去掉了 CONFIG_SMP
 
 ## 出现需要 lock 的位置会被 BMBT_MTTCG 标记出来

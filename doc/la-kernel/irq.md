@@ -1,14 +1,24 @@
+# 重新分析 timer interrupt
+
+```plain
+#0  tick_handle_periodic (dev=0x9000000006000080) at kernel/time/tick-common.c:103
+#1  0x90000000002084a8 in constant_timer_interrupt (irq=<optimized out>, data=<optimized out>) at arch/loongarch/kernel/time.c:49
+#2  0x900000000029d4ac in __handle_irq_event_percpu (desc=0x9000000006000080, flags=0x0) at kernel/irq/handle.c:149
+#3  0x900000000029d708 in handle_irq_event_percpu (desc=0x900000027c0bf000) at kernel/irq/handle.c:189
+#4  0x90000000002a2c9c in handle_percpu_irq (desc=0x900000027c0bf000) at kernel/irq/chip.c:873
+#5  0x900000000029c344 in generic_handle_irq_desc (desc=<optimized out>) at ./include/linux/irqdesc.h:155
+#6  generic_handle_irq (irq=<optimized out>) at kernel/irq/irqdesc.c:639
+#7  0x9000000000fdcec0 in do_IRQ (irq=<optimized out>) at arch/loongarch/kernel/irq.c:103
+#8  0x9000000000203414 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
+```
+
 # TOOD
 - [ ] 中断负载均衡在哪里做的 ?
 
 ## msi
 - [ ] 应该 msi 是放到 extioi 下，其地位和 pch 差不多的吧
 
-
-
-
 ## 谁驱动的 usb 设备注册中断
-
 这些设备都是 local pci probe 获取的:
 
 ## 1
