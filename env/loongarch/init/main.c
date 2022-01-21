@@ -1,6 +1,7 @@
 #include <asm/addrspace.h>
 #include <asm/irq.h>
 #include <asm/page.h>
+#include <asm/time.h>
 #include <linux/cpu.h>
 #include <linux/irqflags.h>
 #include <linux/stack.h>
@@ -22,7 +23,8 @@ void start_kernel(void) {
   setup_arch(&command_line);
   trap_init();
   init_IRQ();
-  // local_irq_enable();
+  time_init();
+  local_irq_enable();
 
   char *argv[] = {NULL};
   main(0, argv);

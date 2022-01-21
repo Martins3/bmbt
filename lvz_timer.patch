@@ -1,0 +1,13 @@
+diff --git a/arch/loongarch/kvm/cpu.c b/arch/loongarch/kvm/cpu.c
+index 5110ee66ffb7..0ddf2738836f 100644
+--- a/arch/loongarch/kvm/cpu.c
++++ b/arch/loongarch/kvm/cpu.c
+@@ -123,7 +123,7 @@ static int lvz_irq_deliver(struct kvm_vcpu *vcpu, unsigned int priority)
+ 	case LARCH_INT_IPI:
+ 	case LARCH_INT_SIP0:
+ 	case LARCH_INT_SIP1:
+-		set_gcsr_estat(irq);
++		// set_gcsr_estat(irq);
+ 		break;
+ 
+ 	case LARCH_INT_IP0:

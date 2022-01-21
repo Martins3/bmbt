@@ -1,20 +1,22 @@
 #include <asm/loongarchregs.h>
 #include <asm/mach-la64/irq.h>
 #include <asm/setup.h>
+#include <asm/time.h>
 #include <assert.h>
 #include <env-timer.h>
+#include <hw/core/cpu.h>
+#include <linux/irqflags.h>
 #include <stdio.h>
 
 // TMP_TODO 现在都是仿照中写的 const timer 的，但是这种写法有问题
 // /home/maritns3/core/linux-4.19-loongson/arch/loongarch/kernel/time.c
-
 static TimerHandler signal_timer_handler;
 static void timer_handler(int irq) {
   // TMP_TODO don't use hardcoded 11
   assert(irq == 11);
-
   /* Clear Timer Interrupt */
   write_csr_tintclear(CSR_TINTCLR_TI);
+  printf("i ");
   enter_interrpt_context();
   signal_timer_handler();
   leave_interrpt_context();
@@ -23,12 +25,35 @@ static void timer_handler(int irq) {
 void setup_timer(TimerHandler handler) {
   signal_timer_handler = handler;
   // TMP_TODO : 根本没有搞清楚 LOONGSON_TIMER_IRQ 和 11 之间的映射
-  // LOONGARCH_CPU_IRQ_BASE 为什么是 50，nmd!
+  // LOONGARCH_CPU_IRQ_BASE 为什么是 50
   set_vi_handler(64 + 11, timer_handler);
 }
 
-void soonest_interrupt_ns(long ns) {}
-void block_interrupt() {}
-void unblock_interrupt() {}
-bool is_interrupt_blocked() { return false; }
-void fire_timer() {}
+void soonest_interrupt_ns(long ns) {
+  // TMP_TODO 需要换算一下
+  constant_timer_next_event(ns);
+}
+
+static bool __blocked = false;
+bool is_interrupt_blocked(void) { return __blocked; }
+
+void block_interrupt() {
+  assert(__blocked == false);
+  assert(qemu_cpu_is_self(NULL));
+  local_irq_disable();
+  __blocked = true;
+}
+
+void unblock_interrupt() {
+  assert(__blocked == true);
+  assert(qemu_cpu_is_self(NULL));
+  __blocked = false;
+  local_irq_enable();
+}
+
+void fire_timer() {
+  constant_timer_next_event(4);
+  // TMP_TODO 不能使用下面的方法，具体原因有待调查
+  // csr_xchgl(1, 0x800 , LOONGARCH_CSR_ESTAT);
+  // TMP_TODO 也不能使用 constant_timer_next_event(0)
+}

@@ -11,9 +11,7 @@
 
 bool mmap_ready = false;
 
-size_t size_code_gen_buffer(size_t tb_size);
-
-long unsigned long len_pagesize_up(unsigned long len) {
+static inline unsigned long len_pagesize_up(unsigned long len) {
   return PFN_UP(len) << PAGE_SHIFT;
 }
 
@@ -35,7 +33,7 @@ typedef struct FreeMem {
 QLIST_HEAD(, FreeMem) free_mem;
 QLIST_HEAD(, FreeMem) free_nodes;
 
-#define POOL_SIZE (20)
+#define POOL_SIZE (100)
 static FreeMem node_pool[POOL_SIZE];
 
 static void init_node_pool() {
@@ -63,11 +61,14 @@ static void free_mem_node(FreeMem *node) {
   duck_printf("huxueshi:%s %d \n", __FUNCTION__, node->idx);
 #endif
   QLIST_REMOVE(node, mem_next);
+  node->start = -1;
+  node->len = 0;
   QLIST_INSERT_HEAD(&free_nodes, node, mem_next);
 }
 
 static void add_head_sentinel() {
-  if (QLIST_EMPTY(&free_mem) || QLIST_FIRST(&free_mem)->len != 0) {
+  duck_assert(!QLIST_EMPTY(&free_mem));
+  if (QLIST_FIRST(&free_mem)->len != 0) {
     FreeMem *sentinel = get_mem_node(0, 0);
     QLIST_INSERT_HEAD(&free_mem, sentinel, mem_next);
   }
@@ -75,10 +76,13 @@ static void add_head_sentinel() {
 
 // unlike head_sentinel can be merged in kernel_unmmap
 // tail_sentinel added in init_pages and won't changed
-static void add_tail_sentinel() {
+static void add_sentinels() {
+  duck_assert(QLIST_EMPTY(&free_mem));
   FreeMem *tail_sentinel = get_mem_node(-1, 0);
-  FreeMem *head_sentinel = QLIST_FIRST(&free_mem);
-  QLIST_INSERT_AFTER(head_sentinel, tail_sentinel, mem_next);
+  QLIST_INSERT_HEAD(&free_mem, tail_sentinel, mem_next);
+
+  FreeMem *head_sentinel = get_mem_node(0, 0);
+  QLIST_INSERT_HEAD(&free_mem, head_sentinel, mem_next);
 }
 
 static const unsigned long valid_prot = (PROT_READ | PROT_WRITE | PROT_EXEC);
@@ -110,14 +114,17 @@ long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
     }
 
     if (len == mem->len) {
+      unsigned long addr = mem->start;
+      unsigned long size = mem->len;
+      memset((void *)addr, 0, size);
       free_mem_node(mem);
-      memset((void *)mem->start, 0, mem->len);
-      return mem->start;
+      return addr;
     }
     mem->len -= len;
     memset((void *)mem->start + mem->len, 0, len);
     return mem->start + mem->len;
   }
+  // TMP_TODO 也采用 _Noreturn 吧
   duck_assert(false);
   return -1;
 }
@@ -171,8 +178,12 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
 
   FreeMem *node = get_mem_node(addr, len);
   QLIST_INSERT_AFTER(left, node, mem_next);
+  duck_assert(QLIST_NEXT(node, mem_next) == right);
 
-  merge(merge(left, node), right);
+  left = merge(left, node);
+  duck_assert(QLIST_NEXT(left, mem_next) == right);
+  merge(left, right);
+
   add_head_sentinel();
 #ifdef DEBUG_MEM
   duck_printf("after free\n");
@@ -185,8 +196,7 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
 void init_pages() {
   QLIST_INIT(&free_mem);
   init_node_pool();
-  add_head_sentinel();
-  add_tail_sentinel();
+  add_sentinels();
 }
 
 void fw_add_mem(unsigned long addr, unsigned long len) {

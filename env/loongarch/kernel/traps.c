@@ -173,6 +173,8 @@ static void show_regs(struct pt_regs *regs, long is_tlbr) {
   printf("CSR ecfg: %08lx	", regs->csr_ecfg);
   printf("CSR estat: %08lx	", regs->csr_estat);
   printf("CSR euen: %08lx	", regs->csr_euen);
+  printf("CSR badi: %08lx ", csr_readq(LOONGARCH_CSR_BADI));
+  printf("CSR badv: %016lx ", csr_readq(LOONGARCH_CSR_BADV));
   printf("\n");
 
   void backtrace(long *fp);

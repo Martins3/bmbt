@@ -15,6 +15,7 @@
  *
  */
 #include <asm/addrspace.h>
+#include <asm/mach-la64/loongson.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
@@ -296,7 +297,6 @@ int duck_sprintf(char *buf, const char *fmt, ...) {
 }
 
 void prom_putchar(char c) {
-#define LOONGSON_REG_BASE 0x1fe00000
   *(char *)(TO_UNCAC(LOONGSON_REG_BASE + 0x1e0)) = c;
 }
 

@@ -170,8 +170,8 @@ int main(int argc, char **argv) {
   /* RUN_TEST(x_should_equal_1); */
 
   /* Tests can also be gathered into test suites. */
-  RUN_SUITE(env_test);
-  RUN_SUITE(timer);
+  // RUN_SUITE(env_test);
+  // RUN_SUITE(timer);
   // RUN_SUITE(basic_test);
   RUN_SUITE(wip);
   RUN_SUITE(basic_test);

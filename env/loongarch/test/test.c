@@ -1,3 +1,5 @@
+#include <asm/ptrace.h>
+#include <asm/time.h>
 #include <assert.h>
 #include <env-timer.h>
 #include <limits.h>
@@ -93,24 +95,29 @@ TEST test_segmentfault(void) {
   PASS();
 }
 
-void hello() { printf("huxueshi:%s \n", __FUNCTION__); }
+int x;
+void hello() {
+  x++;
+  printf("huxueshi:%s %d\n", __FUNCTION__, x);
+  constant_timer_next_event(80000000);
+}
 
 TEST test_timer(void) {
   setup_timer(hello);
-  printf("huxueshi:%s \n", __FUNCTION__);
+  local_irq_disable();
+  constant_timer_next_event(0x4000000);
   local_irq_enable();
-
-  while (1)
-    ;
+  printf("huxueshi:%s \n", __FUNCTION__);
+  while (1) {
+  }
   PASS();
 }
 
 SUITE(env_test) {
-  printf("huxueshi:%s \n", __FUNCTION__);
-  // RUN_TEST(test_mmap);
-  // RUN_TEST(test_syscall);
-  // RUN_TEST(test_segmentfault);
+  RUN_TEST(test_interrupt);
+  RUN_TEST(test_mmap);
+  RUN_TEST(test_syscall);
+  RUN_TEST(test_segmentfault);
   RUN_TEST(test_timer);
   RUN_TEST(test_float);
-  RUN_TEST(test_interrupt);
 }

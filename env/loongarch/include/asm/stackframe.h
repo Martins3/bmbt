@@ -171,10 +171,6 @@
 
 		.macro	RESTORE_SOME docfi=0
     cfi_ld  $r21, PT_R21, \docfi
-		LONG_L	v1, sp, PT_PRMD
-    csrwr	v1, LOONGARCH_CSR_PRMD
-		LONG_L	v1, sp, PT_ERA
-    csrwr	v1, LOONGARCH_CSR_ERA
 		cfi_ld	$r1, PT_R1, \docfi
 		cfi_ld	$r11, PT_R11, \docfi
 		cfi_ld	$r10, PT_R10, \docfi
@@ -200,37 +196,4 @@
 		RESTORE_SOME \docfi
 		RESTORE_SP \docfi
 		.endm
-
-/*
- * Move to kernel mode and disable interrupts.
- * Set cp0 enable bit as sign that we're running on the kernel stack
- */
-		.macro	CLI
-		.endm
-
-/*
- * Move to kernel mode and enable interrupts.
- * Set cp0 enable bit as sign that we're running on the kernel stack
- */
-		.macro	STI
-		li.w	t0, 0x7
-		li.w	t1, (1 << 2)
-		csrxchg	t1, t0, LOONGARCH_CSR_CRMD
-		.endm
-
-/*
- * Just move to kernel mode and leave interrupts as they are.  Note
- * for the R3000 this means copying the previous enable from IEp.
- * Set cp0 enable bit as sign that we're running on the kernel stack
- */
-		.macro	KMODE
-#if CSR_CRMD_IE != CSR_PRMD_PIE
-#error CSR_CRMD_IE != CSR_PRMD_PIE
-#endif
-		LONG_L	t0, sp, PT_PRMD
-		andi	t1, t0, CSR_PRMD_PIE
-		li.w	t0, CSR_CRMD_IE
-		csrxchg	t1, t0, LOONGARCH_CSR_CRMD
-		.endm
-
 #endif /* _ASM_STACKFRAME_H */
