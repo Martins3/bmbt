@@ -7,6 +7,8 @@ void fw_add_mem(unsigned long addr, unsigned long len);
 void init_pages();
 extern bool mmap_ready;
 
+extern char __bss_stop[];
+
 void fw_init_memory(void) {
   int i;
   u32 mem_type;
@@ -17,6 +19,7 @@ void fw_init_memory(void) {
   u64 total_mem = 0;
 
   init_pages();
+  u64 bss_end = TO_PHYS(PFN_ALIGN((u64)__bss_stop));
 
   /* parse memory information */
   for (i = 0; i < loongson_mem_map->map_count; i++) {
@@ -31,6 +34,13 @@ void fw_init_memory(void) {
       mem_end = PFN_ALIGN(mem_end - PAGE_SIZE + 1);
       if (mem_start >= mem_end)
         break;
+      if (mem_end <= bss_end)
+        break;
+      if (mem_start < bss_end) {
+        mem_start = bss_end;
+        mem_size = mem_end - mem_start;
+      }
+
       num_physpages += (mem_size >> PAGE_SHIFT);
       total_mem += mem_size;
       // printf("mem_start:0x%lx, mem_size:0x%lx Bytes\n", mem_start,

@@ -441,8 +441,14 @@ static void timer_interrupt_handler() {
   timeout_ns = qemu_soonest_timeout(timeout_ns,
                                     timerlistgroup_deadline_ns(&main_loop_tlg));
   if (timeout_ns == -1) {
-    warn_report("no timer to fire");
+    // TMP_TODO : 忽然有点好奇，为什么可以保证接下来每次都是有 interrupt 的
+    // TMP_TODO : 为什么如果每次时间都是返回 1s，那么就可以可以及其快速返回时间
+    warn_report("no timer to fire\n");
   }
+  // TMP_TODO : 对于最后四位清零，还是感觉非常神奇啊
+  timeout_ns += 4;
+  timeout_ns = timeout_ns >> 2;
+  timeout_ns = timeout_ns << 2;
   soonest_interrupt_ns(timeout_ns);
 }
 

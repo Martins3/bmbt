@@ -53,6 +53,7 @@ static _Noreturn void idle() {
 }
 
 _Noreturn void kernel_dump() {
+  local_irq_disable();
   long *fp = r_fp();
   backtrace(fp);
   idle();
@@ -65,7 +66,7 @@ void __duck_assert_fail(const char *expr, const char *file, int line,
 }
 
 #ifdef CHECK_SYSCALL_RECURSIVE
-static int syscall_counter = 0;
+int syscall_counter = 0;
 #endif
 long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
                     long arg5, long arg6, long sysno) {
@@ -75,7 +76,7 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
   // But it cause assert fail in recursive syscall checker
   local_irq_save(flags);
   duck_assert(syscall_counter == 0);
-  syscall_counter++;
+  syscall_counter = sysno;
 #endif
   long ret;
 #ifdef DEBUG_KERNEL_SYSCALL
@@ -115,7 +116,7 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
     kernel_dump();
   }
 #ifdef CHECK_SYSCALL_RECURSIVE
-  syscall_counter--;
+  syscall_counter = 0;
   asm volatile("" ::: "memory");
   local_irq_restore(flags);
 #endif

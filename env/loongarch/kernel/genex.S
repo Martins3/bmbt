@@ -35,6 +35,7 @@ SYM_FUNC_START(__cpu_wait)
 	nop
 	nop
 	nop
+
 	nop
 	nop
 	nop
@@ -61,7 +62,6 @@ SYM_FUNC_START(except_vec_vi_handler)
 	LOAD_TEMP_FROM_KSCRATCH
 	SAVE_TEMP
 	SAVE_STATIC
-	CLI
 2:
 	/* v0 is equal to a0
 	 * v0: irq number for do_vi
