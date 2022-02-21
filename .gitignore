@@ -21,3 +21,4 @@ pc-bios/linuxboot_dma.img
 
 *.qcow2
 env/loongarch/include/generated
+*.tar.xz
