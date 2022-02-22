@@ -28,6 +28,7 @@
 #define LOONGARCH_TCG_TARGET_H
 
 #include "../../../include/types.h"
+#include <stdint.h>
 
 #ifndef _ABILP32
 #define _ABILP32 1
@@ -187,6 +188,7 @@ typedef enum {
 #define TCG_TARGET_DEFAULT_MO (0)
 #define TCG_TARGET_HAS_MEMORY_BSWAP     0
 
+// [interrupt 56]
 static inline void flush_icache_range(uintptr_t start, uintptr_t stop)
 {
     __builtin___clear_cache((char *)start, (char *)stop);
