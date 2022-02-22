@@ -114,9 +114,9 @@
     - 在 glib 原来的实现中，这里只是警告，在移植的实现中，我们认为只要出现了警告，那么就应该 crash 掉
 50. slice.c
     - 在 glib/gslice.c 中，为了高性能，实现的库非常的复杂，在这里直接简化为 g_malloc 和 g_free 了
-## musl
-51. __sigsetjmp
-    - 在 BMBT 中的无需处理信号的问题，所以 __sigsetjmp 无需处理信号 mask 的保存问题
+<!-- musl  begin -->
+51. `__sigsetjmp`
+    - 在 BMBT 中的无需处理信号的问题，所以 `__sigsetjmp` 无需处理信号 mask 的保存问题
 52. errno
     - 将 errno 实现为单线程
 53. musl malloc glue.h
@@ -127,3 +127,8 @@
     - bmbt put it into include and it's copied from /usr/include/asm-generic/unistd.h
 55. realloc
     - realloc 真正需要利用上操作 remalloc 的情况很少，直接拷贝算了
+<!-- musl  over -->
+56. icache flush
+    - 内核中实现是 gcc asm inline 的方法，而 QEMU 的实现方法是 `__builtin___clear_cache`
+    - 实际上都会忽略参数 start 和 end，变为 `ibar 0`
+    - ibar 的实现参考手册卷一 2.2.8.2
