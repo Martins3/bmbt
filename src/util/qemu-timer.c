@@ -48,13 +48,11 @@ int64_t qemu_clock_get_ns(QEMUClockType type) {
       return cpu_get_clock();
     }
   case QEMU_CLOCK_HOST:
-    // return REPLAY_CLOCK(REPLAY_CLOCK_HOST, get_clock_realtime());
-    g_assert_not_reached();
-    return 0;
+    /* return REPLAY_CLOCK(REPLAY_CLOCK_HOST, get_clock_realtime()); */
+    return get_clock_realtime();
   case QEMU_CLOCK_VIRTUAL_RT:
-    // return REPLAY_CLOCK(REPLAY_CLOCK_VIRTUAL_RT, cpu_get_clock());
-    g_assert_not_reached();
-    return 0;
+    /* return REPLAY_CLOCK(REPLAY_CLOCK_VIRTUAL_RT, cpu_get_clock()); */
+    return cpu_get_clock();
   }
   return 0;
 }
