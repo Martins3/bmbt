@@ -4,6 +4,7 @@
 #include <env-timer.h>
 #include <limits.h>
 #include <linux/irqflags.h>
+#include <math.h>
 #include <qemu/queue.h>
 #include <sys/mman.h>
 #include <unitest/greatest.h>
@@ -117,11 +118,17 @@ TEST test_timer(void) {
   PASS();
 }
 
+TEST test_sqrt(void) {
+  ASSERT_EQ(sqrt(4.0), 2.0);
+  PASS();
+}
+
 SUITE(env_test) {
+  RUN_TEST(test_sqrt);
+  RUN_TEST(test_float);
   RUN_TEST(test_interrupt);
-  RUN_TEST(test_mmap);
   RUN_TEST(test_syscall);
   RUN_TEST(test_segmentfault);
-  RUN_TEST(test_timer);
-  RUN_TEST(test_float);
+  /* RUN_TEST(test_mmap); */
+  /* RUN_TEST(test_timer); */
 }
