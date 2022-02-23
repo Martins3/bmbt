@@ -1080,7 +1080,7 @@ void pc_guest_info_init(PCMachineState *pcms) {
   x86ms->apic_xrupt_override = kvm_allows_irq0_override();
   pcms->numa_nodes = ms->numa_state->num_nodes;
   pcms->node_mem = g_malloc0(pcms->numa_nodes * sizeof *pcms->node_mem);
-  duck_check(pcms->node_mem == NULL);
+  bmbt_check(pcms->node_mem == NULL);
   for (i = 0; i < ms->numa_state->num_nodes; i++) {
     pcms->node_mem[i] = ms->numa_state->nodes[i].node_mem;
   }
@@ -1164,7 +1164,7 @@ void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
   e820_add_entry(0, x86ms->below_4g_mem_size, E820_RAM);
 
   // bigger RAM size will be supported later
-  duck_check(x86ms->above_4g_mem_size == 0);
+  bmbt_check(x86ms->above_4g_mem_size == 0);
 #ifdef BMBT
   if (x86ms->above_4g_mem_size > 0) {
     ram_above_4g = g_malloc(sizeof(*ram_above_4g));

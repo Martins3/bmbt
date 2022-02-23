@@ -3498,7 +3498,7 @@ static X86CPUModel *x86_register_cpudef_types(X86CPUDefinition *def) {
 
   /* Unversioned model: */
   // m = g_new0(X86CPUModel, 1);
-  duck_check(m.cpudef == NULL); // x86_register_cpudef_types is only called once
+  bmbt_check(m.cpudef == NULL); // x86_register_cpudef_types is only called once
   m.cpudef = def;
   // no need to support the version
 #ifdef BMBT
@@ -4234,7 +4234,7 @@ static void x86_cpu_apic_realize(X86CPU *cpu) {
                                         &apic->io_memory, 0x1000);
 #else
     hwaddr offset = (apic->apicbase & MSR_IA32_APICBASE_BASE);
-    duck_check(offset == 0xfee00000);
+    bmbt_check(offset == 0xfee00000);
     mmio_add_memory_region(offset, &apic->io_memory);
 #endif
     apic_mmio_map_once = true;

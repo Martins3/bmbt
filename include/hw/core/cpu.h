@@ -372,12 +372,12 @@ typedef struct CPUClass {
 } CPUClass;
 
 static inline CPUClass *CPU_GET_CLASS(const CPUState *cpu) {
-  duck_check(cpu->cc);
+  bmbt_check(cpu->cc);
   return cpu->cc;
 }
 
 static inline void CPU_SET_CLASS(CPUState *cpu, CPUClass *cc) {
-  duck_check(cc != NULL);
+  bmbt_check(cc != NULL);
   cpu->cc = cc;
 }
 

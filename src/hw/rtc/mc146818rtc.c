@@ -745,7 +745,7 @@ static void rtc_realizefn(RTCState *s) {
 
   rtc_set_date_from_host(s);
 
-  duck_check(s->lost_tick_policy == LOST_TICK_POLICY_DISCARD);
+  bmbt_check(s->lost_tick_policy == LOST_TICK_POLICY_DISCARD);
 #ifdef BMBT
   switch (s->lost_tick_policy) {
 #ifdef TARGET_I386
@@ -797,7 +797,7 @@ static void rtc_realizefn(RTCState *s) {
 static RTCState __mc146818_rtc;
 RTCState *mc146818_rtc_init(int base_year, qemu_irq intercept_irq) {
   RTCState *mc146818_rtc = &__mc146818_rtc;
-  duck_check(intercept_irq != NULL);
+  bmbt_check(intercept_irq != NULL);
 #ifdef BMBT
   DeviceState *dev;
   ISADevice *isadev;
@@ -819,7 +819,7 @@ RTCState *mc146818_rtc_init(int base_year, qemu_irq intercept_irq) {
   mc146818_rtc->lost_tick_policy = LOST_TICK_POLICY_DISCARD;
   rtc_realizefn(mc146818_rtc);
   qdev_connect_gpio_out(&mc146818_rtc->gpio, 0, intercept_irq);
-  duck_check(mc146818_rtc->irq == intercept_irq);
+  bmbt_check(mc146818_rtc->irq == intercept_irq);
 
   return mc146818_rtc;
 }

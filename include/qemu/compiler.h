@@ -61,6 +61,6 @@
 
 #define QEMU_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 
-#define duck_check(x) assert(x)
+#define bmbt_check(x) assert(x)
 
 #endif /* end of include guard: COMPILER_H_LG8KIJYO */

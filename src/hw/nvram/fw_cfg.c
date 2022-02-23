@@ -335,7 +335,7 @@ static bool fw_cfg_ctl_mem_valid(void *opaque, hwaddr addr, unsigned size,
 
 static void fw_cfg_comb_write(void *opaque, hwaddr addr, uint64_t value,
                               unsigned size) {
-  duck_check(addr == 0);
+  bmbt_check(addr == 0);
   switch (size) {
   case 1:
     fw_cfg_write(opaque, (uint8_t)value);
@@ -826,7 +826,7 @@ FWCfgState *fw_cfg_init_io_dma(uint32_t iobase, uint32_t dma_iobase,
     // qdev_prop_set_bit(dev, "dma_enabled", false);
     s->dma_enabled = false;
   }
-  duck_check(s->dma_enabled);
+  bmbt_check(s->dma_enabled);
 
 #ifdef BMBT
   object_property_add_child(OBJECT(qdev_get_machine()), TYPE_FW_CFG,

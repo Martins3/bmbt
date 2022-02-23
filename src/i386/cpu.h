@@ -1870,12 +1870,12 @@ struct X86CPU {
   int32_t hv_max_vps;
 };
 static inline X86CPUClass *X86_CPU_GET_CLASS(X86CPU *cpu) {
-  duck_check(cpu->xcc != NULL);
+  bmbt_check(cpu->xcc != NULL);
   return cpu->xcc;
 }
 
 static inline void X86_CPU_SET_CLASS(X86CPU *cpu, X86CPUClass *xcc) {
-  duck_check(xcc != NULL);
+  bmbt_check(xcc != NULL);
   cpu->xcc = xcc;
 }
 

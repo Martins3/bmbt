@@ -40,7 +40,7 @@ void tcg_handle_interrupt(CPUState *cpu, int mask) {
 
 int tcg_init() {
   // default tcg_tb_size equals 0
-  duck_check(tcg_tb_size == 0);
+  bmbt_check(tcg_tb_size == 0);
   tcg_exec_init(tcg_tb_size * 1024 * 1024);
   return 0;
 }

@@ -46,7 +46,7 @@ static uint64_t ops_read(void *opaque, hwaddr addr, unsigned size) {
 static void ops_write(void *opaque, hwaddr addr, uint64_t value,
                       unsigned size) {
   // MemoryRegion *mr = (MemoryRegion *)opaque;
-  duck_check(value == 0x12345678);
+  bmbt_check(value == 0x12345678);
 }
 
 static bool test_valid(void *opaque, hwaddr addr, unsigned size, bool is_write,

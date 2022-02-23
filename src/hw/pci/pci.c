@@ -1123,7 +1123,7 @@ static pcibus_t pci_bar_address(PCIDevice *d, int reg, uint8_t type,
   // ObjectClass *oc = object_get_class(machine);
   MachineClass *mc = MACHINE_GET_CLASS(qdev_get_machine());
   bool allow_0_address = mc->pci_allow_0_address;
-  duck_check(allow_0_address == false);
+  bmbt_check(allow_0_address == false);
 
   if (type & PCI_BASE_ADDRESS_SPACE_IO) {
     if (!(cmd & PCI_COMMAND_IO)) {

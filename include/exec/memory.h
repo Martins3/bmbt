@@ -198,9 +198,9 @@ bool prepare_mmio_access(MemoryRegion *mr);
 static inline bool memory_region_is_ram(MemoryRegion *mr) {
 #ifndef RELEASE_VERSION
   if (mr->ram) {
-    duck_check(mr->ram_block != NULL);
+    bmbt_check(mr->ram_block != NULL);
   } else {
-    duck_check(mr->ram_block == NULL);
+    bmbt_check(mr->ram_block == NULL);
   }
 #endif
   return mr->ram;
