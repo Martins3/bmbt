@@ -14,12 +14,13 @@ static TimerHandler signal_timer_handler;
 static void timer_handler(int irq) {
   // TMP_TODO don't use hardcoded 11
   assert(irq == 11);
-  /* Clear Timer Interrupt */
-  write_csr_tintclear(CSR_TINTCLR_TI);
   printf("i ");
   enter_interrpt_context();
   signal_timer_handler();
   leave_interrpt_context();
+  /* Clear Timer Interrupt at the end of timer interrupt handler, otherwise kvm
+   * will inject timer interrupt again. */
+  write_csr_tintclear(CSR_TINTCLR_TI);
 }
 
 void setup_timer(TimerHandler handler) {
