@@ -17,8 +17,8 @@ bios=${qemu_dir}/pc-bios/loongarch_bios.bin
 img=${work_dir}/${img_name}
 
 if [[ ! -f ${img} ]];then
-    wget ${repo_url}/${img_name}
-    exit 0
+  wget ${repo_url}/${img_name}
+  exit 0
 fi
 
 launch_gdb=false
@@ -26,18 +26,18 @@ debug_qemu=""
 debug_kernel=""
 
 while getopts "sd" opt; do
-	case $opt in
-	s) debug_kernel="-S -s" ;;
-	d) launch_gdb=true ;;
-	*) exit 0 ;;
-	esac
+  case $opt in
+  s) debug_kernel="-S -s" ;;
+  d) launch_gdb=true ;;
+  *) exit 0 ;;
+  esac
 done
 
 if [ $launch_gdb = true ]; then
-	echo "debug kernel"
-	cd ${kernel_dir}
-	gdb vmlinux -ex "target remote :1234"
-	exit 0
+  echo "debug kernel"
+  cd ${kernel_dir}
+  gdb vmlinux -ex "target remote :1234"
+  exit 0
 fi
 
 machine_arg="-m 8192M -serial stdio -cpu Loongson-3A5000 -enable-kvm -M loongson7a_v1.0,accel=kvm"
