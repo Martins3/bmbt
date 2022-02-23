@@ -37,12 +37,12 @@ void backtrace(long *fp) {
       real_fp = fp_2;
       ip = fp_1;
     } else {
-      duck_printf("---------------------\n");
+      kern_printf("---------------------\n");
       break;
     }
 
     if (ip != NULL)
-      duck_printf("%lx\n", ip);
+      kern_printf("%lx\n", ip);
     fp = real_fp;
   }
 }
@@ -59,9 +59,9 @@ _Noreturn void kernel_dump() {
   idle();
 }
 
-void __duck_assert_fail(const char *expr, const char *file, int line,
+void __kern_assert_fail(const char *expr, const char *file, int line,
                         const char *func) {
-  duck_printf("Assertion failed: %s (%s: %s: %d)\n", expr, file, func, line);
+  kern_printf("Assertion failed: %s (%s: %s: %d)\n", expr, file, func, line);
   kernel_dump();
 }
 
@@ -75,12 +75,12 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
   // Of course, we can call printf in interrupt handler that interrupts printf.
   // But it cause assert fail in recursive syscall checker
   local_irq_save(flags);
-  duck_assert(syscall_counter == 0);
+  kern_assert(syscall_counter == 0);
   syscall_counter = sysno;
 #endif
   long ret;
 #ifdef DEBUG_KERNEL_SYSCALL
-  duck_printf("%ld: [0x%016lx], [0x%016lx], [0x%016lx], [0x%016lx], "
+  kern_printf("%ld: [0x%016lx], [0x%016lx], [0x%016lx], [0x%016lx], "
               "[0x%016lx], [0x%016lx]\n",
               sysno, arg0, arg1, arg2, arg3, arg4, arg5, arg6);
 #endif
@@ -90,7 +90,7 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
     break;
   case SYS_exit_group:
   case SYS_exit:
-    duck_printf("!!! bmbt never call exit !!!\n");
+    kern_printf("!!! bmbt never call exit !!!\n");
     kernel_dump();
     break;
   case SYS_brk:
@@ -112,7 +112,7 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
     ret = kernel_unmmap(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
     break;
   default:
-    duck_printf("unsported syscall\n");
+    kern_printf("unsported syscall\n");
     kernel_dump();
   }
 #ifdef CHECK_SYSCALL_RECURSIVE

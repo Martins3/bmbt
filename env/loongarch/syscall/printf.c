@@ -118,7 +118,7 @@ static char *number(char *str, long num, int base, int size, int precision,
   return str;
 }
 
-int duck_vsprintf(char *buf, const char *fmt, va_list args) {
+int kern_vsprintf(char *buf, const char *fmt, va_list args) {
   int len;
   unsigned long num;
   int i, base;
@@ -286,12 +286,12 @@ int duck_vsprintf(char *buf, const char *fmt, va_list args) {
   return str - buf;
 }
 
-int duck_sprintf(char *buf, const char *fmt, ...) {
+int kern_sprintf(char *buf, const char *fmt, ...) {
   va_list args;
   int i;
 
   va_start(args, fmt);
-  i = duck_vsprintf(buf, fmt, args);
+  i = kern_vsprintf(buf, fmt, args);
   va_end(args);
   return i;
 }
@@ -309,13 +309,13 @@ void early_console_write(const char *s, unsigned n) {
   }
 }
 
-int duck_printf(const char *fmt, ...) {
+int kern_printf(const char *fmt, ...) {
   char printf_buf[1024];
   va_list args;
   int printed;
 
   va_start(args, fmt);
-  printed = duck_vsprintf(printf_buf, fmt, args);
+  printed = kern_vsprintf(printf_buf, fmt, args);
   va_end(args);
 
   early_console_write(printf_buf, 1024);
