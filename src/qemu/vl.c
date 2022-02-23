@@ -109,7 +109,7 @@ void qemu_system_reset(MachineClass *mc, MachineState *current_machine) {
 #endif
 }
 
-__attribute__((unused)) static void configure_rtc() {
+static void configure_rtc() {
   /* Set defaults */
   rtc_clock = QEMU_CLOCK_HOST;
 }
@@ -288,7 +288,7 @@ void qemu_init() {
 
   init_xtm_options();
 
-  // configure_rtc();
+  configure_rtc();
 
   bmbt_check(first_cpu == NULL);
 
