@@ -49,7 +49,7 @@ static int get_highest_priority_int(uint32_t *tab) {
 }
 
 static void apic_vapic_base_update(APICCommonState *s) {
-  duck_check(!s->vapic_paddr);
+  bmbt_check(!s->vapic_paddr);
 }
 
 static void apic_local_deliver(APICCommonState *s, int vector) {

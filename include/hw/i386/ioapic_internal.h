@@ -99,13 +99,13 @@ static inline SysBusDevice *IOAPIC_SYS_BUS_DEVICE(IOAPICCommonState *s) {
 
 static inline IOAPICCommonClass *
 IOAPIC_COMMON_GET_CLASS(IOAPICCommonState *is) {
-  duck_check(is->icc != NULL);
+  bmbt_check(is->icc != NULL);
   return is->icc;
 }
 
 static inline void IOAPIC_COMMON_SET_CLASS(IOAPICCommonState *is,
                                            IOAPICCommonClass *icc) {
-  duck_check(icc != NULL);
+  bmbt_check(icc != NULL);
   is->icc = icc;
 }
 

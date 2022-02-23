@@ -374,7 +374,7 @@ ISADevice *i8254_pit_init(ISABus *bus, int base, int isa_irq,
                           qemu_irq alt_irq) {
   // DeviceState *dev;
   // ISADevice *d;
-  duck_check(isa_irq == -1);
+  bmbt_check(isa_irq == -1);
 
 #ifdef BMBT
   d = isa_create(bus, TYPE_I8254);

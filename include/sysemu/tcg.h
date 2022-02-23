@@ -11,7 +11,7 @@ int tcg_init();
 
 extern bool tcg_allowed;
 static inline bool tcg_enabled() {
-  duck_check(tcg_allowed == true);
+  bmbt_check(tcg_allowed == true);
   return tcg_allowed;
 }
 

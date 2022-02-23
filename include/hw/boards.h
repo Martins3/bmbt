@@ -256,12 +256,12 @@ struct MachineState {
 MachineState *qdev_get_machine();
 
 static inline MachineClass *MACHINE_GET_CLASS(MachineState *machine) {
-  duck_check(machine->mc != NULL);
+  bmbt_check(machine->mc != NULL);
   return machine->mc;
 }
 
 static inline void MACHINE_SET_CLASS(MachineState *machine, MachineClass *mc) {
-  duck_check(mc != NULL);
+  bmbt_check(mc != NULL);
   machine->mc = mc;
 }
 

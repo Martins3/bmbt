@@ -41,7 +41,7 @@ extern bool boot_strict;
 void qemu_init();
 
 static inline void qemu_boot() {
-  duck_check(first_cpu != NULL);
+  bmbt_check(first_cpu != NULL);
   qemu_tcg_rr_cpu_thread_fn(first_cpu);
 }
 
