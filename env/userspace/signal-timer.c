@@ -21,14 +21,12 @@ static void timer_handler(int sig) {
 }
 
 void setup_timer(TimerHandler handler) {
-  struct sigaction sa;
+  struct sigaction sa = {};
   struct sigevent sev;
 
   signal_timer_handler = handler;
 
   sa.sa_handler = timer_handler;
-  sa.sa_flags = SA_SIGINFO;
-  sigemptyset(&sa.sa_mask);
   if (sigaction(TIMER_SIG, &sa, NULL) == -1) {
     error_report("set sigaction failed\n");
   }
