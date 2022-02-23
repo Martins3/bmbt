@@ -98,8 +98,12 @@ TEST test_segmentfault(void) {
 int x;
 void hello() {
   x++;
-  printf("huxueshi:%s %d\n", __FUNCTION__, x);
-  constant_timer_next_event(80000000);
+  long tval = csr_readq(LOONGARCH_CSR_TVAL);
+  long estat = csr_readq(LOONGARCH_CSR_ESTAT);
+  printf("huxueshi:%s tval=%lx\n", __FUNCTION__, tval);
+  printf("huxueshi:%s estate=%lx\n", __FUNCTION__, estat);
+  printf("huxueshi:%s %d\n\n", __FUNCTION__, x);
+  constant_timer_next_event(90000000);
 }
 
 TEST test_timer(void) {
