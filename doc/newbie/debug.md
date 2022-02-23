@@ -32,6 +32,8 @@ export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIB
 ```
 
 ## 调试 kvm
+有时候，kvm 本身可能的出现 bug，这导致 guest 无法测试:
+
 如果 kvm 不是 modulus 的话:
 - 在 make menuconfig 中将 kvm 修改为 modulus
 - sudo make install && sudo make modules_install
@@ -39,8 +41,12 @@ export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIB
 
 之后:
 - lsmod 查看 kvm 模块
-- sudo rmmod kvm 删除已经存在的 kvm 模块
-- sudo insmod ./arch/loongarch/kvm/kvm.ko 重新安装
+- sudo rmmod kvm # 删除已经存在的 kvm 模块
+- sudo insmod ./arch/loongarch/kvm/kvm.ko # 重新安装
+
+```sh
+make -j && sudo  rmmod kvm && sudo insmod ./arch/loongarch/kvm/kvm.ko
+```
 
 ## 处理 QEMU 的 macro
 

@@ -19,8 +19,8 @@
 当然也可以使用本仓库中的 ./.config 文件，就不用手动一次次的操作了。
 
 实际上这个内核有两个问题需要修复增加两个 patch
-- hwbreak.patch
-- non_lazy_lbt.patch
+- hwbreak.patch : 否则和 qemu 无法调试
+- non_lazy_lbt.patch : licun 说内核没有考虑到在虚拟机中运行二进制翻译
 
 ### 找一个可以正确运行 KVM 的 QEMU
 clone 这个项目 http://rd.loongson.cn:8081/#/admin/projects/kernel/qemu
