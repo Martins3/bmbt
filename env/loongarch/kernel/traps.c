@@ -176,14 +176,6 @@ static void show_regs(struct pt_regs *regs, long is_tlbr) {
   printf("CSR badi: %08lx ", csr_readq(LOONGARCH_CSR_BADI));
   printf("CSR badv: %016lx ", csr_readq(LOONGARCH_CSR_BADV));
   printf("\n");
-
-  void backtrace(long *fp);
-  if (is_tlbr) {
-    printf("%08lx\n", regs->csr_tlbera);
-  } else {
-    printf("%08lx\n", regs->csr_era);
-  }
-  backtrace((long *)regs->regs[22]); /* #define fp $r22 */
 }
 
 void do_reserved(struct pt_regs *regs, long is_tlbr) {
