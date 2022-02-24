@@ -1,3 +1,4 @@
+#include <asm/loongarchregs.h>
 #include <asm/ptrace.h>
 #include <asm/time.h>
 #include <assert.h>
@@ -59,7 +60,7 @@ static void init_pools() {
   }
 }
 
-// TMP_TODO it's unfinished
+// @todo it's unfinished
 TEST test_mmap(void) {
   init_pools();
 
@@ -104,13 +105,13 @@ void hello() {
   printf("huxueshi:%s tval=%lx\n", __FUNCTION__, tval);
   printf("huxueshi:%s estate=%lx\n", __FUNCTION__, estat);
   printf("huxueshi:%s %d\n\n", __FUNCTION__, x);
-  constant_timer_next_event(90000000);
+  constant_timer_next_event(100000000);
 }
 
 TEST test_timer(void) {
   setup_timer(hello);
   local_irq_disable();
-  constant_timer_next_event(0x4000000);
+  constant_timer_next_event(0x100000);
   local_irq_enable();
   printf("huxueshi:%s \n", __FUNCTION__);
   while (1) {
@@ -128,7 +129,14 @@ TEST test_bad_instruction(void) {
   PASS();
 }
 
+TEST test_rdtime(void) {
+  printf("huxueshi:%s %lx\n", __FUNCTION__, drdtime());
+  PASS();
+}
+
 SUITE(env_test) {
+  RUN_TEST(test_timer);
+  RUN_TEST(test_rdtime);
   RUN_TEST(test_bad_instruction);
   RUN_TEST(test_sqrt);
   RUN_TEST(test_float);
@@ -136,5 +144,4 @@ SUITE(env_test) {
   RUN_TEST(test_syscall);
   RUN_TEST(test_segmentfault);
   /* RUN_TEST(test_mmap); */
-  /* RUN_TEST(test_timer); */
 }
