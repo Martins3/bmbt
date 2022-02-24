@@ -18,6 +18,10 @@ SYM_FUNC_START(handle_tlb_refill)
   li.d  t0, 0x9000000000000000
   or  sp, sp, t0
 
+  // in order make backtrace intact
+  csrrd t0, LOONGARCH_CSR_TLBRERA
+  move ra, t0
+
   // prepare arguments
   move  a0, sp
   li.d  a1, 1
