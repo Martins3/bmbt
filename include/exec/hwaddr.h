@@ -7,7 +7,6 @@
 /* hwaddr is the type of a physical address (its size can
    be different from 'target_ulong').  */
 
-#include "../types.h"
 #include <inttypes.h>
 typedef uint64_t hwaddr;
 #define HWADDR_MAX UINT64_MAX

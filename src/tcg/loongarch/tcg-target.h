@@ -27,7 +27,6 @@
 #ifndef LOONGARCH_TCG_TARGET_H
 #define LOONGARCH_TCG_TARGET_H
 
-#include "../../../include/types.h"
 #include <stdint.h>
 
 #ifndef _ABILP32

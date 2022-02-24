@@ -1,7 +1,6 @@
 #ifndef ERROR_REPORT_H_UHVN2LTE
 #define ERROR_REPORT_H_UHVN2LTE
 
-#include "../types.h"
 #include <qemu/compiler.h>
 
 void error_report(const char *fmt, ...) GCC_FMT_ATTR(1, 2);

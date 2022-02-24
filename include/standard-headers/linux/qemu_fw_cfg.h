@@ -1,7 +1,6 @@
 #ifndef QEMU_FW_CFG_H_CB0DZ7LH
 #define QEMU_FW_CFG_H_CB0DZ7LH
-
-#include "../../types.h"
+#include <stdint.h>
 
 #define FW_CFG_ACPI_DEVICE_ID "QEMU0002"
 

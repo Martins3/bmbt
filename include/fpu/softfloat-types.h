@@ -80,7 +80,6 @@ this code that are retained.
 #ifndef SOFTFLOAT_TYPES_H
 #define SOFTFLOAT_TYPES_H
 
-#include "../types.h"
 #include <stdint.h>
 
 

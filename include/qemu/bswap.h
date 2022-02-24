@@ -2,7 +2,6 @@
 #define BSWAP_H_POC0IZMR
 
 #include "../fpu/softfloat-types.h"
-#include "../types.h"
 #include <qemu/compiler.h>
 #include <uglib.h>
 

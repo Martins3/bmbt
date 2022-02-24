@@ -1,7 +1,7 @@
 #ifndef UUID_H_ZBJY6R7X
 #define UUID_H_ZBJY6R7X
 
-#include "../types.h"
+#include <stdint.h>
 
 /* Version 4 UUID (pseudo random numbers), RFC4122 4.4. */
 

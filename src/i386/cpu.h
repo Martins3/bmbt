@@ -9,7 +9,6 @@
 #include "../../include/hw/irq.h"
 #include "../../include/qemu/bitops.h"
 #include "../../include/sysemu/tcg.h"
-#include "../../include/types.h"
 
 // ------------------------------ blindly copy started
 /* The x86 has a strong memory model with some store-after-load re-ordering */

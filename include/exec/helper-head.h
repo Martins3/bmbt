@@ -18,7 +18,6 @@
 #ifndef EXEC_HELPER_HEAD_H
 #define EXEC_HELPER_HEAD_H
 #include "../../include/exec/cpu-defs.h" // for target_ulong
-#include "../types.h"                    // for glue
 
 #define HELPER(name) glue(helper_, name)
 

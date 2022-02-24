@@ -21,7 +21,8 @@
 #define QEMU_RANGE_H
 #include <assert.h>
 #include <errno.h>
-#include <types.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 /*
  * Operations on 64 bit address ranges.

@@ -4,7 +4,6 @@
 #include "../../exec/memory.h"
 #include "../../qemu/error-report.h"
 #include "../../qemu/notify.h"
-#include "../../types.h"
 #include "../irq.h"
 #include "ioapic.h"
 #include <hw/sysbus.h>

@@ -1,6 +1,5 @@
 #ifndef BITOPS_H_Z29X3LYD
 #define BITOPS_H_Z29X3LYD
-#include "../types.h"
 #include "atomic.h"
 #include "osdep.h"
 #include <assert.h>

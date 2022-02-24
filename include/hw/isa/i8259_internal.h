@@ -2,7 +2,6 @@
 #define I8259_INTERNAL_H_XQYSJYON
 
 #include "../../exec/memory.h"
-#include "../../types.h"
 #include "../irq.h"
 
 typedef struct PICCommonState PICCommonState;

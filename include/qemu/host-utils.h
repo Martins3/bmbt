@@ -1,7 +1,6 @@
 #ifndef HOST_UTILS_H_0IEAPEGH
 #define HOST_UTILS_H_0IEAPEGH
 
-#include "../types.h"
 #include <limits.h>
 #include <stdint.h>
 

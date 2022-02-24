@@ -8,7 +8,6 @@
 #include "../../qemu/bitmap.h"
 #include "../../qemu/queue.h"
 #include "../../qemu/thread.h"
-#include "../../types.h"
 #include <inttypes.h> // for VADDR_PRIx
 #include <qemu/osdep.h>
 #include <setjmp.h>

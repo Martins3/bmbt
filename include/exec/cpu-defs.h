@@ -3,7 +3,6 @@
 
 #include "../hw/core/cpu.h"
 #include "../qemu/thread.h"
-#include "../types.h"
 #include "cpu-para.h"
 #include "memattrs.h"
 
