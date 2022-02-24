@@ -166,10 +166,6 @@ GREATEST_MAIN_DEFS();
 int main(int argc, char **argv) {
   GREATEST_MAIN_BEGIN(); /* command-line options, initialization. */
 
-  /* Individual tests can be run directly in main, outside of suites. */
-  /* RUN_TEST(x_should_equal_1); */
-
-  /* Tests can also be gathered into test suites. */
   /* RUN_SUITE(env_test); */
   /* RUN_SUITE(timer); */
   /* RUN_SUITE(basic_test); */
