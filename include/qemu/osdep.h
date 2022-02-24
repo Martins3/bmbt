@@ -1,9 +1,11 @@
 #ifndef OSDEP_H_DXJTBG8M
 #define OSDEP_H_DXJTBG8M
 
-#include "../types.h"
 #include <stdint.h>
 #include <stddef.h>
+
+#include <qemu/config-host.h>
+#include <qemu/config-target.h>
 
 /* Round number up to multiple. Requires that d be a power of 2 (see
  * QEMU_ALIGN_UP for a safer but slower version on arbitrary
@@ -77,4 +79,5 @@ void *qemu_memalign(size_t alignment, size_t size);
  */
 #define QEMU_HW_VERSION "2.5+"
 
+#define bmbt_check(x) assert(x)
 #endif /* end of include guard: OSDEP_H_DXJTBG8M */
