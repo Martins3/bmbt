@@ -132,3 +132,6 @@
     - 内核中实现是 gcc asm inline 的方法，而 QEMU 的实现方法是 `__builtin___clear_cache`
     - 实际上都会忽略参数 start 和 end，变为 `ibar 0`
     - ibar 的实现参考手册卷一 2.2.8.2
+57. 只要保持 ns 和 clock 在任何位置是对应的，暂时可以勉强使用
+    - kernel_clock_gettime 中直接返回 drdtime 的数值
+    - soonest_interrupt_ns 从 ns 参数直接装换为 cycle 传递给 timer 硬件

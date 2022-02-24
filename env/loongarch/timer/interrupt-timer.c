@@ -8,8 +8,6 @@
 #include <linux/irqflags.h>
 #include <stdio.h>
 
-// TMP_TODO 现在都是仿照中写的 const timer 的，但是这种写法有问题
-// /home/maritns3/core/linux-4.19-loongson/arch/loongarch/kernel/time.c
 static TimerHandler signal_timer_handler;
 static void timer_handler(int irq) {
   // TMP_TODO don't use hardcoded 11
@@ -31,7 +29,7 @@ void setup_timer(TimerHandler handler) {
 }
 
 void soonest_interrupt_ns(long ns) {
-  // TMP_TODO 需要换算一下
+  // [interface 57]
   constant_timer_next_event(ns);
 }
 
