@@ -3,7 +3,6 @@
 #include "../exec/memory.h"
 #include "../qemu/atomic.h"
 #include "../qemu/bswap.h"
-#include "../types.h"
 
 typedef enum {
   DMA_DIRECTION_TO_DEVICE = 0,

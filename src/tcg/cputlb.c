@@ -13,7 +13,6 @@
 #include "../../include/qemu/error-report.h"
 #include "../../include/qemu/host-utils.h"
 #include "../../include/qemu/log.h"
-#include "../../include/types.h"
 #include "../i386/cpu.h"
 #include "tcg.h"
 #include "translate-all.h"

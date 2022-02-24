@@ -7,7 +7,6 @@
 #ifndef QEMU_QHT_H
 #define QEMU_QHT_H
 
-#include "../types.h"
 #include "qdist.h"
 #include "thread.h"
 #include <stddef.h>

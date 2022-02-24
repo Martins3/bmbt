@@ -11,7 +11,6 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/thread.h"
 #include "../../include/sysemu/replay.h"
-#include "../../include/types.h"
 #include "../i386/LATX/x86tomips-config.h"
 #include <stdbool.h>
 #include <stddef.h>

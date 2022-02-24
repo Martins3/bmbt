@@ -25,7 +25,8 @@
 #include "../../hw/pci/pcie_regs.h"
 // #include "../../hw/pci/pcie_aer.h"
 #include "../../hw/hotplug.h"
-#include "types.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 typedef enum {
   /* for attention and power indicator */

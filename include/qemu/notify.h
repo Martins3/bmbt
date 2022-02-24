@@ -1,7 +1,6 @@
 #ifndef NOTIFY_H_B3HZ5KGJ
 #define NOTIFY_H_B3HZ5KGJ
 
-#include "../types.h"
 #include "queue.h"
 
 typedef struct Notifier Notifier;

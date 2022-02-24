@@ -6,7 +6,6 @@
 #include "../../standard-headers/linux/qemu_fw_cfg.h"
 #include "../../sysemu/dma.h"
 #include "../../sysemu/sysemu.h"
-#include "../../types.h"
 #include <unistd.h>
 
 #define TYPE_FW_CFG "fw_cfg"

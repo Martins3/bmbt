@@ -5,7 +5,6 @@
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
 #include "../qemu/main-loop.h"
-#include "../types.h"
 #include "cpu-defs.h"
 #include "memop.h"
 

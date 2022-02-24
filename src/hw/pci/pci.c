@@ -30,7 +30,6 @@
 #include <qemu/cutils.h>
 #include <qemu/error-report.h>
 #include <qemu/osdep.h>
-#include <types.h>
 
 //#define DEBUG_PCI
 #ifdef DEBUG_PCI

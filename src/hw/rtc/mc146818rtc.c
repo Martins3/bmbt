@@ -3,7 +3,6 @@
 #include <qemu/cutils.h>
 #include <sysemu/reset.h>
 #include <sysemu/sysemu.h>
-#include <types.h>
 
 #define DEBUG_CMOS
 #define DEBUG_COALESCED

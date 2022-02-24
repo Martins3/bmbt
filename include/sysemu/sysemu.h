@@ -4,7 +4,6 @@
 #include "../qemu/compiler.h"
 #include "../qemu/notify.h"
 #include "../qemu/uuid.h"
-#include "../types.h"
 #include <chardev/char.h>
 #include <hw/qdev-core.h>
 #include <qemu/timer.h>

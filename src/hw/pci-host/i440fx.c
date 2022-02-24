@@ -35,7 +35,6 @@
 #include <hw/pci/pci_ids.h>
 #include <qemu/osdep.h>
 #include <qemu/range.h>
-#include <types.h>
 
 typedef struct I440FXState {
   PCIHostState parent_obj;

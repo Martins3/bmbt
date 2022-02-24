@@ -1,6 +1,5 @@
 #ifndef QEMU_SMBIOS_H
 #define QEMU_SMBIOS_H
-#include "../../types.h"
 #include "../i386/x86.h"
 
 /*

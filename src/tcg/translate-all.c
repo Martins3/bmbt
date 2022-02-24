@@ -15,7 +15,6 @@
 #include "../../include/qemu/qemu-printf.h"
 #include "../../include/qemu/thread.h"
 #include "../../include/sysemu/replay.h"
-#include "../../include/types.h"
 
 #include "./tcg.h"
 #include <assert.h>

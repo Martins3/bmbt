@@ -22,7 +22,6 @@
 #include "../../../src/i386/cpu.h"
 #include "../../exec/hwaddr.h"
 #include "../../qemu/timer.h"
-#include "../../types.h"
 #include "../pci/msi.h"
 
 /* APIC Local Vector Table */

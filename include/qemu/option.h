@@ -1,7 +1,6 @@
 #ifndef OPTION_INT_H_HVEKQS1U
 #define OPTION_INT_H_HVEKQS1U
 
-#include "../types.h"
 #include "./queue.h"
 #include <string.h>
 #include <stdbool.h>

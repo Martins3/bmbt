@@ -1,7 +1,6 @@
 #ifndef TIMER_H_PBGYZKVR
 #define TIMER_H_PBGYZKVR
 
-#include "../types.h"
 #include <env-timer.h>
 #include <signal.h>
 #include <stdint.h>

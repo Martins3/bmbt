@@ -3,7 +3,6 @@
 #include "../exec/exec-all.h"
 #include "../exec/tb-hash.h"
 #include "../hw/core/cpu.h"
-#include "../types.h"
 
 #if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
 #ifdef CONFIG_XTM_PROFILE

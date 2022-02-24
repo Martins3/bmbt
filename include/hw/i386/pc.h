@@ -5,7 +5,6 @@
 #include "../../hw/hotplug.h"
 #include "../../qemu/notify.h"
 #include "../../sysemu/numa.h"
-#include "../../types.h"
 #include "../irq.h"
 #include "../isa/isa.h"
 #include "ioapic.h"

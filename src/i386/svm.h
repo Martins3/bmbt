@@ -1,6 +1,7 @@
 #ifndef SVM_H
 #define SVM_H
-#include "../../include/types.h" // for QEMU_PACKED
+#include <qemu/compiler.h>
+#include <stdint.h>
 
 #define TLB_CONTROL_DO_NOTHING 0
 #define TLB_CONTROL_FLUSH_ALL_ASID 1

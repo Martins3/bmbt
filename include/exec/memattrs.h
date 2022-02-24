@@ -1,7 +1,6 @@
 #ifndef MEMATTRS_H
 #define MEMATTRS_H
-#include "../types.h"
-
+#include <stdint.h>
 /* Every memory transaction has associated with it a set of
  * attributes. Some of these are generic (such as the ID of
  * the bus master); some are specific to a particular kind of
