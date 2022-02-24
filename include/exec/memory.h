@@ -6,6 +6,7 @@
 #include "memattrs.h"
 #include "memop.h"
 #include <assert.h>
+#include <qemu/osdep.h>
 #include <uglib.h>
 
 #define MAX_SEGMENTS_IN_AS 100
