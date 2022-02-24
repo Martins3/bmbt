@@ -52,9 +52,4 @@ void unblock_interrupt() {
   local_irq_enable();
 }
 
-void fire_timer() {
-  constant_timer_next_event(4);
-  // TMP_TODO 不能使用下面的方法，具体原因有待调查
-  // csr_xchgl(1, 0x800 , LOONGARCH_CSR_ESTAT);
-  // TMP_TODO 也不能使用 constant_timer_next_event(0)
-}
+void fire_timer() { constant_timer_next_event(0); }
