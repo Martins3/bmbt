@@ -164,15 +164,15 @@ static void show_regs(struct pt_regs *regs, long is_tlbr) {
   }
 
   printf("ra    : %0*lx %pS\n", field, regs->regs[1], (void *)regs->regs[1]);
-  printf("CSR crmd: %08lx	", regs->csr_crmd);
+  printf("CSR crmd: %08lx ", regs->csr_crmd);
   if (is_tlbr) {
-    printf("CSR tlbprmd: %08lx	", regs->csr_tlbrprmd);
+    printf("CSR tlbprmd: %08lx  ", regs->csr_tlbrprmd);
   } else {
-    printf("CSR prmd: %08lx	", regs->csr_prmd);
+    printf("CSR prmd: %08lx ", regs->csr_prmd);
   }
-  printf("CSR ecfg: %08lx	", regs->csr_ecfg);
-  printf("CSR estat: %08lx	", regs->csr_estat);
-  printf("CSR euen: %08lx	", regs->csr_euen);
+  printf("CSR ecfg: %08lx ", regs->csr_ecfg);
+  printf("CSR estat: %08lx  ", regs->csr_estat);
+  printf("CSR euen: %08lx ", regs->csr_euen);
   printf("CSR badi: %08lx ", csr_readq(LOONGARCH_CSR_BADI));
   printf("CSR badv: %016lx ", csr_readq(LOONGARCH_CSR_BADV));
   printf("\n");
@@ -183,12 +183,12 @@ static void show_regs(struct pt_regs *regs, long is_tlbr) {
   } else {
     printf("%08lx\n", regs->csr_era);
   }
-  backtrace((long *)regs->regs[22]);
+  backtrace((long *)regs->regs[22]); /* #define fp $r22 */
 }
 
 void do_reserved(struct pt_regs *regs, long is_tlbr) {
   /*
-   * Game over - no way to handle this if it ever occurs.	 Most probably
+   * Game over - no way to handle this if it ever occurs.  Most probably
    * caused by a new unknown cpu type or after another deadly
    * hard/software error.
    */
