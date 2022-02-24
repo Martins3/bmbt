@@ -145,7 +145,6 @@ TEST test_self_sent_signal() {
   PASS();
 }
 
-// TMP_TODO : 在 kvm 中，现在一个 sleep 似乎并不容易，如果做不到，那就把这个移动到 userspace 中
 SUITE(timer) {
   RUN_TEST(test_block_and_unblock);
   RUN_TEST(test_block);
