@@ -80,7 +80,7 @@ TEST test_float(void) {
 }
 
 TEST test_interrupt(void) {
-  printf("CSR ecfg: %08lx	", csr_readq(LOONGARCH_CSR_ECFG));
+  printf("CSR ecfg: %08lx ", csr_readq(LOONGARCH_CSR_ECFG));
   ASSERT_EQ(csr_readq(LOONGARCH_CSR_ECFG), 0x71fff);
   PASS();
 }
@@ -123,7 +123,13 @@ TEST test_sqrt(void) {
   PASS();
 }
 
+TEST test_bad_instruction(void) {
+  asm(".long 0x0");
+  PASS();
+}
+
 SUITE(env_test) {
+  RUN_TEST(test_bad_instruction);
   RUN_TEST(test_sqrt);
   RUN_TEST(test_float);
   RUN_TEST(test_interrupt);

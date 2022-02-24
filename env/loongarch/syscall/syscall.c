@@ -9,7 +9,7 @@
 // #define DEBUG_KERNEL_SYSCALL
 #define CHECK_SYSCALL_RECURSIVE
 
-static inline long *r_fp() {
+static inline long *read_fp() {
   long *x;
   asm volatile("move %0, $fp" : "=r"(x));
   return x;
@@ -21,7 +21,7 @@ static inline bool in_stack(void *fp) {
 
 void backtrace(long *fp) {
   if (fp == NULL) {
-    fp = r_fp();
+    fp = read_fp();
   }
 
   while (fp != NULL) {
@@ -54,7 +54,7 @@ static _Noreturn void idle() {
 
 _Noreturn void kernel_dump() {
   local_irq_disable();
-  long *fp = r_fp();
+  long *fp = read_fp();
   backtrace(fp);
   idle();
 }
