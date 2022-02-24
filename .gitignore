@@ -11,7 +11,6 @@
 .vscode/
 compile_commands.json
 
-kernel.mak
 build_*/
 image/
 output/

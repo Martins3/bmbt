@@ -15,8 +15,20 @@ SYM_FUNC_END(except_vec_cex)
   SAVE_ALL
   move  a0, sp
   li.d  a1, 0
+
+
+  # exception in bmbt means something bad happened, if exception handler are
+  # needed, revert the code in dash.
+  # -------------------
+  csrrd t0, LOONGARCH_CSR_ERA
+  move ra, t0
+  # -------------------
+
   la.abs  t0, do_\handler
-  jirl    ra, t0, 0
+  # -------------------
+  jirl    zero, t0, 0
+  # jirl    ra, t0, 0
+  # -------------------
   la.abs  t0, ret_from_exception
   jirl    zero, t0, 0
   SYM_FUNC_END(handle_\exception)
