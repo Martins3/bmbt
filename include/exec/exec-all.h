@@ -116,6 +116,9 @@ typedef struct TranslationBlock {
 #define CF_HASH_MASK                                                           \
   (CF_COUNT_MASK | CF_LAST_IO | CF_USE_ICOUNT | CF_PARALLEL | CF_CLUSTER_MASK)
 
+  /* Per-vCPU dynamic tracing state used to generate this TB */
+  uint32_t trace_vcpu_dstate;
+
   struct tb_tc tc;
 
   /* original tb when cflags has CF_NOCACHE */
@@ -124,6 +127,10 @@ typedef struct TranslationBlock {
   /* jmp_lock placed here to fill a 4-byte hole. Its documentation is below */
   QemuSpin jmp_lock;
 
+  /* first and second physical page containing code. The lower bit
+     of the pointer tells the index in page_next[].
+     The list is protected by the TB's page('s) lock(s) */
+  uintptr_t page_next[2];
   tb_page_addr_t page_addr[2];
 
   /* The following data are used to directly call another TB from
@@ -157,17 +164,20 @@ typedef struct TranslationBlock {
   uintptr_t jmp_list_head;
   uintptr_t jmp_list_next[2];
   uintptr_t jmp_dest[2];
-
+#ifdef CONFIG_LATX
+  struct IR1_INST *_ir1_instructions;
+  int8 _top_in;
+  int8 _top_out;
+  void *next_tb[2];
+#ifdef CONFIG_LATX_PROFILER
+  /* real code generate - exclude tr_exit... */
+  uint16_t nr_code;
+#endif
+  uint64_t exec_times;
+  uint64_t exit_times;
   /* remember to free these memory when QEMU recycle one TB */
-  ETB *extra_tb;
-
-  /* Per-vCPU dynamic tracing state used to generate this TB */
-  uint32_t trace_vcpu_dstate;
-
-  /* first and second physical page containing code. The lower bit
-     of the pointer tells the index in page_next[].
-     The list is protected by the TB's page('s) lock(s) */
-  uintptr_t page_next[2];
+  ETB extra_tb;
+#endif
 } TranslationBlock;
 
 extern bool parallel_cpus;
