@@ -23,7 +23,6 @@ int constant_timer_next_event(unsigned long delta) {
   timer_config &= ~CSR_TCFG_PERIOD;
   // timer_config |= CSR_TCFG_PERIOD;
   csr_writeq(timer_config, LOONGARCH_CSR_TCFG);
-
   return 0;
 }
 
