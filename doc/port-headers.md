@@ -51,7 +51,7 @@
 
 
 # 如何保证 config-host.h 和 config-target.h 被所有的人 include
-在 `include/hw/core/cpu.h` 的函数 cpu_tb_jmp_cache_clear 的 CONFIG_X86toMIPS
+在 `include/hw/core/cpu.h` 的函数 cpu_tb_jmp_cache_clear 的 CONFIG_LATX
 在是否依赖 qemu/config-host.h 产生差别，但是实际上，一直没有注意到
 
 QEMU 采取的做法是让很多位置全部去 include osdep.h, 然后 osdep include 两者
