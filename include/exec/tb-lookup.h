@@ -25,7 +25,6 @@ tb_lookup__cpu_state(CPUState *cpu, target_ulong *pc, target_ulong *cs_base,
              (tb_cflags(tb) & (CF_HASH_MASK | CF_INVALID)) == cf_mask)) {
     return tb;
   }
-  tb = tb_htable_lookup(cpu, *pc, *cs_base, *flags, cflags);
   tb = tb_htable_lookup(cpu, *pc, *cs_base, *flags, cf_mask);
   if (tb == NULL) {
     return NULL;
