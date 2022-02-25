@@ -46,6 +46,9 @@ CONFIG_LATX=y
 CONFIG_SOFTMMU=y
 include ./src/i386/Makefile.objs
 LATX_SRC=$(addprefix src/i386/, $(obj-y))
+LATX_OBJS=$(LATX_SRC:%.c=$(BUILD_DIR)/%.o)
+$(LATX_OBJS): EXTRA_FLAGS = -I./src/i386/LATX/include
+
 C_SRC_FILES += $(LATX_SRC)
 
 OBJ_FILES := $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
@@ -84,8 +87,11 @@ libc:
 		$(MAKE) -f libc/libc.mk; \
 	fi
 
+generate: env/loongarch/include/generated/asm-offset.h
+
 env/loongarch/include/generated/asm-offset.h: env/loongarch/include/asm/ptrace.h
-	@echo "GENERATE $<"
+	@@echo "GENERATE $<"
+	@mkdir -p env/loongarch/include/generated
 	@gcc -Ienv/loongarch/include env/loongarch/asm-offset.c -o $(BUILD_DIR)/asm-offset.out
 	@$(BUILD_DIR)/asm-offset.out
 
@@ -107,7 +113,7 @@ $(bmbt) : $(OBJ_FILES) libc capstone
 		fi
 		@echo "Link      $@"
 
-.PHONY: all clean gdb run gcov clear_gcda test libc capstone
+.PHONY: all clean gdb run gcov clear_gcda test libc capstone generate
 
 GCOV_OUT=$(BUILD_DIR)/gcov
 GCOV_INFO=$(GCOV_OUT)/bmbt_coverage.info

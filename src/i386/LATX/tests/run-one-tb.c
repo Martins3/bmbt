@@ -5,9 +5,9 @@
 #include "../ir2/ir2.h"
 #include "../include/env.h"
 #include "../include/etb.h"
-#include "../include/reg_alloc.h"
-#include "../include/flag_pattern.h"
-#include "../include/flag_lbt.h"
+#include "../include/reg-alloc.h"
+#include "../include/flag-pattern.h"
+#include "../include/flag-lbt.h"
 #include <string.h>
 
 #include "../include/qemu-def.h"

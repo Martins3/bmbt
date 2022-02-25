@@ -2,10 +2,10 @@
 #define _ENV_H_
 
 #include "../include/common.h"
-#include "../include/flag_pattern.h"
+#include "../include/flag-pattern.h"
 #include "../translator/translate.h"
 #include "../x86tomips-config.h"
-#include "../include/shadow_stack.h"
+#include "../include/shadow-stack.h"
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
 #include "../x86tomips-profile-sys.h"

@@ -1,5 +1,5 @@
 #include "../include/common.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include "../include/env.h"
 #include "../x86tomips-options.h"
 

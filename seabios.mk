@@ -1,3 +1,3 @@
 all:
-	make -C seabios
+	$(MAKE) -C seabios
 	cp seabios/out/bios.bin image/bios.bin

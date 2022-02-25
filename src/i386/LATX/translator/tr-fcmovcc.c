@@ -1,7 +1,7 @@
 #include "../include/common.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include "../include/env.h"
-#include "../include/flag_lbt.h"
+#include "../include/flag-lbt.h"
 
 bool translate_fcmovb(IR1_INST *pir1)
 {

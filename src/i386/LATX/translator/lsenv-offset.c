@@ -4,10 +4,10 @@
 #include "../ir2/ir2.h"
 #include "../include/env.h"
 #include "../include/etb.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include "../x86tomips-options.h"
 #include "../include/etb.h"
-#include "../include/shadow_stack.h"
+#include "../include/shadow-stack.h"
 #include "../include/profile.h"
 
 #if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)

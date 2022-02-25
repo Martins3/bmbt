@@ -1,10 +1,10 @@
 #include "../include/common.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include "../include/env.h"
 #include "../ir2/ir2.h"
 #include "../x86tomips-options.h"
 
-#include "../translator/tr_excp.h"
+#include "../translator/tr-excp.h"
 
 /* Calculate the memory address value of IR1_OPND to IR2_OPND
  * Effective Address = disp + [base + index << scale]

@@ -1,8 +1,8 @@
 #include "../include/common.h"
 #include "../include/env.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include "../x86tomips-options.h"
-#include "../include/flag_lbt.h"
+#include "../include/flag-lbt.h"
 
 bool generate_eflag_by_lbt(
         IR2_OPND *dest,

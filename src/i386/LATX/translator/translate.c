@@ -3,15 +3,15 @@
 #include "../include/etb.h"
 #include "../ir2/ir2.h"
 #include "../ir1/ir1.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 
-#include "../include/flag_lbt.h"
+#include "../include/flag-lbt.h"
 #include "../x86tomips-options.h"
 
 #include "../include/ibtc.h"
 #include "../include/profile.h"
-#include "../include/flag_pattern.h"
-#include "../include/shadow_stack.h"
+#include "../include/flag-pattern.h"
+#include "../include/shadow-stack.h"
 
 #include <string.h>
 

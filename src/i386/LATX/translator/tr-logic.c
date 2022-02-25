@@ -1,7 +1,7 @@
 #include "../include/common.h"
 #include "../include/env.h"
-#include "../include/reg_alloc.h"
-#include "../include/flag_lbt.h"
+#include "../include/reg-alloc.h"
+#include "../include/flag-lbt.h"
 #include "../x86tomips-options.h"
 
 bool translate_shrd_imm(IR1_INST *pir1);
