@@ -53,15 +53,37 @@ mkdir build && cd build
 在 arch/x86/boot/main.c 中将 set_video 注释掉就可以继续向下运行了。
 
 ## 复现 xqm 的工作
+- 从 http://rd.loongson.cn/ 中下载:
+```sh
+git clone ssh://huxueshi@rd.loongson.cn:29418/LAT/lat && scp -p -P 29418 huxueshi@rd.loongson.cn:hooks/commit-msg lat/.git/hooks/
+git checkout latx-sys
+```
+
+在 clone 的过程中
+```txt
+Unable to negotiate with 192.168.1.123 port 22222: no matching cipher found. Their offer: aes128-cbc,3des-cbc
+```
+在 .ssh/config 中添加:
+```sh
+Host rd.loongson.cn
+  KexAlgorithms +diffie-hellman-group1-sha1
+  KexAlgorithms +diffie-hellman-group14-sha1
+```
+
 - 获取 image
   - http://old-releases.ubuntu.com/releases/10.04.0/ 中找到 ubuntu-10.04-server-i386.iso 下载，然后可以安装(tcg / kvm 都可以)
 
 - 编译参数
 ```sh
 mkdir build
+cd build
 ../configure --target-list=i386-softmmu --enable-latx --disable-werror
+make -j
 ```
+
 - 运行
 ```sh
 ./run_xqm.sh
 ```
+
+[^1]: https://unix.stackexchange.com/questions/340844/how-to-enable-diffie-hellman-group1-sha1-key-exchange-on-debian-8-0

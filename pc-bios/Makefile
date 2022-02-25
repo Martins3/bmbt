@@ -26,6 +26,10 @@ CFLAGS+=-O2
 CFLAGS+=-g
 CFLAGS+=-march=i486
 
+ifneq ($(shell uname -m), x86_64)
+$(error mismatch architecture)
+endif
+
 all:
 	mkdir -p ../image
 	cc $(CFLAGS) -c -o linuxboot_dma.o linuxboot_dma.c
