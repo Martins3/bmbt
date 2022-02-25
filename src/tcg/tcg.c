@@ -11,7 +11,7 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/thread.h"
 #include "../../include/sysemu/replay.h"
-#include "../i386/LATX/x86tomips-config.h"
+#include "../i386/LATX/include/latx-config.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
@@ -309,7 +309,7 @@ static void tcg_target_qemu_prologue(TCGContext *s) {
 #endif
 
 #ifdef CONFIG_LATX
-  i = target_x86_to_mips_static_codes(s->code_ptr);
+  i = target_latxs_static_codes(s->code_ptr);
   s->code_ptr += i;
 #ifdef BMBT
   s->code_gen_prologue = (void *)context_switch_bt_to_native;

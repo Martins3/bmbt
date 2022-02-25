@@ -1574,7 +1574,7 @@ tcg_target_ulong helper_ret_ldub_mmu(CPUArchState *env, target_ulong addr,
                                      TCGMemOpIdx oi, uintptr_t retaddr) {
   return full_ldub_mmu(env, addr, oi, retaddr);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_ret_ldub_mmu(CPUArchState *env, target_ulong addr,
                                          TCGMemOpIdx oi) {
   return full_ldub_mmu(env, addr, oi, GETPC());
@@ -1590,7 +1590,7 @@ tcg_target_ulong helper_le_lduw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr) {
   return full_le_lduw_mmu(env, addr, oi, retaddr);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_le_lduw_mmu(CPUArchState *env, target_ulong addr,
                                         TCGMemOpIdx oi) {
   return full_le_lduw_mmu(env, addr, oi, GETPC());
@@ -1619,7 +1619,7 @@ tcg_target_ulong helper_le_ldul_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr) {
   return full_le_ldul_mmu(env, addr, oi, retaddr);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_le_ldul_mmu(CPUArchState *env, target_ulong addr,
                                         TCGMemOpIdx oi) {
   return full_le_ldul_mmu(env, addr, oi, GETPC());
@@ -1640,7 +1640,7 @@ uint64_t helper_le_ldq_mmu(CPUArchState *env, target_ulong addr, TCGMemOpIdx oi,
                            uintptr_t retaddr) {
   return load_helper(env, addr, oi, retaddr, MO_LEQ, false, helper_le_ldq_mmu);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 uint64_t xtm_helper_le_ldq_mmu(CPUArchState *env, target_ulong addr,
                                TCGMemOpIdx oi) {
   return load_helper(env, addr, oi, GETPC(), MO_LEQ, false, helper_le_ldq_mmu);
@@ -1661,7 +1661,7 @@ tcg_target_ulong helper_ret_ldsb_mmu(CPUArchState *env, target_ulong addr,
                                      TCGMemOpIdx oi, uintptr_t retaddr) {
   return (int8_t)helper_ret_ldub_mmu(env, addr, oi, retaddr);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_ret_ldsb_mmu(CPUArchState *env, target_ulong addr,
                                          TCGMemOpIdx oi) {
   return (int8_t)helper_ret_ldub_mmu(env, addr, oi, GETPC());
@@ -1672,7 +1672,7 @@ tcg_target_ulong helper_le_ldsw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr) {
   return (int16_t)helper_le_lduw_mmu(env, addr, oi, retaddr);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_le_ldsw_mmu(CPUArchState *env, target_ulong addr,
                                         TCGMemOpIdx oi) {
   return (int16_t)helper_le_lduw_mmu(env, addr, oi, GETPC());
@@ -1691,7 +1691,7 @@ tcg_target_ulong helper_le_ldsl_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr) {
   return (int32_t)helper_le_ldul_mmu(env, addr, oi, retaddr);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_le_ldsl_mmu(CPUArchState *env, target_ulong addr,
                                         TCGMemOpIdx oi) {
   return (int32_t)helper_le_ldul_mmu(env, addr, oi, GETPC());
@@ -1950,7 +1950,7 @@ void helper_ret_stb_mmu(CPUArchState *env, target_ulong addr, uint8_t val,
                         TCGMemOpIdx oi, uintptr_t retaddr) {
   store_helper(env, addr, val, oi, retaddr, MO_UB);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 void xtm_helper_ret_stb_mmu(CPUArchState *env, target_ulong addr, uint8_t val,
                             TCGMemOpIdx oi) {
   store_helper(env, addr, val, oi, GETPC(), MO_UB);
@@ -1961,7 +1961,7 @@ void helper_le_stw_mmu(CPUArchState *env, target_ulong addr, uint16_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr) {
   store_helper(env, addr, val, oi, retaddr, MO_LEUW);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 void xtm_helper_le_stw_mmu(CPUArchState *env, target_ulong addr, uint16_t val,
                            TCGMemOpIdx oi) {
   store_helper(env, addr, val, oi, GETPC(), MO_LEUW);
@@ -1977,7 +1977,7 @@ void helper_le_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr) {
   store_helper(env, addr, val, oi, retaddr, MO_LEUL);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 void xtm_helper_le_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
                            TCGMemOpIdx oi) {
   store_helper(env, addr, val, oi, GETPC(), MO_LEUL);
@@ -1993,7 +1993,7 @@ void helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr) {
   store_helper(env, addr, val, oi, retaddr, MO_LEQ);
 }
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 void xtm_helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
                            TCGMemOpIdx oi) {
   store_helper(env, addr, val, oi, GETPC(), MO_LEQ);

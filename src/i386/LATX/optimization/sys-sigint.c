@@ -46,7 +46,7 @@ void latxs_tb_unlink(TranslationBlock *ctb)
 #ifdef SIGINT_NO_RELINK
         if (!ctb->is_indir_tb) {
             tcgsigint_remove_tb_from_jmp_list(ctb, 0);
-            qatomic_set(&ctb->jmp_dest[0], (uintptr_t)NULL);
+            atomic_set(&ctb->jmp_dest[0], (uintptr_t)NULL);
         }
 #endif
     }
@@ -70,7 +70,7 @@ void latxs_tb_unlink(TranslationBlock *ctb)
 #ifdef SIGINT_NO_RELINK
         if (!ctb->is_indir_tb) {
             tcgsigint_remove_tb_from_jmp_list(ctb, 1);
-            qatomic_set(&ctb->jmp_dest[1], (uintptr_t)NULL);
+            atomic_set(&ctb->jmp_dest[1], (uintptr_t)NULL);
         }
 #endif
     }

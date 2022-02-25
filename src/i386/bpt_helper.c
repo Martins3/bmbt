@@ -4,7 +4,7 @@
 #include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
 #include "cpu.h"
-#include "LATX/x86tomips-config.h"
+#include "LATX/include/latx-config.h"
 #include <stddef.h>
 #include <string.h>
 #include <math.h>

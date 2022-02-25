@@ -2,7 +2,7 @@
 #include "../../include/hw/boards.h"
 #include "../../include/qemu/main-loop.h"
 #include "../../include/qemu/rcu.h"
-#include "../i386/LATX/x86tomips-config.h"
+#include "../i386/LATX/include/latx-config.h"
 #include "../tcg/tcg.h"
 #include <qemu/seqloch.h>
 #include <qemu/timer.h>
@@ -170,9 +170,8 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
   // qemu_cond_signal(&qemu_cpu_cond);
   // qemu_guest_random_seed_thread_part2(cpu->random_seed);
 
-#ifdef CONFIG_X86toMIPS
-  x86_to_mips_init_env((CPUArchState *)cpu->env_ptr);
-  x86_to_mips_init_thread_signal(cpu);
+#ifdef CONFIG_LATX
+  latxs_init_rr_thread_signal(cpu);
 #ifdef CONFIG_BTMMU
   build_func_xqm();
   build_data_xqm();

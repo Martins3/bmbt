@@ -17,12 +17,13 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../include/exec/cpu-all.h"
 #include "../../include/exec/exec-all.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/osdep.h"
 
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-#include "../../src/i386/LATX/x86tomips-config.h"
+#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
+#include "../../src/i386/LATX/include/latx-config.h"
 #endif
 
 bool tcg_allowed;
@@ -65,8 +66,8 @@ void cpu_reloading_memory_map(void) {
 #endif
 
 void cpu_loop_exit(CPUState *cpu) {
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-  x86_to_mips_fix_after_excp_or_int();
+#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
+  latxs_fix_after_excp_or_int();
 #endif
   /* Undo the setting in cpu_tb_exec.  */
   cpu->can_do_io = 1;

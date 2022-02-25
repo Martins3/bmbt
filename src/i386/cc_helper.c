@@ -5,7 +5,7 @@
 #include "../../include/fpu/softfloat.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/osdep.h"
-#include "LATX/x86tomips-config.h"
+#include "LATX/include/latx-config.h"
 #include "cpu.h"
 
 /*
@@ -342,7 +342,7 @@ target_ulong helper_read_eflags(CPUX86State *env)
     uint32_t eflags;
 
     eflags = cpu_cc_compute_all(env, CC_OP);
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
     eflags |= env->eflags;
     if (env->df == 1) {
         eflags &= ~DF_MASK;

@@ -120,7 +120,7 @@ typedef enum X86Seg {
 #define VIP_MASK 0x00100000
 #define ID_MASK 0x00200000
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 
 /* For now, this is only used in system-mode. */
 
@@ -1353,7 +1353,7 @@ typedef struct CPUCaches {
 } CPUCaches;
 
 typedef struct CPUX86State {
-#if defined(CONFIG_X86toMIPS) || defined(CONFIG_LATX)
+#if defined(CONFIG_LATX) || defined(CONFIG_LATX)
   ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
   // ldq,only 10bits offset
 #endif
@@ -1381,7 +1381,7 @@ typedef struct CPUX86State {
                        are known at translation time. */
   uint32_t hflags2; /* various other flags, see HF2_xxx constants. */
 
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
+#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
   void *cpt_ptr; /* Point to Code Page Table */
 #if defined(CONFIG_XTM_PROFILE)
   struct {
@@ -1437,7 +1437,7 @@ typedef struct CPUX86State {
   float_status mmx_status; /* for 3DNow! float ops */
   float_status sse_status;
   uint32_t mxcsr;
-#ifndef CONFIG_X86toMIPS
+#ifndef CONFIG_LATX
   ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
 #endif
   ZMMReg xmm_t0;
@@ -1641,7 +1641,7 @@ typedef struct CPUX86State {
 #endif
 
   unsigned nr_dies;
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 #ifndef CONFIG_LATX
   /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
   uint64_t vregs[6];

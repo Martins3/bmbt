@@ -1,18 +1,18 @@
 #ifndef _QEMU_DEF_H_
 #define _QEMU_DEF_H_
 
-#include "qemu/osdep.h"
-#include "qemu/host-utils.h"
-#include "cpu.h"
-#include "disas/disas.h"
-#include "exec/exec-all.h"
-#include "tcg/tcg-op.h"
-#include "exec/cpu_ldst.h"
-#include "exec/helper-proto.h"
-#include "exec/helper-gen.h"
-#include "trace-tcg.h"
-#include "exec/log.h"
-#include "qemu/qht.h"
+#include <qemu/osdep.h>
+#include "../../cpu.h"
+#include <exec/exec-all.h>
+#include <exec/cpu-ldst.h>
+#include <exec/memop.h>
+#include <exec/tb-hash.h>
+#include <qemu/qemu-printf.h>
+#include <qemu/queue.h>
+#include <fpu/softfloat.h>
+#include "../../../i386/helper.h"
+#include "../../../tcg/tcg.h"
+#include "../../../tcg/tcg-runtime.h"
 
 /*#include "exec/gen-icount.h"*/
 

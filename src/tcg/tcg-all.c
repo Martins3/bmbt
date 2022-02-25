@@ -1,7 +1,7 @@
 #include "../../include/hw/core/cpu.h"
 #include "tcg.h"
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 extern int xtm_sigint_opt(void);
 #define XTM_SIGINT_SIGNAL 63
 #endif
@@ -23,7 +23,7 @@ void tcg_handle_interrupt(CPUState *cpu, int mask) {
   if (!qemu_cpu_is_self(cpu)) {
     qemu_cpu_kick(cpu);
   } else {
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
     if (xtm_sigint_opt()) {
       g_assert_not_reached();
       // pthread_kill(cpu->thread->thread, XTM_SIGINT_SIGNAL);

@@ -513,39 +513,9 @@ static inline bool cpu_in_exclusive_context(const CPUState *cpu) {
   return cpu->in_exclusive_context;
 }
 
-#ifdef CONFIG_X86toMIPS
-#ifndef _X86toMIPS_PROFILE_SYS_H_
-extern void xtm_pf_inc_jc_clear(void *cpu);
-#define _X86toMIPS_PROFILE_SYS_INC_JC_CLEAR_
-#endif
-
-#ifndef _XTM_CAM_CLEAR_FUNC_
-#define _XTM_CAM_CLEAR_FUNC_
-extern uint64_t cam_clear_func;
-#endif
-
-#ifndef _XTM_TBLOOKUP_OPT_
-#define _XTM_TBLOOKUP_OPT_
-extern int xtm_tblookup_opt(void);
-#endif
-
-#include "../../../src/i386/LATX/include/cross-page-check.h"
-#endif /* CONFIG_X86toMIPS */
-
 static inline void cpu_tb_jmp_cache_clear(CPUState *cpu) {
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_USER_ONLY)
-  etb_cache_clear();
-#endif
   unsigned int i;
 
-#ifdef CONFIG_X86toMIPS
-  xtm_pf_inc_jc_clear(cpu);
-  if (xtm_tblookup_opt() && cam_clear_func) {
-    ((void (*)(void))cam_clear_func)();
-  }
-  /* clear Code Page Table (cpt) */
-  xtm_cpt_flush();
-#endif
   for (i = 0; i < TB_JMP_CACHE_SIZE; i++) {
     atomic_set(&cpu->tb_jmp_cache[i], NULL);
   }

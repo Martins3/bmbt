@@ -180,7 +180,7 @@ uint8 options_to_save(void)
 
 #include "qemu-def.h"
 #include "qemu/option.h"
-#include "qemu/option_int.h"
+/* #include "qemu/option_int.h" */
 
 #define LATXS_OPT_by_hand       0
 #define LATXS_OPT_tb_link       1

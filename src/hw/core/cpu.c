@@ -69,7 +69,7 @@ void cpu_reset_interrupt(CPUState *cpu, int mask) {
   }
 }
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 extern int xtm_sigint_opt(void);
 #define XTM_SIGINT_SIGNAL 63
 #endif
@@ -78,7 +78,7 @@ void cpu_exit(CPUState *cpu) {
   atomic_set(&cpu->exit_request, 1);
   /* Ensure cpu_exec will see the exit request after TCG has exited.  */
   smp_wmb();
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   if (xtm_sigint_opt()) {
     g_assert_not_reached();
     // pthread_kill(cpu->thread->thread, XTM_SIGINT_SIGNAL);

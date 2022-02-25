@@ -8,7 +8,7 @@
 #include "../../include/hw/i386/apic.h"
 #include "cpu.h"
 #include "svm.h"
-#include "LATX/x86tomips-config.h"
+#include "LATX/include/latx-config.h"
 #include <stddef.h>
 #include <string.h>
 #include <math.h>
