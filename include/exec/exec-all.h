@@ -1,6 +1,6 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
-#include "../../src/i386/LATX/include/types.h" // for int8
+#include "../../src/i386/LATX/include/latx-types.h" // for int8
 #include "../../src/i386/cpu.h"
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
@@ -31,7 +31,7 @@ struct tb_tc {
   size_t size;
 };
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 struct IR1_INST;
 /* extra attributes we need in TB */
 typedef struct ExtraBlock {
