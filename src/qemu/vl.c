@@ -268,16 +268,10 @@ PCMachineState *machine_init() {
 }
 
 void x86tomips_tr_fldst_init(void);
-void x86_to_mips_njc_init(void);
-void x86_to_mips_cam_init(void);
-void x86_to_mips_init(void);
 void x86tomisp_ir1_init(void);
 
 void call_constructor() {
   x86tomips_tr_fldst_init();
-  x86_to_mips_njc_init();
-  x86_to_mips_cam_init();
-  x86_to_mips_init();
   x86tomisp_ir1_init();
 }
 

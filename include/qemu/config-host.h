@@ -16,7 +16,7 @@
 #define CONFIG_MINIKCONF_MODE --defconfig
 #define CONFIG_POSIX 1
 #define CONFIG_LATX 1
-#define CONFIG_X86toMIPS 1
+#define CONFIG_LATX 1
 #define CONFIG_LINUX 1
 #define CONFIG_TOOLS 1
 #define CONFIG_SLIRP 1

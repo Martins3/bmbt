@@ -8,7 +8,7 @@
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/log.h"
 #include "../../include/qemu/qemu-printf.h"
-#include "LATX/x86tomips-config.h"
+#include "LATX/include/latx-config.h"
 #include "cpu.h"
 #include "svm.h"
 #include <stdbool.h>

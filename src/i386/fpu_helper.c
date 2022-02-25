@@ -5,7 +5,7 @@
 #include "../../include/qemu/bswap.h"
 #include "../../include/hw/irq.h"
 #include "cpu.h"
-#include "LATX/x86tomips-config.h"
+#include "LATX/include/latx-config.h"
 #include <stddef.h>
 #include <string.h>
 #include <math.h>
@@ -42,7 +42,7 @@
 #define floatx80_l2e make_floatx80(0x3fff, 0xb8aa3b295c17f0bcLL)
 #define floatx80_l2t make_floatx80(0x4000, 0xd49a784bcd1b8afeLL)
 
-#if defined(CONFIG_X86toMIPS) && !defined(CONFIG_USER_ONLY)
+#if defined(CONFIG_LATX) && !defined(CONFIG_USER_ONLY)
 extern int xtm_lsfpu_opt(void);
 #endif
 
@@ -1022,11 +1022,11 @@ static void do_fstenv(CPUX86State *env, target_ulong ptr, int data32,
     uint64_t mant;
     CPU_LDoubleU tmp;
 
-#if defined(CONFIG_X86toMIPS) && !defined(CONFIG_USER_ONLY)
+#if defined(CONFIG_LATX) && !defined(CONFIG_USER_ONLY)
     if (!xtm_lsfpu_opt()) {
         /* env->fpstt contains rotated top value.
          * should be fixed with top_bias. */
-        int top_bias = xtm_get_top_bias_from_env(env);
+        int top_bias = latxs_get_top_bias_from_env(env);
         fpus = (env->fpus & ~0x3800) | ((env->fpstt + top_bias) & 0x7) << 11;
     } else {
         fpus = (env->fpus & ~0x3800) | (env->fpstt & 0x7) << 11;
@@ -1183,11 +1183,11 @@ static void do_xsave_fpu(CPUX86State *env, target_ulong ptr, uintptr_t ra)
     int fpus, fptag, i;
     target_ulong addr;
 
-#if defined(CONFIG_X86toMIPS) && !defined(CONFIG_USER_ONLY)
+#if defined(CONFIG_LATX) && !defined(CONFIG_USER_ONLY)
     if (!xtm_lsfpu_opt()) {
         /* env->fpstt contains rotated top value.
          * should be fixed with top_bias. */
-        int top_bias = xtm_get_top_bias_from_env(env);
+        int top_bias = latxs_get_top_bias_from_env(env);
         fpus = (env->fpus & ~0x3800) | ((env->fpstt + top_bias) & 0x7) << 11;
     } else {
         fpus = (env->fpus & ~0x3800) | (env->fpstt & 0x7) << 11;

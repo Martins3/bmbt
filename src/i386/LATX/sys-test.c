@@ -9,7 +9,8 @@
 
 #include "latx-test-sys.h"
 #include "qemu/option.h"
-#include "qemu/option_int.h"
+// TMP_TODO 更加深入的分析
+/* #include "qemu/option_int.h" */
 
 int option_test_sys;
 int option_test_type;

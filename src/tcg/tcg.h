@@ -115,7 +115,7 @@ tcg_target_ulong helper_le_ldul_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
 uint64_t helper_le_ldq_mmu(CPUArchState *env, target_ulong addr, TCGMemOpIdx oi,
                            uintptr_t retaddr);
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_ret_ldub_mmu(CPUArchState *, target_ulong,
                                          TCGMemOpIdx);
 tcg_target_ulong xtm_helper_le_lduw_mmu(CPUArchState *, target_ulong,
@@ -132,7 +132,7 @@ tcg_target_ulong helper_le_ldsw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
 tcg_target_ulong helper_le_ldsl_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 tcg_target_ulong xtm_helper_ret_ldsb_mmu(CPUArchState *, target_ulong,
                                          TCGMemOpIdx);
 tcg_target_ulong xtm_helper_le_ldsw_mmu(CPUArchState *, target_ulong,
@@ -149,7 +149,7 @@ void helper_le_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr);
 void helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr);
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 void xtm_helper_ret_stb_mmu(CPUArchState *, target_ulong, uint8_t, TCGMemOpIdx);
 void xtm_helper_le_stw_mmu(CPUArchState *, target_ulong, uint16_t, TCGMemOpIdx);
 void xtm_helper_le_stl_mmu(CPUArchState *, target_ulong, uint32_t, TCGMemOpIdx);
@@ -310,7 +310,7 @@ static inline unsigned get_alignment_bits(MemOp memop) {
 
 #ifdef HAVE_TCG_QEMU_TB_EXEC
 uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr);
-#elif defined(CONFIG_X86toMIPS)
+#elif defined(CONFIG_LATX)
 #define tcg_qemu_tb_exec(env, tb_ptr)                                          \
   ((uintptr_t(*)(void *, void *))context_switch_bt_to_native)(tb_ptr, env);    \
   if (current_cpu->exception_index == EXCP_DEBUG) {                            \

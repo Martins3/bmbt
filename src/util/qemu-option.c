@@ -1,5 +1,5 @@
 #include "../../include/qemu/option.h"
-#include "../../src/i386/LATX/x86tomips-config-sys.h"
+#include "../../src/i386/LATX/include/latx-config.h"
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -65,7 +65,7 @@ static QemuOpt options[] = {
 };
 
 void init_xtm_options() {
-  QemuOptsList *opts_list = &qemu_xtm_opts;
+  QemuOptsList *opts_list = &qemu_latx_opts;
   QemuOpts *opts = &__xtm_qemu_opts;
   opts->list = opts_list;
 
@@ -74,5 +74,5 @@ void init_xtm_options() {
   for (int i = 0; i < sizeof(options) / sizeof(QemuOpt); ++i) {
     QTAILQ_INSERT_TAIL(&opts->head, &(options[i]), next);
   }
-  x86_to_mips_parse_options(opts);
+  latx_sys_parse_options(opts);
 }

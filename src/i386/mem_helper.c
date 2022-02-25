@@ -4,7 +4,7 @@
 #include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/qemu/bswap.h"
 #include "cpu.h"
-#include "LATX/x86tomips-config.h"
+#include "LATX/include/latx-config.h"
 
 
 void helper_cmpxchg8b_unlocked(CPUX86State *env, target_ulong a0)

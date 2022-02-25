@@ -8,7 +8,7 @@
 #include "cpu.h"
 #include "../../include/exec/cpu-all.h"
 #include "svm.h"
-#include "LATX/x86tomips-config.h"
+#include "LATX/include/latx-config.h"
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
