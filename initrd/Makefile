@@ -1,4 +1,3 @@
-# https://www.itread01.com/content/1550477197.html
 ifneq ($(shell uname -m), x86_64)
 $(error mismatch architecture)
 endif
