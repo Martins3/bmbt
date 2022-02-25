@@ -14,7 +14,7 @@
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
 #include "../../include/sysemu/replay.h"
-#include "../i386/LATX/x86tomips-config.h"
+#include "../i386/LATX/include/latx-config.h"
 #include "../i386/cpu.h"
 #include "../i386/svm.h"
 #include "tcg.h"
@@ -93,8 +93,8 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
   }
 #endif /* DEBUG_DISAS */
 
-#ifdef CONFIG_X86toMIPS
-  x86_to_mips_before_exec_tb(cpu, itb);
+#ifdef CONFIG_LATX_DEBUG
+  latx_before_exec_trace_tb(env, itb);
 #endif
   if (itb->pc == breakpoint_addrx) {
     breakpoint_hit_count += 1;
@@ -106,14 +106,8 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
   }
 
   ret = tcg_qemu_tb_exec(env, tb_ptr);
-#ifdef CONFIG_X86toMIPS
-#ifndef CONFIG_SOFTMMU
-#ifdef N64
-  if (ret & ~TB_EXIT_MASK)
-    ret |= (uintptr_t)itb & 0xffffffff00000000;
-#endif
-#endif
-  x86_to_mips_after_exec_tb(env, itb);
+#ifdef CONFIG_LATX_DEBUG
+  latx_after_exec_trace_tb(env, itb);
 #endif
   cpu->can_do_io = 1;
   last_tb = (TranslationBlock *)(ret & ~TB_EXIT_MASK);
@@ -167,12 +161,12 @@ static inline void tb_add_jump(TranslationBlock *tb, int n,
     goto out_unlock_next;
   }
 
-#ifndef CONFIG_X86toMIPS
+#ifndef CONFIG_LATX
   /* patch the native jump address */
   tb_set_jmp_target(tb, n, (uintptr_t)tb_next->tc.ptr);
 #else
   /* check fpu rotate and patch the native jump address */
-  x86_to_mips_tb_set_jmp_target(tb, n, tb_next);
+  latx_tb_set_jmp_target(tb, n, tb_next);
 #endif
 
   /* add in TB jmp list */
@@ -573,7 +567,9 @@ int cpu_exec(CPUState *cpu) {
 
       tb = tb_find(cpu, last_tb, tb_exit, cflags);
 
+#ifdef CONFIG_LATX_DEBUG
       trace_tb_execution(cpu, tb);
+#endif
 
       cpu_loop_exec_tb(cpu, tb, &last_tb, &tb_exit);
 

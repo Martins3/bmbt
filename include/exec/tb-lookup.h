@@ -3,13 +3,7 @@
 #include "../exec/exec-all.h"
 #include "../exec/tb-hash.h"
 #include "../hw/core/cpu.h"
-
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-#ifdef CONFIG_XTM_PROFILE
-#include "x86tomips-profile-sys.h"
-#endif
-// #include "../../src/i386/LATX/include/cross-page-check.h"
-#endif
+#include "../../src/tcg/tcg.h"
 
 static inline TranslationBlock *
 tb_lookup__cpu_state(CPUState *cpu, target_ulong *pc, target_ulong *cs_base,
@@ -29,24 +23,14 @@ tb_lookup__cpu_state(CPUState *cpu, target_ulong *pc, target_ulong *cs_base,
              tb->flags == *flags &&
              tb->trace_vcpu_dstate == *cpu->trace_dstate &&
              (tb_cflags(tb) & (CF_HASH_MASK | CF_INVALID)) == cf_mask)) {
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_XTM_PROFILE)
-    xtm_pf_jmp_cache(cpu, tb);
-#endif
     return tb;
   }
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_XTM_PROFILE)
-  else {
-    xtm_pf_jmp_cache(cpu, NULL);
-  }
-#endif
+  tb = tb_htable_lookup(cpu, *pc, *cs_base, *flags, cflags);
   tb = tb_htable_lookup(cpu, *pc, *cs_base, *flags, cf_mask);
   if (tb == NULL) {
     return NULL;
   }
   atomic_set(&cpu->tb_jmp_cache[hash], tb);
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-  xtm_cpt_insert_tb(tb);
-#endif
   return tb;
 }
 

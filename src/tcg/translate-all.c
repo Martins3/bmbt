@@ -25,16 +25,6 @@
 int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
                             void *code_hightwater, int *search_size);
 
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-// #include "../i386/LATX/include/cross-page-check.h"
-#include "../i386/LATX/x86tomips-profile-sys.h"
-extern uint64_t cam_clear_key_func;
-#ifndef _XTM_TBLOOKUP_OPT_
-#define _XTM_TBLOOKUP_OPT_
-extern int xtm_tblookup_opt(void);
-#endif
-#endif
-
 /* #define DEBUG_TB_INVALIDATE */
 /* #define DEBUG_TB_FLUSH */
 /* make various TB consistency checks */
@@ -213,7 +203,7 @@ static void page_table_config_init(void) {
 
 static void cpu_gen_init(void) { tcg_context_init(&tcg_init_ctx); }
 
-#ifndef CONFIG_X86toMIPS
+#ifndef CONFIG_LATX
 /* Encode VAL as a signed leb128 sequence at P.
    Return P incremented past the encoded value.  */
 static uint8_t *encode_sleb128(uint8_t *p, target_long val) {
@@ -254,7 +244,7 @@ static target_long decode_sleb128(uint8_t **pp) {
   return val;
 }
 
-#ifndef CONFIG_X86toMIPS
+#ifndef CONFIG_LATX
 /* Encode the data collected about the instructions while compiling TB.
    Place the data at BLOCK, and return the number of bytes consumed.
 
@@ -1146,7 +1136,7 @@ static gboolean tb_host_size_iter(gpointer key, gpointer value, gpointer data) {
   return false;
 }
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 extern void etb_free(ETB *etb);
 static gboolean x86_to_mips_free_etb(gpointer key, gpointer value,
                                      gpointer data) {
@@ -1180,7 +1170,7 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count) {
            tcg_code_size(), nb_tbs, nb_tbs > 0 ? host_size / nb_tbs : 0);
   }
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   tcg_tb_foreach(x86_to_mips_free_etb, 0);
 #endif
 
@@ -1329,13 +1319,13 @@ static inline void tb_remove_from_jmp_list(TranslationBlock *orig, int n_orig) {
   g_assert_not_reached();
 }
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
 extern int xtm_branch_opt(void);
 #endif
 /* reset the jump entry 'n' of a TB so that it is not chained to
    another TB */
 static inline void tb_reset_jump(TranslationBlock *tb, int n) {
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_X86toMIPS)
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX)
   if (xtm_branch_opt() && n == 1 &&
       tb->extra_tb->branch_to_target_direct_in_mips_branch == 1) {
     uint32_t *addr =
@@ -1349,7 +1339,7 @@ static inline void tb_reset_jump(TranslationBlock *tb, int n) {
 
   uintptr_t addr = (uintptr_t)(tb->tc.ptr + tb->jmp_reset_offset[n]);
   tb_set_jmp_target(tb, n, addr);
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   if (tb->extra_tb)
     tb->extra_tb->next_tb[n] = NULL;
 #endif
@@ -1413,11 +1403,6 @@ static void do_tb_phys_invalidate(TranslationBlock *tb,
 
   /* remove the TB from the hash list */
   h = tb_jmp_cache_hash_func(tb->pc);
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-  if (xtm_tblookup_opt() && cam_clear_key_func) {
-    ((void (*)(uint64_t))cam_clear_key_func)((uint64_t)tb->pc);
-  }
-#endif
   CPU_FOREACH(cpu) {
     if (atomic_read(&cpu->tb_jmp_cache[h]) == tb) {
       atomic_set(&cpu->tb_jmp_cache[h], NULL);
@@ -1431,7 +1416,7 @@ static void do_tb_phys_invalidate(TranslationBlock *tb,
   /* suppress any remaining jumps to this TB */
   tb_jmp_unlink(tb);
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   /* free extra_tb */
   etb_free(tb->extra_tb);
   tb->extra_tb = NULL;
@@ -1659,13 +1644,13 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
     max_insns = 1;
   }
 
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   int xtm_is_bo = 0;
 #endif
 
 buffer_overflow:
   tb = tcg_tb_alloc(tcg_ctx);
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   if (unlikely(!tb) || xtm_is_bo) {
 #else
   if (unlikely(!tb)) {
@@ -1807,7 +1792,7 @@ static void tb_invalidate_phys_page_range__locked(struct page_collection *pages,
   }
 #endif
 
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_USER_ONLY)
+#if defined(CONFIG_LATX) && defined(CONFIG_USER_ONLY)
   etb_cache_clear();
 #endif
 
@@ -2003,7 +1988,7 @@ static bool tb_invalidate_phys_page(tb_page_addr_t addr, uintptr_t pc) {
 #endif
   assert_page_locked(p);
 
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_USER_ONLY)
+#if defined(CONFIG_LATX) && defined(CONFIG_USER_ONLY)
   etb_cache_clear();
 #endif
 
@@ -2077,18 +2062,6 @@ void cpu_io_recompile(CPUState *cpu, uintptr_t retaddr) {
 static void tb_jmp_cache_clear_page(CPUState *cpu, target_ulong page_addr) {
   unsigned int i, i0 = tb_jmp_cache_hash_page(page_addr);
 
-#if defined(CONFIG_X86toMIPS) && defined(CONFIG_SOFTMMU)
-  xtm_pf_inc_jc_clear_page(cpu, page_addr);
-  if (xtm_tblookup_opt() && cam_clear_key_func) {
-    for (i = 0; i < TB_JMP_PAGE_SIZE; i++) {
-      TranslationBlock *tb = cpu->tb_jmp_cache[i0 + i];
-      if (tb) {
-        ((void (*)(uint64_t))cam_clear_key_func)((uint64_t)tb->pc);
-      }
-    }
-  }
-  xtm_cpt_flush_page(page_addr);
-#endif
   for (i = 0; i < TB_JMP_PAGE_SIZE; i++) {
     atomic_set(&cpu->tb_jmp_cache[i0 + i], NULL);
   }
@@ -2144,7 +2117,7 @@ struct tb_tree_stats {
   size_t host_size;
   size_t target_size;
   size_t max_target_size;
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   size_t host_inst_nr;
   size_t target_inst_nr;
   size_t max_target_inst_nr;
@@ -2171,7 +2144,7 @@ static gboolean tb_tree_stats_iter(gpointer key, gpointer value,
   tst->nb_tbs++;
   tst->host_size += tb->tc.size;
   tst->target_size += tb->size;
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
   tst->host_inst_nr += (tb->tc.size) >> 2;
   tst->target_inst_nr += tb->icount;
   if (tb->icount > tst->max_target_inst_nr) {
@@ -2215,13 +2188,13 @@ void dump_exec_info(void)
     struct tb_tree_stats tst = {};
     struct qht_stats hst;
     size_t nb_tbs, flush_full, flush_part, flush_elide;
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
     size_t cpl0_nb_tbs, cpl3_nb_tbs;
 #endif
 
     tcg_tb_foreach(tb_tree_stats_iter, &tst);
     nb_tbs = tst.nb_tbs;
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
     cpl0_nb_tbs = tst.cpl0_nb_tbs;
     cpl3_nb_tbs = tst.cpl3_nb_tbs;
 #endif
@@ -2241,7 +2214,7 @@ void dump_exec_info(void)
     qemu_printf("TB avg host size         %zu bytes (expansion ratio: %0.1f)\n",
                 nb_tbs ? tst.host_size / nb_tbs : 0,
                 tst.target_size ? (double)tst.host_size / tst.target_size : 0);
-#ifdef CONFIG_X86toMIPS
+#ifdef CONFIG_LATX
     qemu_printf("TB avg target inst       %zu max=%zu\n",
                 nb_tbs ? tst.target_inst_nr / nb_tbs : 0,
                 tst.max_target_inst_nr);
@@ -2301,8 +2274,7 @@ void tcg_flush_softmmu_tlb(CPUState *cs) {
 #endif
 }
 
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_X86toMIPS) &&                    \
-    defined(CONFIG_XTM_TEST)
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX) && defined(CONFIG_XTM_TEST)
 
 TranslationBlock *tt_alloc_tb(CPUState *cpu);
 void *get_code_highwater(void);
