@@ -1,127 +1,221 @@
 #ifndef _ENV_H_
 #define _ENV_H_
 
-#include "../include/common.h"
-#include "../include/flag-pattern.h"
-#include "../translator/translate.h"
-#include "../x86tomips-config.h"
-#include "../include/shadow-stack.h"
+#include "flag-pattern.h"
+#include "cpu.h"
 
-#if defined(CONFIG_XTM_PROFILE) && defined(CONFIG_SOFTMMU)
-#include "../x86tomips-profile-sys.h"
+typedef struct {
+    bool is_used;/* don't use now, may use for free in the future*/
+    int16 physical_id;
+} TEMP_REG_STATUS;
+
+/* itemp */
+#define ITEMP0_NUM      4
+#define ITEMP1_NUM      5
+#define ITEMP2_NUM      6
+#define ITEMP3_NUM      7
+#define ITEMP4_NUM      8
+#define ITEMP5_NUM      9
+#define ITEMP6_NUM      10
+#define ITEMP7_NUM      11
+#define ITEMP8_NUM      12
+#define ITEMP9_NUM      13
+/* ftemp */
+#define FTEMP0_NUM      9
+#define FTEMP1_NUM      10
+#define FTEMP2_NUM      11
+#define FTEMP3_NUM      12
+#define FTEMP4_NUM      13
+#define FTEMP5_NUM      14
+#define FTEMP6_NUM      15
+
+static const TEMP_REG_STATUS itemp_status_default[] = {
+    {false, ITEMP0_NUM}, {false, ITEMP1_NUM},
+    {false, ITEMP2_NUM}, {false, ITEMP3_NUM},
+    {false, ITEMP4_NUM}, {false, ITEMP5_NUM},
+    {false, ITEMP6_NUM}, {false, ITEMP7_NUM},
+    {false, ITEMP8_NUM}, {false, ITEMP9_NUM}
+};
+
+#ifdef CONFIG_SOFTMMU
+
+#ifdef TARGET_X86_64
+/* temp registers in system mode : a4, a5, a7, t8, x, fp */
+static const TEMP_REG_STATUS latxs_itemp_status_default[] = {
+    {false, 8}, {false, 9}, {false, 11},
+    {false, 20}, {false, 21}, {false, 22}
+};
+#else
+/* temp registers in system mode : T0 - T7 */
+static const TEMP_REG_STATUS latxs_itemp_status_default[] = {
+    {false, 12}, {false, 13}, {false, 14}, {false, 15},
+    {false, 16}, {false, 17}, {false, 18}, {false, 19}
+};
+#define LATXS_ITMP_CONTINUS
+#define LATXS_ITMP_MIN 12
+#define LATXS_ITMP_MAX 19
 #endif
 
-#include "../include/cross-page-check.h"
+#define latxs_itemp_status_num \
+    (sizeof(latxs_itemp_status_default) / sizeof(TEMP_REG_STATUS))
+
+#endif
+
+static const TEMP_REG_STATUS ftemp_status_default[] = {
+    {false, FTEMP0_NUM}, {false, FTEMP1_NUM},
+    {false, FTEMP2_NUM}, {false, FTEMP3_NUM},
+    {false, FTEMP4_NUM}, {false, FTEMP5_NUM},
+    {false, FTEMP6_NUM}
+};
+#define LATXS_FTMP_CONTINUS
+#define LATXS_FTMP_MIN      FTEMP0_NUM
+#define LATXS_FTMP_MAX      FTEMP6_NUM
+
+#define itemp_status_num \
+    (sizeof(itemp_status_default) / sizeof(TEMP_REG_STATUS))
+#define ftemp_status_num \
+    (sizeof(ftemp_status_default) / sizeof(TEMP_REG_STATUS))
+
+typedef struct TRANSLATION_DATA {
+    EXTENSION_MODE
+    ireg_em[IR2_ITEMP_MAX]; /* extension mode of the 32 integer registers */
+    int8 ireg_eb[IR2_ITEMP_MAX]; /* bits number where the extension starts */
+
+    void *curr_tb; /* from QEMU */
+
+    /* ir1 */
+    IR1_INST *curr_ir1_inst;
+    /* uint8       ir1_dump_threshold[MAX_IR1_NUM_PER_TB]; */
+
+    /* ir2 */
+    IR2_INST *ir2_inst_array;
+    int ir2_inst_num_max;
+    int ir2_inst_num_current;
+    int real_ir2_inst_num;
+
+    /* the list of ir2 */
+    IR2_INST *first_ir2;
+    IR2_INST *last_ir2;
+
+    /* label number */
+    int label_num;
+
+    /* temp register number */
+    int itemp_num;
+    int ftemp_num;
+    TEMP_REG_STATUS itemp_status[itemp_status_num];
+    TEMP_REG_STATUS ftemp_status[ftemp_status_num];
+
+    int curr_top;               /* top value (changes when translating) */
+
+    /* TODO : support static translation */
+    uint8 curr_ir1_skipped_eflags; /* these eflag calculation can be skipped */
+                                   /* (because of flag pattern, etc) */
+
+#ifdef CONFIG_SOFTMMU
+    int max_insns; /* max number of target instruction */
+    void *code_highwater; /* to check buffer overflow */
+
+    IR1_INST *ir1_inst_array;
+    int ir1_nr;
+
+    int slow_path_rcd_max;
+    int slow_path_rcd_nr;
+    int in_gen_slow_path;
+    void *slow_path_rcd;
+
+    int x86_ins_idx[MAX_IR1_NUM_PER_TB];
+    int x86_ins_lisa_nr[MAX_IR1_NUM_PER_TB];
+    int x86_ins_nr;
+    int x86_ins_size;
+
+    EXMode reg_exmode[CPU_NB_REGS];
+    EXBits reg_exbits[CPU_NB_REGS];
+
+    uint32_t itemp_mask;
+    uint32_t ftemp_mask;
+    uint32_t itemp_mask_bk;
+    int itemp_saved;
+
+    /* flags for system-mode translation */
+    struct __sys {
+        uint32_t flags; /* all execution flags */
+        uint32_t cflags; /* compile flags*/
+        ADDRX pc;
+        ADDRX cs_base;
+        int pe;     /* protected mode */
+        int code32; /* 32 bit code segment */
+#ifdef TARGET_X86_64
+        int lma;    /* long mode active */
+        int code64; /* 64 bit code segment */
+#endif
+        int ss32;   /* 32 bit stack segment */
+        int addseg; /* non zero if either DS/ES/SS have a non zero base */
+        int f_st;   /* currently unused */
+        int vm86;   /* vm86 mode */
+        int cpl;    /* current privilege level */
+        int iopl;   /* I/O privilege level */
+        int tf;     /* TF cpu flag */
+        int mem_index; /* select memory access functions */
+        int popl_esp_hack; /* for correct popl with esp base handling */
+        int cpuid_features;
+        int cpuid_ext_features;
+        int cpuid_ext2_features;
+        int cpuid_ext3_features;
+        int cpuid_7_0_ebx_features;
+        int cpuid_xsave_features;
+        int bp_hit;
+    } sys;
+
+    /* flags for special EOB */
+    int need_eob;
+    int inhibit_irq;
+    int recheck_tf; /* currently not used. it is mainly for debug.*/
+    /*
+     * Special EOB is ended with a jmp to next instruction.
+     * Some special instruction will modify eip in helper function.
+     * The the execution will not continue from the next instruction.
+     * Set this to ignoe the eip update in generate_exit_tb() of jmp.
+     */
+    int ignore_eip_update;
+    int ignore_top_update;
+
+    /* exit label for icount_decr less than zero */
+    IR2_OPND exitreq_label;
+
+    int end_with_exception;
+    int dec_icount_inst_id;
+
+    int need_save_currtb_for_int;
+#endif
+
+} TRANSLATION_DATA;
+
+#ifdef CONFIG_SOFTMMU
+EXMode latxs_td_get_reg_extm(int gpr);
+EXBits latxs_td_get_reg_extb(int gpr);
+void latxs_td_set_reg_extm(int gpr, EXMode em);
+void latxs_td_set_reg_extb(int gpr, EXBits eb);
+void latxs_td_set_reg_extmb(int gpr, EXMode em, EXBits eb);
+
+void latxs_td_fpu_set_top(int ctop);
+int  latxs_td_fpu_get_top(void);
+#endif
 
 typedef struct ENV {
-    CPUX86State *cpu_state;     /* from QEMU,CPUArchState */
-    TRANSLATION_DATA *tr_data;  /* from X86toMIPS */
-    FLAG_PATTERN_DATA *fp_data; /* from X86toMIPS */
-#ifdef CONFIG_SOFTMMU
-    int after_exec_tb_fixed; /* mainly for FPU TOP */
-    struct {
-        TranslationBlock *tb_unlinked;
-    } sigint_data;
-    struct {
-        uint64_t total_tb_executed;
-        int last_tb_cpl;
-    } monitor_data;
-    struct {
-        cpt_t cpt; /* Code Page Table */
-    } cpc_data;
+    void *cpu_state;            /* from QEMU,CPUArchState */
+    TRANSLATION_DATA *tr_data;  /* from LATX */
+#ifdef CONFIG_LATX_FLAG_PATTERN
+    FLAG_PATTERN_DATA *fp_data; /* from LATX */
 #endif
-#ifdef CONFIG_XTM_FLAG_INT
-    /* Flag to help printing only one line info about that
-     * this CPU is handling interrupt or exception. */
-    int   trace_is_in_int;
+#ifdef CONFIG_SOFTMMU
+    struct {
+        void *tb_unlinked;
+    } sigint_data;
+    int after_exec_tb_fixed;
 #endif
 } ENV;
 
-#ifdef BMBT
-extern __thread ENV *lsenv;
-#else
-extern ENV *lsenv;
-#endif
-
-/* Functions to access ENV's attributes */
-/* Integer Registers */
-int lsenv_offset_of_mips_regs(ENV *lsenv,int i);
-int lsenv_offset_of_mips_iregs(ENV *lsenv,int i);
-int lsenv_offset_of_gpr(ENV *lsenv, int i);
-/* Eflags */
-int lsenv_offset_of_eflags(ENV *lsenv);
-int lsenv_offset_of_cc_src(ENV *lsenv);
-int lsenv_offset_of_cc_op(ENV *lsenv);
-/* FPU */
-int lsenv_offset_of_top(ENV *lsenv);
-int lsenv_offset_of_status_word(ENV *lsenv);
-int lsenv_offset_of_control_word(ENV *lsenv);
-int lsenv_offset_of_tag_word(ENV *lsenv);
-int lsenv_offset_of_fptags(ENV *lsenv);
-int lsenv_offset_of_fpr(ENV *lsenv, int i);
-int lsenv_offset_of_mxcsr(ENV *lsenv);
-int   lsenv_get_top(ENV *lsenv);
-void  lsenv_set_top(ENV *lsenv, int new_fpstt);
-FPReg lsenv_get_fpregs(ENV *lsenv, int i);
-void  lsenv_set_fpregs(ENV *lsenv, int i, FPReg new_value);
-int   lsenv_get_fpu_control_word(ENV *lsenv);
-/* Virtual Registers */
-int lsenv_offset_of_vreg(ENV *lsenv, int i);
-int lsenv_offset_of_guest_base(ENV *lsenv);
-int lsenv_offset_of_last_executed_tb(ENV *lsenv);
-int lsenv_offset_of_next_eip(ENV *lsenv);
-int lsenv_offset_of_top_bias(ENV *lsenv);
-ADDR lsenv_get_vreg(ENV *lsenv, int i);
-void lsenv_set_vreg(ENV *lsenv, int i, ADDR val);
-ADDR  lsenv_get_guest_base(ENV *lsenv);
-void  lsenv_set_guest_base(ENV *lsenv, ADDR gbase);
-ADDR  lsenv_get_last_executed_tb(ENV *lsenv);
-void  lsenv_set_last_executed_tb(ENV *lsenv, ADDR tb);
-ADDRX lsenv_get_next_eip(ENV *lsenv);
-void  lsenv_set_next_eip(ENV *lsenv, ADDRX eip);
-int   lsenv_get_top_bias(ENV *lsenv);
-void  lsenv_set_top_bias(ENV *lsenv, int top_bias);
-int   lsenv_get_fast_cs_mask(ENV *lsenv);
-void  lsenv_set_fast_cs_mask(ENV *lsenv, int mask);
-/* Segment Registers */
-int lsenv_offset_of_seg_base(ENV *lsenv, int i);
-int lsenv_offset_of_seg_selector(ENV *lsenv, int i);
-int lsenv_offset_of_seg_limit(ENV *lsenv, int i);
-int lsenv_offset_of_seg_flags(ENV *lsenv, int i);
-int lsenv_offset_of_gdt_base(ENV *lsenv);
-int lsenv_offset_of_gdt_limit(ENV *lsenv);
-/* SIMD */
-int lsenv_offset_of_mmx(ENV *lsenv, int i);
-int lsenv_offset_of_mmx_t0(ENV *lsenv);
-int lsenv_offset_of_xmm_t0(ENV *lsenv);
-int lsenv_offset_of_xmm(ENV *lsenv, int i);
-int lsenv_offset_of_ss(ENV *lsenv);
-int lsenv_offset_of_fast_cs_mask(ENV *lsenv);
-/* Others */
-int lsenv_offset_of_eip(ENV *lsenv);
-int lsenv_offset_of_df(ENV *lsenv);
-int lsenv_offset_of_tr_data(ENV *lsenv);
-int lsenv_get_last_executed_tb_top_out(ENV *lsenv);
-
-/* Functions to access ENV's interrupt/exception attributes
- * Mainly in user-mode to simulate the 'int' instruction */
-int lsenv_offset_exception_index(ENV *lsenv);
-int lsenv_offset_exception_next_eip(ENV *lsenv);
-void set_CPUX86State_error_code(ENV *lsenv, int error_code);
-void set_CPUX86State_exception_is_int(ENV *lsenv, int exception_is_int);
-void set_CPUState_can_do_io(ENV *lsenv, int can_do_io);
-void helper_raise_int(void);
-void siglongjmp_cpu_jmp_env(void);
-
-/* Functions to access QEMU's data */
-uint8_t cpu_read_code_via_qemu(CPUX86State *env, ADDRX pc);
-ADDR cpu_get_guest_base(void);
-
-/* Functions to access QEMU's TB */
-void *qm_tb_get_jmp_reset_offset(TranslationBlock *tb);
-void *qm_tb_get_jmp_target_arg(TranslationBlock *tb);
-
-void x86tomips_fini(void);
 /* eflags mask */
 #define CF_BIT (1 << 0)
 #define PF_BIT (1 << 2)
@@ -179,6 +273,7 @@ void x86tomips_fini(void);
 #define X87_SR_OFF_C1           9
 #define X87_SR_OFF_C2           10
 #define X87_SR_OFF_C3           14
+#define X87_SR_OFF_B            15
 
 /* x87 FPU Control Register */
 #define X87_CR_OFF_IM           0
@@ -195,34 +290,6 @@ void x86tomips_fini(void);
 #define X87_CR_RC_RD            0x1
 #define X87_CR_RC_RU            0x2
 #define X87_CR_RC_RZ            0x3
-
-#ifdef CONFIG_SOFTMMU
-int lsenv_offset_of_idtr_base(ENV *lsenv);
-int lsenv_offset_of_idtr_limit(ENV *lsenv);
-int lsenv_offset_of_gdtr_base(ENV *lsenv);
-int lsenv_offset_of_gdtr_limit(ENV *lsenv);
-int lsenv_offset_of_ldtr_selector(ENV *lsenv);
-int lsenv_offset_of_tr_selector(ENV *lsenv);
-int lsenv_offset_of_cr(ENV *lsenv, int i);
-int lsenv_offset_of_hflags(ENV *lsenv);
-uint32 lsenv_get_hflags(ENV* lsenv);
-ADDRX lsenv_get_eip(ENV *lsenv);
-void qm_flush_icache(ADDR s, ADDR e);
-void qm_tb_clr_ir1(TranslationBlock *tb);
-#ifdef CONFIG_XTM_PROFILE
-
-#define XTM_PF_LSENV_OFFSET_FUNC_DEF(group, name) \
-int lsenv_offset_of_pf_data_ ## group ## _ ## name (ENV *lsenv);
-
-XTM_PF_LSENV_OFFSET_FUNC_DEF(jc, is_jmpdr)
-XTM_PF_LSENV_OFFSET_FUNC_DEF(jc, is_jmpin)
-XTM_PF_LSENV_OFFSET_FUNC_DEF(jc, is_sys_eob)
-XTM_PF_LSENV_OFFSET_FUNC_DEF(jc, is_excp)
-
-XTM_PF_LSENV_OFFSET_FUNC_DEF(tbf, is_mov)
-XTM_PF_LSENV_OFFSET_FUNC_DEF(tbf, is_pop)
-
-#endif
-#endif
-
+/* Exception Masks */
+#define X87_CR_EXCP_MASK        0x3f
 #endif

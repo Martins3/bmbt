@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/common.h"
-#include "../ir1/ir1.h"
+#include "common.h"
+#include "ir1.h"
 
 IR1_OPND al_ir1_opnd;
 IR1_OPND ah_ir1_opnd;
@@ -71,6 +71,14 @@ IR1_OPND ebp_mem32_ir1_opnd;
 IR1_OPND esi_mem32_ir1_opnd;
 IR1_OPND edi_mem32_ir1_opnd;
 
+csh handle;
+#ifdef CONFIG_SOFTMMU
+csh handle16;
+#ifdef TARGET_X86_64
+csh handle64;
+#endif
+#endif
+
 static IR1_OPND ir1_opnd_new_static_reg(IR1_OPND_TYPE opnd_type, int size,
                                         x86_reg reg)
 {
@@ -121,29 +129,29 @@ static IR1_OPND ir1_opnd_new_static_mem(IR1_OPND_TYPE opnd_type, int size,
 
     return ir1_opnd;
 }
-void x86tomisp_ir1_init(void)
+static void __attribute__((__constructor__)) x86tomisp_ir1_init(void)
 {
-    al_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_AL);
-    ah_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_AH);
-    ax_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_AX);
+    al_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_AL);
+    ah_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_AH);
+    ax_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_AX);
     eax_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 32, X86_REG_EAX);
     rax_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 64, X86_REG_RAX);
 
-    cl_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_CL);
-    ch_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_CH);
-    cx_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_CX);
+    cl_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_CL);
+    ch_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_CH);
+    cx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_CX);
     ecx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 32, X86_REG_ECX);
     rcx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 64, X86_REG_RCX);
 
-    dl_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_DL);
-    dh_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_DH);
-    dx_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_DX);
+    dl_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_DL);
+    dh_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_DH);
+    dx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_DX);
     edx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 32, X86_REG_EDX);
     rdx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 64, X86_REG_RDX);
 
-    bl_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_BL);
-    bh_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 8,  X86_REG_BH);
-    bx_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_BX);
+    bl_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_BL);
+    bh_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_BH);
+    bx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_BX);
     ebx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 32, X86_REG_EBX);
     rbx_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 64, X86_REG_RBX);
 
@@ -155,11 +163,11 @@ void x86tomisp_ir1_init(void)
     ebp_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 32, X86_REG_EBP);
     rbp_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 64, X86_REG_RBP);
 
-    si_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_SI);
+    si_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_SI);
     esi_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 32, X86_REG_ESI);
     rsi_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 64, X86_REG_RSI);
 
-    di_ir1_opnd  = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_DI);
+    di_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 16, X86_REG_DI);
     edi_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 32, X86_REG_EDI);
     rdi_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 64, X86_REG_RDI);
 
@@ -172,101 +180,61 @@ void x86tomisp_ir1_init(void)
     esi_mem8_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 8, X86_REG_ESI, 0);
     edi_mem8_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 8, X86_REG_EDI, 0);
 
-    eax_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EAX, 0);
-    ecx_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_ECX, 0);
-    edx_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EDX, 0);
-    ebx_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EBX, 0);
-    esp_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_ESP, 0);
-    ebp_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EBP, 0);
-    esi_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_ESI, 0);
-    edi_mem16_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EDI, 0);
+    eax_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EAX, 0);
+    ecx_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_ECX, 0);
+    edx_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EDX, 0);
+    ebx_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EBX, 0);
+    esp_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_ESP, 0);
+    ebp_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EBP, 0);
+    esi_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_ESI, 0);
+    edi_mem16_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 16, X86_REG_EDI, 0);
 
-    eax_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EAX, 0);
-    ecx_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_ECX, 0);
-    edx_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EDX, 0);
-    ebx_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EBX, 0);
-    esp_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_ESP, 0);
-    ebp_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EBP, 0);
-    esi_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_ESI, 0);
-    edi_mem32_ir1_opnd = ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EDI, 0);
+    eax_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EAX, 0);
+    ecx_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_ECX, 0);
+    edx_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EDX, 0);
+    ebx_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EBX, 0);
+    esp_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_ESP, 0);
+    ebp_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EBP, 0);
+    esi_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_ESI, 0);
+    edi_mem32_ir1_opnd =
+        ir1_opnd_new_static_mem(X86_OP_MEM, 32, X86_REG_EDI, 0);
 };
 
-void xtm_capstone_init(void);
-csh handle;
-#ifdef CONFIG_SOFTMMU
-#include "../include/env.h"
-csh handle16;
-#endif
-void xtm_capstone_init(void)
-{
-  // @todo this is a really quick fix
-  cs_opt_mem opt;
-  opt.malloc = malloc;
-  opt.calloc = calloc;
-  opt.realloc = realloc;
-  opt.free = free;
-  opt.vsnprintf = vsnprintf;
-  cs_option(CS_ARCH_X86, CS_OPT_MEM, (size_t)&opt);
-
-  if (cs_open(CS_ARCH_X86, CS_MODE_32, &handle) != CS_ERR_OK) {
-    fprintf(stderr, "%s %s %d error : cs_open \n", __FILE__, __func__,
-            __LINE__);
-    exit(-1);
-  }
-    cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-#ifdef CONFIG_SOFTMMU
-    if (cs_open(CS_ARCH_X86, CS_MODE_16, &handle16) != CS_ERR_OK) {
-        fprintf(stderr, "%s %s %d error : cs_open \n", __FILE__, __func__,
-                __LINE__);
-        exit(-1);
-    }
-    cs_option(handle16, CS_OPT_DETAIL, CS_OPT_ON);
-#endif
-}
-
-ADDRX ir1_disasm(IR1_INST *ir1, uint8_t *addr, ADDRX t_pc, int *error)
+ADDRX ir1_disasm(IR1_INST *ir1, uint8_t *addr, ADDRX t_pc, int ir1_num, void *pir1_base)
 {
     cs_insn *info;
-#ifdef CONFIG_SOFTMMU
-#ifdef CONFIG_XTM_PROFILE
-    xtm_pf_tc_tr_disasm_capstone_st();
-#endif
-    TRANSLATION_DATA *td = lsenv->tr_data;
-    int count = 0;
-    ADDRX t_eip = t_pc - td->sys.cs_base; /* EIP = PC - CS_BASE */
-    if (td->sys.code32) {
-#ifdef CONFIG_XTM_MD_CAPSTONE
-        count = xtm_disasm_x86(handle, addr, 15, (uint64_t)t_eip, 1, &info);
-#else
-        count = cs_disasm(handle, addr, 15, (uint64_t)t_eip, 1, &info);
-#endif
-    } else{
-#ifdef CONFIG_XTM_MD_CAPSTONE
-        count = xtm_disasm_x86(handle16, addr, 15, (uint64_t)t_eip, 1, &info);
-#else
-        count = cs_disasm(handle16, addr, 15, (uint64_t)t_eip, 1, &info);
-#endif
+    uint32_t nop = 0x401f0f;
+    if (((*((uint32_t *)addr))&0xf8ffffff) == 0xc81e0ff3) {
+        //repleace endbr32/rdsspd with 4 bytes nop, just a temporary solution
+        addr = (uint8_t *)&nop;
     }
-#ifdef CONFIG_XTM_PROFILE
-    xtm_pf_tc_tr_disasm_capstone_ed();
-#endif
-#else /* NOT CONFIG_SOFTMM */
-#ifdef CONFIG_XTM_MD_CAPSTONE
-    int count = xtm_disasm_x86(handle, addr, 15, (uint64_t)t_pc, 1, &info);
-#else
-    int count = cs_disasm(handle, addr, 15, (uint64_t)t_pc, 1, &info);
-#endif
-#endif
+
+    /* FIXME:the count parameter in cs_disasm is 1, it means we translte 1 insn at a time,
+     * there should be a performance improvement if we increase the number, but
+     * for now there are some problems if we change it. It will be settled later.
+     */
+    int count = cs_disasm(handle, addr, 15, (uint64_t)t_pc, 1, &info, ir1_num, pir1_base);
 
     ir1->info = info;
-#ifndef CONFIG_XTM_MD_CAPSTONE
-    ir1->info_count = count;
-#endif
 
-    /* Disasm error */
     if (count != 1) {
-        *error = 1;
-        return 0;
+        fprintf(stderr, "ERROR : disasm, ADDR : 0x%" PRIx64 "\n", (uint64_t)t_pc);
+        exit(-1);
     }
 
     ir1->flags = 0;
@@ -274,7 +242,6 @@ ADDRX ir1_disasm(IR1_INST *ir1, uint8_t *addr, ADDRX t_pc, int *error)
     ir1->_eflag_use = 0;
     ir1->_native_inst_num = 0;
 
-#ifndef CONFIG_SOFTMMU /* only in user-mode */
     // xtm treat opnd with default seg(without segment-override prefix) as a mem
     // opnd so, we make it invalid
     if (info->detail->x86.prefix[1] != X86_PREFIX_CS &&
@@ -289,31 +256,8 @@ ADDRX ir1_disasm(IR1_INST *ir1, uint8_t *addr, ADDRX t_pc, int *error)
             }
         }
     }
-#endif
 
-#ifdef CONFIG_SOFTMMU
-    fix_up_ir1(ir1);
-    t_pc = ir1_addr(ir1) + td->sys.cs_base;
-    return (ADDRX)(t_pc + ir1->info->size);
-#else
     return (ADDRX)(ir1->info->address + ir1->info->size);
-#endif
-}
-
-void ir1_free_info(IR1_INST *ir1)
-{
-    if (ir1) {
-#ifdef CONFIG_XTM_MD_CAPSTONE
-        if (ir1->info) {
-            if (ir1->info->detail) {
-                xtm_free_cs_detail(ir1->info->detail);
-            }
-            xtm_free_cs_insn(ir1->info);
-        }
-#else
-        cs_free(ir1->info, ir1->info_count);
-#endif
-    }
 }
 
 void ir1_opnd_build_reg(IR1_OPND *opnd, int size, x86_reg reg)
@@ -347,31 +291,7 @@ void ir1_opnd_build_mem(IR1_OPND *opnd, int size, x86_reg base, int64_t disp)
     opnd->avx_bcast = X86_AVX_BCAST_INVALID;
 }
 
-#ifdef CONFIG_SOFTMMU
-void ir1_opnd_build_full_mem(
-        IR1_OPND *opnd,
-        int size,
-        x86_reg seg,
-        x86_reg base,
-        int64_t disp,
-        int64_t index,
-        int64_t scale)
-{
-    opnd->type = X86_OP_MEM;
-
-    lsassert(size % 8 == 0);
-    opnd->size = size / 8;
-
-    opnd->mem.segment = seg;
-    opnd->mem.base    = base;
-
-    opnd->mem.disp  = disp;
-    opnd->mem.index = index;
-    opnd->mem.scale = scale;
-
-    opnd->avx_bcast = X86_AVX_BCAST_INVALID;
-}
-#endif
+void ir1_opnd_check(IR1_OPND *opnd) { lsassert(0); }
 
 IR1_OPND_TYPE ir1_opnd_type(IR1_OPND *opnd) { return opnd->type; }
 
@@ -405,34 +325,104 @@ int ir1_opnd_index_reg_num(IR1_OPND *opnd)
     case X86_REG_AH:
     case X86_REG_AX:
     case X86_REG_EAX:
+#ifdef TARGET_X86_64
+    case X86_REG_RAX:
+#endif
         return eax_index;
     case X86_REG_BL:
     case X86_REG_BH:
     case X86_REG_BX:
     case X86_REG_EBX:
+#ifdef TARGET_X86_64
+    case X86_REG_RBX:
+#endif
         return ebx_index;
     case X86_REG_CL:
     case X86_REG_CH:
     case X86_REG_CX:
     case X86_REG_ECX:
+#ifdef TARGET_X86_64
+    case X86_REG_RCX:
+#endif
         return ecx_index;
     case X86_REG_DL:
     case X86_REG_DH:
     case X86_REG_DX:
     case X86_REG_EDX:
+#ifdef TARGET_X86_64
+    case X86_REG_RDX:
+#endif
         return edx_index;
     case X86_REG_BP:
     case X86_REG_EBP:
+#ifdef TARGET_X86_64
+    case X86_REG_RBP:
+    case X86_REG_BPL:
+#endif
         return ebp_index;
     case X86_REG_SI:
     case X86_REG_ESI:
+#ifdef TARGET_X86_64
+    case X86_REG_RSI:
+    case X86_REG_SIL:
+#endif
         return esi_index;
     case X86_REG_DI:
     case X86_REG_EDI:
+#ifdef TARGET_X86_64
+    case X86_REG_RDI:
+    case X86_REG_DIL:
+#endif
         return edi_index;
     case X86_REG_SP:
     case X86_REG_ESP:
+#ifdef TARGET_X86_64
+    case X86_REG_RSP:
+    case X86_REG_SPL:
+#endif
         return esp_index;
+#ifdef TARGET_X86_64
+    case X86_REG_R8B:
+    case X86_REG_R8W:
+    case X86_REG_R8D:
+    case X86_REG_R8:
+        return r8_index;
+    case X86_REG_R9B:
+    case X86_REG_R9W:
+    case X86_REG_R9D:
+    case X86_REG_R9:
+        return r9_index;
+    case X86_REG_R10B:
+    case X86_REG_R10W:
+    case X86_REG_R10D:
+    case X86_REG_R10:
+        return r10_index;
+    case X86_REG_R11B:
+    case X86_REG_R11W:
+    case X86_REG_R11D:
+    case X86_REG_R11:
+        return r11_index;
+    case X86_REG_R12B:
+    case X86_REG_R12W:
+    case X86_REG_R12D:
+    case X86_REG_R12:
+        return r12_index;
+    case X86_REG_R13B:
+    case X86_REG_R13W:
+    case X86_REG_R13D:
+    case X86_REG_R13:
+        return r13_index;
+    case X86_REG_R14B:
+    case X86_REG_R14W:
+    case X86_REG_R14D:
+    case X86_REG_R14:
+        return r14_index;
+    case X86_REG_R15B:
+    case X86_REG_R15W:
+    case X86_REG_R15D:
+    case X86_REG_R15:
+        return r15_index;
+#endif
     case X86_REG_CS:
         return cs_index;
     case X86_REG_DS:
@@ -464,34 +454,104 @@ int ir1_opnd_base_reg_num(IR1_OPND *opnd)
     case X86_REG_AH:
     case X86_REG_AX:
     case X86_REG_EAX:
+#ifdef TARGET_X86_64
+    case X86_REG_RAX:
+#endif
         return eax_index;
     case X86_REG_BL:
     case X86_REG_BH:
     case X86_REG_BX:
     case X86_REG_EBX:
+#ifdef TARGET_X86_64
+    case X86_REG_RBX:
+#endif
         return ebx_index;
     case X86_REG_CL:
     case X86_REG_CH:
     case X86_REG_CX:
     case X86_REG_ECX:
+#ifdef TARGET_X86_64
+    case X86_REG_RCX:
+#endif
         return ecx_index;
     case X86_REG_DL:
     case X86_REG_DH:
     case X86_REG_DX:
     case X86_REG_EDX:
+#ifdef TARGET_X86_64
+    case X86_REG_RDX:
+#endif
         return edx_index;
     case X86_REG_BP:
     case X86_REG_EBP:
+#ifdef TARGET_X86_64
+    case X86_REG_RBP:
+    case X86_REG_BPL:
+#endif
         return ebp_index;
     case X86_REG_SI:
     case X86_REG_ESI:
+#ifdef TARGET_X86_64
+    case X86_REG_RSI:
+    case X86_REG_SIL:
+#endif
         return esi_index;
     case X86_REG_DI:
     case X86_REG_EDI:
+#ifdef TARGET_X86_64
+    case X86_REG_RDI:
+    case X86_REG_DIL:
+#endif
         return edi_index;
     case X86_REG_SP:
     case X86_REG_ESP:
+#ifdef TARGET_X86_64
+    case X86_REG_RSP:
+    case X86_REG_SPL:
+#endif
         return esp_index;
+#ifdef TARGET_X86_64
+    case X86_REG_R8B:
+    case X86_REG_R8W:
+    case X86_REG_R8D:
+    case X86_REG_R8:
+        return r8_index;
+    case X86_REG_R9B:
+    case X86_REG_R9W:
+    case X86_REG_R9D:
+    case X86_REG_R9:
+        return r9_index;
+    case X86_REG_R10B:
+    case X86_REG_R10W:
+    case X86_REG_R10D:
+    case X86_REG_R10:
+        return r10_index;
+    case X86_REG_R11B:
+    case X86_REG_R11W:
+    case X86_REG_R11D:
+    case X86_REG_R11:
+        return r11_index;
+    case X86_REG_R12B:
+    case X86_REG_R12W:
+    case X86_REG_R12D:
+    case X86_REG_R12:
+        return r12_index;
+    case X86_REG_R13B:
+    case X86_REG_R13W:
+    case X86_REG_R13D:
+    case X86_REG_R13:
+        return r13_index;
+    case X86_REG_R14B:
+    case X86_REG_R14W:
+    case X86_REG_R14D:
+    case X86_REG_R14:
+        return r14_index;
+    case X86_REG_R15B:
+    case X86_REG_R15W:
+    case X86_REG_R15D:
+    case X86_REG_R15:
+        return r15_index;
+#endif
     case X86_REG_CS:
         return cs_index;
     case X86_REG_DS:
@@ -552,6 +612,40 @@ int ir1_opnd_base_reg_num(IR1_OPND *opnd)
         return 6;
     case X86_REG_YMM7:
         return 7;
+#ifdef TARGET_X86_64
+    case X86_REG_XMM8:
+        return 8;
+    case X86_REG_XMM9:
+        return 9;
+    case X86_REG_XMM10:
+        return 10;
+    case X86_REG_XMM11:
+        return 11;
+    case X86_REG_XMM12:
+        return 12;
+    case X86_REG_XMM13:
+        return 13;
+    case X86_REG_XMM14:
+        return 14;
+    case X86_REG_XMM15:
+        return 15;
+    case X86_REG_YMM8:
+        return 8;
+    case X86_REG_YMM9:
+        return 9;
+    case X86_REG_YMM10:
+        return 10;
+    case X86_REG_YMM11:
+        return 11;
+    case X86_REG_YMM12:
+        return 12;
+    case X86_REG_YMM13:
+        return 13;
+    case X86_REG_YMM14:
+        return 14;
+    case X86_REG_YMM15:
+        return 15;
+#endif
     case X86_REG_ST0:
         return 0;
     case X86_REG_ST1:
@@ -584,8 +678,10 @@ longx ir1_opnd_simm(IR1_OPND *opnd)
             return (longx)((int16_t)(opnd->imm));
         case 32:
             return (longx)((int32_t)(opnd->imm));
+#ifdef TARGET_X86_64
         case 64:
-            lsassert(0);
+            return (longx)((int64_t)(opnd->imm));
+#endif
         default:
             lsassert(0);
         }
@@ -594,6 +690,7 @@ longx ir1_opnd_simm(IR1_OPND *opnd)
     } else {
         lsassertm(0, "REG opnd has no imm\n");
     }
+    abort();
 }
 
 ulongx ir1_opnd_uimm(IR1_OPND *opnd)
@@ -605,6 +702,7 @@ ulongx ir1_opnd_uimm(IR1_OPND *opnd)
     } else {
         lsassertm(0, "REG opnd has no imm\n");
     }
+    abort();
 }
 
 x86_reg ir1_opnd_seg_reg(IR1_OPND *opnd) { return opnd->mem.segment; }
@@ -620,9 +718,40 @@ int ir1_opnd_is_8h(IR1_OPND *opnd)
 
 int ir1_opnd_is_8l(IR1_OPND *opnd)
 {
+#ifndef TARGET_X86_64
     return opnd->type == X86_OP_REG && opnd->size == 1 &&
            (opnd->reg == X86_REG_AL || opnd->reg == X86_REG_BL ||
             opnd->reg == X86_REG_CL || opnd->reg == X86_REG_DL);
+#else
+    return opnd->type == X86_OP_REG && opnd->size == 1 &&
+           (opnd->reg == X86_REG_AL   || opnd->reg == X86_REG_BL   ||
+            opnd->reg == X86_REG_CL   || opnd->reg == X86_REG_DL   ||
+            opnd->reg == X86_REG_R8B  || opnd->reg == X86_REG_R9B  ||
+            opnd->reg == X86_REG_R10B || opnd->reg == X86_REG_R11B ||
+            opnd->reg == X86_REG_R12B || opnd->reg == X86_REG_R13B ||
+            opnd->reg == X86_REG_R14B || opnd->reg == X86_REG_R15B ||
+            opnd->reg == X86_REG_SPL  || opnd->reg == X86_REG_BPL  ||
+            opnd->reg == X86_REG_SIL  || opnd->reg == X86_REG_DIL);
+#endif
+}
+
+int ir1_opnd_is_16l(IR1_OPND *opnd)
+{
+#ifndef TARGET_X86_64
+    return opnd->type == X86_OP_REG && opnd->size == 2 &&
+           (opnd->reg == X86_REG_AX || opnd->reg == X86_REG_BX ||
+            opnd->reg == X86_REG_CX || opnd->reg == X86_REG_DX);
+#else
+    return opnd->type == X86_OP_REG && opnd->size == 2 &&
+           (opnd->reg == X86_REG_AX   || opnd->reg == X86_REG_BX   ||
+            opnd->reg == X86_REG_CX   || opnd->reg == X86_REG_DX   ||
+            opnd->reg == X86_REG_R8W  || opnd->reg == X86_REG_R9W  ||
+            opnd->reg == X86_REG_R10W || opnd->reg == X86_REG_R11W ||
+            opnd->reg == X86_REG_R12W || opnd->reg == X86_REG_R13W ||
+            opnd->reg == X86_REG_R14W || opnd->reg == X86_REG_R15W ||
+            opnd->reg == X86_REG_SP   || opnd->reg == X86_REG_BP   ||
+            opnd->reg == X86_REG_SI   || opnd->reg == X86_REG_DI);
+#endif
 }
 
 int ir1_opnd_is_gpr(IR1_OPND *opnd)
@@ -656,6 +785,26 @@ int ir1_opnd_is_gpr(IR1_OPND *opnd)
     case X86_REG_EDI:
     case X86_REG_SP:
     case X86_REG_ESP:
+#ifdef TARGET_X86_64
+    case X86_REG_RAX:
+    case X86_REG_RBX:
+    case X86_REG_RCX:
+    case X86_REG_RDX:
+
+    case X86_REG_R8 ... X86_REG_R15:
+    case X86_REG_R8D ... X86_REG_R15D:
+    case X86_REG_R8W ... X86_REG_R15W:
+    case X86_REG_R8B ... X86_REG_R15B:
+
+    case X86_REG_RBP:
+    case X86_REG_RSI:
+    case X86_REG_RDI:
+    case X86_REG_RSP:
+    case X86_REG_BPL:
+    case X86_REG_SIL:
+    case X86_REG_DIL:
+    case X86_REG_SPL:
+#endif
         return 1;
     default:
         return 0;
@@ -664,13 +813,13 @@ int ir1_opnd_is_gpr(IR1_OPND *opnd)
 
 int ir1_opnd_is_uimm_within_16bit(IR1_OPND *opnd)
 {
-    return ir1_opnd_is_imm(opnd) && ir1_opnd_uimm(opnd) < 65536;
+    return ir1_opnd_is_imm(opnd) && ir1_opnd_uimm(opnd) < 4096;
 }
 
 int ir1_opnd_is_simm_within_16bit(IR1_OPND *opnd)
 {
-    return ir1_opnd_is_imm(opnd) && ir1_opnd_simm(opnd) > -32768 &&
-           ir1_opnd_simm(opnd) < 32767;
+    return ir1_opnd_is_imm(opnd) && ir1_opnd_simm(opnd) >= -2048&&
+           ir1_opnd_simm(opnd) < 2047;
 }
 
 int ir1_opnd_is_gpr_used(IR1_OPND *opnd, uint8_t gpr_index)
@@ -679,6 +828,11 @@ int ir1_opnd_is_gpr_used(IR1_OPND *opnd, uint8_t gpr_index)
         return ir1_opnd_base_reg_num(opnd) == gpr_index;
     } else if (ir1_opnd_is_mem(opnd)) {
         if (ir1_opnd_has_base(opnd)) {
+#ifdef TARGET_X86_64
+            if (ir1_opnd_base_reg(opnd) == X86_REG_RIP) {
+                lsassert(0);
+            }
+#endif
             return ir1_opnd_base_reg_num(opnd) == gpr_index;
         }
         if (ir1_opnd_has_index(opnd)) {
@@ -689,8 +843,6 @@ int ir1_opnd_is_gpr_used(IR1_OPND *opnd, uint8_t gpr_index)
 }
 
 int ir1_opnd_is_mem(IR1_OPND *opnd) { return opnd->type == X86_OP_MEM; }
-
-int ir1_opnd_is_sib(IR1_OPND *opnd) { lsassert(0); }
 
 int ir1_opnd_is_fpr(IR1_OPND *opnd)
 {
@@ -764,6 +916,16 @@ int ir1_opnd_is_xmm(IR1_OPND *opnd)
     case X86_REG_XMM5:
     case X86_REG_XMM6:
     case X86_REG_XMM7:
+#ifdef TARGET_X86_64
+    case X86_REG_XMM8:
+    case X86_REG_XMM9:
+    case X86_REG_XMM10:
+    case X86_REG_XMM11:
+    case X86_REG_XMM12:
+    case X86_REG_XMM13:
+    case X86_REG_XMM14:
+    case X86_REG_XMM15:
+#endif
         return 1;
     default:
         return 0;
@@ -784,25 +946,54 @@ int ir1_opnd_is_ymm(IR1_OPND *opnd)
     case X86_REG_YMM5:
     case X86_REG_YMM6:
     case X86_REG_YMM7:
+#ifdef TARGET_X86_64
+    case X86_REG_YMM8:
+    case X86_REG_YMM9:
+    case X86_REG_YMM10:
+    case X86_REG_YMM11:
+    case X86_REG_YMM12:
+    case X86_REG_YMM13:
+    case X86_REG_YMM14:
+    case X86_REG_YMM15:
+#endif
         return 1;
     default:
         return 0;
     }
 }
 
-int ir1_opnd_is_gpr_defined(IR1_OPND *opnd, uint8 gpr_index) { lsassert(0); }
-
-int ir1_opnd_is_imm0(IR1_OPND *opnd)
+#ifdef TARGET_X86_64
+int ir1_opnd_is_pc_relative(IR1_OPND *opnd)
 {
-    if (ir1_opnd_is_imm(opnd) && ir1_opnd_simm(opnd) == 0) {
+    /* x86_64 : RIP/EIP relative addressing */
+    x86_reg base = ir1_opnd_base_reg(opnd);
+    if (base == X86_REG_RIP) {
         return 1;
+    } else if (base == X86_REG_EIP) {
+        /* legal but strange */
+        lsassert(0);
+        return 1;
+    } else {
+        return 0;
     }
-    return 0;
+}
+#endif
+
+int ir1_opnd_has_base(IR1_OPND *opnd)
+{
+    // may unnecessary to judge mem opnd
+    return opnd->mem.base != X86_REG_INVALID;
 }
 
-int ir1_opnd_has_base(IR1_OPND *opnd)  { return opnd->mem.base    != X86_REG_INVALID; }
-int ir1_opnd_has_index(IR1_OPND *opnd) { return opnd->mem.index   != X86_REG_INVALID; }
-int ir1_opnd_has_seg(IR1_OPND *opnd)   { return opnd->mem.segment != X86_REG_INVALID; }
+int ir1_opnd_has_index(IR1_OPND *opnd)
+{
+    return opnd->mem.index != X86_REG_INVALID;
+}
+
+int ir1_opnd_has_seg(IR1_OPND *opnd)
+{
+    return opnd->mem.segment != X86_REG_INVALID;
+}
 
 int ir1_opnd_get_seg_index(IR1_OPND *opnd)
 {
@@ -825,13 +1016,20 @@ int ir1_opnd_get_seg_index(IR1_OPND *opnd)
     }
     if (seg == X86_REG_GS) {
         return gs_index;
-    } else {
-        return -1;
     }
+    abort();
+    //     IR1_OPND_MEM_ES,
+    //     IR1_OPND_MEM_CS,
+    //     IR1_OPND_MEM_SS,
+    //     IR1_OPND_MEM_DS,
+    //     IR1_OPND_MEM_FS,
+    //     IR1_OPND_MEM_GS,
 }
 
 IR1_PREFIX ir1_prefix(IR1_INST *ir1)
 {
+    // TODO: one ins may has two or more PREFIX (rarely)
+    // only support rep now
     return ir1->info->detail->x86.prefix[0];  // only lock rep
 }
 
@@ -851,17 +1049,11 @@ ADDRX ir1_target_addr(IR1_INST *ir1)
     return (ADDRX)ir1_opnd_uimm(&(ir1->info->detail->x86.operands[0]));
 }
 
+// IR1_OPCODE ir1_opcode(IR1_INST *ir1){
+//     return ir1->detail->x86.opcode;
+// }
+
 IR1_OPCODE ir1_opcode(IR1_INST *ir1) { return ir1->info->id; }
-
-int ir1_grp_nr(IR1_INST *ir1)
-{
-    return ir1->info->detail->groups_count;
-}
-
-uint8_t* ir1_get_grps(IR1_INST *ir1)
-{
-    return ir1->info->detail->groups;
-}
 
 int ir1_is_branch(IR1_INST *ir1)
 {
@@ -897,146 +1089,12 @@ int ir1_is_branch(IR1_INST *ir1)
     }
 }
 
-#ifdef CONFIG_SOFTMMU
-int ir1_is_jump_far(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_LJMP;
-}
-int ir1_is_mov_to_cr(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_MOV &&
-        ir1_opnd_is_cr(ir1_get_opnd(ir1, 0));
-}
-int ir1_is_mov_from_cr(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_MOV &&
-        ir1_opnd_is_cr(ir1_get_opnd(ir1, 1));
-}
-int ir1_is_mov_to_dr(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_MOV &&
-        ir1_opnd_is_dr(ir1_get_opnd(ir1, 0));
-}
-int ir1_is_mov_to_seg(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_MOV &&
-        ir1_opnd_is_seg(ir1_get_opnd(ir1, 0));
-}
-int ir1_is_pop_eflags(IR1_INST *ir1)
-{
-    IR1_OPCODE opcode = ir1_opcode(ir1);
-    return opcode == X86_INS_POPF  ||
-           opcode == X86_INS_POPFD ||
-           opcode == X86_INS_POPFQ ;
-}
-int ir1_is_rsm(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_RSM;
-}
-int ir1_is_sti(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_STI;
-}
-int ir1_is_nop(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_NOP;
-}
-int ir1_is_repz_nop(IR1_INST *ir1)
-{
-    if(!ir1_is_nop(ir1))
-        return 0;
-
-    /* might be a bug of capstone:
-     * For inst '0xf3 0x90' the prefix in cs_insn
-     * will not be setted, but the bytes is OK. */
-    uint8* bytes = (uint8*)(ir1->info->bytes);
-    if (bytes[0] == X86_PREFIX_REPE) {
-        return 1;
-    }
-
-    return 0;
-}
-int ir1_is_iret(IR1_INST *ir1)
-{
-    IR1_OPCODE opcode = ir1_opcode(ir1);
-    return opcode == X86_INS_IRET ||
-           opcode == X86_INS_IRETD ;
-}
-int ir1_is_lmsw(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_LMSW;
-}
-int ir1_is_retf(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_RETF;
-}
-int ir1_is_clts(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_CLTS;
-}
-int ir1_is_call_far(IR1_INST *ir1)
-{
-    return ir1->info->id == X86_INS_LCALL;
-}
-int ir1_is_invlpg(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_INVLPG;
-}
-int ir1_is_pause(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_PAUSE;
-}
-int ir1_is_sysenter(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_SYSENTER;
-}
-int ir1_is_sysexit(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_SYSEXIT;
-}
-int ir1_is_xrstor(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_XRSTOR;
-}
-int ir1_is_xsetbv(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_XSETBV;
-}
-int ir1_is_mwait(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_MWAIT;
-}
-int ir1_is_vmrun(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_VMRUN;
-}
-int ir1_is_stgi(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_STGI;
-}
-/* EOB for instruction might change FPU state */
-int ir1_contains_fldenv(IR1_INST *ir1)
-{
-    IR1_OPCODE opc = ir1_opcode(ir1);
-    return opc == X86_INS_FLDENV  ||
-           opc == X86_INS_FRSTOR  ||
-           opc == X86_INS_FXRSTOR ||
-           opc == X86_INS_XRSTOR;
-}
-int ir1_is_fninit(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_FNINIT;
-}
-int ir1_is_fnsave(IR1_INST *ir1)
-{
-    return ir1_opcode(ir1) == X86_INS_FNSAVE;
-}
-#endif
-
 int ir1_is_jump(IR1_INST *ir1) { return ir1->info->id == X86_INS_JMP; }
 
 int ir1_is_call(IR1_INST *ir1)
 {
+    // lsassert(0);
+    // TODO : only direct?
     return ir1->info->id == X86_INS_CALL;
 }
 
@@ -1046,10 +1104,12 @@ int ir1_is_return(IR1_INST *ir1)
     return ir1->info->id == X86_INS_RET || ir1->info->id == X86_INS_IRET ||
            ir1->info->id == X86_INS_RETF;
 #else
-    /* 'iret' and 'retf' is special EOB in sys-mode.
+    /*
+     * 'iret' and 'retf' is special EOB in sys-mode.
      * In current version, it depends on the added jmp.
      * Can be further optimized to use gen_exit_tb().
-     * Take care of EIP, eflags, mapping registers, etc. */
+     * Take care of EIP, eflags, mapping registers, etc.
+     */
     return ir1->info->id == X86_INS_RET;
 #endif
 }
@@ -1069,20 +1129,17 @@ int ir1_is_syscall(IR1_INST *ir1)
 }
 bool ir1_is_tb_ending(IR1_INST *ir1)
 {
-    if (ir1_opcode(ir1) == X86_INS_CALL &&
-        !ir1_is_indirect_call(ir1) &&
+    // return ir1_is_branch(ir1) || ir1_is_jump(ir1) || ir1_is_call(ir1) ||
+    // ir1_is_return(ir1) || ir1_is_indirect(ir1) || ir1_is_syscall(ir1);
+    if (ir1_opcode(ir1) == X86_INS_CALL && !ir1_is_indirect_call(ir1) &&
         ir1_addr_next(ir1) == ir1_target_addr(ir1)) {
-        /* call next */
         return false;
     }
-    return ir1_is_branch(ir1) ||
-           ir1_is_jump(ir1)   ||
+    return ir1_is_branch(ir1) || ir1_is_jump(ir1) || ir1_is_call(ir1) ||
 #ifdef CONFIG_SOFTMMU
-           ir1_is_jump_far(ir1)   ||
+           latxs_ir1_is_jump_far(ir1)   ||
 #endif
-           ir1_is_call(ir1)   ||
-           ir1_is_return(ir1) ||
-           ir1_is_syscall(ir1);
+           ir1_is_return(ir1) || ir1_is_syscall(ir1);
 }
 
 bool ir1_is_cf_use(IR1_INST *ir1)
@@ -1583,127 +1640,48 @@ IR1_OPND *ir1_get_dest_opnd_implicit(IR1_INST *ir1, int i)
 
 void ir1_make_ins_JMP(IR1_INST *ir1, ADDRX addr, int32 off)
 {
-    uint8_t buf[5];
-    buf[0] = 0xe9;
-    int count = 0;
-    cs_insn *info = NULL;
-#ifdef CONFIG_SOFTMMU
-    TRANSLATION_DATA *td = lsenv->tr_data;
-    if (td->sys.code32) {
-        *((uint32_t *)(buf + 1)) = (uint32_t)(off - 5);
-#ifdef CONFIG_XTM_MD_CAPSTONE
-        count = xtm_disasm_x86(handle, buf, 15, (uint64_t)addr, 1, &info);
-#else
-        count = cs_disasm(handle, buf, 15, (uint64_t)addr, 1, &info);
-#endif
-    } else {
-        *((uint32_t *)(buf + 1)) = (uint32_t)(off - 3);
-#ifdef CONFIG_XTM_MD_CAPSTONE
-        count = xtm_disasm_x86(handle16, buf, 15, (uint64_t)addr, 1, &info);
-#else
-        count = cs_disasm(handle16, buf, 15, (uint64_t)addr, 1, &info);
-#endif
-    }
-#else
-    *((uint32_t *)(buf + 1)) = (uint32_t)(off - 5);
-    info = cs_malloc(handle);
-    count = cs_disasm(handle, buf, 15, (uint64_t)addr, 1, &info);
-#endif
-    lsassert(count == 1);
-    ir1->info = info;
-#ifndef CONFIG_XTM_MD_CAPSTONE
-    ir1->info_count = 1;
-#endif
-}
+    cs_insn *info = cs_malloc(handle);
 
-void ir1_make_ins_ILLEGAL(IR1_INST *ir1, ADDRX addr, int size, int flags)
-{
-    cs_insn *info = NULL;
-#ifdef CONFIG_SOFTMMU
-#ifdef CONFIG_XTM_MD_CAPSTONE
-    info = xtm_alloc_cs_insn();
-    info->detail = xtm_alloc_cs_detail();
-#else
-    TRANSLATION_DATA *td = lsenv->tr_data;
-    if (td->sys.code32) {
-        info = cs_malloc(handle);
-    } else {
-        info = cs_malloc(handle16);
-    }
-#endif
-    info->id = X86_INS_INVALID;
-    info->address = addr - td->sys.cs_base;
-    info->mnemonic[0] = 'i';
-    info->mnemonic[1] = 'l';
-    info->mnemonic[2] = 'l';
-    info->mnemonic[3] = 'e';
-    info->mnemonic[4] = 'g';
-    info->mnemonic[5] = 'a';
-    info->mnemonic[6] = 'l';
-    info->mnemonic[7] = 0;
-    info->size = size;
-    info->op_str[0] = 0;
-    info->detail->x86.addr_size = -1;
-    info->detail->x86.op_count = 0;
-#else
+    info->bytes[0] = 0x69;
+    *(int32_t *)(info->bytes + 1) = off;
+    info->address = (uint64_t)addr;
+    info->size = 5;
+    info->detail->x86.opcode[0] = 0xe9;
+    info->detail->x86.addr_size = 4;
+    info->detail->x86.op_count = 1;
+    info->detail->x86.operands[0].type = X86_OP_IMM;
+    info->detail->x86.operands[0].imm = (int64_t)off + (int64_t)addr;
+    info->detail->x86.operands[0].size = 4;
+    info->id = X86_INS_JMP;
+#ifdef TARGET_X86_64
+    /* addr/operand size ? */
     lsassert(0);
 #endif
-    ir1->flags = flags;
+    // TODO : other field in ir1 and detail->x86
+    // another way : use capstone to disasm 0xe9 | off
     ir1->info = info;
-#ifndef CONFIG_XTM_MD_CAPSTONE
-    ir1->info_count = 1;
-#endif
 }
 
 void ir1_make_ins_NOP(IR1_INST *ir1, ADDRX addr) { lsassert(0); }
 void ir1_make_ins_RET(IR1_INST *ir1, ADDRX addr) { lsassert(0); }
 void ir1_make_ins_LIBFUNC(IR1_INST *ir1, ADDRX addr) { lsassert(0); }
 
-static const char *ir1_get_grp_name(uint8_t grp)
-{
-    static const char *ir1_grp_name[] = {
-        /* 0 - 7 */
-        "invalid", "jump", "call", "ret", "int",
-        "iret", "privilege", "branch-relative",
-        /* 8 - */
-        "VM",    "3DNOW",  "AES",    "ADX",     "AVX",
-        "AVX2",  "AVX512", "BMI",    "BMI2",    "CMOV",
-        "F16C",  "FMA",    "FMA4",   "FSGBASE", "HLE",
-        "MMX",   "MODE32", "MODE64", "RTM",     "SHA",
-        "SSE1",  "SSE2",   "SSE3",   "SSE41",   "SSE42",
-        "SSE4A", "SSSE3",  "PCLMUL", "XOP",     "CDI",
-        "ERI",   "TBM",    "16BITMODE",         "NOT16BITMODE",
-        "SGX",   "DQI",    "BWI",    "PFI",     "VLE",
-        "SMAP",  "NOVLX",  "FPU"
-    };
-
-    if (grp < 8) {
-        return ir1_grp_name[grp];
-    }
-    else{
-        return ir1_grp_name[grp - 120];
-    }
-
-}
-
 int ir1_dump(IR1_INST *ir1)
 {
+#ifdef CONFIG_SOFTMMU
+    fprintf(stderr, "0x%" PRIx64 ": ", ir1->info->address);
     int i = 0;
-    fprintf(stderr, "0x%" PRIx64 ":\t%s\t\t%s\t;\tbytes[%d]={", ir1->info->address,
-            ir1->info->mnemonic, ir1->info->op_str, ir1->info->size);
-    for (i = 0; i < ir1->info->size - 1; ++i) {
-        fprintf(stderr, "%#x,", ir1->info->bytes[i]);
+    for (; i < ir1->info->size; i++) {
+        fprintf(stderr, "%02x ", ir1->info->bytes[i]);
     }
-    fprintf(stderr, "%#x}. ", ir1->info->bytes[i]);
-
-    int grp_nr = ir1_grp_nr(ir1);
-    uint8_t *grps = ir1_get_grps(ir1);
-    fprintf(stderr, "GRP{");
-    for (i = 0; i < grp_nr - 1; ++i) {
-        fprintf(stderr, "%d(%s),", grps[i], ir1_get_grp_name(grps[i]));
+    for (; i < 10; i++) {
+        fprintf(stderr, "   ");
     }
-    fprintf(stderr, "%d(%s)", grps[i], ir1_get_grp_name(grps[i]));
-    fprintf(stderr, "}.\n");
+    fprintf(stderr, "%s\t\t%s\n", ir1->info->mnemonic, ir1->info->op_str);
+#else
+    fprintf(stderr, "0x%" PRIx64 ":\t%s\t\t%s\n", ir1->info->address,
+            ir1->info->mnemonic, ir1->info->op_str);
+#endif
     return 0;
 }
 
@@ -1722,8 +1700,6 @@ const char * ir1_group_name(x86_insn_group grp){
     return cs_group_name(handle, grp);
 }
 
-void ir1_dump_eflag(IR1_INST *ir1) { lsassert(0); }
-
 uint8_t ir1_get_opnd_num(IR1_INST *ir1)
 {
     return ir1->info->detail->x86.op_count;
@@ -1731,7 +1707,7 @@ uint8_t ir1_get_opnd_num(IR1_INST *ir1)
 
 IR1_OPND *ir1_get_opnd(IR1_INST *ir1, int i)
 {
-    lsassert(i < ir1->info->detail->x86.op_count);
+    lsassert(i <= ir1->info->detail->x86.op_count);
     return &(ir1->info->detail->x86.operands[i]);
 }
 
@@ -1741,167 +1717,44 @@ bool ir1_is_indirect_call(IR1_INST *ir1)
 }
 bool ir1_is_indirect_jmp(IR1_INST *ir1)
 {
-    return !ir1_opnd_num(ir1) || !ir1_opnd_is_imm(ir1_get_opnd(ir1, 0));
+    return !ir1_opnd_is_imm(ir1_get_opnd(ir1, 0));
+}
+
+bool ir1_is_prefix_lock(IR1_INST *ir1)
+{
+    return ir1->info->detail->x86.prefix[0] == X86_PREFIX_LOCK;
 }
 
 const char *ir1_reg_name(x86_reg reg) { return cs_reg_name(handle, reg); }
 
-int ir1_addr_size(IR1_INST *ir1)
-{
-    return ir1->info->detail->x86.addr_size;
-}
-
-int ir1_inst_size(IR1_INST *ir1)
-{
-    return ir1->info->size;
-}
-int ir1_is_push(IR1_INST *ir1){
-    IR1_OPCODE op = ir1_opcode(ir1);
-    return op == X86_INS_PUSH || op == X86_INS_PUSHAL || op == X86_INS_PUSHAW ||
-           op == X86_INS_PUSHF || op == X86_INS_PUSHFD || op == X86_INS_PUSHFQ;
-}
-int ir1_is_pop(IR1_INST *ir1){
-    IR1_OPCODE op = ir1_opcode(ir1);
-    return op == X86_INS_POP || op == X86_INS_POPAL || op == X86_INS_POPAW ||
-           op == X86_INS_POPF || op == X86_INS_POPFD || op == X86_INS_POPFQ;
-}
-int ir1_is_push_or_pop(IR1_INST *ir1){
-    return ir1_is_push(ir1) || ir1_is_pop(ir1);
-}
-int ir1_get_segment_override_prefix(IR1_INST *ir1){
-    return ir1->info->detail->x86.prefix[1];
-}
-int ir1_segment_override_prefix_to_index(IR1_PREFIX prefix){
-    switch (prefix) {
-    case X86_PREFIX_CS:
-        return cs_index;
-    case X86_PREFIX_SS:
-        return ss_index;
-    case X86_PREFIX_DS:
-        return ds_index;
-    case X86_PREFIX_ES:
-        return es_index;
-    case X86_PREFIX_FS:
-        return fs_index;
-    case X86_PREFIX_GS:
-        return gs_index;
-    default:
-        lsassert(0);
-    }
-}
-
 #ifdef CONFIG_SOFTMMU
 
-int ir1_opnd_is_cr(IR1_OPND *opnd)
+void latxs_ir1_opnd_build_full_mem(
+        IR1_OPND *opnd, int size,
+        x86_reg seg, x86_reg base, int64_t disp,
+        int64_t index, int64_t scale)
 {
-    if(ir1_opnd_type(opnd) != X86_OP_REG) {
-        return 0;
-    }
+    opnd->type = X86_OP_MEM;
 
-    switch (opnd->reg) {
-        case X86_REG_CR0:
-        case X86_REG_CR1:
-        case X86_REG_CR2:
-        case X86_REG_CR3:
-        case X86_REG_CR4:
-        case X86_REG_CR5:
-        case X86_REG_CR6:
-        case X86_REG_CR7:
-        case X86_REG_CR8:
-        case X86_REG_CR9:
-        case X86_REG_CR10:
-        case X86_REG_CR11:
-        case X86_REG_CR12:
-        case X86_REG_CR13:
-        case X86_REG_CR14:
-        case X86_REG_CR15:
-            return 1;
-        default:
-            return 0;
-    }
+    lsassert(size % 8 == 0);
+    opnd->size = size / 8;
+
+    opnd->mem.segment = seg;
+    opnd->mem.base    = base;
+
+    opnd->mem.disp  = disp;
+    opnd->mem.index = index;
+    opnd->mem.scale = scale;
+
+    opnd->avx_bcast = X86_AVX_BCAST_INVALID;
 }
 
-int ir1_opnd_get_cr_num(IR1_OPND *opnd, int *flag)
+uint8_t *latxs_ir1_inst_opbytes(IR1_INST *ir1)
 {
-    switch (opnd->reg) {
-        case X86_REG_CR0:
-        case X86_REG_CR2:
-        case X86_REG_CR3:
-        case X86_REG_CR4:
-        case X86_REG_CR8:
-            *flag = 1; /* OK to read/write CR */
-        case X86_REG_CR1:
-        case X86_REG_CR5:
-        case X86_REG_CR6:
-        case X86_REG_CR7:
-        case X86_REG_CR9:
-        case X86_REG_CR10:
-        case X86_REG_CR11:
-        case X86_REG_CR12:
-        case X86_REG_CR13:
-        case X86_REG_CR14:
-        case X86_REG_CR15:
-            return opnd->reg - X86_REG_CR0;
-        default:
-            return -1;
-    }
+    return ir1->info->detail->x86.opcode;
 }
 
-int ir1_opnd_is_dr(IR1_OPND *opnd)
-{
-    if(ir1_opnd_type(opnd) != X86_OP_REG) {
-        return 0;
-    }
-
-    switch (opnd->reg) {
-        case X86_REG_DR0:
-        case X86_REG_DR1:
-        case X86_REG_DR2:
-        case X86_REG_DR3:
-        case X86_REG_DR4:
-        case X86_REG_DR5:
-        case X86_REG_DR6:
-        case X86_REG_DR7:
-        case X86_REG_DR8:
-        case X86_REG_DR9:
-        case X86_REG_DR10:
-        case X86_REG_DR11:
-        case X86_REG_DR12:
-        case X86_REG_DR13:
-        case X86_REG_DR14:
-        case X86_REG_DR15:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
-int ir1_opnd_get_dr_num(IR1_OPND *opnd)
-{
-    switch (opnd->reg) {
-        case X86_REG_DR0:
-        case X86_REG_DR1:
-        case X86_REG_DR2:
-        case X86_REG_DR3:
-        case X86_REG_DR4:
-        case X86_REG_DR5:
-        case X86_REG_DR6:
-        case X86_REG_DR7:
-        case X86_REG_DR8:
-        case X86_REG_DR9:
-        case X86_REG_DR10:
-        case X86_REG_DR11:
-        case X86_REG_DR12:
-        case X86_REG_DR13:
-        case X86_REG_DR14:
-        case X86_REG_DR15:
-            return opnd->reg - X86_REG_DR0;
-        default:
-            return -1;
-    }
-}
-
-int ir1_mem_opnd_is_base_imm(IR1_OPND *opnd)
+int latxs_ir1_mem_opnd_is_base_imm(IR1_OPND *opnd)
 {
     if (!ir1_opnd_has_index(opnd) && ir1_opnd_has_base(opnd) &&
         !ir1_opnd_has_seg(opnd)) {
@@ -1910,58 +1763,385 @@ int ir1_mem_opnd_is_base_imm(IR1_OPND *opnd)
     return 0;
 }
 
-int ir1_is_lea(IR1_INST *ir1)
+int latxs_ir1_opnd_is_cr(IR1_OPND *opnd)
 {
-    return ir1->info->id == X86_INS_LEA;
+    if (ir1_opnd_type(opnd) != X86_OP_REG) {
+        return 0;
+    }
+
+    switch (opnd->reg) {
+    case X86_REG_CR0:
+    case X86_REG_CR1:
+    case X86_REG_CR2:
+    case X86_REG_CR3:
+    case X86_REG_CR4:
+    case X86_REG_CR5:
+    case X86_REG_CR6:
+    case X86_REG_CR7:
+    case X86_REG_CR8:
+    case X86_REG_CR9:
+    case X86_REG_CR10:
+    case X86_REG_CR11:
+    case X86_REG_CR12:
+    case X86_REG_CR13:
+    case X86_REG_CR14:
+    case X86_REG_CR15:
+        return 1;
+    default:
+        return 0;
+    }
 }
-int ir1_has_prefix_lock(IR1_INST *ir1)
+
+int latxs_ir1_opnd_get_cr_num(IR1_OPND *opnd, int *flag)
+{
+    switch (opnd->reg) {
+    case X86_REG_CR0:
+    case X86_REG_CR2:
+    case X86_REG_CR3:
+    case X86_REG_CR4:
+    case X86_REG_CR8:
+        *flag = 1; /* OK to read/write CR */
+        return opnd->reg - X86_REG_CR0;
+    case X86_REG_CR1:
+    case X86_REG_CR5:
+    case X86_REG_CR6:
+    case X86_REG_CR7:
+    case X86_REG_CR9:
+    case X86_REG_CR10:
+    case X86_REG_CR11:
+    case X86_REG_CR12:
+    case X86_REG_CR13:
+    case X86_REG_CR14:
+    case X86_REG_CR15:
+        return opnd->reg - X86_REG_CR0;
+    default:
+        return -1;
+    }
+}
+
+int latxs_ir1_opnd_is_dr(IR1_OPND *opnd)
+{
+    if (ir1_opnd_type(opnd) != X86_OP_REG) {
+        return 0;
+    }
+
+    switch (opnd->reg) {
+    case X86_REG_DR0:
+    case X86_REG_DR1:
+    case X86_REG_DR2:
+    case X86_REG_DR3:
+    case X86_REG_DR4:
+    case X86_REG_DR5:
+    case X86_REG_DR6:
+    case X86_REG_DR7:
+    case X86_REG_DR8:
+    case X86_REG_DR9:
+    case X86_REG_DR10:
+    case X86_REG_DR11:
+    case X86_REG_DR12:
+    case X86_REG_DR13:
+    case X86_REG_DR14:
+    case X86_REG_DR15:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int latxs_ir1_opnd_get_dr_num(IR1_OPND *opnd)
+{
+    switch (opnd->reg) {
+    case X86_REG_DR0:
+    case X86_REG_DR1:
+    case X86_REG_DR2:
+    case X86_REG_DR3:
+    case X86_REG_DR4:
+    case X86_REG_DR5:
+    case X86_REG_DR6:
+    case X86_REG_DR7:
+    case X86_REG_DR8:
+    case X86_REG_DR9:
+    case X86_REG_DR10:
+    case X86_REG_DR11:
+    case X86_REG_DR12:
+    case X86_REG_DR13:
+    case X86_REG_DR14:
+    case X86_REG_DR15:
+        return opnd->reg - X86_REG_DR0;
+    default:
+        return -1;
+    }
+}
+
+int latxs_ir1_has_prefix_lock(IR1_INST *ir1)
 {
     return ir1->info->detail->x86.prefix[0] == X86_PREFIX_LOCK;
 }
-int ir1_has_prefix_opsize(IR1_INST *ir1)
+int latxs_ir1_has_prefix_opsize(IR1_INST *ir1)
 {
     return ir1->info->detail->x86.prefix[2] == X86_PREFIX_OPSIZE;
 }
-int ir1_has_prefix_rep(IR1_INST *ir1)
+int latxs_ir1_has_prefix_addrsize(IR1_INST *ir1)
+{
+    return ir1->info->detail->x86.prefix[3] == X86_PREFIX_ADDRSIZE;
+}
+int latxs_ir1_has_prefix_rep(IR1_INST *ir1)
 {
     return ir1->info->detail->x86.prefix[0] == X86_PREFIX_REP;
 }
-int ir1_has_prefix_repe(IR1_INST *ir1)
+int latxs_ir1_has_prefix_repe(IR1_INST *ir1)
 {
     return ir1->info->detail->x86.prefix[0] == X86_PREFIX_REPE;
 }
-int ir1_has_prefix_repne(IR1_INST *ir1)
+int latxs_ir1_has_prefix_repne(IR1_INST *ir1)
 {
     return ir1->info->detail->x86.prefix[0] == X86_PREFIX_REPNE;
 }
-int ir1_data_size(IR1_INST *ir1)
+
+int latxs_ir1_is_lea(IR1_INST *ir1)
 {
-    TRANSLATION_DATA *td = lsenv->tr_data;
-    int prefix_opsize = ir1_has_prefix_opsize(ir1);
-    if (td->sys.code32 ^ prefix_opsize) {
-        /*  code32 && !prefix_opsize
-         * !code32 &&  prefix_opsize  */
-        return 4 << 3;
-    } else {
-        /*  code32 &&  prefix_opsize
-         * !code32 && !prefix_opsize  */
-        return 2 << 3;
-    }
+    return ir1->info->id == X86_INS_LEA;
 }
-uint8 *ir1_inst_opbytes(IR1_INST *ir1)
+
+int latxs_ir1_is_string_op(IR1_INST *ir1)
 {
-    return ir1->info->detail->x86.opcode;
-}
-int ir1_is_string_op(IR1_INST *ir1)
-{
-    uint8 *opbytes = ir1_inst_opbytes(ir1);
-    uint8 opc = opbytes[0];
+    uint8_t *opbytes = latxs_ir1_inst_opbytes(ir1);
+    uint8_t opc = opbytes[0];
     return (0x6c <= opc && opc <= 0x6f) || /* ins/outs       */
            (0xa4 <= opc && opc <= 0xa7) || /* movs/cmps      */
            (0xaa <= opc && opc <= 0xaf) ;  /* stos/lods/scas */
 }
-int ir1_is_illegal(IR1_INST* ir1){
+
+int latxs_ir1_is_jump_far(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_LJMP;
+}
+int latxs_ir1_is_mov_to_cr(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_MOV &&
+        latxs_ir1_opnd_is_cr(ir1_get_opnd(ir1, 0));
+}
+int latxs_ir1_is_mov_from_cr(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_MOV &&
+        latxs_ir1_opnd_is_cr(ir1_get_opnd(ir1, 1));
+}
+int latxs_ir1_is_mov_to_dr(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_MOV &&
+        latxs_ir1_opnd_is_dr(ir1_get_opnd(ir1, 0));
+}
+int latxs_ir1_is_mov_to_seg(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_MOV &&
+        ir1_opnd_is_seg(ir1_get_opnd(ir1, 0));
+}
+int latxs_ir1_is_pop_eflags(IR1_INST *ir1)
+{
+    IR1_OPCODE opcode = ir1_opcode(ir1);
+    return opcode == X86_INS_POPF  ||
+           opcode == X86_INS_POPFD ||
+           opcode == X86_INS_POPFQ ;
+}
+int latxs_ir1_is_rsm(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_RSM;
+}
+int latxs_ir1_is_sti(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_STI;
+}
+int latxs_ir1_is_nop(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_NOP;
+}
+int latxs_ir1_is_repz_nop(IR1_INST *ir1)
+{
+    if (!latxs_ir1_is_nop(ir1)) {
+        return 0;
+    }
+
+    /*
+     * might be a bug of capstone:
+     * For inst '0xf3 0x90' the prefix in cs_insn
+     * will not be setted, but the bytes is OK.
+     */
+    uint8_t  *bytes = (uint8_t *)(ir1->info->bytes);
+    if (bytes[0] == X86_PREFIX_REPE) {
+        return 1;
+    }
+
+    return 0;
+}
+int latxs_ir1_is_iret(IR1_INST *ir1)
+{
+    IR1_OPCODE opcode = ir1_opcode(ir1);
+    return opcode == X86_INS_IRET || opcode == X86_INS_IRETD ||
+           opcode == X86_INS_IRETQ;
+}
+int latxs_ir1_is_lmsw(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_LMSW;
+}
+int latxs_ir1_is_retf(IR1_INST *ir1)
+{
+    IR1_OPCODE opcode = ir1_opcode(ir1);
+    return opcode == X86_INS_RETF || opcode == X86_INS_RETFQ;
+}
+int latxs_ir1_is_clts(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_CLTS;
+}
+int latxs_ir1_is_call_far(IR1_INST *ir1)
+{
+    return ir1->info->id == X86_INS_LCALL;
+}
+int latxs_ir1_is_invlpg(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_INVLPG;
+}
+int latxs_ir1_is_pause(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_PAUSE;
+}
+int latxs_ir1_is_sysenter(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_SYSENTER;
+}
+int latxs_ir1_is_sysexit(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_SYSEXIT;
+}
+int latxs_ir1_is_syscall(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_SYSCALL;
+}
+int latxs_ir1_is_sysret(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_SYSRET;
+}
+int latxs_ir1_is_xrstor(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_XRSTOR;
+}
+int latxs_ir1_is_xsetbv(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_XSETBV;
+}
+int latxs_ir1_is_mwait(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_MWAIT;
+}
+int latxs_ir1_is_vmrun(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_VMRUN;
+}
+int latxs_ir1_is_stgi(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_STGI;
+}
+/* EOB for instruction might change FPU state */
+int latxs_ir1_contains_fldenv(IR1_INST *ir1)
+{
+    IR1_OPCODE opc = ir1_opcode(ir1);
+    return opc == X86_INS_FLDENV  ||
+           opc == X86_INS_FRSTOR  ||
+           opc == X86_INS_FXRSTOR ||
+           opc == X86_INS_XRSTOR;
+}
+int latxs_ir1_is_fninit(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_FNINIT;
+}
+int latxs_ir1_is_fnsave(IR1_INST *ir1)
+{
+    return ir1_opcode(ir1) == X86_INS_FNSAVE;
+}
+
+int latxs_ir1_addr_size(IR1_INST *ir1)
+{
+    return ir1->info->detail->x86.addr_size;
+}
+
+int latxs_ir1_inst_size(IR1_INST *ir1)
+{
+    return ir1->info->size;
+}
+
+void latxs_ir1_free_info(IR1_INST *ir1)
+{
+    if (ir1) {
+        /* cs_free(ir1->info, ir1->info_count); */
+    }
+}
+
+int latxs_ir1_is_illegal(IR1_INST *ir1)
+{
     return ir1->info->id == X86_INS_INVALID;
+}
+
+int latxs_ir1_access_mmx(IR1_INST *ir1)
+{
+    int opnd_num = ir1_opnd_num(ir1);
+    for (int i = 0; i < opnd_num; i++) {
+        if (ir1_opnd_is_mmx(ir1_get_opnd(ir1, i))) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* byhand use */
+int latxs_ir1_opnd_is_gpr32(IR1_OPND *opnd)
+{
+    if (opnd->type != X86_OP_REG) {
+        return 0;
+    }
+    switch (opnd->reg) {
+    case X86_REG_EAX:
+    case X86_REG_EBX:
+    case X86_REG_ECX:
+    case X86_REG_EDX:
+    case X86_REG_EBP:
+    case X86_REG_ESI:
+    case X86_REG_EDI:
+    case X86_REG_ESP:
+#ifdef TARGET_X86_64
+    case X86_REG_R8D ... X86_REG_R15D:
+#endif
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+
+int latxs_ir1_opnd_is_gpr64(IR1_OPND *opnd)
+{
+    if (opnd->type != X86_OP_REG) {
+        return 0;
+    }
+    switch (opnd->reg) {
+    case X86_REG_RAX:
+    case X86_REG_RBX:
+    case X86_REG_RCX:
+    case X86_REG_RDX:
+    case X86_REG_RBP:
+    case X86_REG_RSI:
+    case X86_REG_RDI:
+    case X86_REG_RSP:
+#ifdef TARGET_X86_64
+    case X86_REG_R8 ... X86_REG_R15:
+#endif
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int latxs_ir1_opnd_is_gpr_not_8h(IR1_OPND *opnd)
+{
+    return ir1_opnd_is_gpr(opnd) && !ir1_opnd_is_8h(opnd);
 }
 
 #endif

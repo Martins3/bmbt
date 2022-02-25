@@ -1,24 +1,26 @@
-#include "../include/env.h"
-#include "../include/mem.h"
-#include "../include/reg-alloc.h"
-#include "../include/shadow-stack.h"
-#include "../x86tomips-options.h"
-#include <string.h>
+#include "lsenv.h"
+#include "mem.h"
+#include "reg-alloc.h"
+#include "latx-options.h"
+#include "shadow-stack.h"
 
-SS_ITEM* ss_pop(SS* ss)
+/* global shadow_stack is defined here */
+SS shadow_stack;
+
+SS_ITEM* ss_pop(SS* ss) 
 {
     ss->_ssi_current--;
     assert(ss->_ssi_current>ss->_ssi_first);
     return ss->_ssi_current;
 }
 
-SS_ITEM* ss_top(SS* ss)
+SS_ITEM* ss_top(SS* ss) 
 {
     assert(ss->_ssi_current>ss->_ssi_first);
     return ss->_ssi_current-1;
 }
 
-void ss_init(SS* ss)
+void ss_init(SS* ss) 
 {
     if (option_shadow_stack)
         ss->_ssi_first = (SS_ITEM*) mm_calloc(800000, sizeof(SS_ITEM));
@@ -33,14 +35,14 @@ void ss_init(SS* ss)
     ss->_ssi_current = ss->_ssi_first+1;
 }
 
-void ss_duplicate(SS* ss, SS* from)
+void ss_duplicate(SS* ss, SS* from) 
 {
     ss_init(ss);
     if(from->_ssi_first !=NULL)
         memcpy(ss->_ssi_first, from->_ssi_first, (from->_ssi_current-from->_ssi_first-1)*sizeof(SS_ITEM));
 }
 
-void ss_fini(SS* ss)
+void ss_fini(SS* ss) 
 {
     if (ss->_ssi_first)
         mm_free(ss->_ssi_first);
@@ -50,7 +52,7 @@ void ss_fini(SS* ss)
 }
 
 
-void ss_push(SS* ss, ADDRX x86_esp, ADDRX x86_callee_addr, void *return_tb)
+void ss_push(SS* ss, ADDRX x86_esp, ADDRX x86_callee_addr, void *return_tb) 
 {
     // 1. make sure ss have enough space
     if (ss->_ssi_current == ss->_ssi_last) {
@@ -69,7 +71,7 @@ void ss_push(SS* ss, ADDRX x86_esp, ADDRX x86_callee_addr, void *return_tb)
 }
 
 
-void ss_pop_till_find(SS* ss, ADDRX x86_esp)
+void ss_pop_till_find(SS* ss, ADDRX x86_esp) 
 {
     // 1. find that ss item
     SS_ITEM *ssi = ss_top(ss);
@@ -80,4 +82,21 @@ void ss_pop_till_find(SS* ss, ADDRX x86_esp)
     if(x86_esp == ssi->x86_esp)
         ss_pop(ss);
     return;
+}
+
+void dump_shadow_stack(int debug_type) {
+    switch (debug_type) {
+        case 1: fprintf(stderr,"%dcall      :",debug_type); break;
+        case 2: fprintf(stderr,"%dcallin    :",debug_type); break;
+        case 3: fprintf(stderr,"%dret chain :",debug_type); break;
+        case 4: fprintf(stderr,"%dret null  :",debug_type); break;
+        case 5: fprintf(stderr,"%dret fail  :",debug_type); break;
+        default: fprintf(stderr,"%derror    :",debug_type);
+    }
+    CPUArchState* env = (CPUArchState*)(lsenv->cpu_state);
+    SS_ITEM* curr_ss = (SS_ITEM*)(env->vregs[4]);//ss
+    for (SS_ITEM* p = shadow_stack._ssi_first + 1; p < curr_ss; p++) {
+        fprintf(stderr, "%lx ", (uint64_t)p->x86_callee_addr);
+    }
+    fprintf(stderr, "\n");
 }

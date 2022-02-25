@@ -1,4 +1,4 @@
 # See docs/devel/tracing.txt for syntax documentation.
 
-# x86tomips
+# latx-profile.c
 xtm_tr_tb(void *tb, void *code_addr, void *pc) "TB %p ; code %p ; PC %p"

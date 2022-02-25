@@ -1,32 +1,10 @@
 #ifndef _ETB_H_
 #define _ETB_H_
 
-#include "../include/common.h"
-#include "../x86tomips-config.h"
-#include "../ir1/ir1.h"
+#include "ir1.h"
+#include "qemu-def.h"
 
-/* functions to access ETB items */
-IR1_INST *etb_ir1_inst_first(ETB *etb);
-IR1_INST *etb_ir1_inst_last(ETB *etb);
-IR1_INST *etb_ir1_inst(ETB *etb, const int i);
-int etb_ir1_num(ETB *etb);
-
-ETB* etb_alloc(void);
-void etb_init(ETB *etb);
-void etb_free(ETB* etb);
-
-void etb_check_top_in(ETB *etb, int top);
-void etb_check_top_out(ETB *etb, int top);
-int  etb_get_top_in(ETB *etb);
-void etb_set_top_in(ETB *etb, int8 top_in);
-int  etb_get_top_out(ETB *etb);
-void etb_set_top_out(ETB *etb, int8 top_out);
-
-void tb_flag_usedef(TranslationBlock *tb);
-
-#ifndef CONFIG_SOFTMMU
-
-#define MAX_DEPTH 5
+#define MAX_DEPTH 5 
 typedef enum {
     TB_TYPE_NONE = 80,
     TB_TYPE_BRANCH,
@@ -37,26 +15,72 @@ typedef enum {
     TB_TYPE_JUMPIN,
 } TB_TYPE;
 
-/* etb hash table functions */
-void etb_cache_qht_init(void);
-bool etb_lookup_custom(const void *ap, const void *bp);
-ETB *etb_cache_find(ADDRX pc, bool used_to_attach_tb);
+/* func to access EXTRA TB */
+static inline ETB *qm_tb_get_extra_tb(void *tb)
+{
+    struct TranslationBlock *ptb = (struct TranslationBlock *)tb;
+    return &ptb->extra_tb;
+}
 
-/* flag_pattern.c */
-void tb_find_flag_pattern(TranslationBlock *tb);
+/* functions to access ETB items */
+static inline IR1_INST *tb_ir1_inst_first(struct TranslationBlock *tb)
+{
+    return tb->_ir1_instructions;
+}
 
-/* flag_reduction.c */
-void tb_flag_reduction(TranslationBlock *tb);
-uint8 pending_use_of_succ(ETB* etb, int max_depth);
-void etb_add_succ(ETB *etb, int depth);
-int8 get_etb_type(IR1_INST *last_ir1);
-#endif
+static inline IR1_INST *tb_ir1_inst_last(TranslationBlock *tb)
+{
+    return tb->_ir1_instructions + tb->icount - 1;
+}
 
-#ifdef CONFIG_SOFTMMU
-#if defined(CONFIG_XTM_PROFILE) || defined(CONFIG_XTM_FAST_CS)
-void etb_pref_cs_mask(ETB *etb, IR1_INST *pir1);
-#endif
-#endif
+static inline IR1_INST *tb_ir1_inst(TranslationBlock *tb, const int i)
+{
+    return tb->_ir1_instructions + i;
+}
 
-extern QHT *etb_cache_qht;
+static inline int tb_ir1_num(TranslationBlock *tb)
+{
+    return tb->icount;
+}
+
+static inline int8 etb_get_top_in(struct TranslationBlock *tb)
+{
+    return tb->_top_in;
+}
+
+static inline void etb_check_top_in(struct TranslationBlock *tb, int top_in)
+{
+    if (tb->_top_in == -1) {
+        lsassert(tb->_top_out == -1);
+        lsassert(top_in >= 0 && top_in <= 7);
+        tb->_top_in = top_in;
+    /* } else {
+     *     assertm(top_in() == top, "\n%s: TB<0x%x>: top_in<%d> does not equal
+     *     top<%d>\n\
+     *         NOTE: last_tb_executed: first time: 0x%x, current time: 0x%x\n",\
+     *         BIN_INFO::get_exe_short_name(), this->addr(), top_in(), top,\
+     *         _last_tb_x86_addr, env->last_executed_tb()->addr());
+     */
+    }
+}
+
+static inline void etb_check_top_out(struct TranslationBlock *tb, int top_out)
+{
+    lsassert(tb->_top_in != -1);
+
+    if (tb->_top_out == -1) {
+        lsassert(top_out >= 0 && top_out <= 7);
+        tb->_top_out = top_out;
+    /* } else {
+     *     assertm(top_out() == top, "\n%s: TB<0x%x>: top_out<%d> does not equal
+     *     top<%d>\n\
+     *         NOTE: last_tb_executed: first time: 0x%x, current time: 0x%x\n",\
+     *         BIN_INFO::get_exe_short_name(), this->addr(), top_out(), top,\
+     *         _last_tb_x86_addr, env->last_executed_tb()->addr());
+     */
+    }
+}
+
+void etb_qht_init(void);
+
 #endif

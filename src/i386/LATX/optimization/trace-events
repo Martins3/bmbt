@@ -1,0 +1,5 @@
+# latx sigint
+latx_sigint_handler(unsigned long tid, unsigned long tns, unsigned long pc) "thread 0x%lx timens %ld sigintpc 0x%lx"
+latx_sigint_event(unsigned long tid, unsigned long tns, const char *type, unsigned long tbpc) "thread 0x%lx timens %ld %s 0x%lx"
+latx_sigint_unlink(unsigned long tid, unsigned long tns, unsigned long tbpc, int isindir) "thread 0x%lx timens %ld unlinktbpc 0x%lx isindirtb %d"
+latx_sigint_relink(unsigned long tid, unsigned long tns, unsigned long tbpc, int isindir) "thread 0x%lx timens %ld relinktbpc 0x%lx isindirtb %d"
