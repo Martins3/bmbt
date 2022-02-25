@@ -6,7 +6,7 @@
 /* IR2_INS_TYPE: LISA_ADD_W ...
  * IR2_OPND_TYPE: IR2_OPND_GPR ...
  * IR2_OPND { _type, val } */
-#include "../ir2/la_ir2.h"
+#include "../ir2/la-ir2.h"
 
 #define IR2_ITEMP_MAX 0x4000
 

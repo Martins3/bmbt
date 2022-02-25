@@ -1,8 +1,8 @@
 #include "../include/common.h"
 #include "../include/env.h"
 #include "../include/etb.h"
-#include "../include/reg_alloc.h"
-#include "../include/flag_pattern.h"
+#include "../include/reg-alloc.h"
+#include "../include/flag-pattern.h"
 #include "../x86tomips-options.h"
 #include <string.h>
 

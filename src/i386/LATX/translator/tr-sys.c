@@ -1,6 +1,6 @@
 /* X86toMIPS headers */
 #include "../include/common.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include "../include/env.h"
 #include "../ir2/ir2.h"
 #include "../x86tomips-options.h"
@@ -13,7 +13,7 @@
 #endif
 
 /* Macro : Exception Check for specific instructions */
-#include "../translator/tr_excp.h"
+#include "../translator/tr-excp.h"
 
 /* Execute after every ir1_disasm to fix something
  *

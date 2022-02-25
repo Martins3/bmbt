@@ -1,6 +1,6 @@
 /* X86toMIPS headers */
 #include "include/common.h"
-#include "include/reg_alloc.h"
+#include "include/reg-alloc.h"
 #include "include/env.h"
 #include "ir2/ir2.h"
 #include "x86tomips-options.h"

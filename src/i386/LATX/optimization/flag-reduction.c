@@ -2,7 +2,7 @@
 #include "../include/etb.h"
 #include "../ir1/ir1.h"
 #include "../translator/translate.h"
-#include "../include/flag_usedef.h"
+#include "../include/flag-usedef.h"
 
 #if BMBT
 uint8 pending_use_of_succ(ETB* etb, int max_depth)

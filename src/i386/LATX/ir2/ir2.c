@@ -2,7 +2,7 @@
 #include "../ir2/ir2.h"
 #include "../ir1/ir1.h"
 #include "../include/env.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include <string.h>
 
 #define REG_ALLOC_DEFINE_IR2(ir2name, ir2type, ir2val) \
@@ -47,7 +47,7 @@ REG_ALLOC_DEFINE_IR2_GPR(ra_ir2_opnd,    1); /* ra */
 REG_ALLOC_DEFINE_IR2_GPR(stmp1_ir2_opnd, 8); /* a4 */
 REG_ALLOC_DEFINE_IR2_GPR(stmp2_ir2_opnd, 9); /* a5 */
 
-#include "../ir2/ir2_la_name.h"
+#include "../ir2/ir2-la-name.h"
 
 /* Consist value */
 REG_ALLOC_DEFINE_IR2(invalid_ir2_opnd, IR2_OPND_INV, 0);

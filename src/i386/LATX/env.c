@@ -1,5 +1,5 @@
 #include "include/env.h"
-#include "include/shadow_stack.h"
+#include "include/shadow-stack.h"
 #include "x86tomips-options.h"
 #include "include/profile.h"
 

@@ -1,6 +1,6 @@
 #include "../include/common.h"
 #include "../include/env.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 
 EXTENSION_MODE ir1_opnd_em(IR1_OPND *opnd)
 {

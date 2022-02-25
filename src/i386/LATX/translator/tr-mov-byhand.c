@@ -1,6 +1,6 @@
 #include "../include/common.h"
 #include "../translator/translate.h"
-#include "../include/reg_alloc.h"
+#include "../include/reg-alloc.h"
 #include "../x86tomips-options.h"
 
 static inline
