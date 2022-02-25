@@ -1,9 +1,4 @@
-#include "include/mem.h"
-#include "include/xtm-qemu-config.h"
-
-#ifdef CONFIG_XTM_MEMWATCH
-#include "include/memwatch.h"
-#endif
+#include "mem.h"
 
 void *mm_malloc(int size)
 {
@@ -27,12 +22,7 @@ void *mm_realloc(void *ptr, int size)
     return retval;
 }
 
-void mm_free(void *ptr)
-{
-    if (ptr) {
-        free(ptr);
-    }
-}
+void mm_free(void *ptr) { free(ptr); }
 
 void *mmi_palloc(int size, char *file_name, int line_num)
 {

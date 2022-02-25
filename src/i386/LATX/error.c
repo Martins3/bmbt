@@ -1,13 +1,10 @@
-#include "include/error.h"
-#ifdef USE_SYSTEM_LIBC
+#include "error.h"
 #include <execinfo.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 
 void print_stack_trace(void)
 {
-#ifdef USE_SYSTEM_LIBC
     int size = 64;
     void *array[64];
 
@@ -23,5 +20,4 @@ void print_stack_trace(void)
     }
 
     free(s);
-#endif
 }

@@ -1,13 +1,20 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include "../include/types.h"
-#include "../include/ds-set.h"
-#include "../include/mem.h"
-#include "../include/error.h"
+#include "latx-types.h"
+#include "ds-set.h"
+#include "mem.h"
+#include "error.h"
 
-/* CONFIG_xxx from QEMU */
-#include "../include/xtm-qemu-config.h"
+#define LATX_SYS_FCSR
+#define LATX_SYS_FCSR_SIMD
+/* #define LATX_SYS_FCSR_EXCP TODO */
+
+/*
+ * LATX_SYS_FCSR      : map x86 FPU FCSR => LA FCSR
+ * LATX_SYS_FCSR_SIMD : enabled assert for x86 SIMD FCSR
+ * LATX_SYS_FCSR_EXCP : enable x86 FPU exception TODO
+ */
 
 #define BITS_ARE_SET_ANY(value, bits) (((value) & (bits)) != 0)
 #define BITS_ARE_SET_ALL(value, bits) (((value) & (bits)) == (bits))
@@ -36,6 +43,10 @@
     (((addr) + MIPS_PAGE_SIZE - 1) & MIPS_PAGE_MASK)
 #define MIPS_PAGE_ALIGN_FLOOR(addr) ((addr)(&MIPS_PAGE_MASK))
 
+#ifndef offsetof
+#define offsetof(st, m) __builtin_offsetof(st, m)
+#endif
+
 #ifndef _Bool
 #define _Bool char
 #endif
@@ -61,33 +72,32 @@ enum {
 };
 typedef int8 EXTENSION_MODE;
 
-#ifndef N64
-#define N64
-#endif
+enum {
+    EXMode_N = 96,
+    EXMode_S,
+    EXMode_Z,
+};
+typedef int8_t EXMode;
+typedef int8_t EXBits;
 
-/* Choose register allocation algorithm
- * > IMM: allocate physical register inside re_alloc_temp()
- * > AFT: asign physical register after all IR2s generated */
-#define REG_ALLOC_ALG_IMM
-//#define REG_ALLOC_ALG_AFT
+/* @n should be in [1, 31] */
+#define int32_in_intn(x, n) (!(((x) + (1 << ((n) - 1))) & (~((1 << n) - 1))))
 
-// @n should be in [1, 31]
-#define int32_in_intn(x, n) (!(((x)+(1 << ((n)-1)))&(~((1 << n) - 1))))
-
-#define int32_in_int4(x)   (!(((x)+0x8)&(~(0xf))))
+#define int32_in_int4(x)   (!(((x) + 0x8) & (~(0xf))))
 #define int32_in_int5(x)   int32_in_intn(x, 5)
-#define int32_in_int8(x)   (!(((x)+0x80)&(~(0xff))))
+#define int32_in_int8(x)   (!(((x) + 0x80) & (~(0xff))))
 #define int32_in_int9(x)   int32_in_intn(x, 9)
 #define int32_in_int10(x)  int32_in_intn(x, 10)
 #define int32_in_int11(x)  int32_in_intn(x, 11)
 #define int32_in_int12(x)  int32_in_intn(x, 12)
+#define int32_in_int13(x)  int32_in_intn(x, 13)
 #define int32_in_int14(x)  int32_in_intn(x, 14)
-#define int32_in_int16(x)  (!(((x)+0x8000)&(~(0xffff))))
+#define int32_in_int16(x)  (!(((x) + 0x8000) & (~(0xffff))))
 #define int32_in_int20(x)  int32_in_intn(x, 20)
 #define int32_in_int21(x)  int32_in_intn(x, 21)
 #define int32_in_int26(x)  int32_in_intn(x, 26)
 
-// @n should be in [1, 31]
+/* @n should be in [1, 31] */
 #define uint32_in_uintn(x, n)   (!((uint32_t)(x) >> (n)))
 
 #define uint32_in_uint1(x)      uint32_in_uintn(x, 1)
@@ -99,5 +109,9 @@ typedef int8 EXTENSION_MODE;
 #define uint32_in_uint7(x)      uint32_in_uintn(x, 7)
 #define uint32_in_uint8(x)      uint32_in_uintn(x, 8)
 #define uint32_in_uint12(x)     uint32_in_uintn(x, 12)
+
+#ifndef N64
+#define N64
+#endif
 
 #endif /* _COMMON_H_ */

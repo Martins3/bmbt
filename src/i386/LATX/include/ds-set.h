@@ -9,13 +9,6 @@ typedef struct ds_set {
     void *data;
 } ds_set;
 
-#define DSSET_FOR_EACH(set, index, type, func)              \
-    do {                                                    \
-        for (index = 0; index < set->num; ++index) {        \
-            func(set->data + sizeof(type) * index);         \
-        }                                                   \
-    } while(0)
-
 #define DSSET_INIT(set, elemnum, elemsize)                  \
     do {                                                    \
         set->data = (void *)malloc((elemnum) * (elemsize)); \

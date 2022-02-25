@@ -3,10 +3,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../include/xtm-qemu-config.h"
+#include <unistd.h>
+#include "qemu/osdep.h"
 
 void print_stack_trace(void);
 
+#ifdef CONFIG_LATX_DEBUG
 #define lsassert(cond)                                                  \
     do {                                                                \
         if (!(cond)) {                                                  \
@@ -29,30 +31,31 @@ void print_stack_trace(void);
         }                                                                     \
     } while (0)
 
+#else
+#define lsassert(cond)          ((void)0)
+#define lsassertm(cond, ...)    ((void)0)
+#endif
+
 #ifdef CONFIG_SOFTMMU
 
-#include "../include/types.h"
+#include "latx-types.h"
 
 /* generate exception directly */
-void tr_gen_excp_illegal_op_addr(ADDRX addr, int end);
+void latxs_tr_gen_excp_illegal_op_addr(ADDRX addr, int end);
 
 /* lsassert to simply codes */
-#define lsassert_illop(addr, cond)              \
-    do {                                        \
-        if (!(cond)) {                          \
-            tr_gen_excp_illegal_op_addr(addr, 1);  \
-        }                                       \
-    } while(0)
+#define lsassert_illop(addr, cond) do {                 \
+        if (!(cond)) {                                  \
+            latxs_tr_gen_excp_illegal_op_addr(addr, 1); \
+        }                                               \
+    } while (0)
 
-#define lsassertm_illop(addr, cond, ...)                                       \
-    do {                                                                      \
-        if (!(cond)) {                                                        \
-            fprintf(stderr, "\033[31m assertion failed in <%s> %s:%d \033[m", \
-                    __FUNCTION__, __FILE__, __LINE__);                        \
-            fprintf(stderr, __VA_ARGS__);                                     \
-            tr_gen_excp_illegal_op_addr(addr, 1);                                \
-        }                                                                     \
-    } while(0)
+#define lsassertm_illop(addr, cond, ...) do {           \
+        if (!(cond)) {                                  \
+            fprintf(stderr, __VA_ARGS__);               \
+            latxs_tr_gen_excp_illegal_op_addr(addr, 1); \
+        }                                               \
+    } while (0)
 
 #endif /* CONFIG_SOFTMMU */
 
