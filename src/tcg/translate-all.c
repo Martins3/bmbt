@@ -1136,17 +1136,6 @@ static gboolean tb_host_size_iter(gpointer key, gpointer value, gpointer data) {
   return false;
 }
 
-#ifdef CONFIG_LATX
-extern void etb_free(ETB *etb);
-static gboolean x86_to_mips_free_etb(gpointer key, gpointer value,
-                                     gpointer data) {
-  TranslationBlock *tb = value;
-  etb_free(tb->extra_tb);
-  tb->extra_tb = NULL;
-  return false;
-}
-#endif
-
 /* flush all the translation blocks */
 static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count) {
   bool did_flush = false;
@@ -1169,10 +1158,6 @@ static void do_tb_flush(CPUState *cpu, run_on_cpu_data tb_flush_count) {
     printf("qemu: flush code_size=%zu nb_tbs=%zu avg_tb_size=%zu\n",
            tcg_code_size(), nb_tbs, nb_tbs > 0 ? host_size / nb_tbs : 0);
   }
-
-#ifdef CONFIG_LATX
-  tcg_tb_foreach(x86_to_mips_free_etb, 0);
-#endif
 
   CPU_FOREACH(cpu) { cpu_tb_jmp_cache_clear(cpu); }
 
@@ -1319,30 +1304,11 @@ static inline void tb_remove_from_jmp_list(TranslationBlock *orig, int n_orig) {
   g_assert_not_reached();
 }
 
-#ifdef CONFIG_LATX
-extern int xtm_branch_opt(void);
-#endif
 /* reset the jump entry 'n' of a TB so that it is not chained to
    another TB */
 static inline void tb_reset_jump(TranslationBlock *tb, int n) {
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX)
-  if (xtm_branch_opt() && n == 1 &&
-      tb->extra_tb->branch_to_target_direct_in_mips_branch == 1) {
-    uint32_t *addr =
-        (uint32_t *)(tb->tc.ptr + tb->extra_tb->mips_branch_inst_offset);
-    *addr = tb->extra_tb->mips_branch_backup;
-    tb->extra_tb->mips_branch_backup = 0;
-    tb->extra_tb->branch_to_target_direct_in_mips_branch = 0;
-    return;
-  }
-#endif
-
   uintptr_t addr = (uintptr_t)(tb->tc.ptr + tb->jmp_reset_offset[n]);
   tb_set_jmp_target(tb, n, addr);
-#ifdef CONFIG_LATX
-  if (tb->extra_tb)
-    tb->extra_tb->next_tb[n] = NULL;
-#endif
 }
 
 /* remove any jumps to the TB */
@@ -1415,12 +1381,6 @@ static void do_tb_phys_invalidate(TranslationBlock *tb,
 
   /* suppress any remaining jumps to this TB */
   tb_jmp_unlink(tb);
-
-#ifdef CONFIG_LATX
-  /* free extra_tb */
-  etb_free(tb->extra_tb);
-  tb->extra_tb = NULL;
-#endif
 
   atomic_set(&tcg_ctx->tb_phys_invalidate_count,
              tcg_ctx->tb_phys_invalidate_count + 1);
