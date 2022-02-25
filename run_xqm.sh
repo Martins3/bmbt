@@ -7,12 +7,12 @@ kernel=~/xqm_images/vmlinuz-2.6.32
 
 kernel=${BASE_DIR}/image/bzImage.bin
 initrd=${BASE_DIR}/image/initrd.bin
-qemu=~/ld/x86-qemu-mips/build/i386-softmmu/qemu-system-i386
+qemu=~/core/lat/build/i386-softmmu/qemu-system-i386
 bios=${BASE_DIR}/seabios/out/bios.bin
 
 
 arg_bios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${bios}"
-arg_xqm="-xtm select,tblink,lbt,verbose"
+arg_xqm="-latx select,cpjl=on,intblink=on,njc=on,largecc=on -accel tcg,tb-size=2048"
 arg_img="-hda ~/xqm_images/ubuntu10s.test.img.full"
 arg_kernel="-kernel ${kernel}"
 arg_kernel_cmdline="-append \"console=ttyS0 \""

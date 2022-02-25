@@ -1,27 +1,17 @@
-#include <asm/unistd.h>
+#include <assert.h>  // assert
+#include <limits.h>  // INT_MAX
+#include <math.h>    // sqrt
+#include <stdbool.h> // bool false true
+#include <stdio.h>
+#include <stdlib.h> // malloc sort
+#include <string.h> // strcmp ..
+#include <unistd.h> // sleep
 
-static inline void exit(int status) {
-  int __res;
-  __asm__ volatile("movl %%ecx,%%ebx\n"
-                   "int $0x80"
-                   : "=a"(__res)
-                   : "0"(__NR_exit), "c"((long)(status)));
-}
-
-static inline int write(int fd, const char *buf, int len) {
-  int status;
-  __asm__ volatile("pushl %%ebx\n"
-                   "movl %%esi,%%ebx\n"
-                   "int $0x80\n"
-                   "popl %%ebx\n"
-                   : "=a"(status)
-                   : "0"(__NR_write), "S"((long)(fd)), "c"((long)(buf)),
-                     "d"((long)(len)));
-  return status;
-}
-
-void _start(void);
-void _start(void) {
-  write(1, "Hello World\n", 12);
+int main(int argc, char *argv[]) {
+  for (int i = 0; i < 1000; ++i) {
+    printf("huxueshi:%s loongson\n", __FUNCTION__);
+    sleep(1);
+  }
   exit(0);
+  return 0;
 }
