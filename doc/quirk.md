@@ -139,7 +139,7 @@ VNC server running on ::1:5900
 #2  0x00005555557b8434 in tcg_optimize (s=s@entry=0x7fffb4000b60) at /home/maritns3/core/ld/qemu/tcg/optimize.c:630
 #3  0x000055555579e545 in tcg_gen_code (s=0x7fffb4000b60, tb=tb@entry=0x7fffbc000a40 <code_gen_buffer+2579>) at /home/maritns3/core/ld/qemu/tcg/tcg.c:4074
 #4  0x0000555555808527 in tb_gen_code (cpu=cpu@entry=0x55555663cf50, pc=10376293541477190156, cs_base=cs_base@entry=0, flags=268435608, cflags=-16252928, cflags@entry=524288) at /home/maritns3/core/ld/qemu/accel/tcg/translate-all.c:1757
-#5  0x00005555558066a2 in tb_find (cf_mask=524288, tb_exit=0, last_tb=0x0, cpu=0x0) at /home/maritns3/core/ld/qemu/accel/tcg/cpu-exec.c:406
+#5  0x00005555558066a2 in tb_find (cflags=524288, tb_exit=0, last_tb=0x0, cpu=0x0) at /home/maritns3/core/ld/qemu/accel/tcg/cpu-exec.c:406
 #6  cpu_exec (cpu=cpu@entry=0x55555663cf50) at /home/maritns3/core/ld/qemu/accel/tcg/cpu-exec.c:730
 #7  0x00005555557d2410 in tcg_cpu_exec (cpu=0x55555663cf50) at /home/maritns3/core/ld/qemu/cpus.c:1473
 #8  0x00005555557d46c4 in qemu_tcg_cpu_thread_fn (arg=arg@entry=0x55555663cf50) at /home/maritns3/core/ld/qemu/cpus.c:1781

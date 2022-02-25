@@ -10,8 +10,8 @@
 - CONFIG_XTM_PROFILE : 出现次数很多, 似乎真的有用，以后在慢慢支持吧
 
 ## xqm 特有的
-- CONFIG_X86toMIPS
-- [ ] CONFIG_LATX : 核实一下 CONFIG_X86toMIPS 和 CONFIG_LATX 同时在一起才是正确版本
+- CONFIG_LATX
+- [ ] CONFIG_LATX : 核实一下 CONFIG_LATX 和 CONFIG_LATX 同时在一起才是正确版本
 
 ## [ ] 需要处理的事情
 - [ ] /home/maritns3/core/ld/DuckBuBi/include/qemu/config-host.h 里面有很多 CONFIG 可能到时候是不能使用的
