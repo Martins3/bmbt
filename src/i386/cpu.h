@@ -120,47 +120,23 @@ typedef enum X86Seg {
 #define VIP_MASK 0x00100000
 #define ID_MASK 0x00200000
 
-#ifdef CONFIG_LATX
+#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
 
-/* For now, this is only used in system-mode. */
+#define LATXS_FPU_RESET_VALUE 0
 
-#define XTM_FPU_RESET_VALUE 0
+#define LATXS_FPU_TOP_BIT 0
+#define LATXS_FPU_RESET_ST_BIT 6
+#define LATXS_FPU_LOAD_ST_BIT 7
 
-#define XTM_FPU_TOP_BIT 0
-#define XTM_FPU_RESET_ST_BIT 6
-#define XTM_FPU_LOAD_ST_BIT 7
-//#define XTM_FPU_TB_TOP_OUT      8
-//#define XTM_FPU_TB_TOP_IN       11
-//#define XTM_FPU_TB_TOP_OUT_V    14
-//#define XTM_FPU_TB_TOP_IN_V     15
+#define LATXS_FPU_TOP_MASK (7 << LATXS_FPU_TOP_BIT)
+#define LATXS_FPU_RESET_ST_MASK (1 << LATXS_FPU_RESET_ST_BIT)
+#define LATXS_FPU_LOAD_ST_MASK (1 << LATXS_FPU_LOAD_ST_BIT)
 
-#define XTM_FPU_TOP_MASK (7 << XTM_FPU_TOP_BIT)
-#define XTM_FPU_RESET_ST_MASK (1 << XTM_FPU_RESET_ST_BIT)
-#define XTM_FPU_LOAD_ST_MASK (1 << XTM_FPU_LOAD_ST_BIT)
-//#define XTM_FPU_TB_TOP_OUT_MASK (7 << XTM_FPU_TB_TOP_OUT)
-//#define XTM_FPU_TB_TOP_IN_MASK  (7 << XTM_FPU_TB_TOP_IN)
-//#define XTM_FPU_TB_TOP_OUT_V_MASK (1 << XTM_FPU_TB_TOP_OUT_V)
-//#define XTM_FPU_TB_TOP_IN_V_MASK  (1 << XTM_FPU_TB_TOP_IN_V)
+#define LATXS_FPU_NEED_FIX_MASK                                                \
+  (LATXS_FPU_RESET_ST_MASK | LATXS_FPU_LOAD_ST_MASK)
 
-#define XTM_FPU_NEED_FIX_MASK (XTM_FPU_RESET_ST_MASK | XTM_FPU_LOAD_ST_MASK)
-
-#define xtm_fpu_get_top(x) ((x)&XTM_FPU_TOP_MASK)
-#define xtm_fpu_need_fix(x) ((x)&XTM_FPU_NEED_FIX_MASK)
-
-//#define xtm_fpu_top_out_valid(x) (((x) & XTM_FPU_TB_TOP_OUT_V_MASK) >>
-// XTM_FPU_TB_TOP_OUT_V) #define xtm_fpu_top_in_valid(x)  (((x) &
-// XTM_FPU_TB_TOP_IN_V_MASK)  >> XTM_FPU_TB_TOP_IN_V) #define
-// xtm_fpu_get_top_out(x)   (((x) & XTM_FPU_TB_TOP_OUT_MASK) >>
-// XTM_FPU_TB_TOP_OUT) #define xtm_fpu_get_top_in(x)    (((x) &
-// XTM_FPU_TB_TOP_IN_MASK)  >> XTM_FPU_TB_TOP_IN) #define
-// xtm_fpu_set_top_out(x,o) (((x) & ~XTM_FPU_TB_TOP_OUT_MASK) | (((o) & 7) <<
-// XTM_FPU_TB_TOP_OUT) | XTM_FPU_TB_TOP_OUT_V_MASK) #define
-// xtm_fpu_set_top_in(x,i)  (((x) & ~XTM_FPU_TB_TOP_IN_MASK)  | (((i) & 7) <<
-// XTM_FPU_TB_TOP_IN)  | XTM_FPU_TB_TOP_IN_V_MASK) #define
-// xtm_fpu_clr_top_out(x)
-//((x) & ~XTM_FPU_TB_TOP_OUT_MASK & ~XTM_FPU_TB_TOP_OUT_V_MASK) #define
-// xtm_fpu_clr_top_in(x)    ((x) & ~XTM_FPU_TB_TOP_IN_MASK  &
-//~XTM_FPU_TB_TOP_IN_V_MASK)
+#define latxs_fpu_get_top(x) ((x)&LATXS_FPU_TOP_MASK)
+#define latxs_fpu_need_fix(x) ((x)&LATXS_FPU_NEED_FIX_MASK)
 
 #endif
 
