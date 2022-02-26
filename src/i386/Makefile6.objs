@@ -19,8 +19,6 @@ obj-$(CONFIG_LATX) += LATX/optimization/shadow-stack.c
 obj-$(CONFIG_LATX) += LATX/optimization/sys-lsfpu.c
 obj-$(CONFIG_LATX) += LATX/optimization/sys-staticcs.c
 obj-$(CONFIG_LATX) += LATX/optimization/sys-njc.c
-# TMP_TODO 所以直接不编译进去就可以了吗?
-# 应该存在外部对于这个部分的引用吧
 # obj-$(CONFIG_LATX) += LATX/optimization/sys-sigint.c
 obj-$(CONFIG_LATX) += LATX/optimization/sys-em.c
 # subdir('translator')
