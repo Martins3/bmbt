@@ -57,6 +57,12 @@ typedef uint64_t tcg_insn_unit;
 
 #define TCG_MAX_INSNS 512
 
+#ifndef TARGET_INSN_START_EXTRA_WORDS
+#define TARGET_INSN_START_WORDS 1
+#else
+#define TARGET_INSN_START_WORDS (1 + TARGET_INSN_START_EXTRA_WORDS)
+#endif
+
 typedef struct TCGContext {
   /* goto_tb support */
   tcg_insn_unit *code_buf;
@@ -88,6 +94,9 @@ typedef struct TCGContext {
   TCGRegSet reserved_regs;
 
   size_t tb_phys_invalidate_count;
+
+  uint16_t gen_insn_end_off[TCG_MAX_INSNS];
+  target_ulong gen_insn_data[TCG_MAX_INSNS][TARGET_INSN_START_WORDS];
 } TCGContext;
 
 extern TCGContext tcg_init_ctx;
@@ -95,12 +104,6 @@ extern TCGContext *tcg_ctx;
 
 /* Combine the MemOp and mmu_idx parameters into a single value.  */
 typedef uint32_t TCGMemOpIdx;
-
-#ifndef TARGET_INSN_START_EXTRA_WORDS
-#define TARGET_INSN_START_WORDS 1
-#else
-#define TARGET_INSN_START_WORDS (1 + TARGET_INSN_START_EXTRA_WORDS)
-#endif
 
 /*
  * Memory helpers that will be used by TCG generated code.
