@@ -169,14 +169,15 @@ typedef struct TranslationBlock {
   int8 _top_in;
   int8 _top_out;
   void *next_tb[2];
-#ifdef CONFIG_LATX_PROFILER
-  /* real code generate - exclude tr_exit... */
-  uint16_t nr_code;
-#endif
-  uint64_t exec_times;
-  uint64_t exit_times;
   /* remember to free these memory when QEMU recycle one TB */
   ETB extra_tb;
+#ifdef CONFIG_SOFTMMU
+  /* TB ends because of special situation in system-mode */
+  struct IR1_INST *sys_eob_pir1;
+  /* record the last instruction if TB is too large */
+  struct IR1_INST *tb_too_large_pir1;
+  int is_indir_tb;
+#endif
 #endif
 } TranslationBlock;
 
