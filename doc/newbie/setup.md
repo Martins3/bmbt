@@ -5,6 +5,7 @@
 - musl version : 1e4204d522670a1d8b8ab85f1cfefa960547e8af
 - glibc version : 8b0a2fa8312cad636060cf04fbb3d3d29a26322f
 - glib version  : 979da1da482cfd11e20f0fc6b9c23dcbc2cd0017 2.70.2
+- 第一次更新 LATX  : 0abbe319f0c79461ec29ccb7808df4ba183e34e6
 
 ## 编译 Loongarch64 Host 的内核
 - huxueshi@172.17.103.58 linux-4.19-loongson
