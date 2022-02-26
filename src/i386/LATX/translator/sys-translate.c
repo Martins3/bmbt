@@ -5,7 +5,9 @@
 #include "latx-options.h"
 #include "translate.h"
 #include <string.h>
+#ifdef SYNC_LATX
 #include "qemu/cacheflush.h"
+#endif
 
 /* Main Translation Process */
 

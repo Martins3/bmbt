@@ -5,6 +5,9 @@
 #include "latx-options.h"
 #include "translate.h"
 #include <string.h>
+#ifndef SYNC_LATX
+#include "latx-config.h"
+#endif
 
 /* BPC: Break Point Codes */
 ADDR latxs_sc_bpc;

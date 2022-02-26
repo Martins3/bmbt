@@ -14,14 +14,19 @@
 #include "trace.h"
 #include "translate.h"
 #include "latx-config.h"
+#ifndef SYNC_LATX
+#include "qemu/qht.h"
+#endif
 
 
 int target_latx_host(CPUArchState *env, struct TranslationBlock *tb)
 {
     counter_tb_tr += 1;
 
+#ifdef SYNC_LATX
     trace_xtm_tr_tb((void *)tb, (void *)tb->tc.ptr,
                     (void *)(unsigned long long)tb->pc);
+#endif
 
     if (option_dump) {
         fprintf(stderr, "=====================================\n");
