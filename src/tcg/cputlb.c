@@ -2024,3 +2024,27 @@ uint8_t helper_ret_ldub_cmmu(CPUArchState *env, target_ulong addr,
                              TCGMemOpIdx oi, uintptr_t retaddr) {
   return full_ldub_cmmu(env, addr, oi, retaddr);
 }
+
+// -------------------------- TMP_TODO -----------------------------------
+// cputlb.c 中是不是重新更新一波，现在还是不太清楚，暂时直接超过来
+#if defined(TARGET_I386) && defined(CONFIG_LATX)
+void latxs_helper_le_lddq_mmu(CPUArchState *env, target_ulong addr,
+                           TCGMemOpIdx oi, uintptr_t retaddr)
+{
+    uint64_t low = helper_le_ldq_mmu(env, addr, oi, retaddr);
+    *(uint64_t *)((void *)(&env->temp_xmm)) = low;
+    uint64_t high = helper_le_ldq_mmu(env, addr + 8, oi, retaddr);
+    *(uint64_t *)((void *)(&env->temp_xmm) + 8) = high;
+}
+#endif
+
+#if defined(TARGET_I386) && defined(CONFIG_LATX)
+void latxs_helper_le_stdq_mmu(CPUArchState *env, target_ulong addr,
+                              uint64_t val, TCGMemOpIdx oi, uintptr_t retaddr)
+{
+    uint64_t low = *(uint64_t *)((void *)(&env->temp_xmm));
+    helper_le_stq_mmu(env, addr, low, oi, retaddr);
+    uint64_t high = *(uint64_t *)((void *)(&env->temp_xmm) + 8);
+    helper_le_stq_mmu(env, addr + 8, high, oi, retaddr);
+}
+#endif
