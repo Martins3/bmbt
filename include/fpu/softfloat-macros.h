@@ -82,7 +82,7 @@ this code that are retained.
 #ifndef FPU_SOFTFLOAT_MACROS_H
 #define FPU_SOFTFLOAT_MACROS_H
 
-#include "softfloat-types.h"
+#include "fpu/softfloat-types.h"
 
 /*----------------------------------------------------------------------------
 | Shifts `a' right by the number of bits given in `count'.  If any nonzero
@@ -756,11 +756,9 @@ static inline uint32_t estimateSqrt32(int aExp, uint32_t a)
 | Otherwise, returns 0.
 *----------------------------------------------------------------------------*/
 
-static inline flag eq128( uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1 )
+static inline bool eq128(uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1)
 {
-
-    return ( a0 == b0 ) && ( a1 == b1 );
-
+    return a0 == b0 && a1 == b1;
 }
 
 /*----------------------------------------------------------------------------
@@ -769,11 +767,9 @@ static inline flag eq128( uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1 )
 | Otherwise, returns 0.
 *----------------------------------------------------------------------------*/
 
-static inline flag le128( uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1 )
+static inline bool le128(uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1)
 {
-
-    return ( a0 < b0 ) || ( ( a0 == b0 ) && ( a1 <= b1 ) );
-
+    return a0 < b0 || (a0 == b0 && a1 <= b1);
 }
 
 /*----------------------------------------------------------------------------
@@ -782,11 +778,9 @@ static inline flag le128( uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1 )
 | returns 0.
 *----------------------------------------------------------------------------*/
 
-static inline flag lt128( uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1 )
+static inline bool lt128(uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1)
 {
-
-    return ( a0 < b0 ) || ( ( a0 == b0 ) && ( a1 < b1 ) );
-
+    return a0 < b0 || (a0 == b0 && a1 < b1);
 }
 
 /*----------------------------------------------------------------------------
@@ -795,11 +789,9 @@ static inline flag lt128( uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1 )
 | Otherwise, returns 0.
 *----------------------------------------------------------------------------*/
 
-static inline flag ne128( uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1 )
+static inline bool ne128(uint64_t a0, uint64_t a1, uint64_t b0, uint64_t b1)
 {
-
-    return ( a0 != b0 ) || ( a1 != b1 );
-
+    return a0 != b0 || a1 != b1;
 }
 
 #endif

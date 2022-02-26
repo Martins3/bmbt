@@ -1808,8 +1808,10 @@ static inline void X86_CPU_SET_CLASS(X86CPU *cpu, X86CPUClass *xcc) {
 extern const uint8_t parity_table[256];
 uint32_t cpu_cc_compute_all(CPUX86State *env1, int op);
 
+/* fpu_helper.c */
 void update_fp_status(CPUX86State *env);
 void update_mxcsr_status(CPUX86State *env);
+void update_mxcsr_from_sse_status(CPUX86State *env);
 
 static inline void cpu_set_mxcsr(CPUX86State *env, uint32_t mxcsr) {
   env->mxcsr = mxcsr;
