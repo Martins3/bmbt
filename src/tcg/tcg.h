@@ -156,6 +156,16 @@ void xtm_helper_le_stl_mmu(CPUArchState *, target_ulong, uint32_t, TCGMemOpIdx);
 void xtm_helper_le_stq_mmu(CPUArchState *, target_ulong, uint64_t, TCGMemOpIdx);
 #endif
 
+// ------------- cputlb 的 TMP_TODO
+// 这么说 xtm_helper_le_stq_mmu 之类的直接删掉
+// 还是 qemu 6.0 直接替换掉了
+#if defined(TARGET_I386) && defined(CONFIG_LATX)
+void latxs_helper_le_lddq_mmu(CPUArchState *env, target_ulong addr,
+                           TCGMemOpIdx oi, uintptr_t retaddr);
+void latxs_helper_le_stdq_mmu(CPUArchState *env, target_ulong addr,
+                              uint64_t val, TCGMemOpIdx oi, uintptr_t retaddr);
+#endif
+
 uint8_t helper_ret_ldub_cmmu(CPUArchState *env, target_ulong addr,
                              TCGMemOpIdx oi, uintptr_t retaddr);
 int8_t helper_ret_ldsb_cmmu(CPUArchState *env, target_ulong addr,
