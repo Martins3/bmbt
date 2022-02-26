@@ -710,6 +710,9 @@ void latxs_enter_mmx(void)
                             lsenv_offset_of_tag_word(lsenv));
 }
 
+// TMP_TODO 咨询一下这个这个如何修改的
+void helper_x86_cpu_dump_state(CPUX86State *env);
+
 void do_func(ADDRX addr, int id)
 {
     IR2_OPND eip_opnd = latxs_ra_alloc_itemp();
