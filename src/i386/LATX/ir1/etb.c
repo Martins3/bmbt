@@ -1,6 +1,9 @@
 #include "common.h"
 #include "env.h"
 #include "etb.h"
+#ifndef SYNC_LATX
+#include "qemu/qht.h"
+#endif
 
 /* global etb_qht defined here */
 QHT *etb_qht;

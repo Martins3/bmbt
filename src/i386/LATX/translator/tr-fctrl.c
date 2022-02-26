@@ -3,6 +3,10 @@
 #include "lsenv.h"
 #include "latx-options.h"
 #include "translate.h"
+// TMP_TODO 上面的头文件中到底哪一个实际上包含了
+#ifndef SYNC_LATX
+#include <float.h>
+#endif
 
 static void update_fcsr_flag(IR2_OPND status_word, IR2_OPND fcsr)
 {
