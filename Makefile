@@ -30,6 +30,7 @@ C_SRC_FILES += $(wildcard src/qemu/*.c)
 C_SRC_FILES += $(wildcard src/util/*.c)
 C_SRC_FILES += $(wildcard src/test/*.c)
 C_SRC_FILES += $(wildcard src/i386/*.c)
+C_SRC_FILES += $(wildcard src/crypto/*.c)
 C_SRC_FILES += $(wildcard glib/*.c)
 
 BIN_FILES = $(wildcard image/*.bin)
