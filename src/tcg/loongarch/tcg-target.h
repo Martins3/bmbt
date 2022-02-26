@@ -28,6 +28,7 @@
 #define LOONGARCH_TCG_TARGET_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifndef _ABILP32
 #define _ABILP32 1
@@ -191,6 +192,15 @@ typedef enum {
 static inline void flush_icache_range(uintptr_t start, uintptr_t stop)
 {
     __builtin___clear_cache((char *)start, (char *)stop);
+}
+
+// TMP_TODO a quick fix, need furture investigation
+static inline void flush_idcache_range(uintptr_t rx, uintptr_t rw, size_t len)
+{
+    if (rw != rx) {
+        __builtin___clear_cache((char *)rw, (char *)rw + len);
+    }
+    __builtin___clear_cache((char *)rx, (char *)rx + len);
 }
 
 void tb_target_set_jmp_target(uintptr_t, uintptr_t, uintptr_t);
