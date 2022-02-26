@@ -296,7 +296,7 @@ tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, uint32_t cf_mask)
   if (tb == NULL) {
     mmap_lock();
     tb = tb_gen_code(cpu, pc, cs_base, flags, cf_mask);
-#if defined(CONFIG_X86toMIPS) && !defined(CONFIG_SOFTMMU)
+#if defined(CONFIG_LATX) && !defined(CONFIG_SOFTMMU)
     /* Enable Shadow Stack in user-mode only */
     /* Option Profile in user-mode only */
     /* set tb field in etb */
@@ -689,7 +689,7 @@ TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
   }
   desc.phys_page1 = phys_pc & TARGET_PAGE_MASK;
   h = tb_hash_func(phys_pc, pc, flags, cf_mask, *cpu->trace_dstate);
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_X86toMIPS) &&                    \
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX) &&                    \
     defined(CONFIG_XTM_PROFILE)
   tb_hash_cmp_cnt = 0;
 
