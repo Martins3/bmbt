@@ -1329,16 +1329,31 @@ typedef struct CPUCaches {
 } CPUCaches;
 
 typedef struct CPUX86State {
-#if defined(CONFIG_LATX) || defined(CONFIG_LATX)
-  ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 32];
-  // ldq,only 10bits offset
-#endif
 #ifdef CONFIG_LATX
-  /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
-  uint64_t vregs[6];
-  /* mips_iregs: mips context backup when calling helper */
-  uint64_t mips_iregs[32];
-  uint32_t xtm_fpu;
+  ZMMReg xmm_regs[CPU_NB_REGS == 8 ? 8 : 16];
+  void *ibtc_table_p;
+  /* ldq,only 10bits offset */
+  uint64_t vregs[5];
+  /* for debug,can be removed later */
+  uint64_t mips_regs[32];
+  int fcsr;
+  int fcsr_simd;
+  int is_fcsr_simd;
+  /* TODO: why? in new qemu has no next_eip member */
+  target_ulong exception_next_eip;
+  struct TranslationBlock **tb_jmp_cache_ptr;
+#ifdef CONFIG_SOFTMMU
+  /*
+   * @sigint_flag used for sigint
+   *          = 0 vCPU is executing TB
+   *          = 1 vCPU is not executing TB
+   */
+  uint64_t sigint_flag;
+  struct TranslationBlock *latxs_int_tb;
+  uint32_t latxs_fpu;
+  /* helper use */
+  ZMMReg temp_xmm;
+#endif
 #endif
   /* standard registers */
   target_ulong regs[CPU_NB_REGS];
@@ -1356,25 +1371,6 @@ typedef struct CPUX86State {
   uint32_t hflags;  /* TB flags, see HF_xxx constants. These flags
                        are known at translation time. */
   uint32_t hflags2; /* various other flags, see HF2_xxx constants. */
-
-#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
-  void *cpt_ptr; /* Point to Code Page Table */
-#if defined(CONFIG_XTM_PROFILE)
-  struct {
-    struct {
-      /* Flag for next Jmp Cachel Lookup */
-      uint8_t is_jmpdr;
-      uint8_t is_jmpin;
-      uint8_t is_sys_eob;
-      uint8_t is_excp;
-    } jc;
-    struct {
-      uint8_t is_mov;
-      uint8_t is_pop;
-    } tbf;
-  } xtm_pf_data;
-#endif /* XTM PROFILE */
-#endif
 
   /* segments */
   SegmentCache segs[6]; /* selector values */
@@ -1511,7 +1507,9 @@ typedef struct CPUX86State {
   /* exception/interrupt handling */
   int error_code;
   int exception_is_int;
+#ifndef CONFIG_LATX
   target_ulong exception_next_eip;
+#endif
   target_ulong dr[8]; /* debug registers; note dr4 and dr5 are unused */
   union {
     struct CPUBreakpoint *cpu_breakpoint[4];
@@ -1617,70 +1615,10 @@ typedef struct CPUX86State {
 #endif
 
   unsigned nr_dies;
-#ifdef CONFIG_LATX
-#ifndef CONFIG_LATX
-  /* vregs: Details in X86toMIPS/translator/reg_alloc.c */
-  uint64_t vregs[6];
-  /* mips_iregs: mips context backup when calling helper */
-  uint64_t mips_iregs[32];
-  /*
-   * xtm_fpu: flag for FPU
-   *
-   * [0:2]: TOP in status word
-   *        (fldenv will clear TOP in status and set the fpstt)
-   *
-   * [7]: = 0: status word is not loaded from memory
-   *      = 1: status word loaded from memory
-   *           (fldenv, frstor, fxrstor, xrstor)
-   *
-   * [6]: = 0: FPU state is not reset
-   *      = 1: FPU state is reset (fninit, fnsave)
-   *
-   * [7] and [6] cannot all be 1 at same time.
-   *
-   * [08:10]: TOP out of last executed TB
-   *
-   * [11:13]: TOP in of last executed TB
-   *
-   * [14]: = 1: TOP out is valid
-   *       = 0: TOP out is not valid and should not be used
-   *
-   * [15]: = 1: TOP in  is valid
-   *       = 0: TOP in  is not valid and should not be used
-   *
-   * For now, this is only used in system-mode.
-   * */
-  uint32_t xtm_fpu;
-#endif
-  /*
-   * X86toMIPS Flag is only useful when configure with
-   *
-   *      --enable-x86tomips-flag-int     # CONFIG_XTM_FLAG_INT
-   *
-   * If not, the value of flag will always be zero.
-   *
-   * is_in_int = 0: CPU is not handling interrupt
-   *  > is_int_inst: meaningless
-   *
-   * is_in_int >= 1: CPU is handling interrupt
-   *                 if nested interrupt, this will be greater than 1
-   *  > is_int_inst = 0: this interrupt is NOT an int instruction
-   *  > is_int_inst = 1: this interrupt is an int instruction
-   *
-   * is_top_int_inst: only useful in nested interrupt
-   *  = 0: the first interrupt is not INT instruction
-   *  = 1: the first interrupt is INT instruction
-   */
-  struct {
-    int is_in_int;
-    int is_int_inst;
-    int is_top_int_inst; /* for nested interrupt */
-  } xtm_flags;
-
-#if defined(CONFIG_XTM_TEST)
-  int exit_test;
-#endif
-#endif
+  // TMP_TODO 咨询一下这个东西是做什么用的，删除掉之后问题似乎不大
+  /* #ifdef CONFIG_LATX */
+  /*   ucontext_t *puc; */
+  /* #endif */
 } CPUX86State;
 
 typedef struct X86CPUModel X86CPUModel;
