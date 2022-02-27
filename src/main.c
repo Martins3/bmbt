@@ -77,11 +77,6 @@ TEST test_qemu_option(void) {
   call_constructor();
   init_xtm_options();
   printf("huxueshi:%s \n", __FUNCTION__);
-
-  extern int xtm_sigint_opt(void);
-  ASSERT_EQ(xtm_sigint_opt(), 0);
-
-  printf("huxueshi:%s \n", __FUNCTION__);
   PASS();
 }
 
