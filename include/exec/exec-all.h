@@ -477,7 +477,7 @@ void tb_phys_invalidate(TranslationBlock *tb, tb_page_addr_t page_addr);
 
 /* Hide the atomic_read to make code a little easier on the eyes */
 static inline uint32_t tb_cflags(const TranslationBlock *tb) {
-  return atomic_read(&tb->cflags);
+  return qatomic_read(&tb->cflags);
 }
 
 #if !defined(CONFIG_USER_ONLY) && defined(CONFIG_DEBUG_TCG)

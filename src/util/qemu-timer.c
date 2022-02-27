@@ -67,7 +67,7 @@ static void timer_del_locked(QEMUTimerList *timer_list, QEMUTimer *ts) {
     if (!t)
       break;
     if (t == ts) {
-      atomic_set(pt, t->next);
+      qatomic_set(pt, t->next);
       break;
     }
     pt = &t->next;
@@ -93,7 +93,7 @@ static bool timer_mod_ns_locked(QEMUTimerList *timer_list, QEMUTimer *ts,
   }
   ts->expire_time = MAX(expire_time, 0);
   ts->next = *pt;
-  atomic_set(pt, ts);
+  qatomic_set(pt, ts);
 
   return pt == &timer_list->active_timers;
 }
@@ -228,7 +228,7 @@ bool timerlist_run_timers(QEMUTimerList *timer_list) {
   void *opaque;
   // bool need_replay_checkpoint = false;
 
-  if (!atomic_read(&timer_list->active_timers)) {
+  if (!qatomic_read(&timer_list->active_timers)) {
     return false;
   }
 
@@ -389,7 +389,7 @@ int64_t timerlist_deadline_ns(QEMUTimerList *timer_list) {
   int64_t delta;
   int64_t expire_time;
 
-  if (!atomic_read(&timer_list->active_timers)) {
+  if (!qatomic_read(&timer_list->active_timers)) {
     return -1;
   }
 

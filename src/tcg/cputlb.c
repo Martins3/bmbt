@@ -259,9 +259,9 @@ void tlb_flush_counts(size_t *pfull, size_t *ppart, size_t *pelide) {
   CPU_FOREACH(cpu) {
     CPUArchState *env = cpu->env_ptr;
 
-    full += atomic_read(&env_tlb(env)->c.full_flush_count);
-    part += atomic_read(&env_tlb(env)->c.part_flush_count);
-    elide += atomic_read(&env_tlb(env)->c.elide_flush_count);
+    full += qatomic_read(&env_tlb(env)->c.full_flush_count);
+    part += qatomic_read(&env_tlb(env)->c.part_flush_count);
+    elide += qatomic_read(&env_tlb(env)->c.elide_flush_count);
   }
   *pfull = full;
   *ppart = part;
@@ -304,13 +304,13 @@ static void tlb_flush_by_mmuidx_async_work(CPUState *cpu,
   cpu_tb_jmp_cache_clear(cpu);
 
   if (to_clean == ALL_MMUIDX_BITS) {
-    atomic_set(&env_tlb(env)->c.full_flush_count,
+    qatomic_set(&env_tlb(env)->c.full_flush_count,
                env_tlb(env)->c.full_flush_count + 1);
   } else {
-    atomic_set(&env_tlb(env)->c.part_flush_count,
+    qatomic_set(&env_tlb(env)->c.part_flush_count,
                env_tlb(env)->c.part_flush_count + ctpop16(to_clean));
     if (to_clean != asked) {
-      atomic_set(&env_tlb(env)->c.elide_flush_count,
+      qatomic_set(&env_tlb(env)->c.elide_flush_count,
                  env_tlb(env)->c.elide_flush_count +
                      ctpop16(asked & ~to_clean));
     }
@@ -553,7 +553,7 @@ static void tlb_reset_dirty_range_locked(CPUState *cpu, CPUTLBEntry *tlb_entry,
 #if TCG_OVERSIZED_GUEST
       tlb_entry->addr_write |= TLB_NOTDIRTY;
 #else
-      atomic_set(&tlb_entry->addr_write, tlb_entry->addr_write | TLB_NOTDIRTY);
+      qatomic_set(&tlb_entry->addr_write, tlb_entry->addr_write | TLB_NOTDIRTY);
 #endif
 #ifdef CONFIG_BTMMU
       if (btmmu_enabled()) {
@@ -1005,7 +1005,7 @@ static inline target_ulong tlb_read_ofs(CPUTLBEntry *entry, size_t ofs) {
   return *(target_ulong *)((uintptr_t)entry + ofs);
 #else
   /* ofs might correspond to .addr_write, so use atomic_read */
-  return atomic_read((target_ulong *)((uintptr_t)entry + ofs));
+  return qatomic_read((target_ulong *)((uintptr_t)entry + ofs));
 #endif
 }
 
@@ -1024,7 +1024,7 @@ static bool victim_tlb_hit(CPUArchState *env, size_t mmu_idx, size_t index,
 #if TCG_OVERSIZED_GUEST
     cmp = *(target_ulong *)((uintptr_t)vtlb + elt_ofs);
 #else
-    cmp = atomic_read((target_ulong *)((uintptr_t)vtlb + elt_ofs));
+    cmp = qatomic_read((target_ulong *)((uintptr_t)vtlb + elt_ofs));
 #endif
 
     if (cmp == page) {

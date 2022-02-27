@@ -28,7 +28,7 @@ static inline void seqlock_init(QemuSeqLock *sl) { sl->sequence = 0; }
 
 /* Lock out other writers and update the count.  */
 static inline void seqlock_write_begin(QemuSeqLock *sl) {
-  atomic_set(&sl->sequence, sl->sequence + 1);
+  qatomic_set(&sl->sequence, sl->sequence + 1);
 
   /* Write sequence before updating other fields.  */
   smp_wmb();
@@ -38,7 +38,7 @@ static inline void seqlock_write_end(QemuSeqLock *sl) {
   /* Write other fields before finalizing sequence.  */
   smp_wmb();
 
-  atomic_set(&sl->sequence, sl->sequence + 1);
+  qatomic_set(&sl->sequence, sl->sequence + 1);
 }
 
 // [interface 48]
@@ -68,7 +68,7 @@ static inline void seqlock_write_unlock_impl(QemuSeqLock *sl, QemuSpin *lock) {
 
 static inline unsigned seqlock_read_begin(const QemuSeqLock *sl) {
   /* Always fail if a write is in progress.  */
-  unsigned ret = atomic_read(&sl->sequence);
+  unsigned ret = qatomic_read(&sl->sequence);
 
   /* Read sequence before reading other fields.  */
   smp_rmb();
@@ -78,8 +78,8 @@ static inline unsigned seqlock_read_begin(const QemuSeqLock *sl) {
 static inline int seqlock_read_retry(const QemuSeqLock *sl, unsigned start) {
   /* Read other fields before reading final sequence.  */
   smp_rmb();
-  assert(atomic_read(&sl->sequence) == start);
-  return unlikely(atomic_read(&sl->sequence) != start);
+  assert(qatomic_read(&sl->sequence) == start);
+  return unlikely(qatomic_read(&sl->sequence) != start);
 }
 
 #endif
