@@ -541,7 +541,7 @@ void page_collection_unlock(struct page_collection *set) {}
 
 #ifdef CONFIG_DEBUG_TCG
 
-static __thread GHashTable *ht_pages_locked_debug;
+static  GHashTable *ht_pages_locked_debug;
 
 static void ht_pages_locked_debug_init(void) {
   if (ht_pages_locked_debug) {

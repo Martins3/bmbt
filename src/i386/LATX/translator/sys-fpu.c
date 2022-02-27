@@ -152,7 +152,7 @@ void latxs_fpu_fix_cpu_loop_exit(void)
 }
 
 #if defined(LATX_SYS_FCSR) && defined(LATX_SYS_FCSR_SIMD)
-static __thread int simd_fcsr_saved;
+static  int simd_fcsr_saved;
 /*
  * latxs_set_fpu_fcsr_rounding_field_by_x86() : set()
  * latxs_set_fpu_fcsr()                       : reset()
