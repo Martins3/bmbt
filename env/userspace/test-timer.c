@@ -41,7 +41,7 @@ static void handler() {
   if (loop_counter % 1000 == 0) {
     printf("unblocked %d\n", loop_counter);
   }
-  assert(atomic_read(&counter) == 0);
+  assert(qatomic_read(&counter) == 0);
 
   soonest_interrupt_ns(1000 * 1000 * 100);
 }
