@@ -14,6 +14,7 @@
 #include "../../include/qemu/host-utils.h"
 #include "../../include/qemu/log.h"
 #include "../i386/cpu.h"
+#include "exec/helper-proto.h"
 #include "tcg.h"
 #include "translate-all.h"
 #include <qemu/timer.h>
@@ -2005,14 +2006,60 @@ void helper_be_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
   store_helper(env, addr, val, oi, retaddr, MO_BEQ);
 }
 
-uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
-                                       uint64_t cmpv, uint64_t newv,
-                                       TCGMemOpIdx oi, uintptr_t retaddr) {
-  uint64_t *haddr = atomic_mmu_lookup(env, addr, oi, retaddr);
-  uint64_t ret;
-  ret = atomic_cmpxchg__nocheck(haddr, cmpv, newv);
-  return ret;
-}
+/* First set of helpers allows passing in of OI and RETADDR.  This makes
+   them callable from other helpers.  */
+
+#define EXTRA_ARGS , TCGMemOpIdx oi, uintptr_t retaddr
+#define ATOMIC_NAME(X) HELPER(glue(glue(glue(atomic_##X, SUFFIX), END), _mmu))
+#define ATOMIC_MMU_DECLS
+#define ATOMIC_MMU_LOOKUP atomic_mmu_lookup(env, addr, oi, retaddr)
+#define ATOMIC_MMU_CLEANUP
+#define ATOMIC_MMU_IDX get_mmuidx(oi)
+
+#include "atomic_common.c.inc"
+
+#define DATA_SIZE 1
+#include "atomic_template.h"
+
+#define DATA_SIZE 2
+#include "atomic_template.h"
+
+#define DATA_SIZE 4
+#include "atomic_template.h"
+
+#ifdef CONFIG_ATOMIC64
+#define DATA_SIZE 8
+#include "atomic_template.h"
+#endif
+
+#if HAVE_CMPXCHG128 || HAVE_ATOMIC128
+#define DATA_SIZE 16
+#include "atomic_template.h"
+#endif
+
+/* Second set of helpers are directly callable from TCG as helpers.  */
+
+#undef EXTRA_ARGS
+#undef ATOMIC_NAME
+#undef ATOMIC_MMU_LOOKUP
+#define EXTRA_ARGS         , TCGMemOpIdx oi
+#define ATOMIC_NAME(X)     HELPER(glue(glue(atomic_ ## X, SUFFIX), END))
+#define ATOMIC_MMU_LOOKUP  atomic_mmu_lookup(env, addr, oi, GETPC())
+
+#define DATA_SIZE 1
+#include "atomic_template.h"
+
+#define DATA_SIZE 2
+#include "atomic_template.h"
+
+#define DATA_SIZE 4
+#include "atomic_template.h"
+
+#ifdef CONFIG_ATOMIC64
+#define DATA_SIZE 8
+#include "atomic_template.h"
+#endif
+#undef ATOMIC_MMU_IDX
 
 /* Code access functions.  */
 // *_cmmu 's only user is cpu_read_code_via_qemu
@@ -2029,22 +2076,20 @@ uint8_t helper_ret_ldub_cmmu(CPUArchState *env, target_ulong addr,
 // cputlb.c 中是不是重新更新一波，现在还是不太清楚，暂时直接超过来
 #if defined(TARGET_I386) && defined(CONFIG_LATX)
 void latxs_helper_le_lddq_mmu(CPUArchState *env, target_ulong addr,
-                           TCGMemOpIdx oi, uintptr_t retaddr)
-{
-    uint64_t low = helper_le_ldq_mmu(env, addr, oi, retaddr);
-    *(uint64_t *)((void *)(&env->temp_xmm)) = low;
-    uint64_t high = helper_le_ldq_mmu(env, addr + 8, oi, retaddr);
-    *(uint64_t *)((void *)(&env->temp_xmm) + 8) = high;
+                              TCGMemOpIdx oi, uintptr_t retaddr) {
+  uint64_t low = helper_le_ldq_mmu(env, addr, oi, retaddr);
+  *(uint64_t *)((void *)(&env->temp_xmm)) = low;
+  uint64_t high = helper_le_ldq_mmu(env, addr + 8, oi, retaddr);
+  *(uint64_t *)((void *)(&env->temp_xmm) + 8) = high;
 }
 #endif
 
 #if defined(TARGET_I386) && defined(CONFIG_LATX)
 void latxs_helper_le_stdq_mmu(CPUArchState *env, target_ulong addr,
-                              uint64_t val, TCGMemOpIdx oi, uintptr_t retaddr)
-{
-    uint64_t low = *(uint64_t *)((void *)(&env->temp_xmm));
-    helper_le_stq_mmu(env, addr, low, oi, retaddr);
-    uint64_t high = *(uint64_t *)((void *)(&env->temp_xmm) + 8);
-    helper_le_stq_mmu(env, addr + 8, high, oi, retaddr);
+                              uint64_t val, TCGMemOpIdx oi, uintptr_t retaddr) {
+  uint64_t low = *(uint64_t *)((void *)(&env->temp_xmm));
+  helper_le_stq_mmu(env, addr, low, oi, retaddr);
+  uint64_t high = *(uint64_t *)((void *)(&env->temp_xmm) + 8);
+  helper_le_stq_mmu(env, addr + 8, high, oi, retaddr);
 }
 #endif
