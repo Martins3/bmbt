@@ -1,11 +1,6 @@
 #include "../../include/hw/core/cpu.h"
 #include "tcg.h"
 
-#ifdef CONFIG_LATX
-extern int xtm_sigint_opt(void);
-#define XTM_SIGINT_SIGNAL 63
-#endif
-
 unsigned long tcg_tb_size;
 
 /* mask must never be zero, except for A20 change call */
@@ -23,12 +18,6 @@ void tcg_handle_interrupt(CPUState *cpu, int mask) {
   if (!qemu_cpu_is_self(cpu)) {
     qemu_cpu_kick(cpu);
   } else {
-#ifdef CONFIG_LATX
-    if (xtm_sigint_opt()) {
-      g_assert_not_reached();
-      // pthread_kill(cpu->thread->thread, XTM_SIGINT_SIGNAL);
-    } else
-#endif
       atomic_set(&cpu_neg(cpu)->icount_decr.u16.high, -1);
 #if BMBT
     if (use_icount && !cpu->can_do_io && (mask & ~old_mask) != 0) {
