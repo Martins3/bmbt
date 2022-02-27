@@ -2,6 +2,7 @@ obj-$(CONFIG_LATX) += LATX/error.c
 obj-$(CONFIG_LATX) += LATX/mem.c
 obj-$(CONFIG_LATX) += LATX/latx-config.c
 obj-$(CONFIG_LATX) += LATX/latx-options.c
+obj-$(CONFIG_LATX) += LATX/sys-test.c
 # subdir('diStorm')
 # subdir('ir1')
 obj-$(CONFIG_LATX) += LATX/ir1/etb.c
