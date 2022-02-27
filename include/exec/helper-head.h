@@ -17,7 +17,6 @@
 
 #ifndef EXEC_HELPER_HEAD_H
 #define EXEC_HELPER_HEAD_H
-#include "../../include/exec/cpu-defs.h" // for target_ulong
 
 #define HELPER(name) glue(helper_, name)
 
@@ -50,6 +49,7 @@
 #define dh_ctype_noreturn void QEMU_NORETURN
 #define dh_ctype(t) dh_ctype_##t
 
+// TMP_TODO 重新 review 一下这个东西
 #define NEED_CPU_H
 #ifdef NEED_CPU_H
 #ifdef TARGET_LONG_BITS
@@ -136,30 +136,6 @@
 
 #define dh_arg_decl(t, n) glue(TCGv_, dh_alias(t)) glue(arg, n)
 
-// DEF_HELPER_FLAGS_* copied from include/exec/helper-proto.h
-#define DEF_HELPER_FLAGS_0(name, flags, ret) dh_ctype(ret) HELPER(name)(void);
-
-#define DEF_HELPER_FLAGS_1(name, flags, ret, t1)                               \
-  dh_ctype(ret) HELPER(name)(dh_ctype(t1));
-
-#define DEF_HELPER_FLAGS_2(name, flags, ret, t1, t2)                           \
-  dh_ctype(ret) HELPER(name)(dh_ctype(t1), dh_ctype(t2));
-
-#define DEF_HELPER_FLAGS_3(name, flags, ret, t1, t2, t3)                       \
-  dh_ctype(ret) HELPER(name)(dh_ctype(t1), dh_ctype(t2), dh_ctype(t3));
-
-#define DEF_HELPER_FLAGS_4(name, flags, ret, t1, t2, t3, t4)                   \
-  dh_ctype(ret)                                                                \
-      HELPER(name)(dh_ctype(t1), dh_ctype(t2), dh_ctype(t3), dh_ctype(t4));
-
-#define DEF_HELPER_FLAGS_5(name, flags, ret, t1, t2, t3, t4, t5)               \
-  dh_ctype(ret) HELPER(name)(dh_ctype(t1), dh_ctype(t2), dh_ctype(t3),         \
-                             dh_ctype(t4), dh_ctype(t5));
-
-#define DEF_HELPER_FLAGS_6(name, flags, ret, t1, t2, t3, t4, t5, t6)           \
-  dh_ctype(ret) HELPER(name)(dh_ctype(t1), dh_ctype(t2), dh_ctype(t3),         \
-                             dh_ctype(t4), dh_ctype(t5), dh_ctype(t6));
-
 #define DEF_HELPER_0(name, ret) DEF_HELPER_FLAGS_0(name, 0, ret)
 #define DEF_HELPER_1(name, ret, t1) DEF_HELPER_FLAGS_1(name, 0, ret, t1)
 #define DEF_HELPER_2(name, ret, t1, t2) DEF_HELPER_FLAGS_2(name, 0, ret, t1, t2)
@@ -171,6 +147,8 @@
   DEF_HELPER_FLAGS_5(name, 0, ret, t1, t2, t3, t4, t5)
 #define DEF_HELPER_6(name, ret, t1, t2, t3, t4, t5, t6)                        \
   DEF_HELPER_FLAGS_6(name, 0, ret, t1, t2, t3, t4, t5, t6)
+#define DEF_HELPER_7(name, ret, t1, t2, t3, t4, t5, t6, t7)                    \
+  DEF_HELPER_FLAGS_7(name, 0, ret, t1, t2, t3, t4, t5, t6, t7)
 
 /* MAX_OPC_PARAM_IARGS must be set to n if last entry is DEF_HELPER_FLAGS_n. */
 

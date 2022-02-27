@@ -1,9 +1,5 @@
 #ifndef HELPER_H_9BLYUHYU
 #define HELPER_H_9BLYUHYU
-
-#include "../../include/exec/helper-head.h"
-#include "../../src/i386/cpu.h" // CPUArchState
-
 // DEF_HELPER_FLAGS_4(cc_compute_all, TCG_CALL_NO_RWG_SE, tl, tl, tl, tl, int)
 // DEF_HELPER_FLAGS_4(cc_compute_c, TCG_CALL_NO_RWG_SE, tl, tl, tl, tl, int)
 DEF_HELPER_3(write_eflags, void, env, tl, i32)
