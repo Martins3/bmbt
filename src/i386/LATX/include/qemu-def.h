@@ -10,9 +10,9 @@
 #include <qemu/qemu-printf.h>
 #include <qemu/queue.h>
 #include <fpu/softfloat.h>
-#include "../../../i386/helper.h"
-#include "../../../tcg/tcg.h"
-#include "../../../tcg/tcg-runtime.h"
+#include "../../src/tcg/tcg.h"
+#include <exec/helper-proto.h>
+#include <exec/helper-gen.h>
 
 /*#include "exec/gen-icount.h"*/
 

@@ -1,6 +1,6 @@
 #include "../../include/exec/cpu-ldst.h"
 #include "../../include/exec/exec-all.h"
-#include "../../include/exec/helper-head.h"
+#include "../../include/exec/helper-proto.h"
 #include "../../include/fpu/softfloat-helpers.h"
 #include "../../include/fpu/softfloat.h"
 #include "../../include/qemu/bswap.h"

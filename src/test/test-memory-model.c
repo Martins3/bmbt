@@ -1,5 +1,5 @@
 #include "../i386/cpu.h"
-#include "../i386/helper.h"
+#include <exec/helper-proto.h>
 #include <exec/memory.h>
 #include <exec/ram_addr.h>
 #include <qemu/units.h>
