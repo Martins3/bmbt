@@ -711,7 +711,8 @@ void latxs_enter_mmx(void)
 }
 
 // TMP_TODO 咨询一下这个这个如何修改的
-void helper_x86_cpu_dump_state(CPUX86State *env);
+void helper_x86_cpu_dump_state(CPUX86State *env){
+}
 
 void do_func(ADDRX addr, int id)
 {
