@@ -135,3 +135,6 @@
 57. 只要保持 ns 和 clock 在任何位置是对应的，暂时可以勉强使用
     - kernel_clock_gettime 中直接返回 drdtime 的数值
     - soonest_interrupt_ns 从 ns 参数直接装换为 cycle 传递给 timer 硬件
+58. atomic_common.c.inc
+    - 只是 trace 和 plugin 函数，所以清其中的函数内容空就可以了。
+    - 并且向其中添加一个 trace_mem_build_info 的空定义

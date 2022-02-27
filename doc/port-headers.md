@@ -12,7 +12,7 @@
 
 ## 一些记录
 1. 在 thread-posix.h 中定义了 QemuMutex QemuCond QemuSemaphore QemuEvent QemuThread, 但是只使用了 QemuMutex 了，将其移动到 thread.h 在和锁相关的问题上一起分析
-2. include/exec/helper-head.h 中包含了 /home/maritns3/core/ld/DuckBuBi/include/exec/helper-head.h
+2. include/exec/helper-proto.h 中包含了 /home/maritns3/core/ld/DuckBuBi/include/exec/helper-proto.h
 
 ## cpu-ldst.h
 1. cpu-ldst.h 开始移植的时候，使用了 v6.0 的代码
