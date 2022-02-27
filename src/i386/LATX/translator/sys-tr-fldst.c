@@ -432,7 +432,7 @@ bool latxs_translate_fbstp(IR1_INST *pir1)
     return false;
 }
 
-static void __attribute__((__constructor__)) latxs_tr_fldst_init(void)
+void latxs_tr_fldst_init(void)
 {
     pi = M_PI;
     lg2 = log10(2.0);

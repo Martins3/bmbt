@@ -267,12 +267,11 @@ PCMachineState *machine_init() {
   return &__pcms;
 }
 
-void x86tomips_tr_fldst_init(void);
-void x86tomisp_ir1_init(void);
+// TMP_TODO 所有的 constructor 都需要看看
+void latxs_tr_fldst_init(void);
 
 void call_constructor() {
-  x86tomips_tr_fldst_init();
-  x86tomisp_ir1_init();
+  latxs_tr_fldst_init();
 }
 
 void qemu_init() {
