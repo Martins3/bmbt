@@ -22,8 +22,8 @@
 #include <sys/mman.h>
 #include <uglib.h>
 
-int target_x86_to_mips_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
-                            void *code_hightwater, int *search_size);
+int target_latxs_host(CPUState *cpu, TranslationBlock *tb, int max_insns,
+                      void *code_hightwater, int *search_size);
 
 /* #define DEBUG_TB_INVALIDATE */
 /* #define DEBUG_TB_FLUSH */
@@ -1647,8 +1647,8 @@ tb_overflow:
   }
 
   xtm_is_bo = 0;
-  gen_code_size = target_x86_to_mips_host(
-      cpu, tb, max_insns, tcg_ctx->code_gen_highwater, &search_size);
+  gen_code_size = target_latxs_host(cpu, tb, max_insns,
+                                    tcg_ctx->code_gen_highwater, &search_size);
 
   if (unlikely(gen_code_size < 0)) {
     switch (gen_code_size) {
@@ -2234,21 +2234,17 @@ void tcg_flush_softmmu_tlb(CPUState *cs) {
 #endif
 }
 
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX) && defined(CONFIG_XTM_TEST)
-
-TranslationBlock *tt_alloc_tb(CPUState *cpu);
-void *get_code_highwater(void);
-
-TranslationBlock *tt_alloc_tb(CPUState *cpu) {
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX)
+void *latx_test_sys_alloc_tb(void *_cpu, void **highwater) {
+  CPUState *cpu = _cpu;
   CPUX86State *env = cpu->env_ptr;
-  TranslationBlock *tb;
 
   target_ulong pc;
   target_ulong cs_base;
   uint32_t flags;
   cpu_get_tb_cpu_state(env, &pc, &cs_base, &flags);
 
-  tb = tcg_tb_alloc(tcg_ctx);
+  TranslationBlock *tb = tcg_tb_alloc(tcg_ctx);
   tb->tc.ptr = tcg_ctx->code_gen_ptr;
   tb->pc = pc;
   tb->cs_base = cs_base;
@@ -2274,8 +2270,8 @@ TranslationBlock *tt_alloc_tb(CPUState *cpu) {
     tb_reset_jump(tb, 1);
   }
 
+  *highwater = tcg_ctx->code_gen_highwater;
+
   return tb;
 }
-
-void *get_code_highwater(void) { return tcg_ctx->code_gen_highwater; }
 #endif
