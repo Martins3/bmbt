@@ -13,5 +13,5 @@ typedef struct ibtc_entry {
 } ibtc_entry;
 
 void update_ibtc(ADDR pc, void *tb);
-extern __thread ibtc_entry ibtc_table[IBTC_SIZE];
+extern  ibtc_entry ibtc_table[IBTC_SIZE];
 #endif

@@ -8,7 +8,7 @@
 #include "translate.h"
 #include <string.h>
 
-static __thread char latxs_insn_info[MAX_IR1_NUM_PER_TB * IR1_INST_SIZE] = {0};
+static  char latxs_insn_info[MAX_IR1_NUM_PER_TB * IR1_INST_SIZE] = {0};
 static QemuMutex cs_lock;
 
 static void __attribute__((__constructor__)) latxs_cs_lock_init(void)

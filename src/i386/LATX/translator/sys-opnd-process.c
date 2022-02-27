@@ -1592,7 +1592,7 @@ void latxs_load_freg128_from_ir1_mem(IR2_OPND *opnd2, IR1_OPND *opnd1)
         return;
     }
 
-    static __thread uint64_t freg128_space[4];
+    static  uint64_t freg128_space[4];
     IR2_OPND data_addr = latxs_ra_alloc_itemp();
     latxs_load_imm64_to_ir2(&data_addr, (uint64_t)&freg128_space[0]);
 
@@ -1629,7 +1629,7 @@ void latxs_store_freg128_to_ir1_mem(IR2_OPND *opnd2, IR1_OPND *opnd1)
         return;
     }
 
-    static __thread uint64_t freg128_space[4];
+    static  uint64_t freg128_space[4];
     IR2_OPND data_addr = latxs_ra_alloc_itemp();
     latxs_load_imm64_to_ir2(&data_addr, (uint64_t)&freg128_space[0]);
 

@@ -275,14 +275,14 @@ static void __attribute__((__constructor__)) latx_init(void)
     ss_init(&shadow_stack);
 }
 
-static __thread ENV lsenv_real;
-static __thread TRANSLATION_DATA tr_data_real;
+static  ENV lsenv_real;
+static  TRANSLATION_DATA tr_data_real;
 #ifdef CONFIG_LATX_FLAG_PATTERN
-static __thread FLAG_PATTERN_DATA fp_data_real;
+static  FLAG_PATTERN_DATA fp_data_real;
 #endif
 
 /* global lsenv defined here */
-__thread ENV *lsenv;
+ ENV *lsenv;
 
 void latx_lsenv_init(CPUArchState *env)
 {

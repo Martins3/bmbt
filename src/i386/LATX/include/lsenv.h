@@ -4,7 +4,7 @@
 #include "env.h"
 #include "qemu-def.h"
 
-extern __thread ENV *lsenv;
+extern  ENV *lsenv;
 
 /* func to access ENV's attributes */
 static inline int lsenv_offset_of_mips_regs(ENV *lsenv, int i)
