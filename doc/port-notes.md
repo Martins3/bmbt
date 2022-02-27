@@ -155,3 +155,10 @@ static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
 - include/exec/helper-head.h
 - include/exec/helper-gen.h
 - include/exec/helper-proto.h
+
+## 发生修改的位置
+- 被 SYNC_LATX 包围的部分
+- `__thread` 被直接删除掉了
+
+## 注意
+- latx_lsenv_init 的位置被提前了，但是那只是为多核设计的

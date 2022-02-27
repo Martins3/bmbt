@@ -171,6 +171,7 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
   // qemu_guest_random_seed_thread_part2(cpu->random_seed);
 
 #ifdef CONFIG_LATX
+  latx_lsenv_init((CPUArchState *)cpu->env_ptr);
   latxs_init_rr_thread_signal(cpu);
 #ifdef CONFIG_BTMMU
   build_func_xqm();
