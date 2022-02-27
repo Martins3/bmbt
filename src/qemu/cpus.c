@@ -270,7 +270,7 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
 #endif
 
     if (cpu && cpu->exit_request) {
-      atomic_mb_set(&cpu->exit_request, 0);
+      qatomic_mb_set(&cpu->exit_request, 0);
     }
 
 #ifdef BMBT

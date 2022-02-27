@@ -61,7 +61,7 @@ void process_queued_cpu_work(CPUState *cpu) {
     if (wi->free) {
       g_free(wi);
     } else {
-      atomic_mb_set(&wi->done, true);
+      qatomic_mb_set(&wi->done, true);
     }
   }
   qemu_mutex_unlock(&cpu->work_mutex);

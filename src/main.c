@@ -15,7 +15,7 @@
 
 TEST test_atomic(void) {
   int x;
-  atomic_rcu_set(&x, 123);
+  qatomic_rcu_set(&x, 123);
   ASSERT_EQ(x, 123);
 
   PASS();

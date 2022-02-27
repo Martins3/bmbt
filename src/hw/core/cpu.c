@@ -70,10 +70,10 @@ void cpu_reset_interrupt(CPUState *cpu, int mask) {
 }
 
 void cpu_exit(CPUState *cpu) {
-  atomic_set(&cpu->exit_request, 1);
+  qatomic_set(&cpu->exit_request, 1);
   /* Ensure cpu_exec will see the exit request after TCG has exited.  */
   smp_wmb();
-  atomic_set(&cpu->icount_decr_ptr->u16.high, -1);
+  qatomic_set(&cpu->icount_decr_ptr->u16.high, -1);
 }
 
 void cpu_dump_state(CPUState *cpu, FILE *f, int flags) {
@@ -112,7 +112,7 @@ static void cpu_common_reset(CPUState *cpu) {
   cpu->mem_io_pc = 0;
 #endif
   cpu->icount_extra = 0;
-  atomic_set(&cpu->icount_decr_ptr->u32, 0);
+  qatomic_set(&cpu->icount_decr_ptr->u32, 0);
   cpu->can_do_io = 1;
   cpu->exception_index = -1;
   // cpu->crash_occurred = false;

@@ -381,7 +381,7 @@ retry:
     }
     goto retry;
   }
-  atomic_set(&s->code_gen_ptr, next);
+  qatomic_set(&s->code_gen_ptr, next);
   s->data_gen_ptr = NULL;
   return tb;
 }
@@ -413,7 +413,7 @@ void tb_target_set_jmp_target(uintptr_t tc_ptr, uintptr_t jmp_addr,
   /*
    * Update insn with new address.
    */
-  atomic_set((uint32_t *)jmp_addr, insn);
+  qatomic_set((uint32_t *)jmp_addr, insn);
   flush_icache_range(jmp_addr, jmp_addr + 4);
 }
 
@@ -592,7 +592,7 @@ static inline bool tcg_region_initial_alloc__locked(TCGContext *s) {
 
 /* Call from a safe-work context */
 void tcg_region_reset_all(void) {
-  unsigned int n_ctxs = atomic_read(&n_tcg_ctxs);
+  unsigned int n_ctxs = qatomic_read(&n_tcg_ctxs);
   unsigned int i;
 
   qemu_mutex_lock(&region.lock);
@@ -600,7 +600,7 @@ void tcg_region_reset_all(void) {
   region.agg_size_full = 0;
 
   for (i = 0; i < n_ctxs; i++) {
-    TCGContext *s = atomic_read(&tcg_ctxs[i]);
+    TCGContext *s = qatomic_read(&tcg_ctxs[i]);
     bool err = tcg_region_initial_alloc__locked(s);
     g_assert(!err);
   }
@@ -837,9 +837,9 @@ void tcg_register_thread(void) {
   *s = tcg_init_ctx;
 
   /* Claim an entry in tcg_ctxs */
-  n = atomic_fetch_inc(&n_tcg_ctxs);
+  n = qatomic_fetch_inc(&n_tcg_ctxs);
   g_assert(n < ms->smp.max_cpus);
-  atomic_set(&tcg_ctxs[n], s);
+  qatomic_set(&tcg_ctxs[n], s);
 
   if (n > 0) {
     alloc_tcg_plugin_context(s);

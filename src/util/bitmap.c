@@ -13,7 +13,7 @@ bool bitmap_test_and_clear_atomic(unsigned long *map, long start, long nr) {
 
   /* First word */
   if (nr - bits_to_clear > 0) {
-    old_bits = atomic_fetch_and(p, ~mask_to_clear);
+    old_bits = qatomic_fetch_and(p, ~mask_to_clear);
     dirty |= old_bits & mask_to_clear;
     nr -= bits_to_clear;
     bits_to_clear = BITS_PER_LONG;
@@ -25,7 +25,7 @@ bool bitmap_test_and_clear_atomic(unsigned long *map, long start, long nr) {
   if (bits_to_clear == BITS_PER_LONG) {
     while (nr >= BITS_PER_LONG) {
       if (*p) {
-        old_bits = atomic_xchg(p, 0);
+        old_bits = qatomic_xchg(p, 0);
         dirty |= old_bits;
       }
       nr -= BITS_PER_LONG;
@@ -36,7 +36,7 @@ bool bitmap_test_and_clear_atomic(unsigned long *map, long start, long nr) {
   /* Last word */
   if (nr) {
     mask_to_clear &= BITMAP_LAST_WORD_MASK(size);
-    old_bits = atomic_fetch_and(p, ~mask_to_clear);
+    old_bits = qatomic_fetch_and(p, ~mask_to_clear);
     dirty |= old_bits & mask_to_clear;
   } else {
     if (!dirty) {
@@ -58,7 +58,7 @@ void bitmap_set_atomic(unsigned long *map, long start, long nr)
 
     /* First word */
     if (nr - bits_to_set > 0) {
-        atomic_or(p, mask_to_set);
+        qatomic_or(p, mask_to_set);
         nr -= bits_to_set;
         bits_to_set = BITS_PER_LONG;
         mask_to_set = ~0UL;
@@ -77,7 +77,7 @@ void bitmap_set_atomic(unsigned long *map, long start, long nr)
     /* Last word */
     if (nr) {
         mask_to_set &= BITMAP_LAST_WORD_MASK(size);
-        atomic_or(p, mask_to_set);
+        qatomic_or(p, mask_to_set);
     } else {
         /* If we avoided the full barrier in atomic_or(), issue a
          * barrier to account for the assignments in the while loop.

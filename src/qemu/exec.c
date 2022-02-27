@@ -27,7 +27,7 @@ AddressSpace address_space_smm_memory;
 static RAMBlock *qemu_get_ram_block(ram_addr_t addr) {
   RAMBlock *block;
 
-  block = atomic_rcu_read(&ram_list.mru_block);
+  block = qatomic_rcu_read(&ram_list.mru_block);
   if (block && addr - block->offset < block->max_length) {
     return block;
   }
@@ -317,7 +317,7 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
 
   WITH_RCU_READ_LOCK_GUARD() {
     bmbt_check(client == DIRTY_MEMORY_CODE);
-    blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
+    blocks = qatomic_rcu_read(&ram_list.dirty_memory[client]);
     ramblock = qemu_get_ram_block(start);
     /* Range sanity check on the ramblock */
     assert(start >= ramblock->offset &&
@@ -382,7 +382,7 @@ RAMBlock *qemu_ram_block_from_host(void *ptr, bool round_offset,
 #endif
 
   RCU_READ_LOCK_GUARD();
-  block = atomic_rcu_read(&ram_list.mru_block);
+  block = qatomic_rcu_read(&ram_list.mru_block);
   if (block && block->host && host - block->host < block->max_length) {
     goto found;
   }

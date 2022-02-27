@@ -95,7 +95,7 @@ static inline void cpu_physical_memory_set_dirty_flag(ram_addr_t addr,
   RCU_READ_LOCK_GUARD();
 
   bmbt_check(client == DIRTY_MEMORY_CODE);
-  blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
+  blocks = qatomic_rcu_read(&ram_list.dirty_memory[client]);
 
   set_bit_atomic(offset, blocks->blocks[idx]);
 }
@@ -115,7 +115,7 @@ static inline bool cpu_physical_memory_get_dirty(ram_addr_t start,
 
   WITH_RCU_READ_LOCK_GUARD() {
     bmbt_check(client == DIRTY_MEMORY_CODE);
-    blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
+    blocks = qatomic_rcu_read(&ram_list.dirty_memory[client]);
 
     idx = page / DIRTY_MEMORY_BLOCK_SIZE;
     offset = page % DIRTY_MEMORY_BLOCK_SIZE;
@@ -161,7 +161,7 @@ static inline void cpu_physical_memory_set_dirty_range(ram_addr_t start,
 
   WITH_RCU_READ_LOCK_GUARD() {
     for (i = 0; i < DIRTY_MEMORY_NUM; i++) {
-      blocks[i] = atomic_rcu_read(&ram_list.dirty_memory[i]);
+      blocks[i] = qatomic_rcu_read(&ram_list.dirty_memory[i]);
     }
 
     idx = page / DIRTY_MEMORY_BLOCK_SIZE;
@@ -230,7 +230,7 @@ static inline bool cpu_physical_memory_all_dirty(ram_addr_t start,
 
   RCU_READ_LOCK_GUARD();
 
-  blocks = atomic_rcu_read(&ram_list.dirty_memory[client]);
+  blocks = qatomic_rcu_read(&ram_list.dirty_memory[client]);
 
   idx = page / DIRTY_MEMORY_BLOCK_SIZE;
   offset = page % DIRTY_MEMORY_BLOCK_SIZE;
