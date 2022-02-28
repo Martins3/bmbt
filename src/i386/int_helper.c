@@ -155,6 +155,9 @@ void helper_aam(CPUX86State *env, int base)
     al = al % base;
     env->regs[R_EAX] = (env->regs[R_EAX] & ~0xffff) | al | (ah << 8);
     CC_DST = al;
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX)
+    CC_SRC = cpu_cc_compute_all(env, CC_OP_LOGICB);
+#endif
 }
 
 void helper_aad(CPUX86State *env, int base)
@@ -166,6 +169,9 @@ void helper_aad(CPUX86State *env, int base)
     al = ((ah * base) + al) & 0xff;
     env->regs[R_EAX] = (env->regs[R_EAX] & ~0xffff) | al;
     CC_DST = al;
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX)
+    CC_SRC = cpu_cc_compute_all(env, CC_OP_LOGICB);
+#endif
 }
 
 void helper_aaa(CPUX86State *env)
