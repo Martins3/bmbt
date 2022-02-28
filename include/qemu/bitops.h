@@ -149,6 +149,30 @@ unsigned long find_next_zero_bit(const unsigned long *addr, unsigned long size,
                                  unsigned long offset);
 
 /**
+ * sextract32:
+ * @value: the value to extract the bit field from
+ * @start: the lowest bit in the bit field (numbered from 0)
+ * @length: the length of the bit field
+ *
+ * Extract from the 32 bit input @value the bit field specified by the
+ * @start and @length parameters, and return it, sign extended to
+ * an int32_t (ie with the most significant bit of the field propagated
+ * to all the upper bits of the return value). The bit field must lie
+ * entirely within the 32 bit word. It is valid to request that
+ * all 32 bits are returned (ie @length 32 and @start 0).
+ *
+ * Returns: the sign extended value of the bit field extracted from the
+ * input value.
+ */
+static inline int32_t sextract32(uint32_t value, int start, int length) {
+  assert(start >= 0 && length > 0 && length <= 32 - start);
+  /* Note that this implementation relies on right shift of signed
+   * integers being an arithmetic shift.
+   */
+  return ((int32_t)(value << (32 - length - start))) >> (32 - length);
+}
+
+/**
  * sextract64:
  * @value: the value to extract the bit field from
  * @start: the lowest bit in the bit field (numbered from 0)
