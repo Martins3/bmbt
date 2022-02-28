@@ -4153,6 +4153,10 @@ static void x86_cpu_reset(CPUState *s) {
   }
 #endif
 #endif
+
+#ifdef CONFIG_LATX
+    env->tb_jmp_cache_ptr = s->tb_jmp_cache;
+#endif
 }
 
 #ifndef CONFIG_USER_ONLY
