@@ -57,9 +57,12 @@ void qemu_opts_print(QemuOpts *opts, const char *separator) {
 QemuOpts __xtm_qemu_opts;
 
 static QemuOpt options[] = {
-    {.name = "tblink", .value.boolean = true},
-    {.name = "lbt", .value.boolean = true},
-    {.name = "verbose", .value.boolean = false},
+    /* cpjl=on,intblink=on,njc=on,largecc=on */
+    {.name = "cpjl", .value.boolean = true},
+    {.name = "intblink", .value.boolean = true},
+    {.name = "njc", .value.boolean = true},
+    {.name = "largecc", .value.boolean = true},
+    {.name = "verbose", .value.boolean = true},
     // {.name = "dump", .str = "11111"},
     {.name = "optm", .str = "select"},
 };
