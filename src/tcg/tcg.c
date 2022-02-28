@@ -11,7 +11,6 @@
 #include "../../include/qemu/osdep.h"
 #include "../../include/qemu/thread.h"
 #include "../../include/sysemu/replay.h"
-#include "../i386/LATX/include/latx-config.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
@@ -69,152 +68,6 @@ struct tcg_region_state {
   size_t current;       /* current region index */
   size_t agg_size_full; /* aggregate size of full regions */
 };
-/*
- * LoongArch ISA opcodes
- */
-typedef enum {
-  /* two reg, op: [31:10], 9:5 rj, 4:0 rd */
-  OPC_CLOW = 0x04,      /*LoongArch 0000000000000000000100 0x04 CLO.W*/
-  OPC_CLZW = 0x05,      /*LoongArch 0000000000000000000101 0x05 CLZ.W*/
-  OPC_CTOW = 0x06,      /*LoongArch 0000000000000000000110 0x06 CTO.W*/
-  OPC_CTZW = 0x07,      /*LoongArch 0000000000000000000111 0x07 CTZ.W*/
-  OPC_CLOD = 0x08,      /*LoongArch 0000000000000000001000 0x08 CLO.D*/
-  OPC_CLZD = 0x09,      /*LoongArch 0000000000000000000101 0x09 CLZ.D*/
-  OPC_CTOD = 0x0A,      /*LoongArch 0000000000000000001010 0x0A CTO.D*/
-  OPC_CTZD = 0x0B,      /*LoongArch 0000000000000000001011 0x0B CTZ.D*/
-  OPC_REVB_2H = 0x0C,   /*LoongArch 0000000000000000001100 0x0C REVB.2H */
-  OPC_REVB_4H = 0x0D,   /*LoongArch 0000000000000000001101 0x0D REVB.4H */
-  OPC_REVB_2W = 0x0E,   /*LoongArch 0000000000000000001110 0x0E REVB.2W */
-  OPC_REVB_D = 0x0F,    /*LoongArch 0000000000000000001111 0x0F REVB.D */
-  OPC_REVH_2W = 0x10,   /*LoongArch 0000000000000000010000 0x10 REVH.2W */
-  OPC_REVH_D = 0x11,    /*LoongArch 0000000000000000010001 0x11 REVH.D */
-  OPC_BITREV_4B = 0x12, /*LoongArch 0000000000000000010010 0x12 BITREV.4B */
-  OPC_BITREV_8B = 0x13, /*LoongArch 0000000000000000010011 0x13 BITREV.8B */
-  OPC_BITREV_W = 0x14,  /*LoongArch 0000000000000000010100 0x14 BITREV.W */
-  OPC_BITREV_D = 0x15,  /*LoongArch 0000000000000000010101 0x15 BITREV.D */
-  OPC_SEH = 0x16,       /* LoongARCH: 0000000000000000010110 0x16 EXT.W.H */
-  OPC_SEB = 0x17,       /* LoongARCH: 0000000000000000010111 0x17 EXT.W.B */
-
-  /* three reg, op: 31:15, 14:10 rk, 9:5 rj, 4:0 rd */
-  OPC_ADDW = 0x20,    /*LoongARCH: 00000000000100000 0x20 ADD.W*/
-  OPC_ADD = 0x21,     /*LoongARCH: 00000000000100001 0x21 ADD.D*/
-  OPC_SUBW = 0x22,    /*LoongARCH: 00000000000100010 0x22 SUB.W*/
-  OPC_SUB = 0x23,     /*LoongArch 00000000000100011 0x23 SUB.D*/
-  OPC_SLT = 0x24,     /*LoongARCH: 00000000000100100 0x24 SLT */
-  OPC_SLTU = 0x25,    /*LoongARCH: 00000000000100101 0x25 SLTU*/
-  OPC_MASKEQZ = 0x26, /*LoongArch: 00000000000100110 0x26 SELNEZ*/
-  OPC_MASKNEZ = 0x27, /*LoongArch: 00000000000100111 0x27 SELEQZ*/
-  OPC_NOR = 0x28,     /*LoongArch: 00000000000101000 0x28 NOR*/
-  OPC_AND = 0x29,     /*LoongArch: 00000000000101001 0x29 AND*/
-  OPC_OR = 0x2A,      /*LoongARCH: OR: 00000000000101010 0x2A OR*/
-  OPC_XOR = 0x2B,     /*LoongARCH: XOR: 00000000000101011 0x2B XOR*/
-  OPC_ORN = 0x2C,     /*LoongARCH: ORN: 00000000000101100 0x2C ORN*/
-  OPC_ANDN = 0x2D,    /*LoongARCH: ANDN: 00000000000101101 0x2D ANDN*/
-  OPC_SLLW = 0x2E,    /*LoongARCH: SLLW: 00000000000101110 0x2E SLL.W*/
-  OPC_SRLW = 0x2F,    /*LoongARCH: ANDN: 00000000000101111 0x2F SRL.W*/
-  OPC_SRAW = 0x30,    /*LoongARCH: ANDN: 00000000000110000 0x30 SRA.W*/
-  OPC_SLL = 0x31,     /*Loonarch: 00000000000110001 0x31 SLL.D*/
-  OPC_SRL = 0x32,     /*Loonarch: 00000000000110010 0x32 SRL.D*/
-  OPC_SRA = 0x33,     /*Loonarch: 00000000000110011 0x33 SRA.D*/
-  OPC_ROTRW = 0x36,   /*00000000000110110 ROTR.W*/
-  OPC_ROTRD = 0x37,   /*00000000000110111 ROTR.D*/
-  OPC_MULW = 0x38,    /*LoongArch: 00000000000111000 MUL.W*/
-  OPC_MULHW = 0x39,   /*LoongArch: 00000000000111001 MULH.W*/
-  OPC_MULHWU = 0x3A,  /*00000000000111010 MULHWU*/
-  OPC_MUL = 0x3B,     /*LoongArch: 00000000000111011 MUL.D*/
-  OPC_MULHD = 0x3C,   /*00000000000111100 MULH.D*/
-  OPC_MULHDU = 0x3D,  /*00000000000111101 MULHDU*/
-  OPC_DIVW = 0x40,    /*00000000001000000 DIVW*/
-  OPC_MODW = 0x41,    /*00000000001000001 MODW*/
-  OPC_DIVWU = 0x42,   /*00000000001000010 DIVWU */
-  OPC_MODWU = 0x43,   /*00000000001000011 MODWU */
-  OPC_DIVD = 0x44,    /*00000000001000100 DIVD */
-  OPC_MODD = 0x45,    /*00000000001000101 MODD */
-  OPC_DIVDU = 0x46,   /*00000000001000110 DIVU */
-  OPC_MODDU = 0x47,   /*00000000001000111 MODDU */
-
-  /* imm12+2reg, 31:22 op, 21:10 imm12, 9:5 rj, 4:0 rd */
-  OPC_SLTI = 0x08,   /*LoongARCH: 0000001008 0x8 SLTI*/
-  OPC_SLTIU = 0x09,  /*LoongARCH: 0000001001 0x9 SLTIU*/
-  OPC_ADDIW = 0x0A,  /*LoongARCH: 0000001010 0xA ADDI.W*/
-  OPC_ADDI = 0x0B,   /*LoongARCH: 0000001011  0xB ADDI.D*/
-  OPC_LU52ID = 0x0C, /*LoongARCH: 0000001100 0xC LU52I.D */
-  OPC_ANDI = 0x0D,   /*LoongARCH: 0000001101 0xD ANDI*/
-  OPC_ORI = 0x0E,    /*LoongARCH: 0000001110 0xE ORI*/
-  OPC_XORI = 0x0F,   /*LoongARCH: 0000001111 0xF XORI*/
-  OPC_LB = 0xA0,     /*LoongArch: 0010100000 0xA0 LD.B*/
-  OPC_LH = 0xA1,     /*LoongArch: 0010100001 0xA1 LD.H*/
-  OPC_LW = 0xA2,     /*LoongARCH: 0010100010 0xA2 LD.W*/
-  OPC_LD = 0xA3,     /*LoongARCH: 0010100011 0xA3 LD.D*/
-  OPC_SB = 0xA4,     /*LoongArch: 0010100100 0xA4 ST.B*/
-  OPC_SH = 0xA5,     /*LoongArch: 0010100101 0xA5 ST.H*/
-  OPC_SW = 0xA6,     /*LoongARCH: 0010100110 0xA6 ST.W*/
-  OPC_SD = 0xA7,     /*LoongARCH: 0010100111 0xA7 ST.D*/
-  OPC_LBU = 0xA8,    /*LoongARCH: 0010101000 0xA8 LD.BU*/
-  OPC_LHU = 0xA9,    /*LoongArch: 0010101001 0xA9 LD.HU*/
-  OPC_LWU = 0xAA,    /*LoongArch: 0010101010 0xAA LD.WU*/
-  OPC_PREF = 0xAB,   /*LoongArch: 0010101011 0xAB PREF*/
-  OPC_FLDS = 0xAC,   /*LoongArch: 0010101100 0xAC FLD.S*/
-  OPC_FSTS = 0xAD,   /*LoongArch: 0010101101 0xAD FST.S*/
-  OPC_FLDD = 0xAE,   /*LoongArch: 0010101110 0xAE FLD.D*/
-  OPC_FSTD = 0xAF,   /*LoongArch: 0010101111 0xAF FST.D*/
-
-  /* branch with 21bit offset and one reg, 31:26 op, 25:10 offs[15:0], 9:5 rj,
-     4:0 offs[20:16] */
-  OPC_BEQZ = 0x10, /* LoongArch: 010000 0x10*/
-  OPC_BNEZ = 0x11, /* LoongArch: 010001 0x11*/
-
-  /* imm16+2reg, 31:26 op, 25:10 imm16, 9:5 rj, 4:0 rd */
-  OPC_JIRL = 0x13, /* LoongArch 010011 0x13*/
-  OPC_BEQ = 0x16,  /*LoongArch: 010110 0x16*/
-  OPC_BNE = 0x17,  /*LoongArch: 010111 0x17*/
-  OPC_BLT = 0x18,  /*LoongArch: 011000 0x18*/
-  OPC_BGE = 0x19,  /*LoongArch: 011001 0x19*/
-  OPC_BLTU = 0x1A, /*LoongArch: 011010 0x1A*/
-  OPC_BGEU = 0x1B, /*LoongArch: 011011 0x1B*/
-
-  /* branch with 26bit offset, 31:26 op, 25:10 offs[15:0], 9:0 offs[25:16] */
-  OPC_B = 0x14,  /* LoongArch: 010100 => 0x14 instead of OPC_J*/
-  OPC_BL = 0x15, /* LoongArch: 010101 => 0x15 instead of OPC_JAL*/
-
-  /* imm5 + 2reg, 31:15 op, 14:10 imm5, 9:5 rj, 4:0 rd */
-  OPC_SLLIW = 0x81,  /*LoongARCH: 00000000010000001 0x81 SLLI.W*/
-  OPC_SRLIW = 0x89,  /*LoongARCH: 00000000010001001 0x89 SRLI.W*/
-  OPC_SRAIW = 0x91,  /*LoongARCH: 00000000010010001 0x91 SRAI.W*/
-  OPC_ROTRIW = 0x99, /*LoongARCH: 00000000010011001 0x99 ROTRI.W*/
-
-  /* imm6 + 2reg, 31:16 op, 15:10 imm6, 9:5 rj, 4:0 rd */
-  OPC_SLLI = 0x41,  /*LoongARCH: 0000000001000001 0x41 SLLI.D*/
-  OPC_SRLI = 0x45,  /*LoongARCH: 0000000001000101 0x45 SRLI.D*/
-  OPC_SRAI = 0x49,  /*LoongARCH: 0000000001001001 0x41 SRAI.D*/
-  OPC_ROTRI = 0x4d, /*LoongARCH: 0000000001001101 0x45 ROTRI.D*/
-
-  /* 31:21+bit15 op, 20:16 msb, 14:10 lsb, 9:5 rj, 4:0 rd */
-  OPC_INS = (0x03 << 21) |
-            (0 << 15), /* LoongARCH: BSTRINS.W BS00000000011 0x03 Bit15=0*/
-  OPC_EXT = (0x03 << 21) |
-            (1 << 15), /* LoongARCH: BSTRPICK.W BS00000000011 0x03 Bit15=1*/
-
-  /* 31:22 op, 21:16 msb, 15:10 lsb, 9:5 rj, 4:0 rd */
-  OPC_DINS = 0x02, /* LoongARCH: BSTRINS.D 000000010 0x02 */
-  OPC_DEXT = 0x03, /* LoongARCH: BSTRPICK.D 000000011 0x03 */
-
-  OPC_DBAR = 0x70E4, /* LoongARCH: DBAR 00111000011100100 */
-
-  /* imm20 + 1reg, 31:25 op, 24:5 imm20, 4:0 rd */
-  OPC_LUI = 0x0A,       /*LoongARCH: 0001010 0xA*/
-  OPC_LU32I = 0x0B,     /*LoongARCH: 0001011 0xB*/
-  OPC_PCADDI = 0x0C,    /*LoongARCH: 0001100 0xC*/
-  OPC_PCALAU12I = 0x0D, /*LoongARCH: 0001101 0xD*/
-  OPC_PCADDU12I = 0x0E, /*LoongARCH: 0001110 0xE*/
-  OPC_AUIPC = OPC_PCADDU12I,
-  OPC_PCADDU18I = 0x0F, /*LoongARCH: 0001111 0xF*/
-
-  /* To avoid SP calculate error*/
-  /* Different with Riscv, we need to use different Ops for data load/store*/
-  ALIAS_PADD = sizeof(void *) == 4 ? OPC_ADDW : OPC_ADD,
-  ALIAS_PADDI = sizeof(void *) == 4 ? OPC_ADDIW : OPC_ADDI,
-} LoongarchInsn;
 
 static TCGContext **tcg_ctxs;
 static unsigned int n_tcg_ctxs;
@@ -300,63 +153,7 @@ static struct tcg_region_tree *tc_ptr_to_region_tree(void *p) {
   return region_trees + region_idx * tree_size;
 }
 
-/* Generate global QEMU prologue and epilogue code */
-static void tcg_target_qemu_prologue(TCGContext *s) {
-  int i;
-
-#ifdef LOONGARCH_DEBUG
-  printf("Start tcg_target_qemu_prologue.\n");
-#endif
-
-#ifdef CONFIG_LATX
-  i = target_latxs_static_codes(s->code_ptr);
-  s->code_ptr += i;
-#ifdef BMBT
-  s->code_gen_prologue = (void *)context_switch_bt_to_native;
-  s->code_gen_epilogue = (void *)context_switch_native_to_bt;
-#endif
-#else
-  /* TB prologue */
-  tcg_out_opc_imm(s, ALIAS_PADDI, TCG_REG_SP, TCG_REG_SP, -FRAME_SIZE);
-  for (i = 0; i < ARRAY_SIZE(tcg_target_callee_save_regs); i++) {
-    tcg_out_st(s, TCG_TYPE_REG, tcg_target_callee_save_regs[i], TCG_REG_SP,
-               SAVE_OFS + i * REG_SIZE);
-  }
-
-#ifndef CONFIG_SOFTMMU
-  if (guest_base) {
-    tcg_out_movi(s, TCG_TYPE_PTR, TCG_GUEST_BASE_REG, guest_base);
-    tcg_regset_set_reg(s->reserved_regs, TCG_GUEST_BASE_REG);
-  }
-#endif
-
-  /* Call generated code */
-  tcg_out_mov(s, TCG_TYPE_PTR, TCG_AREG0, tcg_target_call_iarg_regs[0]);
-  // LoongArch
-  // tcg_out_opc_imm(s, OPC_JALR, TCG_REG_ZERO, tcg_target_call_iarg_regs[1],
-  // 0);
-  tcg_out_opc_jirl(s, TCG_REG_ZERO, tcg_target_call_iarg_regs[1], 0);
-  /* Return path for goto_ptr. Set return value to 0 */
-  s->code_gen_epilogue = s->code_ptr;
-  tcg_out_mov(s, TCG_TYPE_REG, TCG_REG_A0, TCG_REG_ZERO);
-
-  /* TB epilogue */
-  tb_ret_addr = s->code_ptr;
-  for (i = 0; i < ARRAY_SIZE(tcg_target_callee_save_regs); i++) {
-    tcg_out_ld(s, TCG_TYPE_REG, tcg_target_callee_save_regs[i], TCG_REG_SP,
-               SAVE_OFS + i * REG_SIZE);
-  }
-
-  tcg_out_opc_imm(s, ALIAS_PADDI, TCG_REG_SP, TCG_REG_SP, FRAME_SIZE);
-  // LoongArch
-  // tcg_out_opc_imm(s, OPC_JALR, TCG_REG_ZERO, TCG_REG_RA, 0);
-  tcg_out_opc_jirl(s, TCG_REG_ZERO, TCG_REG_RA, 0);
-#endif
-
-#ifdef LOONGARCH_DEBUG
-  printf("End tcg_target_qemu_prologue.\n");
-#endif
-}
+void tcg_target_qemu_prologue(TCGContext *s);
 
 #ifdef BMBT
 static int32_t encode_imm12(uint32_t imm) { return (imm & 0xfff) << 10; }
@@ -384,37 +181,6 @@ retry:
   qatomic_set(&s->code_gen_ptr, next);
   s->data_gen_ptr = NULL;
   return tb;
-}
-
-/*LoongArch for B and BL insn*/
-static int32_t encode_uj(LoongarchInsn opc, uint32_t imm) {
-  int32_t insn = 0;
-  int32_t offset = 0;
-
-  tcg_debug_assert((imm & 3) == 0);
-
-  insn |= (opc << 26);
-  offset |= ((imm >> 2) & 0xFFFF) << 10;
-  offset |= ((imm >> 2) & 0x3FF0000) >> 16;
-  insn |= offset;
-
-  return insn;
-}
-
-void tb_target_set_jmp_target(uintptr_t tc_ptr, uintptr_t jmp_addr,
-                              uintptr_t addr) {
-  ptrdiff_t offset = addr - jmp_addr;
-  tcg_insn_unit insn;
-  if (offset == sextract64(offset, 0, 28)) {
-    insn = encode_uj(OPC_B, offset & 0xFFFFFFF);
-  } else {
-    tcg_debug_assert(0);
-  }
-  /*
-   * Update insn with new address.
-   */
-  qatomic_set((uint32_t *)jmp_addr, insn);
-  flush_icache_range(jmp_addr, jmp_addr + 4);
 }
 
 void tcg_tb_insert(TranslationBlock *tb) {

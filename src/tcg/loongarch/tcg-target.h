@@ -203,6 +203,7 @@ static inline void flush_idcache_range(uintptr_t rx, uintptr_t rw, size_t len)
     __builtin___clear_cache((char *)rx, (char *)rx + len);
 }
 
-void tb_target_set_jmp_target(uintptr_t, uintptr_t, uintptr_t);
+void tb_target_set_jmp_target(uintptr_t tc_ptr, uintptr_t jmp_rx, uintptr_t jmp_rw, uintptr_t addr);
+
 
 #endif

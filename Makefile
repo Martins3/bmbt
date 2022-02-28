@@ -24,6 +24,7 @@ endif
 C_SRC_FILES = $(ENV_SRC_FILES)
 C_SRC_FILES += $(wildcard src/*.c)
 C_SRC_FILES += $(wildcard src/tcg/*.c)
+C_SRC_FILES += $(wildcard src/tcg/loongarch/*.c)
 C_SRC_FILES += $(wildcard src/hw/*/*.c)
 C_SRC_FILES += $(wildcard src/fpu/*.c)
 C_SRC_FILES += $(wildcard src/qemu/*.c)
