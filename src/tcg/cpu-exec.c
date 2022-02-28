@@ -93,7 +93,10 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
   latx_before_exec_trace_tb(env, itb);
 #endif
 
+  latxs_before_exec_tb(cpu, itb);
   ret = tcg_qemu_tb_exec(env, tb_ptr);
+  latxs_after_exec_tb(cpu, itb);
+
 #ifdef CONFIG_LATX_DEBUG
   latx_after_exec_trace_tb(env, itb);
 #endif
@@ -152,12 +155,12 @@ static inline void tb_add_jump(TranslationBlock *tb, int n,
     goto out_unlock_next;
   }
 
-#ifndef CONFIG_LATX
-  /* patch the native jump address */
-  tb_set_jmp_target(tb, n, (uintptr_t)tb_next->tc.ptr);
-#else
+#ifdef CONFIG_LATX
   /* check fpu rotate and patch the native jump address */
   latx_tb_set_jmp_target(tb, n, tb_next);
+#else
+  /* patch the native jump address */
+  tb_set_jmp_target(tb, n, (uintptr_t)tb_next->tc.ptr);
 #endif
 
   /* add in TB jmp list */

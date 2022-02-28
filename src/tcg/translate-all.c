@@ -15,6 +15,7 @@
 #include "../../include/qemu/qemu-printf.h"
 #include "../../include/qemu/thread.h"
 #include "../../include/sysemu/replay.h"
+#include "../../src/i386/LATX/include/latx-options.h"
 
 #include "./tcg.h"
 #include <assert.h>
@@ -874,25 +875,31 @@ static void page_lock_pair(PageDesc **ret_p1, tb_page_addr_t phys1,
        : MAX_CODE_GEN_BUFFER_SIZE)
 
 size_t size_code_gen_buffer(size_t tb_size) {
-  /* Size the buffer.  */
-  if (tb_size == 0) {
-#ifdef USE_STATIC_CODE_GEN_BUFFER
-    tb_size = DEFAULT_CODE_GEN_BUFFER_SIZE;
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX)
+    if (option_large_code_cache) {
+        return tb_size;
+    } else {
+        /* max code cache size with b */
+        return 128 * 1024 * 1024;
+    }
 #else
-    /* ??? Needs adjustments.  */
-    /* ??? If we relax the requirement that CONFIG_USER_ONLY use the
-       static buffer, we could size this on RESERVED_VA, on the text
-       segment size of the executable, or continue to use the default.  */
-    tb_size = (unsigned long)(CONFIG_GUEST_RAM_SIZE / 4);
+    /* Size the buffer.  */
+    if (tb_size == 0) {
+        size_t phys_mem = qemu_get_host_physmem();
+        if (phys_mem == 0) {
+            tb_size = DEFAULT_CODE_GEN_BUFFER_SIZE;
+        } else {
+            tb_size = MIN(DEFAULT_CODE_GEN_BUFFER_SIZE, phys_mem / 8);
+        }
+    }
+    if (tb_size < MIN_CODE_GEN_BUFFER_SIZE) {
+        tb_size = MIN_CODE_GEN_BUFFER_SIZE;
+    }
+    if (tb_size > MAX_CODE_GEN_BUFFER_SIZE) {
+        tb_size = MAX_CODE_GEN_BUFFER_SIZE;
+    }
+    return tb_size;
 #endif
-  }
-  if (tb_size < MIN_CODE_GEN_BUFFER_SIZE) {
-    tb_size = MIN_CODE_GEN_BUFFER_SIZE;
-  }
-  if (tb_size > MAX_CODE_GEN_BUFFER_SIZE) {
-    tb_size = MAX_CODE_GEN_BUFFER_SIZE;
-  }
-  return tb_size;
 }
 
 #ifdef __mips__
