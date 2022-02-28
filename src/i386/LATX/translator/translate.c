@@ -294,7 +294,9 @@ IR1_INST *get_ir1_list(struct TranslationBlock *tb, ADDRX pc)
     } while (!ir1_is_tb_ending(pir1));
     tb->size = pc - start_pc;
 
+#ifdef SYNC_LATX
     ir1_list = (IR1_INST *)mm_realloc(ir1_list, ir1_num * sizeof(IR1_INST));
+#endif
     tb->icount = ir1_num;
     return ir1_list;
 
