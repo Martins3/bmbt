@@ -28,17 +28,7 @@
 #include <string.h>
 #include <math.h>
 
-// TMP_TODO 这个需要再看看的了
-/* #include "qemu/osdep.h" */
-/* #include <math.h> */
-/* #include "cpu.h" */
-/* #include "exec/helper-proto.h" */
-/* #include "qemu/host-utils.h" */
-/* #include "exec/exec-all.h" */
-/* #include "exec/cpu_ldst.h" */
-/* #include "fpu/softfloat.h" */
 #include "fpu/softfloat-macros.h"
-/* #include "helper-tcg.h" */
 
 #if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
 #include "LATX/include/latx-config.h"
