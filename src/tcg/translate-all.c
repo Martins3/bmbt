@@ -1316,6 +1316,9 @@ static inline void tb_remove_from_jmp_list(TranslationBlock *orig, int n_orig) {
 static inline void tb_reset_jump(TranslationBlock *tb, int n) {
   uintptr_t addr = (uintptr_t)(tb->tc.ptr + tb->jmp_reset_offset[n]);
   tb_set_jmp_target(tb, n, addr);
+#ifdef CONFIG_LATX
+    tb->next_tb[n] = NULL;
+#endif
 }
 
 /* remove any jumps to the TB */
@@ -1611,14 +1614,14 @@ TranslationBlock *tb_gen_code(CPUState *cpu, target_ulong pc,
     max_insns = 1;
   }
 
-#ifdef CONFIG_LATX
-  int xtm_is_bo = 0;
+#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
+    int latxs_is_buffer_overflow = 0;
 #endif
 
 buffer_overflow:
   tb = tcg_tb_alloc(tcg_ctx);
-#ifdef CONFIG_LATX
-  if (unlikely(!tb) || xtm_is_bo) {
+#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
+  if (unlikely(!tb) || latxs_is_buffer_overflow) {
 #else
   if (unlikely(!tb)) {
 #endif
@@ -1636,15 +1639,25 @@ buffer_overflow:
   tb->cflags = cflags;
   tb->orig_tb = NULL;
   tb->trace_vcpu_dstate = *cpu->trace_dstate;
-
   // tcg_ctx->tb_cflags = cflags;
 
-tb_overflow:
+#ifndef CONFIG_LATX
+ tb_overflow:
+#else
+    tb->_top_out = -1;
+    tb->_top_in = -1;
+#ifdef CONFIG_SOFTMMU
+    tb->next_tb[0] = NULL;
+    tb->next_tb[1] = NULL;
+    tb->sys_eob_pir1 = NULL;
+    tb->tb_too_large_pir1 = NULL;
+    tb->is_indir_tb = 0;
+#endif
+#endif
   /* generate machine code */
   tb->jmp_reset_offset[0] = TB_JMP_RESET_OFFSET_INVALID;
   tb->jmp_reset_offset[1] = TB_JMP_RESET_OFFSET_INVALID;
   tcg_ctx->tb_jmp_reset_offset = tb->jmp_reset_offset;
-
   if (TCG_TARGET_HAS_direct_jump) {
     tcg_ctx->tb_jmp_insn_offset = tb->jmp_target_arg;
     tcg_ctx->tb_jmp_target_addr = NULL;
@@ -1653,7 +1666,7 @@ tb_overflow:
     tcg_ctx->tb_jmp_target_addr = tb->jmp_target_arg;
   }
 
-  xtm_is_bo = 0;
+  latxs_is_buffer_overflow = 0;
   gen_code_size = target_latxs_host(cpu, tb, max_insns,
                                     tcg_ctx->code_gen_highwater, &search_size);
 
@@ -1663,22 +1676,11 @@ tb_overflow:
       /*
        * Overflow of code_gen_buffer, or the current slice of it.
        */
-      xtm_is_bo = 1;
+      latxs_is_buffer_overflow = 1;
       goto buffer_overflow;
     case -2:
-      /*
-       * The code generated for the TranslationBlock is too large.
-       * The maximum size allowed by the unwind info is 64k.
-       * There may be stricter constraints from relocations
-       * in the tcg backend.
-       *
-       * Try again with half as many insns as we attempted this time.
-       * If a single insn overflows, there's a bug somewhere...
-       */
-      max_insns = tb->icount;
-      assert(max_insns > 1);
-      max_insns /= 2;
-      goto tb_overflow;
+      // NiuGenen comment the code
+      g_assert_not_reached();
     default:
       g_assert_not_reached();
     }
@@ -1697,13 +1699,18 @@ tb_overflow:
   tb->jmp_dest[0] = (uintptr_t)NULL;
   tb->jmp_dest[1] = (uintptr_t)NULL;
 
-  /* init original jump addresses which have been set during tcg_gen_code() */
-  if (tb->jmp_reset_offset[0] != TB_JMP_RESET_OFFSET_INVALID) {
-    tb_reset_jump(tb, 0);
-  }
-  if (tb->jmp_reset_offset[1] != TB_JMP_RESET_OFFSET_INVALID) {
-    tb_reset_jump(tb, 1);
-  }
+    /* init original jump addresses which have been set during tcg_gen_code() */
+#if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
+    /* indirect jmp is already linked to jmp glue 2, no need to reset it */
+    if (!(tb->is_indir_tb)) {
+        if (tb->jmp_reset_offset[0] != TB_JMP_RESET_OFFSET_INVALID) {
+            tb_reset_jump(tb, 0);
+        }
+        if (tb->jmp_reset_offset[1] != TB_JMP_RESET_OFFSET_INVALID) {
+            tb_reset_jump(tb, 1);
+        }
+    }
+#endif
 
   /* check next page if needed */
   virt_page2 = (pc + tb->size - 1) & TARGET_PAGE_MASK;
@@ -1757,10 +1764,6 @@ static void tb_invalidate_phys_page_range__locked(struct page_collection *pages,
   if (cpu != NULL) {
     env = cpu->env_ptr;
   }
-#endif
-
-#if defined(CONFIG_LATX) && defined(CONFIG_USER_ONLY)
-  etb_cache_clear();
 #endif
 
   /* we remove all the TBs in the range [start, end[ */
