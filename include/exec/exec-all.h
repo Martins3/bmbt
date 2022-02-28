@@ -1,12 +1,36 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
-#include "../../src/i386/LATX/include/latx-types.h" // for int8
 #include "../../src/i386/cpu.h"
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
 #include "../qemu/main-loop.h"
 #include "cpu-defs.h"
 #include "memop.h"
+
+#ifdef CONFIG_LATX
+#include "../../src/i386/LATX/include/latx-types.h" // for int8
+struct IR1_INST;
+/* extra attributes we need in TB */
+typedef struct ExtraBlock {
+  uint64_t pc;                 /* for hash compare, it's ID of a ETB */
+  struct TranslationBlock *tb; /* which tb this etb belongs to */
+#if defined(CONFIG_LATX_FLAG_PATTERN) || defined(CONFIG_LATX_FLAG_REDUCTION)
+  uint8 pending_use; /* indicate which eflags are used but hasn't defined yet */
+#endif
+#ifdef CONFIG_LATX_FLAG_REDUCTION
+  int8 _tb_type;
+  struct ExtraBlock *succ[2]; /* successors of this ETB */
+  /* flags is used to indicate the state of this ETB
+   * bit0: set if succ[2] are set
+   * bit1: set if pending_use is set */
+  uint8 flags;
+#define SUCC_IS_SET_MASK 0x01
+#define PENDING_USE_IS_SET_MASK 0x02
+#endif
+  /* historical field */
+  uint16_t size;
+} ETB;
+#endif
 
 /* Page tracking code uses ram addresses in system mode, and virtual
    addresses in userspace mode.  Define tb_page_addr_t to be an appropriate
@@ -30,69 +54,6 @@ struct tb_tc {
   void *ptr; /* pointer to the translated code */
   size_t size;
 };
-
-#ifdef CONFIG_LATX
-struct IR1_INST;
-/* extra attributes we need in TB */
-typedef struct ExtraBlock {
-  /* @pc: ID of a ETB.
-     It is equal to EIP + CS_BASE in system-mode  */
-  uint64_t pc;
-  struct IR1_INST *_ir1_instructions;
-  int16_t _ir1_num;
-  /* which tb this etb belongs to */
-  struct TranslationBlock *tb;
-  /* record the last instruction if TB is too large */
-  struct IR1_INST *tb_too_large_pir1;
-
-/* Fields in user-mode only */
-#ifndef CONFIG_SOFTMMU
-  int8_t _tb_type;
-  /* @succ: successors of this ETB */
-  struct ExtraBlock *succ[2];
-  /* @pending_use: indicate which eflags are used
-   *               but hasn't defined yet */
-  uint8_t pending_use;
-  /* @flags: used to indicate the state of this ETB
-   *         bit[0] set if succ[2] are set
-   *         bit[1] set if pending_use is set */
-  uint8 flags;
-#define SUCC_IS_SET_MASK 0x01
-#define PENDING_USE_IS_SET_MASK 0x02
-  /* Execution time of this TB */
-  int64 _execution_times;
-#endif
-
-/* Fields in system-mode only */
-#ifdef CONFIG_SOFTMMU
-  /* TB ends because of special situation in system-mode */
-  struct IR1_INST *sys_eob_pir1;
-#if defined(CONFIG_XTM_PROFILE) || defined(CONFIG_XTM_FAST_CS)
-#define XTM_FAST_CS_SHIFT_FPU 0
-#define XTM_FAST_CS_SHIFT_XMM 1
-#define XTM_FAST_CS_MASK_FPU (1 << XTM_FAST_CS_SHIFT_FPU)
-#define XTM_FAST_CS_MASK_XMM (1 << XTM_FAST_CS_SHIFT_XMM)
-#define XTM_FAST_CS_MASK (XTM_FAST_CS_MASK_FPU | XTM_FAST_CS_MASK_XMM)
-#define XTM_FAST_CS_MASK_ZERO 0x0
-  /* mask[0]: this TB use FPU
-   * mask[1]: this TB use XMM */
-  uint8_t fast_cs_mask;
-#endif
-#endif
-
-  bool tb_need_cpc[2]; /* cross page check */
-
-  bool end_with_jcc;
-  uintptr_t mips_branch_inst_offset;
-  bool branch_to_target_direct_in_mips_branch;
-  uint32_t mips_branch_backup;
-
-  /* historical field */
-  int8 _top_in;
-  int8 _top_out;
-  void *next_tb[2];
-} ETB;
-#endif
 
 typedef struct TranslationBlock {
   /* simulated PC corresponding to this block (EIP + CS base) */
