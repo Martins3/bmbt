@@ -118,16 +118,6 @@ tcg_target_ulong helper_le_ldul_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
 uint64_t helper_le_ldq_mmu(CPUArchState *env, target_ulong addr, TCGMemOpIdx oi,
                            uintptr_t retaddr);
-#ifdef CONFIG_LATX
-tcg_target_ulong xtm_helper_ret_ldub_mmu(CPUArchState *, target_ulong,
-                                         TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_lduw_mmu(CPUArchState *, target_ulong,
-                                        TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_ldul_mmu(CPUArchState *, target_ulong,
-                                        TCGMemOpIdx);
-uint64_t xtm_helper_le_ldq_mmu(CPUArchState *, target_ulong, TCGMemOpIdx);
-#endif
-
 /* Value sign-extended to tcg register size.  */
 tcg_target_ulong helper_ret_ldsb_mmu(CPUArchState *env, target_ulong addr,
                                      TCGMemOpIdx oi, uintptr_t retaddr);
@@ -135,14 +125,6 @@ tcg_target_ulong helper_le_ldsw_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
 tcg_target_ulong helper_le_ldsl_mmu(CPUArchState *env, target_ulong addr,
                                     TCGMemOpIdx oi, uintptr_t retaddr);
-#ifdef CONFIG_LATX
-tcg_target_ulong xtm_helper_ret_ldsb_mmu(CPUArchState *, target_ulong,
-                                         TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_ldsw_mmu(CPUArchState *, target_ulong,
-                                        TCGMemOpIdx);
-tcg_target_ulong xtm_helper_le_ldsl_mmu(CPUArchState *, target_ulong,
-                                        TCGMemOpIdx);
-#endif
 
 void helper_ret_stb_mmu(CPUArchState *env, target_ulong addr, uint8_t val,
                         TCGMemOpIdx oi, uintptr_t retaddr);
@@ -152,12 +134,6 @@ void helper_le_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr);
 void helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr);
-#ifdef CONFIG_LATX
-void xtm_helper_ret_stb_mmu(CPUArchState *, target_ulong, uint8_t, TCGMemOpIdx);
-void xtm_helper_le_stw_mmu(CPUArchState *, target_ulong, uint16_t, TCGMemOpIdx);
-void xtm_helper_le_stl_mmu(CPUArchState *, target_ulong, uint32_t, TCGMemOpIdx);
-void xtm_helper_le_stq_mmu(CPUArchState *, target_ulong, uint64_t, TCGMemOpIdx);
-#endif
 
 // ------------- cputlb 的 TMP_TODO
 // 这么说 xtm_helper_le_stq_mmu 之类的直接删掉
