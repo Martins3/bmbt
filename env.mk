@@ -2,13 +2,18 @@
 SHELL:=/bin/bash
 BASE_DIR := $(shell pwd)
 ARCH_APPENDIX :=loongson
-CFLAGS := -g -Wall -O0 -Werror
+# CFLAGS := -g -Wall -O0 -Werror
+# TMP_TODO : this is temporal hacking for capstone
+CFLAGS := -g -Wall -O0
 
 ENV_KERNEL ?= 1
 
 USE_LIBC ?= 0
 USE_GLIB ?= 0
 USE_ULIBC_FILE ?= 1
+
+# CAPSTONE_DIR=capstone
+CAPSTONE_DIR=src/i386/LATX/capStone
 
 ifeq ($(USE_LIBC), 1)
   LIBC_APPENDIX=libc
@@ -73,8 +78,8 @@ ifneq (,$(findstring x86_64, $(UNAME)))
 endif
 
 BUILD_DIR := $(BASE_DIR)/build_$(ARCH_APPENDIX)_$(ENV_APPENDIX)_$(LIBC_APPENDIX)_$(GLIB_APPENDIX)
-CAPSTONE_HEADER=-I$(BASE_DIR)/capstone/include
-LIB_CAPSTONE=$(BUILD_DIR)/capstone/libcapstone.a
+CAPSTONE_HEADER=-I$(BASE_DIR)/$(CAPSTONE_DIR)/include
+LIB_CAPSTONE=$(BUILD_DIR)/$(CAPSTONE_DIR)/libcapstone.a
 
 CFLAGS += $(LIBC_CFLAGS) $(LIBC_HEADER) $(ENV_CFLAGS)
 ifeq ($(DEBUG), 1)
