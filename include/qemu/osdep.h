@@ -46,9 +46,6 @@ extern int qemu_dcache_linesize_log;
 extern uintptr_t qemu_real_host_page_size;
 extern intptr_t qemu_real_host_page_mask;
 
-void init_real_host_page_size(void);
-void init_cache_info(void);
-
 #ifndef DIV_ROUND_UP
 #define DIV_ROUND_UP(n, d) (((n) + (d)-1) / (d))
 #endif

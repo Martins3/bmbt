@@ -159,6 +159,7 @@ static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
 ## 发生修改的位置
 - 被 SYNC_LATX 包围的部分
 - `__thread` 被直接删除掉了
+- call_constructor 中需要调用的 constructor 被删除了
 
 ## 注意
 - latx_lsenv_init 的位置被提前了，但是那只是为多核设计的

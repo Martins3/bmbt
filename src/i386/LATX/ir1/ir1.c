@@ -129,7 +129,7 @@ static IR1_OPND ir1_opnd_new_static_mem(IR1_OPND_TYPE opnd_type, int size,
 
     return ir1_opnd;
 }
-static void __attribute__((__constructor__)) x86tomisp_ir1_init(void)
+void x86tomisp_ir1_init(void)
 {
     al_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_AL);
     ah_ir1_opnd = ir1_opnd_new_static_reg(X86_OP_REG, 8, X86_REG_AH);

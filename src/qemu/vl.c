@@ -267,11 +267,28 @@ PCMachineState *machine_init() {
   return &__pcms;
 }
 
-// TMP_TODO 所有的 constructor 都需要看看
+void init_real_host_page_size(void);
+void init_cache_info(void);
+void softfloat_init(void);
+
+void latx_init(void);
 void latxs_tr_fldst_init(void);
+void sys_devel_init(void);
+void latxs_cs_lock_init(void);
+void x86tomisp_ir1_init(void);
+void tcg_sigint_init(void);
 
 void call_constructor() {
+  init_real_host_page_size();
+  init_cache_info();
+  softfloat_init();
+
+  latx_init();
   latxs_tr_fldst_init();
+  sys_devel_init();
+  latxs_cs_lock_init();
+  x86tomisp_ir1_init();
+  tcg_sigint_init();
 }
 
 void qemu_init() {
@@ -297,9 +314,6 @@ void qemu_init() {
   qemu_init_cpu_list();
 
   memory_map_init();
-
-  init_real_host_page_size();
-  init_cache_info();
 
   qemu_set_log(0);
 
