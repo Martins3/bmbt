@@ -45,7 +45,11 @@ typedef enum MMUAccessType {
   MMU_INST_FETCH = 2
 } MMUAccessType;
 
+#ifdef CONFIG_LATX
+#define TB_JMP_CACHE_BITS 16
+#else
 #define TB_JMP_CACHE_BITS 12
+#endif
 #define TB_JMP_CACHE_SIZE (1 << TB_JMP_CACHE_BITS)
 #define CPU_TRACE_DSTATE_MAX_EVENTS 32
 
