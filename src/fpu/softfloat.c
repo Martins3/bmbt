@@ -7642,7 +7642,7 @@ float128 float128_scalbn(float128 a, int n, float_status *status)
 
 }
 
-static void __attribute__((constructor)) softfloat_init(void)
+void softfloat_init(void)
 {
     union_float64 ua, ub, uc, ur;
 

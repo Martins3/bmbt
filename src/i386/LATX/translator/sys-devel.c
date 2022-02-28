@@ -24,7 +24,7 @@ void latxs_register_ir1(IR1_OPCODE opc)
     ir1_in_sys[opc] = 1;
 }
 
-static void __attribute__((__constructor__)) sys_devel_init(void)
+void sys_devel_init(void)
 {
     int num = (int)X86_INS_ENDING;
     int size = (num + 1) * sizeof(uint8_t);
