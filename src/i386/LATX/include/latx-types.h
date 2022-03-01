@@ -4,6 +4,14 @@
 #include <inttypes.h>
 #include "qemu/osdep.h"
 
+// __WORDSIZE defined in /usr/include/x86_64-linux-gnu/bits/wordsize.h, add it's
+// definition if it's missed in kernel mode
+#ifndef SYNC_LATX
+#ifndef __WORDSIZE
+#define __WORDSIZE 64
+#endif
+#endif
+
 typedef char int8;
 typedef short int16;
 typedef int int32;

@@ -517,14 +517,14 @@ void load_ireg_from_imm32(IR2_OPND opnd2, uint32 value, EXTENSION_MODE em)
             if (low_16_bits < 0) {
                 imm = low_16_bits;
                 lsassertm(((imm & 0xFFFFFFFFFFFF0000) == 0xFFFFFFFFFFFF0000),
-                        "value=0x%x, imm = 0x%llx\n", value, imm);
+                        "value=0x%x, imm = 0x%lx\n", value, imm);
                 load_imm64(opnd2, imm);
                 ir2_opnd_set_em(&opnd2, SIGN_EXTENSION, 16);
                 return;
             } else {
                 imm = (int32)value;
                 lsassertm(((imm & 0xFFFFFFFFFFFF0000) == 0xFFFFFFFFFFFF0000),
-                        "value=0x%x, imm = 0x%llx\n", value, imm);
+                        "value=0x%x, imm = 0x%lx\n", value, imm);
                 load_imm64(opnd2, value);
                 ir2_opnd_set_em(&opnd2, SIGN_EXTENSION, 17);
                 return;
