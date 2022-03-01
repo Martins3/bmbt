@@ -3,8 +3,7 @@
 - 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
   - cpu_ldst_template.h 这个文件在 6.0 版本中被替换掉了，这一部分的代码是按照 6.0 的
 - 在文件夹的组织上
-  1. 将原来的 tcg 和 accel/tcg 都合并到一个位置了
-  2. 暂时将原来在 qemu 中放到顶层目录中的文件放到 qeum 下面了，为了防止破坏原来的一点点 firmware 的代码
+  2. 暂时将原来在 qemu 中放到顶层目录中的文件放到 qeum 下面了
 - 关于 CONFIG_MACHINE_BSWAP_H 这个 macro
     - 是否定义是 configure 的时候传递参数定义的
     - 检查 musl 的源码，发现，当 CONFIG_MACHINE_BSWAP_H 之后，可以使用 libc 的内容，否则使用 QEMU 提供的
@@ -12,9 +11,6 @@
   - GSList 的使用方法是创建链表然后管理指针
   - 而 QLIST 的方法内核的方法，需要将要管理的结构体内插入一个 entry
   - 所以，其实共存也问题不大, 在加上 GSList 目前完全没有出现，所以暂时不考虑了
-- i386/translate.c 几乎被全部移除掉了，除了
-    - tcg_x86_init : 其中也不存在内容
-    - restore_state_to_opc
 - RAM_BLOCK_NUM:
   - 对于 ram bloc 已经是写死的了，或者说，一定不支持 above_4g_mem
 - `__cpu_ases`: 直接静态分配的，所以目前仅仅支持一个 CPU
@@ -159,7 +155,10 @@ static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
 ## 发生修改的位置
 - 被 SYNC_LATX 包围的部分
 - `__thread` 被直接删除掉了
-- call_constructor 中需要调用的 constructor 被删除了
+- call_constructor 中需要调用的 constructor 函数的 `static __attribute__((constructor))` 删除
+
+## 修改主线的部分
+参考 ./sync-latx.md 中，只需要对于每一个 CONFIG_LATX 逐个分析就可以了。
 
 ## 注意
-- latx_lsenv_init 的位置被提前了，但是那只是为多核设计的
+- latx_lsenv_init 的位置被提前了，但是那只是为多核设计的，可以不用管。
