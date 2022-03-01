@@ -107,6 +107,12 @@ static void qemu_tcg_rr_wait_io_event(void) {
   while (all_cpu_threads_idle()) {
     stop_tcg_kick_timer();
     // qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
+    if (qemu_mutex_iothread_locked())
+      qemu_mutex_unlock_iothread();
+  }
+
+  if (!qemu_mutex_iothread_locked()) {
+    qemu_mutex_lock_iothread();
   }
 
   start_tcg_kick_timer();
@@ -181,13 +187,17 @@ void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
 
   /* wait for initial kick-off after machine start */
   while (first_cpu->stopped) {
-    // qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
+    // in bmbt, cpu never stop
+    g_assert_not_reached();
+#ifdef BMBT
+    qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
 
     /* process any pending work */
     CPU_FOREACH(cpu) {
       current_cpu = cpu;
       qemu_wait_io_event_common(cpu);
     }
+#endif
   }
 
   start_tcg_kick_timer();
