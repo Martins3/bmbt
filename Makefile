@@ -89,13 +89,15 @@ libc:
 		$(MAKE) -f libc/libc.mk; \
 	fi
 
-generate: env/loongarch/include/generated/asm-offset.h
-
-env/loongarch/include/generated/asm-offset.h: env/loongarch/include/asm/ptrace.h
-	@@echo "GENERATE $<"
+# Can't find a method to generate asm-offset.h automatically. Fortunately, there
+# is only one rule which is based on headers included asm-offset.c
+env/loongarch/include/generated/asm-offset.h: env/loongarch/asm-offset.c env/loongarch/include/asm/ptrace.h
+	@@echo "GENERATE asm-offset.h"
 	@mkdir -p env/loongarch/include/generated
-	@gcc -Ienv/loongarch/include env/loongarch/asm-offset.c -o $(BUILD_DIR)/asm-offset.out
+	@gcc -MMD -Ienv/loongarch/include env/loongarch/asm-offset.c -o $(BUILD_DIR)/asm-offset.out
 	@$(BUILD_DIR)/asm-offset.out
+
+asm-offset: env/loongarch/include/generated/asm-offset.h
 
 CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include
 $(BUILD_DIR)/%.o : %.c
@@ -107,7 +109,7 @@ $(BUILD_DIR)/image/%.o : image/%.bin
 	@mkdir -p $(@D)
 	ld -r -b binary -o $@ $<
 
-$(bmbt) : $(OBJ_FILES) libc capstone
+$(bmbt) : asm-offset $(OBJ_FILES) libc capstone
 		@if [ $(USE_LIBC) != 1 ]; then \
 			ld $(LDFLAGS) $(FS_SYSCALL_WRAP) -o $(bmbt) $(OBJ_FILES) $(LIB_CAPSTONE) $(LIB_C) /usr/lib/gcc/loongarch64-linux-gnu/8/libgcc.a; \
 		else \
@@ -115,7 +117,7 @@ $(bmbt) : $(OBJ_FILES) libc capstone
 		fi
 		@echo "Link      $@"
 
-.PHONY: all clean gdb run gcov clear_gcda test libc capstone generate
+.PHONY: all clean gdb run gcov clear_gcda test libc capstone asm-offset
 
 GCOV_OUT=$(BUILD_DIR)/gcov
 GCOV_INFO=$(GCOV_OUT)/bmbt_coverage.info
@@ -133,7 +135,8 @@ gcov:
 	# microsoft-edge $(GCOV_OUT)/index.html
 
 clean:
-	rm -r $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
+	rm -rf env/loongarch/include/generated
 
 clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
