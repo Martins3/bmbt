@@ -94,6 +94,7 @@ libc:
 env/loongarch/include/generated/asm-offset.h: env/loongarch/asm-offset.c env/loongarch/include/asm/ptrace.h
 	@@echo "GENERATE asm-offset.h"
 	@mkdir -p env/loongarch/include/generated
+	@mkdir -p $(BUILD_DIR)
 	@gcc -Ienv/loongarch/include env/loongarch/asm-offset.c -o $(BUILD_DIR)/asm-offset.out
 	@$(BUILD_DIR)/asm-offset.out
 
