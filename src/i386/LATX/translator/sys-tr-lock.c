@@ -638,8 +638,6 @@ bool latxs_translate_lock_cmpxchg16b(IR1_INST *pir1)
     return true;
 #else
     lsassert(0);
-    // TMP_TODO 这是 LATX 的 bug
-    return false;
 #endif
 }
 bool latxs_translate_lock_xchg(IR1_INST *pir1)
