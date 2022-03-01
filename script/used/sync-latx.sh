@@ -1,8 +1,11 @@
 #!/bin/bash
 
-location=~/core/5000
-LATX=${location}/core/lat/target/i386/latx
-LOC=${location}/core/bmbt/src/i386/LATX
+location=~/core/5000/core
+LATX_PROJECT=${location}/lat
+BMBT_PROJECT=${location}/bmbt
 
-mv ${LOC} /tmp
-cp -r ${LATX} ${LOC}
+LATX=${LATX_PROJECT}/target/i386/latx
+LOC=${BMBT_PROJECT}/src/i386/LATX
+
+ag CONFIG_LATX ${LATX} > latx_patch_for_qemu.txt
+ag SYNC_LATX ${LOC} > bmbt_patch_for_latx.txt

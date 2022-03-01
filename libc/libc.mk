@@ -1,5 +1,5 @@
 #!/usr/bin/make
-include env.mk
+include make/env.mk
 
 C_SRC_FILES+=$(wildcard libc/src/*/*.c)
 C_SRC_FILES+=$(wildcard libc/src/loongarch.c)

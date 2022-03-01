@@ -22,7 +22,7 @@ kernel:
 	fi
 	# copy modified kconfig
 	if [[ ! -f $(KERNEL_PATH)/.config ]]; then \
-		cp $(BASE_DIR)/tiny_kernel.config $(KERNEL_PATH)/.config; \
+		cp $(BASE_DIR)/kernel-config/tiny_kernel.config $(KERNEL_PATH)/.config; \
 	fi
 	# skip "set_video" because we didn't implemented the devices
 	sed -i 's/set_video/\/\/ set_videio/' $(KERNEL_PATH)/arch/x86/boot/main.c
