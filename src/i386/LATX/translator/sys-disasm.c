@@ -334,7 +334,9 @@ IR1_INST *latxs_get_ir1_list(TranslationBlock *tb, ADDRX pc, int *p_ir1_num)
 
     } while (!ir1_is_tb_ending(pir1));
 
+#ifdef SYNC_LATX
     ir1_list = mm_realloc(ir1_list, ir1_num * sizeof(IR1_INST));
+#endif
     *p_ir1_num = ir1_num;
     return ir1_list;
 }
