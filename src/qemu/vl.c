@@ -268,17 +268,6 @@ PCMachineState *machine_init() {
   return &__pcms;
 }
 
-// call it before latx_init
-static void capstone_init(void) {
-  cs_opt_mem opt;
-  opt.malloc = malloc;
-  opt.calloc = calloc;
-  opt.realloc = realloc;
-  opt.free = free;
-  opt.vsnprintf = vsnprintf;
-  cs_option(CS_ARCH_X86, CS_OPT_MEM, (size_t)&opt);
-}
-
 void init_real_host_page_size(void);
 void init_cache_info(void);
 void softfloat_init(void);
@@ -295,7 +284,6 @@ void call_constructor() {
   init_cache_info();
   softfloat_init();
 
-  capstone_init();
   latx_init();
   latxs_tr_fldst_init();
   sys_devel_init();

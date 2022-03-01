@@ -2,9 +2,7 @@
 SHELL:=/bin/bash
 BASE_DIR := $(shell pwd)
 ARCH_APPENDIX :=loongson
-# CFLAGS := -g -Wall -O0 -Werror
-# TMP_TODO : this is temporal hacking for capstone
-CFLAGS := -g -Wall -O0
+CFLAGS := -g -Wall -O0 -Werror
 
 ENV_KERNEL ?= 1
 
