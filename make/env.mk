@@ -10,7 +10,6 @@ USE_LIBC ?= 0
 USE_GLIB ?= 0
 USE_ULIBC_FILE ?= 1
 
-# CAPSTONE_DIR=capstone
 CAPSTONE_DIR=src/i386/LATX/capStone
 
 ifeq ($(USE_LIBC), 1)
