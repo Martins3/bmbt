@@ -1,5 +1,5 @@
 #!/usr/bin/make
-include env.mk
+include make/env.mk
 
 bmbt := $(BUILD_DIR)/bmbt.bin
 GCC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
@@ -77,12 +77,12 @@ check-and-reinit-submodules:
 check-pre-commit:
 	@if [ ! -d $(BASE_DIR)/.husky/_ ];then \
 		echo "please setup up precomit and husky"; \
-		echo "see ./install-contri-check.sh"; \
+		echo "see ./script/install-contri-check.sh"; \
 		# exit 1; \
 	fi
 
 capstone:
-	$(MAKE) -f capstone.mk
+	$(MAKE) -f make/capstone.mk
 
 libc:
 	@if [ $(USE_LIBC) != 1 ]; then \

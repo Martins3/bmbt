@@ -55,3 +55,10 @@ make -j && sudo  rmmod kvm && sudo insmod ./arch/loongarch/kvm/kvm.ko
 ../configure --target-list=x86_64-softmmu  --disable-werror --extra-cflags='-save-temps'
 ```
 但是这似乎导致无法 `make -j10`, 只能串行编译
+
+## 系统态
+
+使用脚本 script/backtrace.sh 可以显示 crash 之后的 backtrace ，在 .bashrc 添加 alias 更加方便:
+```sh
+alias bt=/home/loongson/core/bmbt/script/backtrace.sh
+```

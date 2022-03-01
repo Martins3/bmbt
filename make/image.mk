@@ -4,8 +4,7 @@ endif
 
 all:
 	mkdir -p image
-	$(MAKE) -f kernel.mk
+	$(MAKE) -f make/kernel.mk
 	$(MAKE) -C pc-bios
 	$(MAKE) -C initrd
-	$(MAKE) -f seabios.mk
-
+	$(MAKE) -f make/seabios.mk

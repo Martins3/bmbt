@@ -1,5 +1,5 @@
 #!/usr/bin/make
-include env.mk
+include make/env.mk
 C_SRC_FILES += $(CAPSTONE_DIR)/cs.c
 C_SRC_FILES += $(CAPSTONE_DIR)/utils.c
 C_SRC_FILES += $(CAPSTONE_DIR)/SStream.c
