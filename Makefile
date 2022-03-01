@@ -156,7 +156,7 @@ gdb: all
 	if [[ $(ENV_KERNEL) == 1 ]];then \
 		gdb $(bmbt) -ex "target remote :1234"; \
 	else \
-		gdb -ex "handle SIG127 nostop noprint" --args $(bmbt); \
+		gdb -ex "handle SIG127 nostop noprint" -ex "run" --args $(bmbt); \
 	fi
 
 s: all
