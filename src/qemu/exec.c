@@ -4,7 +4,7 @@
 #include "../../include/exec/ram_addr.h"
 #include "../../include/hw/core/cpu.h"
 #include "../../include/qemu/error-report.h"
-#include "../tcg/translate-all.h"
+#include "accel/tcg/translate-all.h"
 
 #include <errno.h>
 

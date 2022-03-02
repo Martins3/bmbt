@@ -3,7 +3,7 @@ include make/env.mk
 
 bmbt := $(BUILD_DIR)/bmbt.bin
 GCC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
-I386_FLAGS = -I./src/target/i386/LATX/include -I./src/target/i386
+I386_FLAGS = -I./src/target/i386/LATX/include -I./src/target/i386 -I./src
 
 # @todo it's so ugly to define two options out of the gcc option --coverage
 # https://gcc.gnu.org/onlinedocs/gcc-9.3.0/gcc/Instrumentation-Options.html
@@ -25,6 +25,7 @@ endif
 C_SRC_FILES = $(ENV_SRC_FILES)
 C_SRC_FILES += $(wildcard src/*.c)
 C_SRC_FILES += $(wildcard src/tcg/*.c)
+C_SRC_FILES += $(wildcard src/accel/tcg/*.c)
 C_SRC_FILES += $(wildcard src/tcg/loongarch/*.c)
 C_SRC_FILES += $(wildcard src/hw/*/*.c)
 C_SRC_FILES += $(wildcard src/fpu/*.c)

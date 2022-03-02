@@ -1,5 +1,5 @@
-#include "../../include/hw/core/cpu.h"
-#include "tcg.h"
+#include <hw/core/cpu.h>
+#include "tcg/tcg.h"
 
 unsigned long tcg_tb_size;
 
