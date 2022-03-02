@@ -17,12 +17,12 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../include/exec/exec-all.h"
-#include "../../include/exec/cpu-ldst.h"
-#include "../../include/fpu/softfloat.h"
-#include "../../include/fpu/softfloat-helpers.h"
-#include "../../include/qemu/bswap.h"
-#include "../../include/hw/irq.h"
+#include <exec/exec-all.h>
+#include <exec/cpu-ldst.h>
+#include <fpu/softfloat.h>
+#include <fpu/softfloat-helpers.h>
+#include <qemu/bswap.h>
+#include <hw/irq.h>
 #include "cpu.h"
 #include <stddef.h>
 #include <string.h>

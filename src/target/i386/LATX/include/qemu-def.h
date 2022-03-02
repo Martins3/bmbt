@@ -10,7 +10,7 @@
 #include <qemu/qemu-printf.h>
 #include <qemu/queue.h>
 #include <fpu/softfloat.h>
-#include "../../src/tcg/tcg.h"
+#include "../../../src/tcg/tcg.h"
 #include <exec/helper-proto.h>
 #include <exec/helper-gen.h>
 
