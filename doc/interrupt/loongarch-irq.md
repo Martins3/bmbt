@@ -32,9 +32,9 @@
 # loongson.h
 在 /home/maritns3/core/ld/kernel/arch/loongarch/include/asm/mach-la64/loongson.h 的宏的定义啊
 
-1. `#define LOONGSON_LIO_BASE	0x18000000` ? 手册描述 ?
-2. `#define LOONGSON_BOOT_BASE	0x1c000000` ?
-3. `#define LOONGSON_REG_BASE	0x1fe00000`
+1. `#define LOONGSON_LIO_BASE 0x18000000` ? 手册描述 ?
+2. `#define LOONGSON_BOOT_BASE  0x1c000000` ?
+3. `#define LOONGSON_REG_BASE 0x1fe00000`
 
 从 `extioi_irq_dispatch` 中的扫描地址空间，表 11-10
 
@@ -63,13 +63,13 @@ register_pch_pic 中初始化了 pch 的中断控制器。
 ```c
 static void ip2_irqdispatch(void)
 {
-	do_IRQ(LOONGSON_LINTC_IRQ);
+  do_IRQ(LOONGSON_LINTC_IRQ);
 }
 ```
 还是在这个初始化函数中间了:
 ```c
-		irq_set_chained_handler_and_data(parent_irq[i],
-				liointc_chained_handle_irq, &priv->handler[i]);
+    irq_set_chained_handler_and_data(parent_irq[i],
+        liointc_chained_handle_irq, &priv->handler[i]);
 ```
 
 - setup_IRQ
@@ -79,7 +79,7 @@ static void ip2_irqdispatch(void)
 
 legacy 中断控制器的入口是:
 ```c
-#define LIOINTC_DEFAULT_PHYS_BASE	(LOONGSON_REG_BASE + 0x1400)
+#define LIOINTC_DEFAULT_PHYS_BASE (LOONGSON_REG_BASE + 0x1400)
 ```
 
 参考 11.1.1 按地址访问，表 11-2
@@ -101,23 +101,23 @@ legacy 中断控制器的入口是:
       - [ ] extioi 接下来就要读去他的寄存器了，那怎么办 ?
     - [ ] 而且使用 loongson_cpu_has_msi256 来判断
 ```c
-	/* Generate parent INT part of map cache */
-	for (i = 0; i < LIOINTC_NUM_PARENT; i++) {
-		u32 pending = priv->handler[i].parent_int_map;
+  /* Generate parent INT part of map cache */
+  for (i = 0; i < LIOINTC_NUM_PARENT; i++) {
+    u32 pending = priv->handler[i].parent_int_map;
 
-		while (pending) {
-			int bit = __ffs(pending);
+    while (pending) {
+      int bit = __ffs(pending);
 
-			priv->map_cache[bit] = BIT(i) << LIOINTC_SHIFT_INTx;
-			pending &= ~BIT(bit);
-		}
-	}
+      priv->map_cache[bit] = BIT(i) << LIOINTC_SHIFT_INTx;
+      pending &= ~BIT(bit);
+    }
+  }
 
-	for (i = 0; i < LIOINTC_CHIP_IRQ; i++) {
-		/* Generate core part of map cache */
-		priv->map_cache[i] |= BIT(0);
-		writeb(priv->map_cache[i], base + i);
-	}
+  for (i = 0; i < LIOINTC_CHIP_IRQ; i++) {
+    /* Generate core part of map cache */
+    priv->map_cache[i] |= BIT(0);
+    writeb(priv->map_cache[i], base + i);
+  }
 ```
 
 ## 分析 extioi
@@ -171,8 +171,8 @@ IRQ56~63 一般保留给 CPU 内部使用
 - ls7a 就是一些主板元素吧
 
 ```c
-#define LS7A_PCH_REG_BASE		0x10000000UL
-#define HT1LO_OFFSET		0xe0000000000UL
+#define LS7A_PCH_REG_BASE   0x10000000UL
+#define HT1LO_OFFSET    0xe0000000000UL
 
 register_pch_pic(0, LS7A_PCH_REG_BASE, LOONGSON_PCH_IRQ_BASE);
 ```
@@ -187,19 +187,19 @@ entries = (((unsigned long)ls7a_readq(pch_pic_addr(idx)) >> 48) & 0xff) + 1;
 
 ```c
 static int pci_read(struct pci_bus *bus,
-		unsigned int devfn,
-		int where, int size, u32 *value)
+    unsigned int devfn,
+    int where, int size, u32 *value)
 {
-	return loongarch_pci_ops->read(bus,
-				 devfn, where, size, value);
+  return loongarch_pci_ops->read(bus,
+         devfn, where, size, value);
 }
 
 static int pci_write(struct pci_bus *bus,
-		unsigned int devfn,
-		int where, int size, u32 value)
+    unsigned int devfn,
+    int where, int size, u32 value)
 {
-	return loongarch_pci_ops->write(bus,
-				  devfn, where, size, value);
+  return loongarch_pci_ops->write(bus,
+          devfn, where, size, value);
 }
 ```
 
@@ -504,3 +504,21 @@ lpc 接入到 pch_pic 的 16 上，
 [    1.860646] irq: irq_domain_set_mapping 14 40
 [    1.860647] irq: irq_domain_set_mapping 14 40
 ```
+
+## 时钟中断
+正常的时钟中断的实现应该是:
+```c
+/*
+#0  hrtimer_interrupt (dev=0x9000000006000080) at kernel/time/hrtimer.c:1511
+#1  0x90000000002084a8 in constant_timer_interrupt (irq=<optimized out>, data=<optimized out>) at arch/loongarch/kernel/time.c:49
+#2  0x900000000029d4ac in __handle_irq_event_percpu (desc=0x9000000006000080, flags=0x0) at kernel/irq/handle.c:149
+#3  0x900000000029d708 in handle_irq_event_percpu (desc=0x900000027c0bf000) at kernel/irq/handle.c:189
+#4  0x90000000002a2c9c in handle_percpu_irq (desc=0x900000027c0bf000) at kernel/irq/chip.c:873
+#5  0x900000000029c344 in generic_handle_irq_desc (desc=<optimized out>) at ./include/linux/irqdesc.h:155
+#6  generic_handle_irq (irq=<optimized out>) at kernel/irq/irqdesc.c:639
+#7  0x9000000000fdcec0 in do_IRQ (irq=<optimized out>) at arch/loongarch/kernel/irq.c:103
+#8  0x9000000000203414 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
+Backtrace stopped: frame did not save the PC
+```
+
+- 所有的中断都是通过
