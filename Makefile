@@ -47,7 +47,7 @@ endif
 
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
-include ./src/target/i386/Makefile6.objs
+include ./src/target/i386/Makefile.objs
 LATX_SRC=$(addprefix src/target/i386/, $(obj-y))
 C_SRC_FILES += $(LATX_SRC)
 
