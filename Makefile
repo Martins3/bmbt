@@ -3,6 +3,7 @@ include make/env.mk
 
 bmbt := $(BUILD_DIR)/bmbt.bin
 GCC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
+I386_FLAGS = -I./src/target/i386/LATX/include -I./src/target/i386
 
 # @todo it's so ugly to define two options out of the gcc option --coverage
 # https://gcc.gnu.org/onlinedocs/gcc-9.3.0/gcc/Instrumentation-Options.html
@@ -30,7 +31,7 @@ C_SRC_FILES += $(wildcard src/fpu/*.c)
 C_SRC_FILES += $(wildcard src/qemu/*.c)
 C_SRC_FILES += $(wildcard src/util/*.c)
 C_SRC_FILES += $(wildcard src/test/*.c)
-C_SRC_FILES += $(wildcard src/i386/*.c)
+C_SRC_FILES += $(wildcard src/target/i386/*.c)
 C_SRC_FILES += $(wildcard src/crypto/*.c)
 C_SRC_FILES += $(wildcard glib/*.c)
 
@@ -46,11 +47,8 @@ endif
 
 CONFIG_LATX=y
 CONFIG_SOFTMMU=y
-include ./src/i386/Makefile6.objs
-LATX_SRC=$(addprefix src/i386/, $(obj-y))
-LATX_OBJS=$(LATX_SRC:%.c=$(BUILD_DIR)/%.o)
-$(LATX_OBJS): EXTRA_FLAGS = -I./src/i386/LATX/include -I./src/i386/
-
+include ./src/target/i386/Makefile6.objs
+LATX_SRC=$(addprefix src/target/i386/, $(obj-y))
 C_SRC_FILES += $(LATX_SRC)
 
 OBJ_FILES := $(C_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
@@ -100,7 +98,7 @@ env/loongarch/include/generated/asm-offset.h: env/loongarch/asm-offset.c env/loo
 
 asm-offset: env/loongarch/include/generated/asm-offset.h
 
-CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include
+CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include $(I386_FLAGS)
 $(BUILD_DIR)/%.o : %.c
 	@mkdir -p $(@D)
 	@gcc $(CFLAGS) $(EXTRA_FLAGS) -MMD -c $< -o $@

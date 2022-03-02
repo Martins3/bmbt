@@ -1,6 +1,6 @@
 #include "tcg-target.h"
-#include "../../i386/LATX/include/latx-config.h"
-#include "../../i386/LATX/include/latx-options.h"
+#include "latx-config.h"
+#include "latx-options.h"
 #include "../tcg.h"
 #include <stddef.h>
 

@@ -3,7 +3,7 @@
 #include "../../../include/hw/pci-host/i440fx.h"
 #include "../../../include/qemu/error-report.h"
 #include "../../../include/qemu/units.h"
-#include "../../i386/cpu.h"
+#include "cpu.h"
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/southbridge/piix.h>
 

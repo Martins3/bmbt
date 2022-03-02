@@ -23,7 +23,7 @@
 #include "../../include/qemu/osdep.h"
 
 #if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
-#include "../../src/i386/LATX/include/latx-config.h"
+#include "latx-config.h"
 #endif
 
 bool tcg_allowed;
