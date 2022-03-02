@@ -1,14 +1,14 @@
 #ifndef CPU_H_CJEDABLV
 #define CPU_H_CJEDABLV
 
-#include "../../include/exec/cpu-defs.h"
-#include "../../include/exec/hwaddr.h"
-#include "../../include/fpu/softfloat-types.h"
-#include "../../include/hw/core/cpu.h"
-#include "../../include/hw/hotplug.h"
-#include "../../include/hw/irq.h"
-#include "../../include/qemu/bitops.h"
-#include "../../include/sysemu/tcg.h"
+#include <exec/cpu-defs.h>
+#include <exec/hwaddr.h>
+#include <fpu/softfloat-types.h>
+#include <hw/core/cpu.h>
+#include <hw/hotplug.h>
+#include <hw/irq.h>
+#include <qemu/bitops.h>
+#include <sysemu/tcg.h>
 
 // ------------------------------ blindly copy started
 /* The x86 has a strong memory model with some store-after-load re-ordering */

@@ -1,8 +1,8 @@
-#include "../../include/exec/exec-all.h"
-#include "../../include/exec/cpu-ldst.h"
-#include "../../include/fpu/softfloat.h"
-#include "../../include/fpu/softfloat-helpers.h"
-#include "../../include/qemu/bswap.h"
+#include <exec/exec-all.h>
+#include <exec/cpu-ldst.h>
+#include <fpu/softfloat.h>
+#include <fpu/softfloat-helpers.h>
+#include <qemu/bswap.h>
 #include "cpu.h"
 #include "LATX/include/latx-config.h"
 
