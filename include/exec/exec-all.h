@@ -1,10 +1,10 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
-#include "cpu.h"
 #include "../hw/core/cpu.h"
 #include "../qemu/atomic.h"
 #include "../qemu/main-loop.h"
 #include "cpu-defs.h"
+#include "cpu.h"
 #include "memop.h"
 
 #ifdef CONFIG_LATX
@@ -141,6 +141,9 @@ typedef struct TranslationBlock {
 #endif
 #endif
 } TranslationBlock;
+
+void restore_state_to_opc(CPUArchState *env, TranslationBlock *tb,
+                          target_ulong *data);
 
 extern bool parallel_cpus;
 

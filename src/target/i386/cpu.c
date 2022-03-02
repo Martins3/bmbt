@@ -5271,10 +5271,6 @@ static Property x86_cpu_properties[] = {
     DEFINE_PROP_BOOL("legacy-cache", X86CPU, legacy_cache, true)};
 #endif
 
-void tcg_x86_init(void) {
-  // originally defined in translate.c, it's useless in xqm
-}
-
 void cpu_common_realizefn(X86CPU *cpu) {
   // cpu_common_realizefn is empty:
   // 1. ignore_memory_transaction_failures is used by ARM
