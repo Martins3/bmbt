@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <http://www.gnu.org/licenses/>
  */
-#include "../../../src/i386/cpu.h"
+#include "cpu.h"
 #include "../../exec/hwaddr.h"
 #include "../../qemu/timer.h"
 #include "../pci/msi.h"

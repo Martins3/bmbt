@@ -1,7 +1,7 @@
 #include "../../include/exec/cpu-all.h"
 #include "../../include/exec/helper-proto.h"
 #include "../../include/exec/tb-lookup.h"
-#include "../i386/cpu.h"
+#include "cpu.h"
 
 void *HELPER(lookup_tb)(CPUArchState *env) {
   CPUState *cpu = env_cpu(env);

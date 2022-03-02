@@ -1,6 +1,6 @@
 #ifndef NUMA_H_4ZUXICHZ
 #define NUMA_H_4ZUXICHZ
-#include "../../src/i386/cpu.h"
+#include "cpu.h"
 
 struct CPUArchId;
 

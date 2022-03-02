@@ -1,4 +1,4 @@
-#include "../i386/cpu.h"
+#include "cpu.h"
 #include <exec/helper-proto.h>
 #include <exec/memory.h>
 #include <exec/ram_addr.h>

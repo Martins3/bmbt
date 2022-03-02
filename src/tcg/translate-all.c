@@ -15,7 +15,9 @@
 #include "../../include/qemu/qemu-printf.h"
 #include "../../include/qemu/thread.h"
 #include "../../include/sysemu/replay.h"
-#include "../../src/i386/LATX/include/latx-options.h"
+#ifdef CONFIG_LATX
+#include "latx-options.h"
+#endif
 
 #include "./tcg.h"
 #include <assert.h>

@@ -1,6 +1,6 @@
-#include "i386/LATX/include/common.h"
-#include "i386/LATX/include/latx-types.h"
-#include "i386/LATX/include/la-ir2.h"
+#include "common.h"
+#include "latx-types.h"
+#include "la-ir2.h"
 #include <exec/exec-all.h>
 // sys-sigint.c
 int sigint_enabled(void) { return 0; }

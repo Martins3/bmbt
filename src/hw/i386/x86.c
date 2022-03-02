@@ -1,6 +1,6 @@
 #include "../../../include/hw/i386/pc.h"
 #include "../../../include/hw/i386/topology.h"
-#include "../../i386/cpu.h"
+#include "cpu.h"
 #include <exec/cpu-all.h>
 #include <standard-headers/asm-x86/bootparam.h>
 

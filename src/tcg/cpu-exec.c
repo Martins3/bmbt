@@ -14,9 +14,9 @@
 #include "../../include/qemu/qht.h"
 #include "../../include/qemu/rcu.h"
 #include "../../include/sysemu/replay.h"
-#include "../i386/LATX/include/latx-config.h"
-#include "../i386/cpu.h"
-#include "../i386/svm.h"
+#include "latx-config.h"
+#include "cpu.h"
+#include "svm.h"
 #include "tcg.h"
 #include <assert.h>
 #include <stdbool.h>

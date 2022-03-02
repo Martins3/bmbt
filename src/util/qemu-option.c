@@ -1,5 +1,5 @@
-#include "../../include/qemu/option.h"
-#include "../../src/i386/LATX/include/latx-config.h"
+#include <qemu/option.h>
+#include "latx-config.h"
 #include <inttypes.h>
 #include <stdio.h>
 
