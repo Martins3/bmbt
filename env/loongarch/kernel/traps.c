@@ -7,7 +7,6 @@
 #include <asm/loongarchregs.h>
 #include <asm/ptrace.h>
 #include <asm/setup.h>
-#include <larchintrin.h>
 #include <linux/compiler_types.h>
 #include <linux/sizes.h>
 #include <stdio.h>
