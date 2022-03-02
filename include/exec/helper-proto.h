@@ -39,7 +39,7 @@ dh_ctype(ret) HELPER(name) (dh_ctype(t1), dh_ctype(t2), dh_ctype(t3), \
 
 #include "helper.h"
 /* #include "trace/generated-helpers.h" */
-#include "../../src/tcg/tcg-runtime.h"
+#include "accel/tcg/tcg-runtime.h"
 /* #include "accel/tcg/plugin-helpers.h" */
 
 #undef IN_HELPER_PROTO

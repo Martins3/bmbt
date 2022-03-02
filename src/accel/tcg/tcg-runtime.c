@@ -1,6 +1,6 @@
-#include "../../include/exec/cpu-all.h"
-#include "../../include/exec/helper-proto.h"
-#include "../../include/exec/tb-lookup.h"
+#include <exec/cpu-all.h>
+#include <exec/helper-proto.h>
+#include <exec/tb-lookup.h>
 #include "cpu.h"
 
 void *HELPER(lookup_tb)(CPUArchState *env) {

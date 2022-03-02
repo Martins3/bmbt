@@ -19,7 +19,7 @@
 #ifndef TRANSLATE_ALL_H
 #define TRANSLATE_ALL_H
 
-#include "../../include/exec/exec-all.h"
+#include <exec/exec-all.h>
 
 /* translate-all.c */
 struct page_collection *page_collection_lock(tb_page_addr_t start,

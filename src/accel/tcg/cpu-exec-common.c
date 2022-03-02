@@ -17,10 +17,10 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../include/exec/cpu-all.h"
-#include "../../include/exec/exec-all.h"
-#include "../../include/hw/core/cpu.h"
-#include "../../include/qemu/osdep.h"
+#include <exec/cpu-all.h>
+#include <exec/exec-all.h>
+#include <hw/core/cpu.h>
+#include <qemu/osdep.h>
 
 #if defined(CONFIG_LATX) && defined(CONFIG_SOFTMMU)
 #include "latx-config.h"
