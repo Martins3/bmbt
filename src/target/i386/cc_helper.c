@@ -1,10 +1,10 @@
-#include "../../include/exec/cpu-ldst.h"
-#include "../../include/exec/exec-all.h"
-#include "../../include/exec/helper-proto.h"
-#include "../../include/fpu/softfloat-helpers.h"
-#include "../../include/fpu/softfloat.h"
-#include "../../include/qemu/bswap.h"
-#include "../../include/qemu/osdep.h"
+#include <exec/cpu-ldst.h>
+#include <exec/exec-all.h>
+#include <exec/helper-proto.h>
+#include <fpu/softfloat-helpers.h>
+#include <fpu/softfloat.h>
+#include <qemu/bswap.h>
+#include <qemu/osdep.h>
 #include "LATX/include/latx-config.h"
 #include "cpu.h"
 

@@ -1,10 +1,10 @@
-#include "../../include/exec/exec-all.h"
-#include "../../include/exec/cpu-ldst.h"
-#include "../../include/fpu/softfloat.h"
-#include "../../include/fpu/softfloat-helpers.h"
-#include "../../include/qemu/bswap.h"
-#include "../../include/qemu/log.h"
-#include "../../include/hw/i386/apic.h"
+#include <exec/exec-all.h>
+#include <exec/cpu-ldst.h>
+#include <fpu/softfloat.h>
+#include <fpu/softfloat-helpers.h>
+#include <qemu/bswap.h>
+#include <qemu/log.h>
+#include <hw/i386/apic.h>
 #include "cpu.h"
 #include "svm.h"
 #include "LATX/include/latx-config.h"
@@ -26,16 +26,16 @@
 #define CPU_MMU_INDEX (cpu_mmu_index_kernel(env))
 #define MEMSUFFIX _kernel
 #define DATA_SIZE 1
-#include "../../include/exec/cpu_ldst_template.h"
+#include <exec/cpu_ldst_template.h>
 
 #define DATA_SIZE 2
-#include "../../include/exec/cpu_ldst_template.h"
+#include <exec/cpu_ldst_template.h>
 
 #define DATA_SIZE 4
-#include "../../include/exec/cpu_ldst_template.h"
+#include <exec/cpu_ldst_template.h>
 
 #define DATA_SIZE 8
-#include "../../include/exec/cpu_ldst_template.h"
+#include <exec/cpu_ldst_template.h>
 #undef CPU_MMU_INDEX
 #undef MEMSUFFIX
 
