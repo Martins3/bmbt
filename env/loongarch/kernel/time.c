@@ -3,9 +3,11 @@
 #include <asm/ptrace.h>
 #include <asm/time.h>
 #include <assert.h>
+#include <qemu/timer.h>
 #include <stdio.h>
 
 u64 const_clock_freq;
+const int NS_PER_CYCLE = 10;
 
 static int constant_set_state_oneshot() {
   unsigned long timer_config;
@@ -18,6 +20,7 @@ static int constant_set_state_oneshot() {
 
 int constant_timer_next_event(unsigned long delta) {
   unsigned long timer_config;
+  delta = delta / NS_PER_CYCLE;
   delta &= CSR_TCFG_VAL;
   timer_config = delta | CSR_TCFG_EN;
   timer_config &= ~CSR_TCFG_PERIOD;
@@ -35,4 +38,5 @@ void time_init(void) {
   else
     const_clock_freq = calc_const_freq();
   printf("Const clock freq=%ld\n", const_clock_freq);
+  assert(const_clock_freq * NS_PER_CYCLE == NANOSECONDS_PER_SECOND);
 }

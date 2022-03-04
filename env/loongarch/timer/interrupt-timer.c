@@ -12,7 +12,7 @@ static TimerHandler signal_timer_handler;
 static void timer_handler(int irq) {
   // TMP_TODO don't use hardcoded 11
   assert(irq == 11);
-  printf("i ");
+  asm(".long 0x002b8000");
   enter_interrpt_context();
   signal_timer_handler();
   leave_interrpt_context();
