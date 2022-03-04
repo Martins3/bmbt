@@ -8,10 +8,11 @@
 #include <unistd.h> // sleep
 
 int main(int argc, char *argv[]) {
-  for (int i = 0; i < 1000; ++i) {
-    printf("huxueshi:%s loongson %d\n", __FUNCTION__, i);
-    sleep(1);
+  char x[1000];
+  printf("enter userspace :%s \n", __FUNCTION__);
+  while (true) {
+    scanf("%s", x);
+    printf("huxueshi:%s %s\n", __FUNCTION__, x);
   }
-  exit(0);
   return 0;
 }
