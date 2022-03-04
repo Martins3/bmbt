@@ -45,7 +45,7 @@ export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIB
 - sudo insmod ./arch/loongarch/kvm/kvm.ko # 重新安装
 
 ```sh
-make -j && sudo  rmmod kvm && sudo insmod ./arch/loongarch/kvm/kvm.ko
+make -j && sudo rmmod kvm && sudo insmod ./arch/loongarch/kvm/kvm.ko
 ```
 
 ## 处理 QEMU 的 macro

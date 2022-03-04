@@ -17,11 +17,11 @@
 - 打开 CONFIG_PCIE_LOONGSON
 - 打开调试选项: kernel hacking -> Compile-time checkes and compiler options 打开 DEBUG_INFO 选项
 
-当然也可以使用本仓库中的 ./.config 文件，就不用手动一次次的操作了。
-
 实际上这个内核有两个问题需要修复增加两个 patch
 - hwbreak.patch : 否则和 qemu 无法调试
 - non_lazy_lbt.patch : licun 说内核没有考虑到在虚拟机中运行二进制翻译
+
+当然也可以使用本仓库中的 kernel-config/ls-host.config 文件，就不用手动一次次的操作了。
 
 ### 找一个可以正确运行 KVM 的 QEMU
 clone 这个项目 http://rd.loongson.cn:8081/#/admin/projects/kernel/qemu
@@ -39,7 +39,16 @@ mkdir build && cd build
             --enable-virtfs
 ```
 
-## 编译 tiny 内核
+注意，这个东西是无法在 x86 上编译的，因为 kvm 的之类的 macro 需要系统的头文件。
+
+## 生成镜像
+在 x86 上 make -f make/image.mk 自动生成:
+- initrd
+- seabios
+- pc-bios
+- guest linux kernel
+
+### 编译 tiny 内核
 - 教程: https://weeraman.com/building-a-tiny-linux-kernel-8c07579ae79d
   - make tinyconfig 将会输出很多参数确认信息，那并不是问题
   - 需要打开的选项
