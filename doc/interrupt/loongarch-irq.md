@@ -521,4 +521,172 @@ lpc 接入到 pch_pic 的 16 上，
 Backtrace stopped: frame did not save the PC
 ```
 
-- 所有的中断都是通过
+所有的中断的入口设置的位置
+- loongarch_cpu_intc_map : 因为
+  - set_vi_handler : plat_irq_dispatch
+
+- plat_irq_dispatch
+  - irq_linear_revmap : 将 hwirq 装换为 linux irq
+  - do_IRQ
+
+loongarch_cpu_intc_map 的所有调用的两个参数为:
+```txt
+[    0.000000] irq=50 hw_number=0
+[    0.000000] irq=51 hw_number=1
+[    0.000000] irq=52 hw_number=2
+[    0.000000] irq=53 hw_number=3
+[    0.000000] irq=54 hw_number=4
+[    0.000000] irq=55 hw_number=5
+[    0.000000] irq=56 hw_number=6
+[    0.000000] irq=57 hw_number=7
+[    0.000000] irq=58 hw_number=8
+[    0.000000] irq=59 hw_number=9
+[    0.000000] irq=60 hw_number=10
+[    0.000000] irq=61 hw_number=11
+[    0.000000] irq=62 hw_number=12
+[    0.000000] irq=63 hw_number=13
+```
+
+这里时间中断的 irq 和 hw_number 其实是正好对应的:
+```txt
+➜  ~/core/linux-4.19-loongson git:(bmbt) ✗ cat /proc/interrupts
+            CPU0       CPU1       CPU2       CPU3
+  17:          0          0          0          0  PCH-PIC-EXT   47  acpi
+  19:          1          0          0          0  PCH-PIC-EXT   52  ls2x-rtc alarm
+  20:          0          0          0          0  PCH-PIC-EXT    9  ls_i2c, ls_i2c, ls_i2c, ls_i2c, ls_i2c, ls_i2c
+  27:          0          0          0          0  PCH-PIC-EXT   49  ohci_hcd:usb3
+  28:          0          0          0          0  PCH-PIC-EXT   48  ehci_hcd:usb1
+  29:      27121          0          0          0  PCH-PIC-EXT   51  ohci_hcd:usb4
+  30:         35          0          0          0  PCH-PIC-EXT   50  ehci_hcd:usb2
+  34:          0          0          0          0  PCH-PIC-EXT   28  loongson-drm
+  36:          0          0          0          0  PCH-PIC-EXT   16  ahci[0000:00:08.0]
+  37:     569501          0          0          0  PCH-PIC-EXT   17  ahci[0000:00:08.1]
+  38:          0          0          0          0  PCH-PIC-EXT   18  ahci[0000:00:08.2]
+  39:          0          0          0          0  PCH-MSI-EXT   64  ahci[0000:01:00.0]
+  40:   17821313          0          0          0  PCH-PIC-EXT   12  enp0s3f0
+  41:          0          0          0          0  PCH-PIC-EXT   14  enp0s3f1
+  61:    5729930    6148984    5434918    7134640  COREINTC   11  timer
+IPI0:    6618373    4574147    3358770    2633731       Rescheduling interrupts
+IPI1:    1176257    1202742    1279049    1157042       Call Function interrupts
+ ERR:          0
+```
+
+过滤掉时钟中断:
+```plain
+hb __handle_irq_event_percpu if (desc->irq_data.irq != 61 && desc->irq_data.irq != 19)
+```
+
+在这里:
+```txt
+#0  __handle_irq_event_percpu (desc=0x900000027d219a00, flags=0x900000027c0cbeec) at kernel/irq/handle.c:140
+#1  0x90000000002822c4 in handle_irq_event_percpu (desc=0x900000027d219a00) at kernel/irq/handle.c:189
+#2  0x9000000000282368 in handle_irq_event (desc=0x900000027d219a00) at kernel/irq/handle.c:206
+#3  0x9000000000286590 in handle_level_irq (desc=0x900000027d219a00) at kernel/irq/chip.c:650
+#4  0x9000000000280f00 in generic_handle_irq_desc (desc=<optimized out>) at ./include/linux/irqdesc.h:155
+#5  generic_handle_irq (irq=<optimized out>) at kernel/irq/irqdesc.c:639
+#6  0x90000000008a2aa0 in extioi_irq_dispatch (desc=<optimized out>) at drivers/irqchip/irq-loongarch-extioi.c:254
+#7  0x9000000000280f00 in generic_handle_irq_desc (desc=<optimized out>) at ./include/linux/irqdesc.h:155
+#8  generic_handle_irq (irq=<optimized out>) at kernel/irq/irqdesc.c:639
+#9  0x9000000000f85908 in do_IRQ (irq=<optimized out>) at arch/loongarch/kernel/irq.c:103
+#10 0x90000000002033d4 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
+Backtrace stopped: frame did not save the PC
+>>> p desc->irq_data.irq
+$2 = 19
+```
+
+- [x] 进入到系统中，看看 53 是啥
+```c
+loongson@loongson-pc:~$ cat /proc/interrupts
+            CPU0
+  17:          0  PCH-PIC-EXT    4  acpi
+  18:          0  PCH-PIC-EXT    3  ls2x-rtc alarm
+  19:       1216  PCH-PIC-EXT    2  ttyS0
+  22:          0  PCH-MSI-EXT   32  virtio1-config
+  23:       1282  PCH-MSI-EXT   33  virtio1-req.0
+  61:       1201  COREINTC   11  timer
+IPI0:          0       Rescheduling interrupts
+IPI1:          0       Call Function interrupts
+ ERR:          0
+```
+实际上，53 不和任何东西对应，没有所谓的键盘中断，只有 ttyS0 的中断而已。
+
+
+- [ ] 是不是，在 do_IRQ 的 irq 是 53 在 `__handle_irq_event_percpu` 的时候，这就是 19 了
+- [x] 4 3 2 32 33 那一排数据的含义不是很懂
+在 show_interrupts 中:
+```c
+  if (desc->irq_data.domain)
+    seq_printf(p, " %*d", prec, (int) desc->irq_data.hwirq);
+```
+- [ ] 第一排真的是 linux irq 吗?
+
+- 实际上，就是一个串口，因为内核的启动设置使用串口沟通的
+
+- serial8250_interrupt
+
+```c
+#0  serial8250_interrupt (irq=19, dev_id=0x900000027da3ca00) at ./include/linux/spinlock_api_smp.h:141
+#1  0x9000000000282070 in __handle_irq_event_percpu (desc=0x900000027d7f5a00, flags=0x900000027c0cbeec) at kernel/irq/handle.c:152
+#2  0x90000000002822dc in handle_irq_event_percpu (desc=0x900000027d7f5a00) at kernel/irq/handle.c:192
+#3  0x9000000000282380 in handle_irq_event (desc=0x900000027d7f5a00) at kernel/irq/handle.c:209
+#4  0x90000000002865a8 in handle_level_irq (desc=0x900000027d7f5a00) at kernel/irq/chip.c:650
+#5  0x9000000000280f00 in generic_handle_irq_desc (desc=<optimized out>) at ./include/linux/irqdesc.h:155
+#6  generic_handle_irq (irq=<optimized out>) at kernel/irq/irqdesc.c:639
+#7  0x90000000008a2ab8 in extioi_irq_dispatch (desc=<optimized out>) at drivers/irqchip/irq-loongarch-extioi.c:254
+#8  0x9000000000280f00 in generic_handle_irq_desc (desc=<optimized out>) at ./include/linux/irqdesc.h:155
+#9  generic_handle_irq (irq=<optimized out>) at kernel/irq/irqdesc.c:639
+#10 0x9000000000f85908 in do_IRQ (irq=<optimized out>) at arch/loongarch/kernel/irq.c:103
+#11 0x90000000002033d4 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
+Backtrace stopped: frame did not save the PC
+```
+
+| do_IRQ | handle |
+| 53     | 23     | virtio1-req.0 |
+| 61     | 61     | 时钟          |
+|        | 19     | ttyS0         |
+
+- 分析一下 do_IRQ 的参数 irq 到底是什么
+  - 应该是 : do_IRQ 中的参数就是硬件的一次装换，其实都是硬件的
+
+```c
+[    1.506311] Call Trace:
+[    1.506890] [<9000000000208b80>] show_stack+0x2c/0x134
+[    1.507990] [<9000000000f78dd8>] dump_stack+0x94/0xc0
+[    1.509107] [<90000000002822ec>] __handle_irq_event_percpu+0x304/0x344
+[    1.510544] [<900000000028234c>] handle_irq_event_percpu+0x20/0x80
+[    1.511816] [<90000000002823f0>] handle_irq_event+0x44/0xac
+[    1.513007] [<9000000000286618>] handle_level_irq+0xe0/0x188
+[    1.514268] [<9000000000280f00>] generic_handle_irq+0x24/0x3c
+[    1.515452] [<90000000008a2b94>] extioi_irq_dispatch+0xbc/0x1a0
+[    1.516665] [<9000000000280f00>] generic_handle_irq+0x24/0x3c
+[    1.517937] [<9000000000f859c0>] do_IRQ+0x80/0xf8
+[    1.518996] [<90000000002033d4>] except_vec_vi_handler+0xb0/0xdc
+[    1.520203] [<900000000098b2f0>] uart_write+0x150/0x2cc
+[    1.521354] [<900000000096b35c>] n_tty_write+0x1d4/0x490
+[    1.522554] [<9000000000966c88>] tty_write+0x14c/0x2ec
+[    1.523566] [<90000000003f7530>] do_iter_write+0x18c/0x1c0
+[    1.524787] [<90000000003f75f4>] vfs_writev+0x78/0x110
+[    1.525866] [<90000000003f76fc>] do_writev+0x70/0x118
+[    1.526942] [<900000000020f018>] syscall_common+0x28/0x38
+```
+
+- [ ] 验证一下，当 ctrl 的时候，kvm 中应该受到中断才可以的
+- [ ] 调查分析一下，ECFG 对应的中断是 3 ，但是在 do_IRQ 中，被装换为 53 了
+
+## 如何初始化 extioi_init 的
+```c
+#0  extioi_init () at drivers/irqchip/irq-loongarch-extioi.c:165
+#1  0x90000000008a3428 in extioi_vec_init (fwnode=0x900000027c011300, cascade=<optimized out>, vec_count=<optimized out>, misc_func=<optimized out>, eio_en_off=<optimiz
+ed out>, node_map=1, node=0) at drivers/irqchip/irq-loongarch-extioi.c:376
+#2  0x9000000000f6e5e8 in eiointc_domain_init () at arch/loongarch/la64/irq.c:251
+#3  irqchip_init_default () at arch/loongarch/la64/irq.c:283
+#4  0x90000000014ace78 in setup_IRQ () at arch/loongarch/la64/irq.c:311
+#5  0x90000000014acea4 in arch_init_irq () at arch/loongarch/la64/irq.c:360
+#6  0x90000000014ae708 in init_IRQ () at arch/loongarch/kernel/irq.c:59
+#7  0x90000000014a8a40 in start_kernel () at init/main.c:636
+#8  0x9000000000f79084 in kernel_entry () at arch/loongarch/kernel/head.S:129
+Backtrace stopped: frame did not save the PC
+```
+14.3.3[^1] 扩展中断处理中，介绍了打开中断的方法。
+
+[^1]: https://loongson.github.io/LoongArch-Documentation/README-CN.html
