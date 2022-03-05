@@ -68,78 +68,33 @@
 `register_pch_pic(0, LS7A_PCH_REG_BASE, LOONGSON_PCH_IRQ_BASE);`
 
 
-一些特殊的原因，这两个分配总是同时进行的:
-```c
-
-static int extioi_domain_alloc(struct irq_domain *domain, unsigned int virq,
-				unsigned int nr_irqs, void *arg)
-{
-	unsigned int type, i;
-	unsigned long hwirq = 0;
-	struct extioi *priv = domain->host_data;
-
-	extioi_domain_translate(domain, arg, &hwirq, &type);
-	for (i = 0; i < nr_irqs; i++) {
-		irq_domain_set_info(domain, virq + i, hwirq + i, &extioi_irq_chip,
-					priv, handle_edge_irq, NULL, NULL);
-	}
-
-	return 0;
-}
-
-static int pch_pic_alloc(struct irq_domain *domain, unsigned int virq,
-				unsigned int nr_irqs, void *arg)
-{
-	int err;
-	unsigned int type;
-	struct irq_fwspec fwspec;
-	struct pch_pic *priv = domain->host_data;
-	unsigned long hwirq = 0;
-
-	pch_pic_domain_translate(domain, arg, &hwirq, &type);
-
-	fwspec.fwnode = domain->parent->fwnode;
-	fwspec.param_count = 1;
-	fwspec.param[0] = hwirq;
-  pr_info("huxueshi:%s %d %ld\n", __FUNCTION__, virq, hwirq);
-	err = irq_domain_alloc_irqs_parent(domain, virq, 1, &fwspec);
-	if (err)
-		return err;
-	irq_domain_set_info(domain, virq, hwirq,
-				&pch_pic_irq_chip, priv,
-				handle_level_irq, NULL, NULL);
-	irq_set_noprobe(virq);
-
-	return 0;
-}
-```
 在 `extioi_vec_init` 中，
 `irq_set_chained_handler_and_data(LOONGSON_BRIDGE_IRQ, extioi_irq_dispatch, extioi_priv);`
 的参数 parent_irq = LOONGSON_BRIDGE_IRQ, 这个 handler 就是注册到了 extioi_irq_dispatch 上了
 
 注意，LOONGSON_BRIDGE_IRQ = 50 + 3
 ```c
-#define LOONGARCH_CPU_IRQ_TOTAL 	14
-#define LOONGARCH_CPU_IRQ_BASE 		50
-#define LOONGSON_LINTC_IRQ   		(LOONGARCH_CPU_IRQ_BASE + 2) /* IP2 for CPU legacy I/O interrupt controller */
-#define LOONGSON_BRIDGE_IRQ 		(LOONGARCH_CPU_IRQ_BASE + 3) /* IP3 for bridge */
+#define LOONGARCH_CPU_IRQ_TOTAL   14
+#define LOONGARCH_CPU_IRQ_BASE    50
+#define LOONGSON_LINTC_IRQ      (LOONGARCH_CPU_IRQ_BASE + 2) /* IP2 for CPU legacy I/O interrupt controller */
+#define LOONGSON_BRIDGE_IRQ     (LOONGARCH_CPU_IRQ_BASE + 3) /* IP3 for bridge */
 ```
 
 应该是最开始的位置，这个设置应该也是没有任何意义的:
 ```c
 static int loongarch_cpu_intc_map(struct irq_domain *d, unsigned int irq,
-			     irq_hw_number_t hw)
+           irq_hw_number_t hw)
 {
-	struct irq_chip *chip;
+  struct irq_chip *chip;
 
-	chip = &loongarch_cpu_irq_controller;
+  chip = &loongarch_cpu_irq_controller;
 
-	if (cpu_has_vint)
-		set_vi_handler(EXCCODE_INT_START + hw, plat_irq_dispatch);
+  if (cpu_has_vint)
+    set_vi_handler(EXCCODE_INT_START + hw, plat_irq_dispatch);
 
-	irq_set_chip_and_handler(irq, chip, handle_percpu_irq);
+  irq_set_chip_and_handler(irq, chip, handle_percpu_irq);
 
-	return 0;
+  return 0;
 }
 ```
 
@@ -160,12 +115,12 @@ set_vi_handler(EXCCODE_IP1, ip3_irqdispatch);
 
 static void ip2_irqdispatch(void)
 {
-	do_IRQ(LOONGSON_LINTC_IRQ); // 52
+  do_IRQ(LOONGSON_LINTC_IRQ); // 52
 }
 
 static void ip3_irqdispatch(void)
 {
-	do_IRQ(LOONGSON_BRIDGE_IRQ); // 这里查找的 irq 是 53 好吧
+  do_IRQ(LOONGSON_BRIDGE_IRQ); // 这里查找的 irq 是 53 好吧
 }
 ```
 
@@ -173,41 +128,41 @@ static void ip3_irqdispatch(void)
 ```c
 asmlinkage void __weak plat_irq_dispatch(void)
 {
-	unsigned long pending = csr_readl(LOONGARCH_CSR_ECFG)
-		& csr_readl(LOONGARCH_CSR_ESTAT) & ECFG0_IM;
-	unsigned int virq;
-	int irq;
+  unsigned long pending = csr_readl(LOONGARCH_CSR_ECFG)
+    & csr_readl(LOONGARCH_CSR_ESTAT) & ECFG0_IM;
+  unsigned int virq;
+  int irq;
 
-	if (!pending) {
-		spurious_interrupt();
-		return;
-	}
+  if (!pending) {
+    spurious_interrupt();
+    return;
+  }
 
-	while (pending) {
-		irq = fls(pending) - 1;
-		if (IS_ENABLED(CONFIG_GENERIC_IRQ_IPI) && irq < 2)
-			virq = irq_linear_revmap(ipi_domain, irq);
-		else
-			virq = irq_linear_revmap(irq_domain, irq); // 使用 irq 作为参数
-		do_IRQ(virq);
-		pending &= ~BIT(irq);
-	}
+  while (pending) {
+    irq = fls(pending) - 1;
+    if (IS_ENABLED(CONFIG_GENERIC_IRQ_IPI) && irq < 2)
+      virq = irq_linear_revmap(ipi_domain, irq);
+    else
+      virq = irq_linear_revmap(irq_domain, irq); // 使用 irq 作为参数
+    do_IRQ(virq);
+    pending &= ~BIT(irq);
+  }
 }
 ```
 
 ```c
 static void irq_domain_set_mapping(struct irq_domain *domain,
-				   irq_hw_number_t hwirq,
-				   struct irq_data *irq_data)
+           irq_hw_number_t hwirq,
+           struct irq_data *irq_data)
 {
-	if (hwirq < domain->revmap_size) {
+  if (hwirq < domain->revmap_size) {
     pr_info("%s %ld %d\n", __FUNCTION__, hwirq, irq_data->irq);
-		domain->linear_revmap[hwirq] = irq_data->irq;
-	} else {
-		mutex_lock(&domain->revmap_tree_mutex);
-		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
-		mutex_unlock(&domain->revmap_tree_mutex);
-	}
+    domain->linear_revmap[hwirq] = irq_data->irq;
+  } else {
+    mutex_lock(&domain->revmap_tree_mutex);
+    radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
+    mutex_unlock(&domain->revmap_tree_mutex);
+  }
 }
 ```
 
@@ -215,33 +170,33 @@ static void irq_domain_set_mapping(struct irq_domain *domain,
 ```c
 static void extioi_irq_dispatch(struct irq_desc *desc)
 {
-	int i;
-	u64 pending;
-	bool handled = false;
-	struct irq_chip *chip = irq_desc_get_chip(desc);
-	struct extioi *priv = irq_desc_get_handler_data(desc);
-	chained_irq_enter(chip, desc);
+  int i;
+  u64 pending;
+  bool handled = false;
+  struct irq_chip *chip = irq_desc_get_chip(desc);
+  struct extioi *priv = irq_desc_get_handler_data(desc);
+  chained_irq_enter(chip, desc);
 
-	for (i = 0; i < VEC_REG_COUNT; i++) {
-		pending = iocsr_readq(LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
-		/* Do not write ISR register since it is zero already */
-		if (pending == 0)
-			continue;
-		iocsr_writeq(pending, LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
-		while (pending) {
-			int bit = __ffs(pending);
-			int virq = irq_linear_revmap(priv->extioi_domain,
-					bit + VEC_COUNT_PER_REG * i);
-			if (virq > 0) generic_handle_irq(virq);
-			pending &= ~BIT(bit);
-			handled = true;
-		}
-	}
+  for (i = 0; i < VEC_REG_COUNT; i++) {
+    pending = iocsr_readq(LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
+    /* Do not write ISR register since it is zero already */
+    if (pending == 0)
+      continue;
+    iocsr_writeq(pending, LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
+    while (pending) {
+      int bit = __ffs(pending);
+      int virq = irq_linear_revmap(priv->extioi_domain,
+          bit + VEC_COUNT_PER_REG * i);
+      if (virq > 0) generic_handle_irq(virq);
+      pending &= ~BIT(bit);
+      handled = true;
+    }
+  }
 
-	if (!handled)
-		spurious_interrupt();
+  if (!handled)
+    spurious_interrupt();
 
-	chained_irq_exit(chip, desc);
+  chained_irq_exit(chip, desc);
 }
 ```
 从这里，所有的编号都是从 0 开始的，查找  extioi_domain::linear_revmap 来得到 linux irq:
