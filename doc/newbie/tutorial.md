@@ -66,3 +66,42 @@ src/tcg/../../include/exec/tb-lookup.h:44
 [ 1075.597660] [<9000000000203e80>] __cpu_wait+0x20/0x24
 [ 1075.597662] [<900000000020fa90>] calculate_cpu_foreign_map+0x148/0x180
 ```
+
+## qemu 注入中断的过程
+
+1. 在 qemu 中的部分
+```c
+#1  0x00000001201af1d4 in ioapic_handler (opaque=0x120ce1ae0, irq=2, level=0) at /home/loongson/core/centos-qemu/hw/loongarch/larch_3a.c:1066
+#2  0x00000001202c66b0 in qemu_set_irq (irq=0x120e78ed0, level=0) at /home/loongson/core/centos-qemu/hw/core/irq.c:44
+#3  0x00000001201aedac in legacy_set_irq (opaque=0x120c25010, irq=0, level=0) at /home/loongson/core/centos-qemu/hw/loongarch/larch_3a.c:917
+#4  0x00000001202c66b0 in qemu_set_irq (irq=0x12128b830, level=0) at /home/loongson/core/centos-qemu/hw/core/irq.c:44
+#5  0x00000001202baa28 in qemu_irq_lower (irq=0x12128b830) at /home/loongson/core/centos-qemu/include/hw/irq.h:17
+#6  0x00000001202baf58 in serial_update_irq (s=0x12128b9a0) at /home/loongson/core/centos-qemu/hw/char/serial.c:152
+#7  0x00000001202bb58c in serial_xmit (s=0x12128b9a0) at /home/loongson/core/centos-qemu/hw/char/serial.c:261
+#8  0x00000001202bba80 in serial_ioport_write (opaque=0x12128b9a0, addr=0, val=74, size=1) at /home/loongson/core/centos-qemu/hw/char/serial.c:373
+#9  0x00000001202bcf6c in serial_mm_write (opaque=0x12128b9a0, addr=0, value=74, size=1) at /home/loongson/core/centos-qemu/hw/char/serial.c:1032
+#10 0x00000001200d8114 in memory_region_write_accessor (mr=0x12128ba80, addr=0, value=0xffe7ffdfc8, size=1, shift=0, mask=255, attrs=...) at /home/loongson/core/centos-qemu/memory.c:483
+#11 0x00000001200d83f0 in access_with_adjusted_size (addr=0, value=0xffe7ffdfc8, size=1, access_size_min=1, access_size_max=8, access_fn=0x1200d8024 <memory_region_write_accessor>, mr=0x12128ba80, attrs=...) at /home/loongson/core/centos-qemu/memory.c:544
+#12 0x00000001200db830 in memory_region_dispatch_write (mr=0x12128ba80, addr=0, data=74, op=MO_8, attrs=...) at /home/loongson/core/centos-qemu/memory.c:1475
+#13 0x0000000120065a68 in flatview_write_continue (fv=0xffe0a46e70, addr=534774240, attrs=..., buf=0xfff7fcc028 "J", len=1, addr1=0, l=1, mr=0x12128ba80) at /home/loongson/core/centos-qemu/exec.c:3129
+#14 0x0000000120065c00 in flatview_write (fv=0xffe0a46e70, addr=534774240, attrs=..., buf=0xfff7fcc028 "J", len=1) at /home/loongson/core/centos-qemu/exec.c:3169
+#15 0x0000000120066020 in address_space_write (as=0x120b30e88 <address_space_memory>, addr=534774240, attrs=..., buf=0xfff7fcc028 "J", len=1) at /home/loongson/core/centos-qemu/exec.c:3259
+#16 0x00000001200660b4 in address_space_rw (as=0x120b30e88 <address_space_memory>, addr=534774240, attrs=..., buf=0xfff7fcc028 "J", len=1, is_write=true) at /home/loongson/core/centos-qemu/exec.c:3269
+#17 0x00000001200f9540 in kvm_cpu_exec (cpu=0x120c91360) at /home/loongson/core/centos-qemu/accel/kvm/kvm-all.c:2386
+#18 0x00000001200c5d20 in qemu_kvm_cpu_thread_fn (arg=0x120c91360) at /home/loongson/core/centos-qemu/cpus.c:1318
+#19 0x00000001206e2538 in qemu_thread_start (args=0x120cc0790) at /home/loongson/core/centos-qemu/util/qemu-thread-posix.c:519
+#20 0x000000fff754489c in start_thread () at /lib/loongarch64-linux-gnu/libpthread.so.0
+```
+
+2. 在内核中的部分
+```c
+[41565.981837] huxueshi:kvm_ls7a_ioapic_set_irq level=1 state->intedge=8 mask=4 last_intirr=0 intirr=0
+[41565.981838] huxueshi:kvm_ls7a_ioapic_raise
+[41565.981838] kvm [7368]: msi_irq_handler,2,up
+[41565.981839] kvm [7368]: ext_irq_handler:irq = 2,level = 1
+[41565.981841] huxueshi:msi_irq_handler raise
+[41565.981842] kvm [7368]: ext_irq_update_core:86
+[41565.981844] huxueshi:kvm_vcpu_ioctl_interrupt intr=3
+[41565.981845] huxueshi:lvz_queue_irq 3
+[41565.981848] huxueshi:lvz_irq_deliver 2 3
+```
