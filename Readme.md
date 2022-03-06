@@ -10,6 +10,9 @@
 
 ```sh
 git clone https://github.com/Martins3/bmbt --recursive --shallow-submodules
+cd bmbt
+make -f make/image.mk
+make run -j
 ```
 
 ## 报告
@@ -21,6 +24,7 @@ https://loongson.github.io/LoongArch-Documentation/README-CN.html
 ## 目标
 这个项目的想法是，一个 3A5000 电脑开机之后，然后开机之后就是 Windows 。
 基本思路是让 BIOS 启动之后，然后执行 BMBT，进而让 guest OS 来引导启动。
+
 ## 思路的来源
 1. 在二进制翻译上充分利用硬件资源加速
 2. 避免 QEMU 和 Linux 的软件栈的复杂性
