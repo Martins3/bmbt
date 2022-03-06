@@ -1,5 +1,13 @@
 ## 一些根本的疑惑
-- [ ] 为什么那些长长的 acpi 调用，最后会选择 pch_pic 的
+- [x] 为什么那些长长的 acpi 调用，最后会选择 pch_pic 的
+- [ ] 从哪里知道 cpu extioi 和 pch_pic 的链接到一起的
+- [ ] 应该 msi 是放到 extioi 下，其地位和 pch 差不多的吧
+- [ ] 中断负载均衡在哪里做的 ?
+
+## 一些 irq_domain 中值得关注的函数
+- irq_set_chained_handler_and_data
+- irq_set_chip_and_handler
+
 
 ## irq domain
 - [x] [What are linux irq domains, why are they needed?](https://stackoverflow.com/questions/34371352/what-are-linux-irq-domains-why-are-they-needed)
@@ -298,8 +306,8 @@ IPI1:          0       Call Function interrupts
 ```
 - 是因为 pch_pic_alloc
 
-pch_pic_alloc 总是会调用 extioi_domain_alloc 吗?
-
+- [x] pch_pic_alloc 总是会调用 extioi_domain_alloc 吗?
+  - 是的
 
 在 register_pch_pic 中:
 ```c
@@ -328,6 +336,7 @@ static int pch_pic_domain_translate(struct irq_domain *d,
   return 0;
 }
 ```
+看上去，pch 只是负责将 acpi gsi 的中断号翻译一下。
 
 ## 分析所有的 irq 的分配的过程
 ```c
@@ -558,32 +567,199 @@ Backtrace stopped: frame did not save the PC
 
 ## 分析一下 linux irq 的分配的过程
 - pch_pic_alloc
-  - 构建 fwspec，实际上，我感觉这个应该从 fw 中读取
+  - 构建 fwspec 主要是用于承载 acpi gsi
   - [ ] irq_domain_alloc_irqs_parent
   - [ ] irq_domain_set_info : 好多类似的函数啊
+
 ```c
 static int pch_pic_alloc(struct irq_domain *domain, unsigned int virq,
-				unsigned int nr_irqs, void *arg)
+        unsigned int nr_irqs, void *arg)
 {
-	int err;
-	unsigned int type;
-	struct irq_fwspec fwspec;
-	struct pch_pic *priv = domain->host_data;
-	unsigned long hwirq = 0;
+  int err;
+  unsigned int type;
+  struct irq_fwspec fwspec;
+  struct pch_pic *priv = domain->host_data;
+  unsigned long hwirq = 0;
 
-	pch_pic_domain_translate(domain, arg, &hwirq, &type);
+  pch_pic_domain_translate(domain, arg, &hwirq, &type);
 
-	fwspec.fwnode = domain->parent->fwnode;
-	fwspec.param_count = 1;
-	fwspec.param[0] = hwirq;
-	err = irq_domain_alloc_irqs_parent(domain, virq, 1, &fwspec);
-	if (err)
-		return err;
-	irq_domain_set_info(domain, virq, hwirq,
-				&pch_pic_irq_chip, priv,
-				handle_level_irq, NULL, NULL);
-	irq_set_noprobe(virq);
+  fwspec.fwnode = domain->parent->fwnode;
+  fwspec.param_count = 1;
+  fwspec.param[0] = hwirq;
+  err = irq_domain_alloc_irqs_parent(domain, virq, 1, &fwspec);
+  if (err)
+    return err;
+  irq_domain_set_info(domain, virq, hwirq,
+        &pch_pic_irq_chip, priv,
+        handle_level_irq, NULL, NULL);
+  irq_set_noprobe(virq);
 
-	return 0;
+  return 0;
 }
 ```
+
+一个经典的 pch_pic_alloc 的调用路径:
+```c
+#0  pch_pic_alloc (domain=0x900000027c0bfa00, virq=17, nr_irqs=1, arg=0x900000027cd33c50) at drivers/irqchip/irq-loongson-pch-pic.c:279
+#1  0x900000000028bf28 in irq_domain_alloc_irqs_hierarchy (arg=<optimized out>, nr_irqs=<optimized out>, irq_base=<optimized out>, domain=<optimized out>) at kernel/irq/irqdomain.c:1270
+#2  __irq_domain_alloc_irqs (domain=0x900000027c0bfa00, irq_base=17, nr_irqs=1, node=<optimized out>, arg=<optimized out>, realloc=<optimized out>, affinity=<optimizedout>) at kernel/irq/irqdomain.c:1326
+#3  0x900000000028c4cc in irq_domain_alloc_irqs (arg=<optimized out>, node=<optimized out>, nr_irqs=<optimized out>, domain=<optimized out>) at ./include/linux/irqdomain.h:466
+#4  irq_create_fwspec_mapping (fwspec=0x900000027cd33c50) at kernel/irq/irqdomain.c:810
+#5  0x900000000020bc40 in acpi_register_gsi (dev=<optimized out>, gsi=17, trigger=<optimized out>, polarity=<optimized out>) at arch/loongarch/kernel/acpi.c:90
+#6  0x900000000020bcb4 in acpi_gsi_to_irq (gsi=<optimized out>, irqp=0x900000027cd33cdc) at arch/loongarch/kernel/acpi.c:49
+#7  0x90000000009135bc in acpi_os_install_interrupt_handler (gsi=68, handler=0x9000000000931c70 <acpi_ev_sci_xrupt_handler>, context=0x900000027d11c180) at drivers/acpi/osl.c:573
+#8  0x9000000000931cf0 in acpi_ev_install_sci_handler () at drivers/acpi/acpica/evsci.c:156
+#9  0x900000000092eb38 in acpi_ev_install_xrupt_handlers () at drivers/acpi/acpica/evevent.c:94
+#10 0x90000000014e92f0 in acpi_enable_subsystem (flags=<optimized out>) at drivers/acpi/acpica/utxfinit.c:184
+#11 0x90000000014e7214 in acpi_bus_init () at drivers/acpi/bus.c:1157
+#12 acpi_init () at drivers/acpi/bus.c:1253
+#13 0x9000000000200b8c in do_one_initcall (fn=0x90000000014e7154 <acpi_init>) at init/main.c:884
+#14 0x90000000014a4e8c in do_initcall_level (level=<optimized out>) at ./include/linux/init.h:131
+#15 do_initcalls () at init/main.c:960
+#16 do_basic_setup () at init/main.c:978
+#17 kernel_init_freeable () at init/main.c:1145
+#18 0x9000000000f79118 in kernel_init (unused=<optimized out>) at init/main.c:1062
+#19 0x900000000020316c in ret_from_kernel_thread () at arch/loongarch/kernel/entry.S:85
+Backtrace stopped: frame did not save the PC
+```
+
+从而实现的操作:
+```c
+int acpi_register_gsi(struct device *dev, u32 gsi, int trigger, int polarity)
+
+      struct irq_fwspec fwspec;
+
+      fwspec.fwnode = handle;
+      fwspec.param[0] = gsi; // 比如 gsi = 68
+      fwspec.param_count = 1;
+      return irq_create_fwspec_mapping(&fwspec);
+```
+
+使用 pch_pic 的原因是因为 hwhand
+
+pch_pic 的初始化的位置在 pch_pic_domains_init
+```c
+    irq_handle = irq_domain_alloc_fwnode((void *)address);
+```
+而在 acpi_register_gsi 中存在的这个东西
+```c
+    handle = pch_pic_get_fwnode(id);
+```
+
+## 既然存在那么多的 irq desc，为什么只有这个 irq desc 被打印出来了
+- [ ] 我猜测是因为不是所有的 desc 都注册了 action 的
+
+```c
+  if ((!desc->action || irq_desc_is_chained(desc)) && !any_count)
+    goto outsparse;
+```
+比如在 loongarch_cpu_intc_map 中调用 irq_set_chip_and_handler 中就是仅仅注册了 handlr_irq，那个只是一个 generic 的部分。
+
+但是，request_irq 之类的操作，为什么最后 action 最后选择上那几个 irq 的。
+
+## 忽然意识到，其实 request irq 操作和 irq_set_chip_and_handler 的操作分别两个操作
+- [x] 那么 request_irq 的时候，怎么和对应的 irq desc 匹配起来
+  - [x] 找到 ttyS0 的注册位置
+
+```c
+#0  request_threaded_irq (irq=61, handler=0x9000000000208430 <constant_timer_interrupt>, thread_fn=0x0, irqflags=83456, devname=0x90000000011ee470 "timer", dev_id=0x0)
+at kernel/irq/manage.c:1884
+#1  0x9000000000208764 in request_irq (dev=<optimized out>, name=<optimized out>, flags=<optimized out>, handler=<optimized out>, irq=<optimized out>) at ./include/linu
+x/interrupt.h:147
+#2  constant_clockevent_init () at arch/loongarch/kernel/time.c:175
+#3  constant_clockevent_init () at arch/loongarch/kernel/time.c:140
+#4  0x90000000014aba54 in time_init () at arch/loongarch/kernel/time.c:233
+#5  0x90000000014a4a58 in start_kernel () at init/main.c:643
+#6  0x9000000000f79014 in kernel_entry () at arch/loongarch/kernel/head.S:129
+Backtrace stopped: frame did not save the PC
+```
+- [x] 比如这个地方注册，他是怎么知道自己的 irq = 61 的啊?
+  - 好吧，我 tm 的人傻了，这是写死的, 这只是一个例外而已，问题不大
+
+
+
+```c
+#0  request_threaded_irq (irq=19, handler=0x900000000098dd20 <serial8250_interrupt>, thread_fn=0x0, irqflags=0, devname=0x900000027cff6780 "ttyS0", dev_id=0x900000027cf
+1de80) at kernel/irq/manage.c:1884
+#1  0x900000000098ecf4 in request_irq (dev=<optimized out>, name=<optimized out>, flags=<optimized out>, handler=<optimized out>, irq=<optimized out>) at ./include/linu
+x/interrupt.h:147
+#2  serial_link_irq_chain (up=<optimized out>) at drivers/tty/serial/8250/8250_core.c:215
+#3  univ8250_setup_irq (up=0x90000000015f68c8 <serial8250_ports>) at drivers/tty/serial/8250/8250_core.c:340
+#4  0x90000000009925f8 in serial8250_do_startup (port=0x90000000015f68c8 <serial8250_ports>) at drivers/tty/serial/8250/8250_port.c:2347
+#5  0x900000000098bd98 in uart_port_startup (tty=0x900000027ce14400, state=0x900000027ce5a000, init_hw=0) at drivers/tty/serial/serial_core.c:218
+#6  0x900000000098cac8 in uart_startup (init_hw=<optimized out>, state=<optimized out>, tty=<optimized out>) at drivers/tty/serial/serial_core.c:1743
+#7  uart_startup (init_hw=<optimized out>, state=<optimized out>, tty=<optimized out>) at drivers/tty/serial/serial_core.c:248
+#8  uart_port_activate (tty=<optimized out>, port=<optimized out>) at drivers/tty/serial/serial_core.c:1758
+#9  uart_port_activate (port=0x900000027ce5a000, tty=0x900000027ce14400) at drivers/tty/serial/serial_core.c:1743
+#10 0x9000000000971898 in tty_port_open (port=0x900000027ce5a000, tty=0x900000027ce14400, filp=0x0) at drivers/tty/tty_port.c:696
+#11 0x900000000098a12c in uart_open (tty=0x900000027ce14400, filp=<optimized out>) at drivers/tty/serial/serial_core.c:1734
+#12 0x9000000000969660 in tty_open (inode=0x900000027a934720, filp=0x900000027da6e400) at drivers/tty/tty_io.c:2046
+#13 0x90000000003fd310 in chrdev_open (inode=0x13, filp=0x900000027da6e400) at fs/char_dev.c:423
+#14 0x90000000003f3fd8 in do_dentry_open (f=0x900000027da6e400, inode=0x900000027a934720, open=0x90000000003fd25c <chrdev_open>) at fs/open.c:796
+#15 0x90000000003f56b4 in vfs_open (path=<optimized out>, file=<optimized out>) at ./include/linux/dcache.h:545
+#16 0x9000000000408d94 in do_last (op=<optimized out>, file=<optimized out>, nd=<optimized out>) at fs/namei.c:3421
+#17 path_openat (nd=0x900000027cd33cb8, op=0x900000027cd33db8, flags=<optimized out>) at fs/namei.c:3537
+#18 0x900000000040b360 in do_filp_open (dfd=<optimized out>, pathname=<optimized out>, op=0x900000027cd33db8) at fs/namei.c:3567
+#19 0x90000000003f5a3c in do_sys_open (dfd=-100, filename=<optimized out>, flags=<optimized out>, mode=<optimized out>) at fs/open.c:1085
+#20 0x90000000014a4ec4 in ksys_open (mode=<optimized out>, flags=<optimized out>, filename=<optimized out>) at ./include/linux/syscalls.h:1280
+#21 kernel_init_freeable () at init/main.c:1148
+#22 0x9000000000f79118 in kernel_init (unused=<optimized out>) at init/main.c:1062
+#23 0x900000000020316c in ret_from_kernel_thread () at arch/loongarch/kernel/entry.S:85
+Backtrace stopped: frame did not save the PC
+```
+很容易跟踪到其 irq 为 uart.port.irq
+
+而在 serial_pnp_probe 中正好是初始化 irq 为 19 的:
+```c
+#0  serial_pnp_probe (dev=0x900000027d32f000, dev_id=0x9000000001068570 <pnp_dev_table+1248>) at drivers/tty/serial/8250/8250_pnp.c:440
+#1  0x9000000000959b54 in pnp_device_probe (dev=0x900000027d32f000) at drivers/pnp/driver.c:109
+#2  0x9000000000a294cc in really_probe (dev=0x900000027d32f000, drv=0x9000000001428160 <serial_pnp_driver+64>) at drivers/base/dd.c:506
+#3  0x9000000000a29704 in driver_probe_device (drv=0x9000000001428160 <serial_pnp_driver+64>, dev=0x900000027d32f000) at drivers/base/dd.c:667
+#4  0x9000000000a298ac in __driver_attach (data=<optimized out>, dev=<optimized out>) at drivers/base/dd.c:903
+#5  __driver_attach (dev=0x900000027d32f000, data=0x9000000001428160 <serial_pnp_driver+64>) at drivers/base/dd.c:872
+#6  0x9000000000a27200 in bus_for_each_dev (bus=<optimized out>, start=<optimized out>, data=0x900000027d8a85c3, fn=0xffc0000000000000) at drivers/base/bus.c:279
+#7  0x9000000000a28d10 in driver_attach (drv=<optimized out>) at drivers/base/dd.c:922
+#8  0x9000000000a2877c in bus_add_driver (drv=0x9000000001428160 <serial_pnp_driver+64>) at drivers/base/bus.c:672
+#9  0x9000000000a2a4f0 in driver_register (drv=0x9000000001428160 <serial_pnp_driver+64>) at drivers/base/driver.c:170
+#10 0x9000000000959934 in pnp_register_driver (drv=<optimized out>) at drivers/pnp/driver.c:272
+#11 0x900000000098f14c in serial8250_pnp_init () at drivers/tty/serial/8250/8250_pnp.c:539
+#12 0x90000000014ebf0c in serial8250_init () at drivers/tty/serial/8250/8250_core.c:1158
+#13 0x9000000000200b8c in do_one_initcall (fn=0x90000000014ebe70 <serial8250_init>) at init/main.c:884
+#14 0x90000000014a4e8c in do_initcall_level (level=<optimized out>) at ./include/linux/init.h:131
+#15 do_initcalls () at init/main.c:960
+#16 do_basic_setup () at init/main.c:978
+#17 kernel_init_freeable () at init/main.c:1145
+#18 0x9000000000f79118 in kernel_init (unused=<optimized out>) at init/main.c:1062
+#19 0x900000000020316c in ret_from_kernel_thread () at arch/loongarch/kernel/entry.S:85
+Backtrace stopped: frame did not save the PC
+```
+
+## 找到 ttyS0 分配的所有的 irq ，以及他们之间实现映射的方法
+- irq=3
+- irq=53
+- irq=2
+- irq=19
+
+### 在 cpu intc 中
+`__loongarch_cpu_irq_init` 你可以分配，然后调用 irq_domain_associate_many, 最后会调用到 irq_domain_set_mapping
+
+```c
+    domain->linear_revmap[hwirq] = irq_data->irq;
+```
+记录的是，hwirq 到 linux irq 的映射，当拿到了 linux irq 之后，就可以找到对应 irq desc 了，然后找到这个函数。
+
+在这里，实现了从 (hwirq, irq) => (1, 51) 的映射
+
+cpu intc 将这个注册为 extioi_irq_dispatch
+```c
+static inline void generic_handle_irq_desc(struct irq_desc *desc)
+{
+  desc->handle_irq(desc);
+}
+```
+居然是在 eiointc_domain_init => extioi_vec_init 中初始化的
+- irq_set_chained_handler_and_data : 因为知道 cpu intc 的 desc 和 irq 的对应
+  - `__irq_do_set_handler`
+    - 在这里注册其 desc::handle_irq 也就是 extioi_irq_dispatch
+
+## 在 extioi 中的映射是如何构建的

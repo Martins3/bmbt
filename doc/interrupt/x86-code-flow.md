@@ -98,27 +98,27 @@ msix_setup_entries 创建了 msi_desc
 ```c
 /**
  * msi_msg - Representation of a MSI message
- * @address_lo:		Low 32 bits of msi message address
- * @arch_addrlo:	Architecture specific shadow of @address_lo
- * @address_hi:		High 32 bits of msi message address
- *			(only used when device supports it)
- * @arch_addrhi:	Architecture specific shadow of @address_hi
- * @data:		MSI message data (usually 16 bits)
- * @arch_data:		Architecture specific shadow of @data
+ * @address_lo:   Low 32 bits of msi message address
+ * @arch_addrlo:  Architecture specific shadow of @address_lo
+ * @address_hi:   High 32 bits of msi message address
+ *      (only used when device supports it)
+ * @arch_addrhi:  Architecture specific shadow of @address_hi
+ * @data:   MSI message data (usually 16 bits)
+ * @arch_data:    Architecture specific shadow of @data
  */
 struct msi_msg {
-	union {
-		u32			address_lo;
-		arch_msi_msg_addr_lo_t	arch_addr_lo;
-	};
-	union {
-		u32			address_hi;
-		arch_msi_msg_addr_hi_t	arch_addr_hi;
-	};
-	union {
-		u32			data;
-		arch_msi_msg_data_t	arch_data;
-	};
+  union {
+    u32     address_lo;
+    arch_msi_msg_addr_lo_t  arch_addr_lo;
+  };
+  union {
+    u32     address_hi;
+    arch_msi_msg_addr_hi_t  arch_addr_hi;
+  };
+  union {
+    u32     data;
+    arch_msi_msg_data_t arch_data;
+  };
 };
 ```
 
@@ -563,21 +563,21 @@ x86_vector_domain = irq_domain_create_tree(fn, &x86_vector_domain_ops, NULL);
 
 ```c
 static const struct irq_domain_ops x86_vector_domain_ops = {
-	.select		= x86_vector_select,
-	.alloc		= x86_vector_alloc_irqs,
-	.free		= x86_vector_free_irqs,
-	.activate	= x86_vector_activate,
-	.deactivate	= x86_vector_deactivate,
+  .select   = x86_vector_select,
+  .alloc    = x86_vector_alloc_irqs,
+  .free   = x86_vector_free_irqs,
+  .activate = x86_vector_activate,
+  .deactivate = x86_vector_deactivate,
 #ifdef CONFIG_GENERIC_IRQ_DEBUGFS
-	.debug_show	= x86_vector_debug_show,
+  .debug_show = x86_vector_debug_show,
 #endif
 };
 
 const struct irq_domain_ops mp_ioapic_irqdomain_ops = {
-	.alloc		= mp_irqdomain_alloc,
-	.free		= mp_irqdomain_free,
-	.activate	= mp_irqdomain_activate,
-	.deactivate	= mp_irqdomain_deactivate,
+  .alloc    = mp_irqdomain_alloc,
+  .free   = mp_irqdomain_free,
+  .activate = mp_irqdomain_activate,
+  .deactivate = mp_irqdomain_deactivate,
 };
 ```
 x86_vector_domain_ops 和 mp_ioapic_irqdomain_ops 其实就是对应 lapic 和 ioapic:
