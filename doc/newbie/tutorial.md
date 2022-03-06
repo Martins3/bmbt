@@ -1,4 +1,4 @@
-## 两个经典的 backtrace
+## 访存
 ```c
 #0  tlb_set_page_with_attrs (cpu=0x7ffff7ffd9e8 <_rtld_global+2440>, vaddr=32767, paddr=140737354006919, attrs=..., prot=0, mmu_idx=-1, size=4096) at src/tcg/cputlb.c:6
 82
@@ -22,6 +22,7 @@ src/tcg/../../include/exec/tb-lookup.h:44
 #16 0x00005555555cb1ee in main (argc=1, argv=0x7fffffffd728) at src/main.c:185
 ```
 
+## smc
 ```c
 #0  0x0000555555619baf in cpu_physical_memory_test_and_clear_dirty (start=1044480, length=4096, client=1) at src/qemu/exec.c:334
 #1  0x00005555555d863a in tlb_protect_code (ram_addr=1044480) at src/tcg/cputlb.c:515
@@ -37,4 +38,31 @@ src/tcg/../../include/exec/tb-lookup.h:44
 #11 0x00005555555c926d in wip () at src/main.c:173
 #12 0x00005555555ca124 in greatest_run_suite (suite_cb=0x5555555c9215 <wip>, suite_name=0x5555556da6d7 "wip") at src/main.c:176
 #13 0x00005555555cb1ee in main (argc=1, argv=0x7fffffffd728) at src/main.c:185
+```
+
+## usb 键盘的中断处理
+```plain
+[ 1075.597619] [<900000000020866c>] show_stack+0x2c/0x100
+[ 1075.597621] [<9000000000ec39c8>] dump_stack+0x90/0xc0
+[ 1075.597624] [<9000000000c4b1b0>] input_event+0x30/0xc8
+[ 1075.597626] [<9000000000ca3ee4>] hidinput_report_event+0x44/0x68
+[ 1075.597628] [<9000000000ca1e30>] hid_report_raw_event+0x230/0x470
+[ 1075.597631] [<9000000000ca21a4>] hid_input_report+0x134/0x1b0
+[ 1075.597632] [<9000000000cb07ac>] hid_irq_in+0x9c/0x280
+[ 1075.597634] [<9000000000be9cf0>] __usb_hcd_giveback_urb+0xa0/0x120
+[ 1075.597636] [<9000000000c23a7c>] finish_urb+0xac/0x1c0
+[ 1075.597638] [<9000000000c24b50>] ohci_work.part.8+0x218/0x550
+[ 1075.597640] [<9000000000c27f98>] ohci_irq+0x108/0x320
+[ 1075.597642] [<9000000000be96e8>] usb_hcd_irq+0x28/0x40
+[ 1075.597644] [<9000000000296430>] __handle_irq_event_percpu+0x70/0x1b8
+[ 1075.597645] [<9000000000296598>] handle_irq_event_percpu+0x20/0x88
+[ 1075.597647] [<9000000000296644>] handle_irq_event+0x44/0xa8
+[ 1075.597648] [<900000000029abfc>] handle_level_irq+0xdc/0x188
+[ 1075.597651] [<90000000002952a4>] generic_handle_irq+0x24/0x40
+[ 1075.597652] [<900000000081dc50>] extioi_irq_dispatch+0x178/0x210
+[ 1075.597654] [<90000000002952a4>] generic_handle_irq+0x24/0x40
+[ 1075.597656] [<9000000000ee4eb8>] do_IRQ+0x18/0x28
+[ 1075.597658] [<9000000000203ffc>] except_vec_vi_end+0x94/0xb8
+[ 1075.597660] [<9000000000203e80>] __cpu_wait+0x20/0x24
+[ 1075.597662] [<900000000020fa90>] calculate_cpu_foreign_map+0x148/0x180
 ```

@@ -58,14 +58,6 @@ NESTED(handle_sys_wrap, 0, sp)
 - [ ] 为什么使用 handle_sys_wrap 进行间接跳转
 - [ ] kernelsp 如何使用的
 
-关于 exception 的实现:
-- build_tlb_refill_handler :  将代码拷贝到 refill_ebase 中间
-- configure_exception_vector : ebase 和 refill_ebase 写入到 csr 中间
-- trap_init : refill_ebase = ebase, 调用各种 handler 设置
-
-从内核代码 和 csr 寄存器数值分析，vector 的距离是 512
-需要分配的空间是: ( size = (64 + 14) * vec_size;)
-
 ## abi
 - [ ] 分析手册
   - [ ] 几种 la 和 la.abs 等之类的指令的区别是什么?
