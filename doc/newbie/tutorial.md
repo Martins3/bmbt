@@ -105,3 +105,18 @@ src/tcg/../../include/exec/tb-lookup.h:44
 [41565.981845] huxueshi:lvz_queue_irq 3
 [41565.981848] huxueshi:lvz_irq_deliver 2 3
 ```
+
+## extioi 初始化
+```c
+#0  extioi_init () at drivers/irqchip/irq-loongarch-extioi.c:165
+#1  0x90000000008a3428 in extioi_vec_init (fwnode=0x900000027c011300, cascade=<optimized out>, vec_count=<optimized out>, misc_func=<optimized out>, eio_en_off=<optimiz
+ed out>, node_map=1, node=0) at drivers/irqchip/irq-loongarch-extioi.c:376
+#2  0x9000000000f6e5e8 in eiointc_domain_init () at arch/loongarch/la64/irq.c:251
+#3  irqchip_init_default () at arch/loongarch/la64/irq.c:283
+#4  0x90000000014ace78 in setup_IRQ () at arch/loongarch/la64/irq.c:311
+#5  0x90000000014acea4 in arch_init_irq () at arch/loongarch/la64/irq.c:360
+#6  0x90000000014ae708 in init_IRQ () at arch/loongarch/kernel/irq.c:59
+#7  0x90000000014a8a40 in start_kernel () at init/main.c:636
+#8  0x9000000000f79084 in kernel_entry () at arch/loongarch/kernel/head.S:129
+Backtrace stopped: frame did not save the PC
+```
