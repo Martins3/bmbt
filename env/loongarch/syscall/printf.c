@@ -15,6 +15,8 @@
  *
  */
 #include <asm/addrspace.h>
+#include <asm/device.h>
+#include <asm/io.h>
 #include <asm/mach-la64/loongson.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -296,9 +298,7 @@ int kern_sprintf(char *buf, const char *fmt, ...) {
   return i;
 }
 
-void prom_putchar(char c) {
-  *(char *)(TO_UNCAC(LOONGSON_REG_BASE + 0x1e0)) = c;
-}
+void prom_putchar(char c) { writeb(c, (char *)LS_ISA_SERIAL_IO_BASE); }
 
 void early_console_write(const char *s, unsigned n) {
   while (n-- && *s) {
