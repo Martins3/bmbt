@@ -138,3 +138,8 @@
 58. atomic_common.c.inc
     - 只是 trace 和 plugin 函数，所以清其中的函数内容空就可以了。
     - 并且向其中添加一个 trace_mem_build_info 的空定义
+59. 暂时不支持 acpi
+    - 龙芯的代码中似乎总是存在不支持 acpi 的那一条道路，为了简化代码，总是直接选择不支持 acpi 的那个道路
+60. irqdomain
+    - Loongonix 构建了三个 irq domain，以及对应的几个文件 irq-loongarch-extioi.c irq-loongson-pch-pic.c irq-loongarch-cpu.c irq-loongson-pch-msi.c
+    - 这实在是太复杂了，我们直接硬编码了
