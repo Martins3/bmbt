@@ -1,0 +1,48 @@
+diff --git a/hw/loongarch/larch_3a.c b/hw/loongarch/larch_3a.c
+index 605a15969b..580361b4a0 100644
+--- a/hw/loongarch/larch_3a.c
++++ b/hw/loongarch/larch_3a.c
+@@ -1063,6 +1063,28 @@ static void ioapic_handler(void *opaque, int irq, int level)
+         qemu_set_irq(apic->irq[irq], level);
+     }
+ }
++#define NEED_DEBUGCON
++
++#ifdef NEED_DEBUGCON
++static void debugcon_ioport_write(void *opaque, hwaddr addr, uint64_t val,
++                                  unsigned width) {
++  unsigned char ch = val;
++  putchar(ch);
++}
++
++static uint64_t debugcon_ioport_read(void *opaque, hwaddr addr, unsigned width) {
++  printf("huxueshi:%s kkk\n", __FUNCTION__);
++  return 0x77;
++}
++
++static const MemoryRegionOps debugcon_ops = {
++    .read = debugcon_ioport_read,
++    .write = debugcon_ioport_write,
++    .valid.min_access_size = 1,
++    .valid.max_access_size = 1,
++    .endianness = DEVICE_LITTLE_ENDIAN,
++};
++#endif
+
+ static void *ls3a_intctl_init(MachineState *machine, CPULOONGARCHState *env[])
+ {
+@@ -1097,6 +1119,14 @@ static void *ls3a_intctl_init(MachineState *machine, CPULOONGARCHState *env[])
+                                 mc->pm_mmio_addr, iomem);
+     vmstate_register(NULL, 0, &vmstate_ls3a_pm, s);
+
++#ifdef NEED_DEBUGCON
++    iomem = g_new(MemoryRegion, 1);
++    memory_region_init_io(iomem, NULL, &debugcon_ops, NULL,
++                        "debugcon", 1);
++    memory_region_add_subregion(address_space_mem,
++                                LS7A_UART_BASE + 0x100, iomem);
++#endif
++
+     /*Add MSI mmio memory*/
+     iomem = g_new(MemoryRegion, 1);
+     memory_region_init_io(iomem, NULL, &ls3a_msi_ops, lsms->apic,

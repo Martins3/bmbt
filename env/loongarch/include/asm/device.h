@@ -3,6 +3,7 @@
 #include <asm/addrspace.h>
 #include <asm/mach-la64/loongson.h>
 
-#define LS_ISA_SERIAL_IO_BASE (TO_UNCAC(LOONGSON_REG_BASE + 0x1e0))
+#define LS_ISA_SERIAL_IO_BASE ((void *)TO_UNCAC(LOONGSON_REG_BASE + 0x1e0))
+#define LS_ISA_DEBUGCON_IO_BASE ((void *)TO_UNCAC(LOONGSON_REG_BASE + 0x1e0 + 0x100))
 
 #endif /* end of include guard: DEVICE_H_V9602GXP */

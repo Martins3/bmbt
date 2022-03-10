@@ -298,7 +298,7 @@ int kern_sprintf(char *buf, const char *fmt, ...) {
   return i;
 }
 
-void prom_putchar(char c) { writeb(c, (char *)LS_ISA_SERIAL_IO_BASE); }
+void prom_putchar(char c) { writeb(c, LS_ISA_SERIAL_IO_BASE); }
 
 void early_console_write(const char *s, unsigned n) {
   while (n-- && *s) {
