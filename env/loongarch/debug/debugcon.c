@@ -2,7 +2,7 @@
 #include <asm/device.h>
 #include <asm/io.h>
 
-static void debugcon_putchar(char c) { writeb(c, LS_ISA_SERIAL_IO_BASE); }
+static void debugcon_putchar(char c) { writeb(c, LS_ISA_DEBUGCON_IO_BASE); }
 
 void debugcon_puts(const char *s) {
   int num = 0;

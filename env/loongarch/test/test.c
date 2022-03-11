@@ -9,6 +9,9 @@
 #include <qemu/queue.h>
 #include <sys/mman.h>
 #include <unitest/greatest.h>
+#include <asm/io.h>
+#include <asm/device.h>
+#include <asm/debugcon.h>
 
 typedef struct AllocatedMem {
   QLIST_ENTRY(AllocatedMem) mem_next;
@@ -81,7 +84,7 @@ TEST test_float(void) {
 }
 
 TEST test_interrupt(void) {
-  printf("CSR ecfg: %08lx ", csr_readq(LOONGARCH_CSR_ECFG));
+  printf("CSR ecfg: %08lx \n", csr_readq(LOONGARCH_CSR_ECFG));
   ASSERT_EQ(csr_readq(LOONGARCH_CSR_ECFG), 0x71fff);
   PASS();
 }
@@ -134,7 +137,15 @@ TEST test_rdtime(void) {
   PASS();
 }
 
+TEST test_debugcon(void){
+  u8 x = readb(LS_ISA_DEBUGCON_IO_BASE);
+  debugcon_puts("this is from debugcon\n");
+  ASSERT_EQ(x, 0x77);
+  PASS();
+}
+
 SUITE(env_test) {
+  RUN_TEST(test_debugcon);
   RUN_TEST(test_timer);
   RUN_TEST(test_rdtime);
   RUN_TEST(test_bad_instruction);
