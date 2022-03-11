@@ -12,8 +12,8 @@
 #include "../../../include/sysemu/reset.h"
 #include "../../../include/sysemu/sysemu.h"
 #include "../../../include/sysemu/tcg.h"
-#include "cpu.h"
 #include "acpi-build.h"
+#include "cpu.h"
 #include "e820_memory_layout.h"
 #include <hw/audio/pcspk.h>
 #include <hw/char/serial.h>
@@ -1341,10 +1341,15 @@ static const MemoryRegionOps ioportF0_io_ops = {
         },
 };
 
+void setup_serial_pass_through();
 static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
                             bool no_vmport) {
 
-  serial_hds_isa_init(isa_bus, 0, MAX_ISA_SERIAL_PORTS);
+  if (0) {
+    serial_hds_isa_init(isa_bus, 0, MAX_ISA_SERIAL_PORTS);
+  } else {
+    setup_serial_pass_through();
+  }
 #ifdef NEED_LATER
   int i;
   DriveInfo *fd[MAX_FD];

@@ -118,19 +118,18 @@ static void irqchip_init_default(void) {
   pch_pic_domains_init();
   pch_lpc_domain_init();
 #endif
+  extioi_vec_init();
+  pch_pic_init();
 }
 
 void setup_IRQ(void) {
-#ifdef TMP_TODO
-  // 这也太难了吧!
+  // [interface 59]
+#ifdef BMBT
   u64 node;
 
-  // TMP_TODO 所以正确的 model 是什么呀
-  // 暂时使用下面哪一个了
   if (loongson_sysconf.is_soc_cpu)
     pch_irq_route_model = PCH_IRQ_ROUTE_EXT_SOC;
   else {
-    // TMP_TODO 这 TM 也太 hacking 了吧k
     for_each_node(node) writel(
         0x40000000 | (node << 12),
         (volatile void __iomem *)(((node << 44) | LOONGSON_HT1_CFG_BASE) +

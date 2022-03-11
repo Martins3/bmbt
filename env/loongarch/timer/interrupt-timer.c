@@ -1,3 +1,4 @@
+#include <asm/cpu-features.h>
 #include <asm/loongarchregs.h>
 #include <asm/mach-la64/irq.h>
 #include <asm/setup.h>
@@ -8,11 +9,12 @@
 #include <linux/irqflags.h>
 #include <stdio.h>
 
+
 static TimerHandler signal_timer_handler;
 static void timer_handler(int irq) {
-  // TMP_TODO don't use hardcoded 11
-  assert(irq == 11);
-  asm(".long 0x002b8000");
+  assert(irq == ECFGB_TIMER);
+  if (cpu_has_hypervisor)
+    asm(".long 0x002b8000"); // kvm bug
   enter_interrpt_context();
   signal_timer_handler();
   leave_interrpt_context();
@@ -23,9 +25,7 @@ static void timer_handler(int irq) {
 
 void setup_timer(TimerHandler handler) {
   signal_timer_handler = handler;
-  // TMP_TODO : 根本没有搞清楚 LOONGSON_TIMER_IRQ 和 11 之间的映射
-  // LOONGARCH_CPU_IRQ_BASE 为什么是 50
-  set_vi_handler(64 + 11, timer_handler);
+  set_vi_handler(EXCCODE_TIMER, timer_handler);
 }
 
 void soonest_interrupt_ns(long ns) {
