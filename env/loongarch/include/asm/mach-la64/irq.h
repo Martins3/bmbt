@@ -117,10 +117,12 @@ extern int htvec_init(unsigned long addr, unsigned int num_parents,
 extern int extioi_vec_init(struct fwnode_handle *fwnode, int cascade_irq,
                            u32 vec_count, u32 misc_func, u32 eio_en_off,
                            u64 node_map, u32 node);
-extern int pch_pic_init(struct fwnode_handle *irq_handle, unsigned long addr,
-                        unsigned int size, int model, int gsi_base);
 extern void fixup_irqs(void);
+#endif
+extern int pch_pic_init();
+extern void extioi_vec_init(void);
 extern void extioi_init(void);
+#ifdef TMP_TODO
 extern void loongson3_ipi_interrupt(int irq);
 extern void pmu_handle_irq(int irq);
 extern int pch_lpc_init(u64 address, u16 size, int parent_irq,
@@ -136,4 +138,7 @@ extern struct fwnode_handle *liointc_get_fwnode(void);
 extern struct fwnode_handle *htvec_get_fwnode(void);
 extern enum pch_irq_route_model_id get_irq_route_model(void);
 
+typedef void (*irq_action)(int);
+void set_extioi_action_handler(int hwirq, irq_action action);
+void set_pch_pci_action_handler(int hwirq, irq_action action);
 #endif /* __ASM_MACH_LOONGSON64_IRQ_H_ */
