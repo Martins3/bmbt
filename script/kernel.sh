@@ -25,11 +25,11 @@ launch_gdb=false
 debug_kernel=""
 debug_qemu=""
 
-while getopts "sdq" opt; do
+while getopts "skd" opt; do
   case $opt in
   s) debug_kernel="-S -s" ;;
-  d) launch_gdb=true ;;
-  q) debug_qemu="gdb --args" ;;
+  k) launch_gdb=true ;;
+  d) debug_qemu="gdb --args" ;;
   *) exit 0 ;;
   esac
 done
