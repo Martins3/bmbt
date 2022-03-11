@@ -49,5 +49,6 @@ void tcg_register_thread(void) {
 - 没有再考虑内核中多核
   - 没有多核启动
   - head.S 和 genex.S 中的 entry 去掉了 CONFIG_SMP
+- access interrupt controller，such as pch_pic_bitclr
 
 ## 出现需要 lock 的位置会被 BMBT_MTTCG 标记出来

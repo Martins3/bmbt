@@ -95,8 +95,10 @@ src/tcg/../../include/exec/tb-lookup.h:44
 
 2. 在内核中的部分
 ```c
-[41565.981837] huxueshi:kvm_ls7a_ioapic_set_irq level=1 state->intedge=8 mask=4 last_intirr=0 intirr=0
-[41565.981838] huxueshi:kvm_ls7a_ioapic_raise
+[41565.981837] kvm_vm_ioctl
+[41565.981837] kvm_vm_ioctl_irq_line
+[41565.981837] kvm_ls7a_ioapic_set_irq level=1 state->intedge=8 mask=4 last_intirr=0 intirr=0
+[41565.981838] kvm_ls7a_ioapic_raise
 [41565.981838] kvm [7368]: msi_irq_handler,2,up
 [41565.981839] kvm [7368]: ext_irq_handler:irq = 2,level = 1
 [41565.981841] huxueshi:msi_irq_handler raise
@@ -119,4 +121,76 @@ ed out>, node_map=1, node=0) at drivers/irqchip/irq-loongarch-extioi.c:376
 #7  0x90000000014a8a40 in start_kernel () at init/main.c:636
 #8  0x9000000000f79084 in kernel_entry () at arch/loongarch/kernel/head.S:129
 Backtrace stopped: frame did not save the PC
+```
+
+## loongarch address flatview
+```txt
+FlatView #0
+ AS "ls7a1000_pcie", root: bus master container
+ AS "virtio-net-pci", root: bus master container
+ Root memory region: (none)
+  No rendered FlatView
+
+FlatView #1
+ AS "I/O", root: io
+ Root memory region: io
+  0000000000000000-00000000000003af (prio 0, i/o): iohuxueshi:kvm_cpu_exec 1fe001e6
+FlatView #0
+ AS "ls7a1000_pcie", root: bus master container
+ AS "virtio-net-pci", root: bus master container
+ Root memory region: (none)
+  No rendered FlatView
+
+FlatView #1
+ AS "I/O", root: io
+ Root memory region: io
+  0000000000000000-00000000000003af (prio 0, i/o): io
+  00000000000003b0-00000000000003df (prio 0, i/o): cirrus-io
+  00000000000003e0-000000000000ffff (prio 0, i/o): io @00000000000003e0
+
+FlatView #2
+ AS "memory", root: system
+ AS "cpu-memory-0", root: system
+ AS "cirrus-vga", root: bus master container
+ Root memory region: system
+  0000000000000000-000000000009ffff (prio 0, ram): loongarch_ls3a.ram kvm
+  00000000000a0000-00000000000affff (prio 1, ram): vga.vram kvm
+  00000000000b0000-00000000000bffff (prio 0, i/o): cirrus-low-memory @0000000000010000
+  00000000000c0000-000000000fffffff (prio 0, ram): loongarch_ls3a.ram @00000000000c0000 kvm
+  0000000010000000-0000000010000fff (prio 0, i/o): ioapic
+  0000000010002000-0000000010002013 (prio 1, i/o): 0x10002000
+  000000001001041c-000000001001041f (prio 1, i/o): 0x1001041c
+  0000000010013ffc-0000000010013fff (prio 1, i/o): 0x10013ffc
+  0000000010080000-00000000100800ff (prio 0, i/o): ls3a_pm
+  00000000100d000c-00000000100d0013 (prio 0, i/o): acpi-evt
+  00000000100d0014-00000000100d0017 (prio 0, i/o): acpi-cnt
+  00000000100d0018-00000000100d001b (prio 0, i/o): acpi-tmr
+  00000000100d0028-00000000100d002f (prio 0, i/o): acpi-gpe0
+  00000000100d0030-00000000100d0033 (prio 0, i/o): acpi-reset
+  00000000100d0100-00000000100d01ff (prio 0, i/o): ls7a_rtc
+  0000000018000000-00000000180003af (prio 0, i/o): io
+  00000000180003b0-00000000180003df (prio 0, i/o): cirrus-io
+  00000000180003e0-000000001800ffff (prio 0, i/o): io @00000000000003e0
+  000000001a000000-000000001bffffff (prio 0, i/o): ls7a_pci_conf
+  000000001c000000-000000001c3fffff (prio 0, rom): loongarch.bios kvm
+  000000001e000000-000000001e00000b (prio 0, i/o): acpi-mem-hotplug
+  000000001e020000-000000001e020001 (prio 0, i/o): fwcfg.ctl
+  000000001e020008-000000001e02000f (prio 0, i/o): fwcfg.data
+  000000001f000000-000000001f0000ff (prio 0, i/o): gipi0
+  000000001f010000-000000001f02ffff (prio 0, i/o): apic0
+  000000001fe00008-000000001fe0000f (prio 1, i/o): ((hwaddr)0x1fe00008 | off)
+  000000001fe00010-000000001fe00017 (prio 1, i/o): ((hwaddr)0x1fe00010 | off)
+  000000001fe00020-000000001fe00027 (prio 1, i/o): ((hwaddr)0x1fe00020 | off)
+  000000001fe00180-000000001fe00187 (prio 1, i/o): ((hwaddr)0x1fe00180 | off)
+  000000001fe0019c-000000001fe001a3 (prio 1, i/o): ((hwaddr)0x1fe0019c | off)
+  000000001fe001d0-000000001fe001d7 (prio 1, i/o): ((hwaddr)0x1fe001d0 | off)
+  000000001fe001e0-000000001fe001e7 (prio 0, i/o): serial
+  000000001fe002e0-000000001fe002e0 (prio 0, i/o): debugcon
+  000000001fe00420-000000001fe00427 (prio 1, i/o): ((hwaddr)0x1fe00420 | off)
+  0000000020000000-0000000027ffffff (prio 0, i/o): pcie-mmcfg-mmio
+  000000002ff00000-000000002ff00007 (prio 0, i/o): ls3a_msi
+  0000000040000000-00000000403fffff (prio 1, ram): vga.vram kvm
+  0000000041000000-00000000413fffff (prio 0, i/o): cirrus-bitblt-mmio
+  0000000042004000-0000000042004fff (prio 1, i/o): cirrus-mmio
+  0000000090000000-000000017fffffff (prio 0, ram): loongarch_ls3a.ram @0000000010000000 kvm
 ```

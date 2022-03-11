@@ -25,3 +25,8 @@ serial_mm_init(address_space_mem, LS7A_UART_BASE, 0, pirq[0], 115200, serial_hd(
 static const int isa_serial_irq[MAX_ISA_SERIAL_PORTS] = {4, 3, 4, 3};
 ```
 - [ ] 回忆一下，当只是发送的时候，那么得到的永远都是 lower 啊
+
+- [ ] 以前应该是不存在这个的吧
+```c
+serial8250: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+```
