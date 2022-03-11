@@ -293,8 +293,8 @@ Backtrace stopped: Cannot access memory at address 0xffffc90000004018
 1. pnp_add_resource : 在 acpi 初始化中添加 serial dev 的 irq=4 的 resource
 2. serial_pnp_probe : 在 serial 驱动初始化过程中访问资源
 ```c
-	if (pnp_irq_valid(dev, 0))
-		uart.port.irq = pnp_irq(dev, 0);
+  if (pnp_irq_valid(dev, 0))
+    uart.port.irq = pnp_irq(dev, 0);
 ```
 3. 驱动注册
 ```c
