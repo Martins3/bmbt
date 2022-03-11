@@ -42,6 +42,7 @@ BIN_FILES = $(wildcard image/*.bin)
 # "invalid argument to built-in function"
 ifeq ($(ENV_KERNEL), 1)
   KERNEL_SRC_FILES += $(wildcard env/loongarch/*/*.c)
+  KERNEL_SRC_FILES += $(wildcard env/loongarch/drivers/*/*.c)
   KERNEL_OBJS_FILES=$(KERNEL_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
   $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O2
 endif
@@ -147,7 +148,9 @@ LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
 
 run: all clear_gcda
 	if [[ $(ENV_KERNEL) == 1 ]];then \
-		 $(LA_QEMU) -nographic -m 4G -cpu Loongson-3A5000 -serial mon:stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a,kernel_irqchip=off -kernel $(bmbt); \
+		# TMP_TODO 我不理解，运行内核的时候就不需要，为什么运行 bmbt 的时候又需要屏蔽信号 \
+		# gdb -ex "handle SIGUSR1 nostop noprint" --args $(LA_QEMU) -m 4G -cpu Loongson-3A5000 -serial stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt); \
+		$(LA_QEMU) -m 8G -cpu Loongson-3A5000 -serial stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt); \
 	else \
 		$(bmbt); \
 	fi
@@ -163,4 +166,4 @@ gdb: all
 	fi
 
 s: all
-		$(LA_QEMU) -nographic -m 2G -cpu Loongson-3A5000 -serial mon:stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a,kernel_irqchip=off -kernel $(bmbt) -S -s;
+		$(LA_QEMU) -m 8G -cpu Loongson-3A5000 -serial stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt) -S -s;

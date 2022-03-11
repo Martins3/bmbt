@@ -13,6 +13,7 @@ index 605a15969b..580361b4a0 100644
 +                                  unsigned width) {
 +  unsigned char ch = val;
 +  putchar(ch);
++  fflush(stdout);
 +}
 +
 +static uint64_t debugcon_ioport_read(void *opaque, hwaddr addr, unsigned width) {
