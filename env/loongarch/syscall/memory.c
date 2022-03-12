@@ -124,9 +124,7 @@ long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
     memset((void *)mem->start + mem->len, 0, len);
     return mem->start + mem->len;
   }
-  // TMP_TODO 也采用 _Noreturn 吧
-  kern_assert(false);
-  return -1;
+  kern_not_reach("mmap never failed !");
 }
 
 static FreeMem *merge(FreeMem *left, FreeMem *node) {

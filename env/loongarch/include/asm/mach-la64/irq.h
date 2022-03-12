@@ -75,7 +75,7 @@ enum pch_irq_route_model_id {
 #define IPI_IRQ_OFFSET 6
 static inline int create_ipi_dirq(unsigned int irq) { return 0; }
 static inline void destroy_ipi_dirq(unsigned int irq) {}
-#ifdef TMP_TODO
+#ifdef BMBT
 static inline int def_set_irq_affinity(struct irq_data *d,
                                        const struct cpumask *affinity,
                                        bool force) {
@@ -104,7 +104,7 @@ extern int find_pch_pic(u32 gsi);
 extern unsigned long pch_pic_addr(int pch_pic);
 extern struct pch_pic_irq *pch_pic_irq_routing(int pch_pic);
 extern void register_pch_pic(int id, u32 address, u32 irq_base);
-#ifdef TMP_TODO
+#ifdef BMBT
 extern int liointc_init(struct resource *res, int parent_irq_num,
                         u32 *parent_irq, u32 *parent_int_map,
                         struct fwnode_handle *domain_handle, int model);
@@ -122,7 +122,7 @@ extern void fixup_irqs(void);
 extern int pch_pic_init();
 extern void extioi_vec_init(void);
 extern void extioi_init(void);
-#ifdef TMP_TODO
+#ifdef BMBT
 extern void loongson3_ipi_interrupt(int irq);
 extern void pmu_handle_irq(int irq);
 extern int pch_lpc_init(u64 address, u16 size, int parent_irq,
