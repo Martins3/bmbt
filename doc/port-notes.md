@@ -159,8 +159,8 @@ static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
 - `__thread` 被直接删除掉了
 - call_constructor 中需要调用的 constructor 函数的 `static __attribute__((constructor))` 删除
 
-## 修改主线的部分
-参考 ./sync-latx.md 中，只需要对于每一个 CONFIG_LATX 逐个分析就可以了。
+## 修改主线 QEMU 的部分
+- 参考 ./sync-latx.md 中，只需要对于每一个 CONFIG_LATX 逐个分析就可以了。
 
 ## 注意
 - latx_lsenv_init 的位置被提前了，但是那只是为多核设计的，可以不用管。
