@@ -3,8 +3,10 @@
 
 int kern_printf(const char *fmt, ...);
 
-void __kern_assert_fail(const char *expr, const char *file, int line,
-                        const char *func);
+_Noreturn void __kern_assert_fail(const char *expr, const char *file, int line,
+                                  const char *func);
+#define kern_not_reach(x) __kern_assert_fail(#x, __FILE__, __LINE__, __func__)
+
 #define kern_assert(x)                                                         \
   ((void)((x) || (__kern_assert_fail(#x, __FILE__, __LINE__, __func__), 0)))
 

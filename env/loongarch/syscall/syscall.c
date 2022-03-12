@@ -59,8 +59,8 @@ _Noreturn void kernel_dump() {
   idle();
 }
 
-void __kern_assert_fail(const char *expr, const char *file, int line,
-                        const char *func) {
+_Noreturn void __kern_assert_fail(const char *expr, const char *file, int line,
+                                  const char *func) {
   kern_printf("Assertion failed: %s (%s: %s: %d)\n", expr, file, func, line);
   kernel_dump();
 }
