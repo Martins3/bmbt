@@ -58,11 +58,11 @@ static void pch_pic_bitclr(struct pch_pic *priv, int offset, int bit) {
   local_irq_restore(flags);
 }
 
-void pch_pic_mask_irq(struct pch_pic *priv, int hwirq) {
+static void pch_pic_mask_irq(struct pch_pic *priv, int hwirq) {
   pch_pic_bitset(priv, PCH_PIC_MASK, hwirq);
 }
 
-void pch_pic_unmask_irq(struct pch_pic *priv, int hwirq) {
+static void pch_pic_unmask_irq(struct pch_pic *priv, int hwirq) {
   u32 idx = PIC_REG_IDX(hwirq);
 
   writeq(BIT(PIC_REG_BIT(hwirq)), priv->base + PCH_PIC_CLR + idx * 8);
@@ -74,7 +74,7 @@ static unsigned int pch_pic_startup(struct pch_pic *priv, int hwirq) {
   return 0;
 }
 
-void pch_pic_ack_irq(struct pch_pic *priv, int hwirq) {
+static void pch_pic_ack_irq(struct pch_pic *priv, int hwirq) {
   u64 reg;
   void __iomem *addr = priv->base + PCH_PIC_EDGE + PIC_REG_IDX(hwirq) * 8;
 
@@ -111,33 +111,46 @@ static void pch_pic_reset(struct pch_pic *priv) {
   }
 }
 
+static void pch_pic_set_type_edge_high(struct pch_pic *priv, int hwirq) {
+  pch_pic_bitset(priv, PCH_PIC_EDGE, hwirq);
+  pch_pic_bitclr(priv, PCH_PIC_POL, hwirq);
+}
+
 static struct pch_pic priv = {
     .base = (void *)TO_UNCAC(0x10000000),
     .model = PCH_IRQ_ROUTE_EXT,
 };
 
+#define IRQ_IOAPIC_SERIAL 2
+void serial_handler(int hwirq);
+
 int pch_pic_init() {
   pch_pic_reset(&priv);
+  set_pch_pci_action_handler(IRQ_IOAPIC_SERIAL, serial_handler);
   return 0;
 }
 
 static irq_action pch_pic_actions[IOCSR_EXTIOI_VECTOR_NUM];
 
-// pch-pic version handle_level_irq
-void handle_pch_pic_irq(int hwirq) {
-  /* pch_pic_mask_irq(&priv, hwirq); */
-  /* pch_pic_ack_irq(&priv, hwirq); */
+static void pch_pic_handler(int hwirq) {
   if (pch_pic_actions[hwirq]) {
     pch_pic_actions[hwirq](hwirq);
   } else {
     printf("pch-pci handler[%d] is not installed\n", hwirq);
     abort();
   }
-  /* pch_pic_unmask_irq(&priv, hwirq); */
+}
+
+void pch_pci_handle_edge_irq(int hwirq) {
+  pch_pic_mask_irq(&priv, hwirq);
+  pch_pic_ack_irq(&priv, hwirq);
+  pch_pic_handler(hwirq);
+  pch_pic_unmask_irq(&priv, hwirq);
 }
 
 void set_pch_pci_action_handler(int hwirq, irq_action action) {
-  set_extioi_action_handler(hwirq, handle_pch_pic_irq);
+  set_extioi_action_handler(hwirq, pch_pci_handle_edge_irq);
+  pch_pic_set_type_edge_high(&priv, hwirq);
   pch_pic_startup(&priv, hwirq);
   pch_pic_actions[hwirq] = action;
 }
