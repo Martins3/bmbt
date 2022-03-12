@@ -49,7 +49,6 @@
 #define dh_ctype_noreturn void QEMU_NORETURN
 #define dh_ctype(t) dh_ctype_##t
 
-// TMP_TODO 重新 review 一下这个东西
 #define NEED_CPU_H
 #ifdef NEED_CPU_H
 #ifdef TARGET_LONG_BITS
