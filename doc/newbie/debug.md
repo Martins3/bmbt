@@ -48,6 +48,11 @@ export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIB
 make -j && sudo rmmod kvm && sudo insmod ./arch/loongarch/kvm/kvm.ko
 ```
 
+## dmesg may be truncated
+```sh
+sudo dmesg -w|tee b.txt
+```
+
 ## 处理 QEMU 的 macro
 
 生成中间文件
