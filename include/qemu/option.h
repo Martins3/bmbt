@@ -66,7 +66,6 @@ static inline QemuOpt *qemu_opt_find(QemuOpts *opts, const char *name) {
 
 void qemu_opts_print(QemuOpts *opts, const char *separator);
 
-// TMP_TODO 补充到 sync xqm 的说明中
 extern QemuOptsList qemu_latx_opts;
 void latx_sys_parse_options(QemuOpts *opts);
 

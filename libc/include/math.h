@@ -140,6 +140,11 @@ double tan(double);
 double rint(double);
 double floor(double);
 double ceil(double);
+double sin(double);
+double cos(double);
+
+// bmbt: used by sys-tr-farith.c
+double log2(double);
 
 // bmbt: used by tr_farith.h
 double log(double);
@@ -148,11 +153,6 @@ double log10(double);
 // bmbt: used by internal functions
 long double frexpl(long double, int *);
 double scalbn(double, int);
-
-// TMP_TODO 需要重新增加的函数
-double sin(double);
-double cos(double);
-double log2(double);
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 #define M_PI 3.14159265358979323846 /* pi */

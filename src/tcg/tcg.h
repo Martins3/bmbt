@@ -135,9 +135,6 @@ void helper_le_stl_mmu(CPUArchState *env, target_ulong addr, uint32_t val,
 void helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
                        TCGMemOpIdx oi, uintptr_t retaddr);
 
-// ------------- cputlb 的 TMP_TODO
-// 这么说 xtm_helper_le_stq_mmu 之类的直接删掉
-// 还是 qemu 6.0 直接替换掉了
 #if defined(TARGET_I386) && defined(CONFIG_LATX)
 void latxs_helper_le_lddq_mmu(CPUArchState *env, target_ulong addr,
                            TCGMemOpIdx oi, uintptr_t retaddr);
@@ -371,9 +368,7 @@ static inline TCGMemOpIdx make_memop_idx(MemOp op, unsigned idx) {
 
 void tcg_prologue_init(TCGContext *s);
 
-// TMP_TODO 重新理解一下 atomic_template.h 的操作了
-// 实际上 helper 系统比我们想想的简单: helper-gen.h helper-proto.h
-// 在 tcg.h 放了很多 atomic 头文件的声明
+// bmbt: only one copied here
 uint64_t helper_atomic_cmpxchgq_le_mmu(CPUArchState *env, target_ulong addr,
                                        uint64_t cmpv, uint64_t newv,
                                        TCGMemOpIdx oi, uintptr_t retaddr);
