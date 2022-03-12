@@ -74,7 +74,8 @@ void init_xtm_options() {
 #ifndef ENV_KERNEL
   if (tty_pass_through || pci_pass_through) {
     printf("userspace doesn't support device passthrough\n");
-    exit(1);
+    tty_pass_through = false;
+    pci_pass_through = false;
   }
 #endif
 
