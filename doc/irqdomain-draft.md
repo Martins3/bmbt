@@ -109,7 +109,7 @@ Backtrace stopped: frame did not save the PC
 
 in `pci_msi_setup_msi_irqs`, msi domain is accessed by dev
 ```c
-	domain = dev_get_msi_domain(&dev->dev);
+  domain = dev_get_msi_domain(&dev->dev);
 ```
 
 how dev's msi domain setup?
@@ -151,16 +151,16 @@ dev get msi domain from it's host bridge `pci_host_bridge_msi_domain`
  */
 struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
 {
-	struct fwnode_handle *fwnode;
+  struct fwnode_handle *fwnode;
 
-	if (!pci_msi_get_fwnode_cb)
-		return NULL;
+  if (!pci_msi_get_fwnode_cb)
+    return NULL;
 
-	fwnode = pci_msi_get_fwnode_cb(&bus->dev);
-	if (!fwnode)
-		return NULL;
+  fwnode = pci_msi_get_fwnode_cb(&bus->dev);
+  if (!fwnode)
+    return NULL;
 
-	return irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
+  return irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
 }
 ```
 it seems get the firmware by the fwnode.

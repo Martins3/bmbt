@@ -127,7 +127,7 @@
     - bmbt put it into include and it's copied from /usr/include/asm-generic/unistd.h
 55. realloc
     - realloc 真正需要利用上操作 remalloc 的情况很少，直接拷贝算了
-<!-- musl  over -->
+<!-- musl  end -->
 56. icache flush
     - 内核中实现是 gcc asm inline 的方法，而 QEMU 的实现方法是 `__builtin___clear_cache`
     - 实际上都会忽略参数 start 和 end，变为 `ibar 0`
