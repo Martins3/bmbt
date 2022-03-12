@@ -710,9 +710,8 @@ void latxs_enter_mmx(void)
                             lsenv_offset_of_tag_word(lsenv));
 }
 
-// TMP_TODO 咨询一下这个这个如何修改的
-void helper_x86_cpu_dump_state(CPUX86State *env){
-}
+// bmbt: @rrwhx say it's ok to empty this function
+void helper_x86_cpu_dump_state(CPUX86State *env) { abort(); }
 
 void do_func(ADDRX addr, int id)
 {

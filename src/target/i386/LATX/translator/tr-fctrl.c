@@ -3,7 +3,6 @@
 #include "lsenv.h"
 #include "latx-options.h"
 #include "translate.h"
-// TMP_TODO 上面的头文件中到底哪一个实际上包含了
 #ifndef SYNC_LATX
 #include <float.h>
 #endif

@@ -61,7 +61,6 @@ void ext_set_irq_affinity(int hwirq) {
   } else {
     csr_any_send(LOONGARCH_IOCSR_EXTIOI_EN_BASE + (pos_off << 2),
                  extioi_en[pos_off] & (~((1 << (vector & 0x1F)))), 0x0, 0);
-    // TMP_TODO : I don't how to implement this yet
     /* extioi_set_irq_route(vector, cpu, &priv->node_map, priv->node); */
     abort();
     csr_any_send(LOONGARCH_IOCSR_EXTIOI_EN_BASE + (pos_off << 2),
@@ -76,7 +75,6 @@ void extioi_init(void) {
   uint64_t tmp;
 
   int extioi_node = 0;
-  // TMP_TODO 没太看懂 group 的内容
   int group = 0;
 
   /* init irq en bitmap */
@@ -110,9 +108,6 @@ void extioi_init(void) {
 
     for (j = 0; j < IOCSR_EXTIOI_VECTOR_NUM / 4; j++) {
       if (!group) {
-        // TMP_TODO
-        // 1. cpu_has_hypervisor 需要测试一下
-        // 2. 为什么 kvm 模式下和正常模式下存在差别
         if (cpu_has_hypervisor) {
           tmp = cpu_logical_map(0);
         } else {

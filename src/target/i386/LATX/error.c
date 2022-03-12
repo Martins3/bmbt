@@ -1,3 +1,4 @@
+#ifndef SYNC_LATX
 #include "include/error.h"
 #ifdef USE_SYSTEM_LIBC
 #include <execinfo.h>
@@ -5,7 +6,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// TMP_TODO doc
 void print_stack_trace(void)
 {
 #ifdef USE_SYSTEM_LIBC
@@ -26,3 +26,4 @@ void print_stack_trace(void)
     free(s);
 #endif
 }
+#endif

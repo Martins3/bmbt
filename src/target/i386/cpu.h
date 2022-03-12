@@ -1615,10 +1615,11 @@ typedef struct CPUX86State {
 #endif
 
   unsigned nr_dies;
-  // TMP_TODO 咨询一下这个东西是做什么用的，删除掉之后问题似乎不大
-  /* #ifdef CONFIG_LATX */
-  /*   ucontext_t *puc; */
-  /* #endif */
+#ifdef CONFIG_LATX
+#ifdef BMBT
+  ucontext_t *puc;
+#endif
+#endif
 } CPUX86State;
 
 typedef struct X86CPUModel X86CPUModel;
