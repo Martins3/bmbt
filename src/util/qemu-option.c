@@ -1,6 +1,6 @@
-#include <qemu/option.h>
 #include "latx-config.h"
 #include <inttypes.h>
+#include <qemu/option.h>
 #include <stdio.h>
 
 /* print value, escaping any commas in value */
@@ -67,7 +67,17 @@ static QemuOpt options[] = {
     {.name = "optm", .str = "select"},
 };
 
+bool tty_pass_through = true;
+bool pci_pass_through = false;
+
 void init_xtm_options() {
+#ifndef ENV_KERNEL
+  if (tty_pass_through || pci_pass_through) {
+    printf("userspace doesn't support device passthrough\n");
+    exit(1);
+  }
+#endif
+
   QemuOptsList *opts_list = &qemu_latx_opts;
   QemuOpts *opts = &__xtm_qemu_opts;
   opts->list = opts_list;
