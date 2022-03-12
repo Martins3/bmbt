@@ -4,6 +4,7 @@
 
 * [tcg_register_thread](#tcg_register_thread)
 * [多核编程需要增加考虑的事情](#多核编程需要增加考虑的事情)
+  * [内核的初始化需要考虑多核的初始化了](#内核的初始化需要考虑多核的初始化了)
 * [出现需要 lock 的位置会被 BMBT_MTTCG 标记出来](#出现需要-lock-的位置会被-bmbt_mttcg-标记出来)
 
 <!-- vim-markdown-toc -->
@@ -50,5 +51,8 @@ void tcg_register_thread(void) {
   - 没有多核启动
   - head.S 和 genex.S 中的 entry 去掉了 CONFIG_SMP
 - access interrupt controller，such as pch_pic_bitclr
+
+### 内核的初始化需要考虑多核的初始化了
+- 比如在 `cpu_logical_map` 根本不初始化，应为我们知道 logical cpu 和 physical cpu 存在 0 到 0 的映射
 
 ## 出现需要 lock 的位置会被 BMBT_MTTCG 标记出来
