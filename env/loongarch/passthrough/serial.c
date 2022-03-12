@@ -10,7 +10,6 @@
 static MemoryRegion mr;
 static const hwaddr X86_ISA_SERIAL_IO_BASE = 0x3f8;
 static const int ISA_SERIAL_IRQ = 4;
-#define IRQ_IOAPIC_SERIAL 2
 
 static uint64_t serial_ioport_pass_read(void *opaque, hwaddr addr,
                                         unsigned size) {
@@ -45,13 +44,11 @@ static void serial_mr_setup() {
 }
 
 void serial_handler(int hwirq) {
-  /* debugcon_puts("i "); */
   qemu_irq_lower(serial_irq);
   qemu_irq_raise(serial_irq);
 }
 
 void setup_serial_pass_through() {
   serial_mr_setup();
-  set_pch_pci_action_handler(IRQ_IOAPIC_SERIAL, serial_handler);
   qemu_irq_lower(serial_irq);
 }
