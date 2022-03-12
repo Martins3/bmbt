@@ -2005,8 +2005,6 @@ uint8_t helper_ret_ldub_cmmu(CPUArchState *env, target_ulong addr,
   return full_ldub_cmmu(env, addr, oi, retaddr);
 }
 
-// -------------------------- TMP_TODO -----------------------------------
-// cputlb.c 中是不是重新更新一波，现在还是不太清楚，暂时直接超过来
 #if defined(TARGET_I386) && defined(CONFIG_LATX)
 void latxs_helper_le_lddq_mmu(CPUArchState *env, target_ulong addr,
                               TCGMemOpIdx oi, uintptr_t retaddr) {
