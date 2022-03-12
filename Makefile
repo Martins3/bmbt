@@ -145,14 +145,22 @@ clear_gcda:
 QEMU_DIR=/home/loongson/core/centos-qemu
 LA_BIOS=$(QEMU_DIR)/pc-bios/loongarch_bios.bin
 LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
+RUN_IN_QEMU=$(LA_QEMU) -m 8G -cpu Loongson-3A5000 -serial stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt)
 
 run: all clear_gcda
 	if [[ $(ENV_KERNEL) == 1 ]];then \
-		# TMP_TODO 我不理解，运行内核的时候就不需要，为什么运行 bmbt 的时候又需要屏蔽信号 \
-		# gdb -ex "handle SIGUSR1 nostop noprint" --args $(LA_QEMU) -m 4G -cpu Loongson-3A5000 -serial stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt); \
-		$(LA_QEMU) -m 8G -cpu Loongson-3A5000 -serial stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt); \
+		$(RUN_IN_QEMU); \
 	else \
 		$(bmbt); \
+	fi
+
+qemu:
+	if [[ $(ENV_KERNEL) == 1 ]];then \
+		# in cpus.c:qemu_cpu_kick_thread, SIG_IPI (which is SIGUSR1) will cause \
+		# the gdb stopped unexpectedly \
+		gdb -ex "handle SIGUSR1 nostop noprint" --args $(RUN_IN_QEMU); \
+	else \
+		gdb -ex "handle SIGUSR1 nostop noprint" --args $(bmbt); \
 	fi
 
 test: all clear_gcda
@@ -166,4 +174,4 @@ gdb: all
 	fi
 
 s: all
-		$(LA_QEMU) -m 8G -cpu Loongson-3A5000 -serial stdio -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt) -S -s;
+		$(RUN_IN_QEMU) -S -s;
