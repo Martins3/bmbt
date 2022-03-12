@@ -1,7 +1,6 @@
 #include <asm/addrspace.h>
 #include <asm/io.h>
 #include <asm/mach-la64/irq.h>
-#include <linux/irqflags.h>
 #include <linux/type.h>
 #include <stdio.h>
 
@@ -32,30 +31,22 @@ struct pch_pic {
   int model;
 };
 
-// TMP_TODO I don't understand we have block the interrupt
-// is it already blocked?
 static void pch_pic_bitset(struct pch_pic *priv, int offset, int bit) {
   u64 reg;
-  unsigned long flags;
   void __iomem *addr = priv->base + offset + PIC_REG_IDX(bit) * 8;
 
-  local_irq_save(flags);
   reg = readq(addr);
   reg |= BIT(PIC_REG_BIT(bit));
   writeq(reg, addr);
-  local_irq_restore(flags);
 }
 
 static void pch_pic_bitclr(struct pch_pic *priv, int offset, int bit) {
   u64 reg;
-  unsigned long flags;
   void __iomem *addr = priv->base + offset + PIC_REG_IDX(bit) * 8;
 
-  local_irq_save(flags);
   reg = readq(addr);
   reg &= ~BIT(PIC_REG_BIT(bit));
   writeq(reg, addr);
-  local_irq_restore(flags);
 }
 
 static void pch_pic_mask_irq(struct pch_pic *priv, int hwirq) {
