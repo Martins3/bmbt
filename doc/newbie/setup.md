@@ -1,11 +1,12 @@
 # 如何复现工作
 
-- 当前的整个工作都是基于 QEMU 的 895fdf6776076c7cbb6b18c6703a40c4e03a084e 进行的
-- 对应的 qemu 版本: 6cdf8c4efa073eac7d5f9894329e2d07743c2955 (tag: v4.2.1)
+- 当前的整个工作都是基于 x86-qemu-mips 的 895fdf6776076c7cbb6b18c6703a40c4e03a084e 进行的
+  - ssh://git@172.17.103.58:2222/binarytranslation/x86-qemu-mips.git
+  - 实际上，x86-qemu-mips 是在 qemu 上修改的，对应的 qemu 版本: 6cdf8c4efa073eac7d5f9894329e2d07743c2955 (tag: v4.2.1)
 - musl version : 1e4204d522670a1d8b8ab85f1cfefa960547e8af
 - glibc version : 8b0a2fa8312cad636060cf04fbb3d3d29a26322f
-- glib version  : 979da1da482cfd11e20f0fc6b9c23dcbc2cd0017 2.70.2
-- 第二次更新 LATX  : 0abbe319f0c79461ec29ccb7808df4ba183e34e6
+- glib version : 979da1da482cfd11e20f0fc6b9c23dcbc2cd0017 2.70.2
+- 第二次更新 LATX : 0abbe319f0c79461ec29ccb7808df4ba183e34e6
 
 ## 编译 Loongarch64 Host 的内核
 - huxueshi@172.17.103.58 linux-4.19-loongson
