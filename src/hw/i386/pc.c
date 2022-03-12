@@ -1345,11 +1345,10 @@ void setup_serial_pass_through();
 static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
                             bool no_vmport) {
 
-  if (0) {
-    serial_hds_isa_init(isa_bus, 0, MAX_ISA_SERIAL_PORTS);
-  } else {
+  if (tty_pass_through)
     setup_serial_pass_through();
-  }
+  else
+    serial_hds_isa_init(isa_bus, 0, MAX_ISA_SERIAL_PORTS);
 #ifdef NEED_LATER
   int i;
   DriveInfo *fd[MAX_FD];

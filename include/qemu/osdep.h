@@ -1,8 +1,9 @@
 #ifndef OSDEP_H_DXJTBG8M
 #define OSDEP_H_DXJTBG8M
 
-#include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <qemu/config-host.h>
 #include <qemu/config-target.h>
@@ -77,4 +78,6 @@ void *qemu_memalign(size_t alignment, size_t size);
 #define QEMU_HW_VERSION "2.5+"
 
 #define bmbt_check(x) assert(x)
+extern bool tty_pass_through;
+extern bool pci_pass_through;
 #endif /* end of include guard: OSDEP_H_DXJTBG8M */
