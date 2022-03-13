@@ -4,6 +4,7 @@ USE_MINIMAL_INITRD=false
 
 repo_url=http://pkg.loongnix.cn:8080/loongnix/isos/
 img_name=Loongnix-20.mini.loongarch64.rc1.b2.qcow2
+# img_name=Loongnix-20.1.mate.gui.loongarch64.qcow2
 
 # ----------- config ---------------
 kernel_dir=~/core/linux-4.19-loongson
@@ -17,7 +18,7 @@ bios=${qemu_dir}/pc-bios/loongarch_bios.bin
 img=~/${img_name}
 
 if [[ ! -f ${img} ]]; then
-  wget ${repo_url}/${img_name}
+  wget ${repo_url}/${img_name} -O ${img}
   exit 0
 fi
 
@@ -41,14 +42,21 @@ if [ $launch_gdb = true ]; then
   exit 0
 fi
 
-machine_arg="-m 8192M -serial stdio -cpu Loongson-3A5000 -enable-kvm -M loongson7a_v1.0,accel=kvm"
+machine_arg="-m 8192M -serial mon:stdio -cpu Loongson-3A5000 -enable-kvm -M loongson7a_v1.0,accel=kvm"
 if [[ $USE_MINIMAL_INITRD = true ]]; then
   kernel_arg="-kernel ${kernel} -append \"console=ttyS0 earlyprintk root=/dev/ram rdinit=/hello.out\" -initrd ${initrd}"
   img_arg="-bios ${bios}"
 else
+  if [[ $img_name = Loongnix-20.mini.loongarch64.rc1.b2.qcow2 ]]; then
+    dev=/dev/vda1
+  elif [[ $img_name = Loongnix-20.1.mate.gui.loongarch64.qcow2 ]]; then
+    dev=/dev/vda2
+  else
+    exit 1
+  fi
   # (user password): (loongson Loongson20)
   # use external kernel is essential, built-in kernel is unable to boot on the latest kvm
-  kernel_arg="-kernel ${kernel} -append \"console=ttyS0 earlyprintk root=/dev/vda1 \""
+  kernel_arg="-kernel ${kernel} -append \"console=ttyS0 earlyprintk root=$dev \""
   img_arg="-drive file=${img},if=virtio -bios ${bios}"
 fi
 
