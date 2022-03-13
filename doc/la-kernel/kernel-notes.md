@@ -50,9 +50,9 @@ syscall 的处理流程:
 
 ```asm
 NESTED(handle_sys_wrap, 0, sp)
-	la.abs	t0, handle_sys
-	jirl    zero, t0, 0
-	END(handle_sys_wrap)
+  la.abs  t0, handle_sys
+  jirl    zero, t0, 0
+  END(handle_sys_wrap)
 ```
 
 - [ ] 为什么使用 handle_sys_wrap 进行间接跳转
@@ -199,12 +199,12 @@ IMPCTL
 
 从手册上看 gintc 可以将中断直接连到 glibc 中间，但是 kvm 并没有将这个事情利用上:
 1. 设置 KVM_CSR_ESTAT 的作用:
-		case KVM_CSR_ESTAT:
-		write_gcsr_estat(v);
-		write_csr_gintc((v & 0x3fc) >> 2);
+    case KVM_CSR_ESTAT:
+    write_gcsr_estat(v);
+    write_csr_gintc((v & 0x3fc) >> 2);
 
 2. 在 vcpu_load 和 vcpu_set 的时候存在一些作用
-	- kvm_loongarch_deliver_interrupts
+  - kvm_loongarch_deliver_interrupts
 
 分析完成 kvm_loongarch_deliver_interrupts 的调用之后, 目前的 kvm 实际上并没有用上这些的高级功能，只是可以通过 ioctl 将中断注入到
 其中的方法。
@@ -230,51 +230,51 @@ IMPCTL
  * Complete the register saves and invoke the handler which is passed in $v0
  */
 NESTED(except_vec_vi_handler, 0, sp)
-	SAVE_TEMP
-	SAVE_STATIC
-	CLI
+  SAVE_TEMP
+  SAVE_STATIC
+  CLI
 #ifdef CONFIG_TRACE_IRQFLAGS
-	move	s0, v0
-	TRACE_IRQS_OFF
-	move	v0, s0
+  move  s0, v0
+  TRACE_IRQS_OFF
+  move  v0, s0
 #endif
 
-	LONG_L	s0, tp, TI_REGS
-	LONG_S	sp, tp, TI_REGS
+  LONG_L  s0, tp, TI_REGS
+  LONG_S  sp, tp, TI_REGS
 
-	/*
-	 * SAVE_ALL ensures we are using a valid kernel stack for the thread.
-	 * Check if we are already using the IRQ stack.
-	 */
-	move	s1, sp # Preserve the sp
+  /*
+   * SAVE_ALL ensures we are using a valid kernel stack for the thread.
+   * Check if we are already using the IRQ stack.
+   */
+  move  s1, sp # Preserve the sp
 
-	/* Get IRQ stack for this CPU */
-	csrrd	t0, LOONGARCH_CSR_TMID
-	la		t1, irq_stack
-	LONG_SLL	t0, t0, LONGLOG
-	LONG_ADDU	t1, t1, t0
-	LONG_L		t0, t1, 0
+  /* Get IRQ stack for this CPU */
+  csrrd t0, LOONGARCH_CSR_TMID
+  la    t1, irq_stack
+  LONG_SLL  t0, t0, LONGLOG
+  LONG_ADDU t1, t1, t0
+  LONG_L    t0, t1, 0
 
-	# Check if already on IRQ stack
-	PTR_LI		t1, ~(_THREAD_SIZE-1)
-	and		t1, t1, sp
-	beq		t0, t1, 2f
+  # Check if already on IRQ stack
+  PTR_LI    t1, ~(_THREAD_SIZE-1)
+  and   t1, t1, sp
+  beq   t0, t1, 2f
 
-	/* Switch to IRQ stack */
-	li		t1, _IRQ_STACK_START
-	PTR_ADDU	sp, t0, t1
+  /* Switch to IRQ stack */
+  li    t1, _IRQ_STACK_START
+  PTR_ADDU  sp, t0, t1
 
-	/* Save task's sp on IRQ stack so that unwinding can follow it */
-	LONG_S		s1, sp, 0
+  /* Save task's sp on IRQ stack so that unwinding can follow it */
+  LONG_S    s1, sp, 0
 2:
-	jirl    	ra, v0, 0
+  jirl      ra, v0, 0
 
-	/* Restore sp */
-	move	sp, s1
+  /* Restore sp */
+  move  sp, s1
 
-	la	t0, ret_from_irq
-	jirl    zero, t0, 0
-	END(except_vec_vi_handler)
+  la  t0, ret_from_irq
+  jirl    zero, t0, 0
+  END(except_vec_vi_handler)
 ```
 
 ```diff
@@ -296,17 +296,17 @@ index 1c7e7d53820a..8c656910d349 100644
 --- a/arch/loongarch/kernel/genex.S
 +++ b/arch/loongarch/kernel/genex.S
 @@ -84,10 +84,8 @@ NESTED(except_vec_vi_handler, 0, sp)
- 	move	s1, sp # Preserve the sp
+  move  s1, sp # Preserve the sp
 
- 	/* Get IRQ stack for this CPU */
--	csrrd	t0, LOONGARCH_CSR_TMID
- 	la		t1, irq_stack
--	LONG_SLL	t0, t0, LONGLOG
--	LONG_ADDU	t1, t1, t0
-+	LONG_ADDU	t1, t1, $r21
- 	LONG_L		t0, t1, 0
+  /* Get IRQ stack for this CPU */
+- csrrd t0, LOONGARCH_CSR_TMID
+  la    t1, irq_stack
+- LONG_SLL  t0, t0, LONGLOG
+- LONG_ADDU t1, t1, t0
++ LONG_ADDU t1, t1, $r21
+  LONG_L    t0, t1, 0
 
- 	# Check if already on IRQ stack
+  # Check if already on IRQ stack
 ```
 似乎将 $r21 作为内核的 percpu 使用了!
 
