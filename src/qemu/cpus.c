@@ -42,23 +42,31 @@ static void cpu_handle_guest_debug(CPUState *cpu) {
   // support gdb is a rocket science
 }
 
+void native_qemu_mutex_lock_iothread_impl(const char *file, int line) {
+  // printf("locked %s:%d\n", file, line);
+  g_assert(!qemu_mutex_iothread_locked());
+  qemu_mutex_lock(&qemu_global_mutex);
+  iothread_locked = true;
+}
+
+void native_qemu_mutex_unlock_iothread(void) {
+  g_assert(qemu_mutex_iothread_locked());
+  qemu_mutex_unlock(&qemu_global_mutex);
+  iothread_locked = false;
+}
+
 /*
  * The BQL is taken from so many places that it is worth profiling the
  * callers directly, instead of funneling them all through a single function.
  */
 void qemu_mutex_lock_iothread_impl(const char *file, int line) {
-  // printf("locked %s:%d\n", file, line);
-  g_assert(!qemu_mutex_iothread_locked());
   // [interface 40]
   block_interrupt();
-  qemu_mutex_lock(&qemu_global_mutex);
-  iothread_locked = true;
+  native_qemu_mutex_lock_iothread_impl(file, line);
 }
 
 void qemu_mutex_unlock_iothread(void) {
-  g_assert(qemu_mutex_iothread_locked());
-  qemu_mutex_unlock(&qemu_global_mutex);
-  iothread_locked = false;
+  native_qemu_mutex_unlock_iothread();
   // [interface 40]
   unblock_interrupt();
 }
