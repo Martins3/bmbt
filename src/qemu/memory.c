@@ -103,7 +103,7 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
     }
   }
   unimplemented_io(dispatch, offset);
-  exit(0);
+  g_assert_not_reached();
 }
 
 static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
