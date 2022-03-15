@@ -67,3 +67,14 @@ sudo dmesg -w|tee b.txt
 ```sh
 alias bt=/home/loongson/core/bmbt/script/backtrace.sh
 ```
+
+## 在代码中获取 guest id
+```c
+#include "cpu.h"
+
+printf("[huxueshi:%s:%d] %x\n", __FUNCTION__, __LINE__, env->segs[R_CS].base + env->eip);
+```
+
+## 使用 gdb 从 ip 获取到 line
+- gdb
+- disass 0x1234456

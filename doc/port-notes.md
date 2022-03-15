@@ -1,3 +1,13 @@
+## 如何做一个 devices 的移植
+1. qom
+2. qdev
+3. qdev_gpio_connect
+4. memory region
+  - isa_register_ioport
+5. VMStateDescription 总是在被直接删除的
+6. `Error **errp` 出现错误就直接 error_report 了，直接报错了
+  - error_setg 使用 error_report 来代替
+
 ## 移植过程中的一些记录
 
 - 存在一种编程方法，将一个头文件 include 两次从而实现 template 的，但是这种方法会影响 ccls 的定位。
