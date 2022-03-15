@@ -473,7 +473,8 @@ static void rtc_set_cmos(RTCState *s, const struct tm *tm) {
   s->cmos_data[RTC_DAY_OF_MONTH] = rtc_to_bcd(s, tm->tm_mday);
   s->cmos_data[RTC_MONTH] = rtc_to_bcd(s, tm->tm_mon + 1);
   year = tm->tm_year + 1900 - s->base_year;
-  s->cmos_data[RTC_YEAR] = rtc_to_bcd(s, year % 100);
+  // temporal fix the rtc time,see #321
+  s->cmos_data[RTC_YEAR] = rtc_to_bcd(s, 0);
   s->cmos_data[RTC_CENTURY] = rtc_to_bcd(s, year / 100);
 }
 
