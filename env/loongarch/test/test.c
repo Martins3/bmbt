@@ -11,7 +11,7 @@
 #include <unitest/greatest.h>
 #include <asm/io.h>
 #include <asm/device.h>
-#include <asm/debugcon.h>
+#include <asm/debug.h>
 
 typedef struct AllocatedMem {
   QLIST_ENTRY(AllocatedMem) mem_next;
