@@ -9,7 +9,7 @@ ifneq ($(shell uname -m), x86_64)
 $(error mismatch architecture)
 endif
 
-kernel:
+setup_src:
 	# down load img
 	if [[ ! -f $(KERNEL_IMG) ]]; then \
 		curl -L https://mirrors.edge.kernel.org/pub/linux/kernel/v4.x/linux-4.4.142.tar.xz > linux.tar.xz; \
@@ -20,11 +20,26 @@ kernel:
 		echo "$(KERNEL_PATH) not found, try to install one"; \
 		tar -xvf linux.tar.xz -C $(KERNEL_PATH) --strip-components 1; \
 	fi
+	# skip "set_video" because we didn't implemented the devices
+	sed -i 's/set_video/\/\/ set_videio/' $(KERNEL_PATH)/arch/x86/boot/main.c
+
+minimal_config:
 	# copy modified kconfig
 	if [[ ! -f $(KERNEL_PATH)/.config ]]; then \
 		cp $(BASE_DIR)/kernel-config/tiny_kernel.config $(KERNEL_PATH)/.config; \
 	fi
-	# skip "set_video" because we didn't implemented the devices
-	sed -i 's/set_video/\/\/ set_videio/' $(KERNEL_PATH)/arch/x86/boot/main.c
+
+def_config:
+	if [[ ! -f $(KERNEL_PATH)/.config ]]; then \
+		make -C $(KERNEL_PATH) i386_defconfig; \
+	fi
+
+compile:
 	make -C $(KERNEL_PATH)
 	cp $(KERNEL_PATH)/arch/x86/boot/bzImage  $(BASE_DIR)/image/bzImage.bin
+
+minimal: setup_src minimal_config compile
+	@echo "minimal kernel installed"
+
+def: setup_src def_config compile
+	@echo "minimal kernel installed"
