@@ -1,3 +1,4 @@
+#include <asm/debug.h>
 #include <asm/device.h>
 #include <asm/io.h>
 #include <asm/mach-la64/irq.h>
@@ -5,7 +6,6 @@
 #include <hw/irq.h>
 #include <hw/isa/isa.h>
 #include <stdio.h>
-#include <asm/debugcon.h>
 
 static MemoryRegion mr;
 static const hwaddr X86_ISA_SERIAL_IO_BASE = 0x3f8;
