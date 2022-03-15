@@ -1,5 +1,13 @@
 #!/bin/bash
-LATX=false
+LATX=true
+run_tiny_kernel=true
+
+BASE_DIR=$(pwd)
+BASE_DIR=/home/loongson/core/bmbt
+
+kernel=~/xqm_images/vmlinuz-2.6.32
+kernel=${BASE_DIR}/image/bzImage.bin
+initrd=${BASE_DIR}/image/initrd.bin
 
 function usage() {
   echo "Usage :   [options] [--]
@@ -27,14 +35,6 @@ while getopts "hxl" opt; do
 done
 shift $((OPTIND - 1))
 
-BASE_DIR=$(pwd)
-BASE_DIR=/home/loongson/core/bmbt
-
-run_tiny_kernel=true
-kernel=~/xqm_images/vmlinuz-2.6.32
-
-kernel=${BASE_DIR}/image/bzImage.bin
-initrd=${BASE_DIR}/image/initrd.bin
 if [[ $LATX = true ]]; then
   qemu=~/core/lat/build/i386-softmmu/qemu-system-i386
   arg_xqm="-latx select,cpjl=on,intblink=on,njc=on,largecc=on -accel tcg,tb-size=2048"
@@ -51,7 +51,7 @@ arg_kernel_cmdline="-append \"console=ttyS0 \""
 arg_initrd=""
 
 if [[ $run_tiny_kernel == true ]]; then
-  arg_kernel_cmdline="-append \"console=ttyS0 earlyprintk=serial root=/dev/ram rdinit=/hello.out\""
+  arg_kernel_cmdline="-append \"console=ttyS0 earlyprintk=serial root=/dev/ram hpet=disable rdinit=/hello.out\""
   arg_initrd="-initrd ${initrd}"
   arg_img=""
 fi
