@@ -68,7 +68,7 @@ static QemuOpt options[] = {
 };
 
 bool tty_pass_through = true;
-bool pci_pass_through = false;
+bool pci_pass_through = true;
 
 void init_xtm_options() {
 #ifndef ENV_KERNEL
