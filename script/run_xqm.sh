@@ -44,6 +44,7 @@ else
 fi
 bios=${BASE_DIR}/seabios/out/bios.bin
 
+network="-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1"
 arg_bios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${bios}"
 arg_img="-hda ~/xqm_images/ubuntu10s.test.img.full"
 arg_kernel="-kernel ${kernel}"
@@ -56,6 +57,6 @@ if [[ $run_tiny_kernel == true ]]; then
   arg_img=""
 fi
 
-cmd="${qemu} ${arg_img} ${arg_kernel} ${arg_xqm} ${arg_bios} ${arg_kernel_cmdline} ${arg_initrd} --nographic"
+cmd="${qemu} ${arg_img} ${arg_kernel} ${arg_xqm} ${arg_bios} ${arg_kernel_cmdline} ${arg_initrd} --nographic ${network}"
 echo "${cmd}"
 eval "${cmd}"

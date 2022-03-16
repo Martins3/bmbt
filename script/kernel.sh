@@ -42,6 +42,7 @@ if [ $launch_gdb = true ]; then
   exit 0
 fi
 
+network="-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1"
 machine_arg="-m 8192M -serial mon:stdio -cpu Loongson-3A5000 -enable-kvm -M loongson7a_v1.0,accel=kvm"
 if [[ $USE_MINIMAL_INITRD = true ]]; then
   kernel_arg="-kernel ${kernel} -append \"console=ttyS0 earlyprintk root=/dev/ram rdinit=/hello.out\" -initrd ${initrd}"
@@ -60,6 +61,6 @@ else
   img_arg="-drive file=${img},if=virtio -bios ${bios}"
 fi
 
-cmd="${debug_qemu} ${qemu} ${machine_arg} ${img_arg} ${kernel_arg} ${debug_kernel}"
+cmd="${debug_qemu} ${qemu} ${machine_arg} ${img_arg} ${kernel_arg} ${debug_kernel} ${network}"
 echo "$cmd"
 eval "$cmd"
