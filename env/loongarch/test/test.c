@@ -1,3 +1,6 @@
+#include <asm/debug.h>
+#include <asm/device.h>
+#include <asm/io.h>
 #include <asm/loongarchregs.h>
 #include <asm/ptrace.h>
 #include <asm/time.h>
@@ -5,13 +8,11 @@
 #include <env-timer.h>
 #include <limits.h>
 #include <linux/irqflags.h>
+#include <linux/pci.h>
 #include <math.h>
 #include <qemu/queue.h>
 #include <sys/mman.h>
 #include <unitest/greatest.h>
-#include <asm/io.h>
-#include <asm/device.h>
-#include <asm/debug.h>
 
 typedef struct AllocatedMem {
   QLIST_ENTRY(AllocatedMem) mem_next;
@@ -137,14 +138,22 @@ TEST test_rdtime(void) {
   PASS();
 }
 
-TEST test_debugcon(void){
+TEST test_debugcon(void) {
   u8 x = readb(LS_ISA_DEBUGCON_IO_BASE);
   debugcon_puts("this is from debugcon\n");
   ASSERT_EQ(x, 0x77);
   PASS();
 }
 
+TEST test_pci(void) {
+  u32 val = 0x12345678;
+  pci_bus_write_config_dword(0, 0x100, val);
+  abort();
+  PASS();
+}
+
 SUITE(env_test) {
+  RUN_TEST(test_pci);
   RUN_TEST(test_debugcon);
   RUN_TEST(test_timer);
   RUN_TEST(test_rdtime);
