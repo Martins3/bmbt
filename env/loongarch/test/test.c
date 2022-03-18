@@ -1,3 +1,4 @@
+#include "cpu.h"
 #include <asm/debug.h>
 #include <asm/device.h>
 #include <asm/io.h>
@@ -6,6 +7,7 @@
 #include <asm/time.h>
 #include <assert.h>
 #include <env-timer.h>
+#include <exec/helper-proto.h>
 #include <limits.h>
 #include <linux/irqflags.h>
 #include <linux/pci.h>
@@ -148,11 +150,21 @@ TEST test_debugcon(void) {
 TEST test_pci(void) {
   u32 val = 0x12345678;
   pci_bus_write_config_dword(0, 0x100, val);
+  PASS();
+}
+
+TEST test_pio(void) {
+  CPUX86State env;
+  env.hflags = 0;
+  uint32_t port = 0xd000;
+  target_ulong x = helper_inl(&env, port);
+  printf("[huxueshi:%s:%d] %x\n", __FUNCTION__, __LINE__, x);
   abort();
   PASS();
 }
 
 SUITE(env_test) {
+  RUN_TEST(test_pio);
   RUN_TEST(test_pci);
   RUN_TEST(test_debugcon);
   RUN_TEST(test_timer);
