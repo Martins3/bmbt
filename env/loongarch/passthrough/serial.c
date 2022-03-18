@@ -25,7 +25,7 @@ static void serial_ioport_pass_write(void *opaque, hwaddr addr, uint64_t val,
   writeb(val, LS_ISA_SERIAL_IO_BASE + addr);
 }
 
-const MemoryRegionOps serial_pass_ops = {
+static const MemoryRegionOps serial_pass_ops = {
     .read = serial_ioport_pass_read,
     .write = serial_ioport_pass_write,
     .impl =

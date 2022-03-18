@@ -87,9 +87,13 @@ static inline bool mr_match(const MemoryRegion *mr, hwaddr offset) {
 }
 
 static void unimplemented_io(AddressSpaceDispatch *dispatch, hwaddr offset) {
-  CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
-  printf("guest ip : %x\n", env->segs[R_CS].base + env->eip);
-  printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
+  if (current_cpu != NULL) {
+    CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
+    printf("guest ip : %x\n", env->segs[R_CS].base + env->eip);
+    printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
+  } else {
+    printf("weird! current_cpu is NULL\n");
+  }
 }
 
 // [BMBT_OPTIMIZE 0]

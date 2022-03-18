@@ -29,7 +29,6 @@ struct pci_config_window {
 };
 
 void init_pci_bus(struct pci_ecam_ops *ecam_ops, struct pci_config_window *cfg);
-void loongarch_pic_init();
 
 #endif /* end of include guard: PCI_ECAM_H_QNWUDIJ9                            \
         */
