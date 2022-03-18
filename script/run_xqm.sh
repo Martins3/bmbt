@@ -1,6 +1,8 @@
 #!/bin/bash
 LATX=true
 run_tiny_kernel=true
+debug_qemu=""
+show_seabios_log=false
 
 BASE_DIR=$(pwd)
 BASE_DIR=/home/loongson/core/bmbt
@@ -18,7 +20,7 @@ function usage() {
   -l            Run latx"
 }
 
-while getopts "hxl" opt; do
+while getopts "hxld" opt; do
   case $opt in
   h)
     usage
@@ -26,6 +28,7 @@ while getopts "hxl" opt; do
     ;;
   x) LATX=false ;;
   l) LATX=true ;;
+  d) debug_qemu="gdb --args" ;;
   *)
     echo -e "\n  Option does not exist : OPTARG\n"
     usage
@@ -45,7 +48,18 @@ fi
 bios=${BASE_DIR}/seabios/out/bios.bin
 
 network="-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1"
-arg_bios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${bios}"
+
+# assign stdio to debugcon and serial, then qemu complaints like this:
+# > qemu-system-i386: -serial stdio: cannot use stdio by multiple character devices
+# > qemu-system-i386: -serial stdio: could not connect serial device to character backend 'stdio'
+if [[ $show_seabios_log = true ]]; then
+  arg_bios="-chardev stdio,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${bios}"
+  arg_serial=""
+else
+  arg_bios="-chardev file,path=/tmp/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios -bios ${bios}"
+  arg_serial="-nographic"
+fi
+
 arg_img="-hda ~/xqm_images/ubuntu10s.test.img.full"
 arg_kernel="-kernel ${kernel}"
 arg_kernel_cmdline="-append \"console=ttyS0 \""
@@ -57,6 +71,6 @@ if [[ $run_tiny_kernel == true ]]; then
   arg_img=""
 fi
 
-cmd="${qemu} ${arg_img} ${arg_kernel} ${arg_xqm} ${arg_bios} ${arg_kernel_cmdline} ${arg_initrd} --nographic ${network}"
+cmd="${debug_qemu} ${qemu} ${arg_img} ${arg_kernel} ${arg_xqm} ${arg_bios} ${arg_kernel_cmdline} ${arg_initrd} ${network} ${arg_serial}"
 echo "${cmd}"
 eval "${cmd}"
