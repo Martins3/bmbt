@@ -138,12 +138,6 @@ TEST test_qht(void) {
   PASS();
 }
 
-TEST test_qemu_init() {
-  qemu_init();
-  qemu_boot();
-  PASS();
-}
-
 /* Suites can group multiple tests with common setup. */
 SUITE(basic_test) {
   RUN_TEST(test_atomic);
@@ -153,22 +147,19 @@ SUITE(basic_test) {
   RUN_TEST(test_qht);
 }
 
-SUITE(wip) { RUN_TEST(test_qemu_init); }
-
 /* Add definitions that need to be in the test runner's main file. */
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char **argv) {
+  qemu_init();
   GREATEST_MAIN_BEGIN(); /* command-line options, initialization. */
-
   /* RUN_SUITE(env_test); */
   /* RUN_SUITE(timer); */
   /* RUN_SUITE(basic_test); */
-  RUN_SUITE(wip);
-  RUN_SUITE(basic_test);
-  RUN_SUITE(memory_model_test);
-
+  /* RUN_SUITE(basic_test); */
+  /* RUN_SUITE(memory_model_test); */
   GREATEST_MAIN_END(); /* display results */
+  qemu_boot();
 }
 
 #ifndef USE_SYSTEM_LIBC
