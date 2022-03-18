@@ -1215,7 +1215,6 @@ typedef enum greatest_test_res {
 #define GREATEST_MAIN_END()                                                    \
   do {                                                                         \
     GREATEST_PRINT_REPORT();                                                   \
-    return (greatest_all_passed() ? EXIT_SUCCESS : EXIT_FAILURE);              \
   } while (0)
 
 /* Make abbreviations without the GREATEST_ prefix for the
