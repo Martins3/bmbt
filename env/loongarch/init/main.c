@@ -25,7 +25,7 @@ void start_kernel(void) {
   trap_init();
   init_IRQ();
   time_init();
-  loongarch_pic_init();
+  loongarch_pci_init();
   local_irq_enable();
 
   char *argv[] = {NULL};

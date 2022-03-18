@@ -5,6 +5,7 @@
 #include <linux/pci.h>
 #include <linux/type.h>
 #include <stdbool.h>
+#include <uglib.h>
 
 /*
  * On 64-bit systems, we do a single ioremap for the whole config space
@@ -21,12 +22,21 @@ int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn, int where,
   if (!addr)
     return PCIBIOS_DEVICE_NOT_FOUND;
 
-  if (size == 1)
+  switch (size) {
+  case 1:
     writeb(val, addr);
-  else if (size == 2)
+    break;
+  case 2:
     writew(val, addr);
-  else
+    break;
+  case 4:
+    printf("[huxueshi:%s:%d] A\n", __FUNCTION__, __LINE__);
     writel(val, addr);
+    printf("[huxueshi:%s:%d] B\n", __FUNCTION__, __LINE__);
+    break;
+  default:
+    g_assert_not_reached();
+  }
 
   return PCIBIOS_SUCCESSFUL;
 }
@@ -41,13 +51,7 @@ int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn, int where,
     return PCIBIOS_DEVICE_NOT_FOUND;
   }
 
-  if (size == 1)
-    *val = readb(addr);
-  else if (size == 2)
-    *val = readw(addr);
-  else
-    *val = readl(addr);
-
+  *val = readl(addr);
   return PCIBIOS_SUCCESSFUL;
 }
 
@@ -93,7 +97,7 @@ struct pci_config_window *pci_ecam_create(struct pci_ecam_ops *ops) {
   return cfg;
 }
 
-void loongarch_pic_init() {
+void loongarch_pci_init() {
   struct pci_config_window *cfg = pci_ecam_create(&pci_generic_ecam_ops);
   init_pci_bus(&pci_generic_ecam_ops, cfg);
 }
