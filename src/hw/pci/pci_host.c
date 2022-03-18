@@ -22,9 +22,6 @@
 #include "hw/pci/pci.h"
 #include "hw/pci/pci_bus.h"
 #include "qemu/osdep.h"
-#ifdef ENV_KERNEL
-#include <linux/pci.h>
-#endif
 
 /* debug PCI */
 //#define DEBUG_PCI
@@ -106,15 +103,16 @@ uint32_t pci_host_config_read_common(PCIDevice *pci_dev, uint32_t addr,
   return ret;
 }
 
+void pci_pass_through_write(uint32_t addr, uint32_t val, int l);
+uint32_t pci_pass_through_read(uint32_t addr, int l);
+
 void pci_data_write(PCIBus *s, uint32_t addr, uint32_t val, int len) {
   PCIDevice *pci_dev = pci_dev_find_by_addr(s, addr);
   uint32_t config_addr = addr & (PCI_CONFIG_SPACE_SIZE - 1);
 
   if (!pci_dev) {
     if (pci_pass_through) {
-      uint8_t devfn = addr >> 8;
-      uint8_t where = addr & 0xfc;
-      pci_bus_write_config_dword(devfn, where, val);
+      pci_pass_through_write(addr, val, len);
       return;
     }
     return;
@@ -133,10 +131,7 @@ uint32_t pci_data_read(PCIBus *s, uint32_t addr, int len) {
 
   if (!pci_dev) {
     if (pci_pass_through) {
-      uint8_t devfn = addr >> 8;
-      uint8_t where = addr & 0xfc;
-      pci_bus_read_config_dword(devfn, where, &val);
-      return val;
+      return pci_pass_through_read(addr, len);
     }
     return ~0x0;
   }

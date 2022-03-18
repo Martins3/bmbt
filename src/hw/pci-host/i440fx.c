@@ -274,6 +274,7 @@ PCIHostState *QOM_init_pci_host_bridge() {
   return &pci_host_state->parent_obj;
 }
 
+void pci_pass_through_init();
 PCIBus *i440fx_init(const char *host_type, const char *pci_type,
                     PCII440FXState **pi440fx_state,
                     MemoryRegion *address_space_mem,
@@ -361,6 +362,10 @@ PCIBus *i440fx_init(const char *host_type, const char *pci_type,
   d->config[I440FX_COREBOOT_RAM_SIZE] = ram_size;
 
   i440fx_update_memory_mappings(f);
+
+  if (pci_pass_through) {
+    pci_pass_through_init();
+  }
 
   return b;
 }
