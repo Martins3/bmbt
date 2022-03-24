@@ -65,8 +65,10 @@ arg_kernel="-kernel ${kernel}"
 arg_kernel_cmdline="-append \"console=ttyS0 \""
 arg_initrd=""
 
+# 运行 hello.out 的参数
+# arg_kernel_cmdline="-append \"console=ttyS0 earlyprintk=serial root=/dev/ram hpet=disable rdinit=/hello.out\""
 if [[ $run_tiny_kernel == true ]]; then
-  arg_kernel_cmdline="-append \"console=ttyS0 earlyprintk=serial root=/dev/ram hpet=disable rdinit=/hello.out\""
+  arg_kernel_cmdline="-append \"console=ttyS0 earlyprintk=serial\""
   arg_initrd="-initrd ${initrd}"
   arg_img=""
 fi

@@ -143,3 +143,5 @@
 60. irqdomain
     - Loongonix 构建了三个 irq domain，以及对应的几个文件 irq-loongarch-extioi.c irq-loongson-pch-pic.c irq-loongarch-cpu.c irq-loongson-pch-msi.c
     - 这实在是太复杂了，我们直接硬编码了
+61. pci bus
+    - 在 Linux 内核中, pci_bus_read_config_word 之类的函数都是有参数 pci_bus 的,在 bmbt 中,这个的参数简化掉了.
