@@ -156,8 +156,13 @@ void machine_initfn(MachineState *ms) {
   ms->kernel_filename = "image/vmlinuz-2.6.32";
   ms->kernel_filename = "image/bzImage.bin";
   ms->initrd_filename = "image/initrd.bin";
-  ms->kernel_cmdline =
-      "console=ttyS0 earlyprintk=serial debug root=/dev/ram rdinit=/hello.out";
+  ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial debug";
+  /*
+   - use initrd as hello.out
+      - "console=ttyS0 earlyprintk=serial debug root=/dev/ram rdinit=/hello.out"
+   - use busybox as hello.out
+      - "console=ttyS0 earlyprintk=serial debug";
+  */
 
   if (mc->nvdimm_supported) {
     g_assert_not_reached();
