@@ -30,9 +30,7 @@ int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn, int where,
     writew(val, addr);
     break;
   case 4:
-    printf("[huxueshi:%s:%d] A\n", __FUNCTION__, __LINE__);
     writel(val, addr);
-    printf("[huxueshi:%s:%d] B\n", __FUNCTION__, __LINE__);
     break;
   default:
     g_assert_not_reached();
@@ -51,7 +49,19 @@ int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn, int where,
     return PCIBIOS_DEVICE_NOT_FOUND;
   }
 
-  *val = readl(addr);
+  switch (size) {
+  case 1:
+    *val = readb(addr);
+    break;
+  case 2:
+    *val = readw(addr);
+    break;
+  case 4:
+    *val = readl(addr);
+    break;
+  default:
+    g_assert_not_reached();
+  }
   return PCIBIOS_SUCCESSFUL;
 }
 

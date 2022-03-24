@@ -28,12 +28,24 @@ static void pci_config_write(uint32_t addr, uint32_t val, int l) {
 }
 
 static uint32_t pci_config_read(uint32_t addr, int l) {
-  uint32_t val;
+  uint32_t val32;
+  uint16_t val16;
+  uint8_t val8;
   uint8_t devfn = addr >> 8;
-  uint8_t where = addr & 0xfc;
-  // read more is better than read less, no need to take care of length
-  pci_bus_read_config_dword(devfn, where, &val);
-  return val;
+  uint8_t where = addr & 0xff;
+  switch (l) {
+  case 1:
+    pci_bus_read_config_byte(devfn, where, &val8);
+    return val8;
+  case 2:
+    pci_bus_read_config_word(devfn, where, &val16);
+    return val16;
+  case 4:
+    pci_bus_read_config_dword(devfn, where, &val32);
+    return val32;
+  default:
+    g_assert_not_reached();
+  }
 }
 
 void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
@@ -101,8 +113,10 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
                                 unsigned size) {
   addr += BUILD_PCIMEM_START;
 
+#ifdef PCI_PASS_DEBUG
   printf("[huxueshi:%s:%d] %lx %lx\n", __FUNCTION__, __LINE__, addr,
          addr - LOONGSON_X86_PCI_MEM_OFFSET);
+#endif
   switch (size) {
   case 1:
     writeb(val, (void *)TO_UNCAC((addr - LOONGSON_X86_PCI_MEM_OFFSET)));
