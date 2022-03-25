@@ -11,7 +11,7 @@ static void unimplemented(const char *str) {
 
 static void pci_config_write(uint32_t addr, uint32_t val, int l) {
   uint8_t devfn = addr >> 8;
-  uint8_t where = addr & 0xfc;
+  uint8_t where = addr & 0xff;
   switch (l) {
   case 1:
     pci_bus_write_config_byte(devfn, where, val);
@@ -112,6 +112,7 @@ static uint64_t pass_mmio_pass_read(void *opaque, hwaddr addr, unsigned size) {
 static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
                                 unsigned size) {
   addr += BUILD_PCIMEM_START;
+  addr = TO_UNCAC((addr - LOONGSON_X86_PCI_MEM_OFFSET));
 
 #ifdef PCI_PASS_DEBUG
   printf("[huxueshi:%s:%d] %lx %lx\n", __FUNCTION__, __LINE__, addr,
@@ -119,16 +120,16 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
 #endif
   switch (size) {
   case 1:
-    writeb(val, (void *)TO_UNCAC((addr - LOONGSON_X86_PCI_MEM_OFFSET)));
+    writeb(val, (void *)addr);
     break;
   case 2:
-    writew(val, (void *)TO_UNCAC((addr - LOONGSON_X86_PCI_MEM_OFFSET)));
+    writew(val, (void *)addr);
     break;
   case 4:
-    writel(val, (void *)TO_UNCAC((addr - LOONGSON_X86_PCI_MEM_OFFSET)));
+    writel(val, (void *)addr);
     break;
   case 8:
-    writeq(val, (void *)TO_UNCAC((addr - LOONGSON_X86_PCI_MEM_OFFSET)));
+    writeq(val, (void *)addr);
     break;
   default:
     g_assert_not_reached();
