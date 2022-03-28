@@ -72,6 +72,7 @@ static int convert_to_tcgmemop(IR2_OPCODE op)
     }
 }
 
+#ifndef HAMT
 static int get_ldst_align_bits(IR2_OPCODE opc)
 {
     if (option_fast_fpr_ldst) {
@@ -105,8 +106,10 @@ static int get_ldst_align_bits(IR2_OPCODE opc)
         return -1; /* no support for unaligned access */
     }
 }
+#endif
 
 /* return label point to slow path */
+#ifndef HAMT
 static void tr_gen_lookup_qemu_tlb(
         IR2_OPCODE op,
         IR2_OPND *gpr_opnd,
@@ -321,7 +324,9 @@ static void tr_gen_lookup_qemu_tlb(
     latxs_ra_free_temp(&add_opnd);
 #endif
 }
+#endif
 
+#ifndef HAMT
 static void td_rcd_softmmu_slow_path(
         IR2_OPCODE op,
         IR2_OPND *gpr_ir2_opnd,
@@ -384,7 +389,9 @@ static void td_rcd_softmmu_slow_path(
         }
     }
 }
+#endif
 
+#ifndef HAMT
 static void tr_gen_ldst_slow_path(
         IR2_OPCODE op,
         IR2_OPND  *gpr_opnd, /* temp(t0-t7) or mapping(s1-s8) */
@@ -400,9 +407,10 @@ static void tr_gen_ldst_slow_path(
             label_slow_path, label_exit,
             mmu_index, save_temp, is_load);
 }
-
+#endif
 
 /* option_fast_fpr_ldst : opnd_gpr can be fpr */
+#ifndef HAMT
 static void __gen_ldst_softmmu_helper_native(
         IR2_OPCODE op,
         IR2_OPND *opnd_gpr,
@@ -460,6 +468,7 @@ static void __gen_ldst_softmmu_helper_native(
         latxs_ra_free_temp(&mem_no_offset);
     }
 }
+#endif
 
 static void __tr_gen_softmmu_sp_rcd(softmmu_sp_rcd_t *sp)
 {
@@ -711,7 +720,18 @@ void gen_ldst_softmmu_helper(
         int save_temp)
 {
     if (is_ldst_realized_by_softmmu(op)) {
+#ifdef HAMT
+        IR2_OPND base = latxs_ir2_opnd_mem_get_base(opnd_mem);
+        int offset  = latxs_ir2_opnd_mem_get_offset(opnd_mem);
+        assert(offset == 0);
+        // map guest to 1 - 5G
+        IR2_OPND reg1 = latxs_ra_alloc_itemp();
+        latxs_load_imm64(&reg1, 0x100000000);
+        latxs_append_ir2_opnd3(LISA_ADD_D, &base, &base, &reg1);
+        latxs_append_ir2_opnd2i(op, opnd_gpr, &base, offset);
+#else
         __gen_ldst_softmmu_helper_native(op, opnd_gpr, opnd_mem, save_temp);
+#endif
         return;
     }
 

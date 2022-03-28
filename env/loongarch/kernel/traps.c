@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAMT
+#include <asm/tlb.h>
+extern void tlb_do_page_fault_protect(void);
+#endif
 
 extern void handle_reserved(void);
 extern void *vector_table[];
@@ -111,8 +115,18 @@ void set_tlb_handler(void) {
   for (i = 0; i < 64; i++)
     set_handler(i * VECSIZE, handle_reserved, VECSIZE);
 
+#ifndef HAMT
   for (i = EXCCODE_TLBL; i <= EXCCODE_TLBPE; i++)
     set_handler(i * VECSIZE, exception_table[i], VECSIZE);
+#else
+  set_handler(EXCCODE_TLBL * VECSIZE, handle_tlb_load, VECSIZE);
+  set_handler(EXCCODE_TLBS * VECSIZE, handle_tlb_store, VECSIZE);
+  set_handler(EXCCODE_TLBI * VECSIZE, handle_tlb_load, VECSIZE);
+  set_handler(EXCCODE_TLBM * VECSIZE, handle_tlb_modify, VECSIZE);
+  // set_handler(EXCCODE_TLBRI * VECSIZE, tlb_do_page_fault_protect, VECSIZE);
+  // set_handler(EXCCODE_TLBXI * VECSIZE, tlb_do_page_fault_protect, VECSIZE);
+  // set_handler(EXCCODE_TLBPE * VECSIZE, tlb_do_page_fault_protect, VECSIZE);
+#endif
 }
 
 void trap_init(void) {

@@ -1282,6 +1282,13 @@ static inline void write_csr_tlbrefill_pagesize(unsigned int size) {
              LOONGARCH_CSR_TLBREHI);
 }
 
+#define read_csr_tlbehi() __dcsrrd(LOONGARCH_CSR_TLBEHI)
+#define write_csr_tlbehi(val) __dcsrwr(val, LOONGARCH_CSR_TLBEHI)
+#define write_csr_tlbidx(val) __dcsrwr(val, LOONGARCH_CSR_TLBIDX)
+#define read_csr_tlbelo0() __dcsrrd(LOONGARCH_CSR_TLBELO0)
+#define write_csr_tlbelo0(val) __dcsrwr(val, LOONGARCH_CSR_TLBELO0)
+#define read_csr_tlbelo1() __dcsrrd(LOONGARCH_CSR_TLBELO1)
+#define write_csr_tlbelo1(val) __dcsrwr(val, LOONGARCH_CSR_TLBELO1)
 #define read_csr_asid() __dcsrrd(LOONGARCH_CSR_ASID)
 #define write_csr_asid(val) __dcsrwr(val, LOONGARCH_CSR_ASID)
 #define read_csr_entryhi() __dcsrrd(LOONGARCH_CSR_TLBEHI)

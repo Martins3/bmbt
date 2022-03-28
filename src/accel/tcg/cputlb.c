@@ -905,10 +905,16 @@ static void iotlb_check(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
   }
 }
 
+#ifdef HAMT
+uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
+                  CPUTLBEntry *entry, int mmu_idx, target_ulong vaddr,
+                  uintptr_t retaddr, MMUAccessType access_type, MemOp op){
+#else
 static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                          CPUTLBEntry *entry, int mmu_idx, target_ulong vaddr,
                          uintptr_t retaddr, MMUAccessType access_type,
                          MemOp op) {
+#endif
   CPUState *cpu = env_cpu(env);
   hwaddr mr_offset;
   MemoryRegion *mr;
@@ -955,9 +961,15 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
   return 0;
 }
 
+#ifdef HAMT
+void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, CPUTLBEntry *entry,
+               int mmu_idx, uint64_t val, target_ulong vaddr, uintptr_t retaddr,
+               MemOp op){
+#else
 static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                       CPUTLBEntry *entry, int mmu_idx, uint64_t val,
                       target_ulong vaddr, uintptr_t retaddr, MemOp op) {
+#endif
   CPUState *cpu = env_cpu(env);
   hwaddr mr_offset;
   MemoryRegion *mr;
@@ -1105,8 +1117,14 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr) {
   return get_page_addr_code_hostp(env, addr, NULL);
 }
 
+#ifdef HAMT
+void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
+                           CPUIOTLBEntry *iotlbentry, uintptr_t retaddr) {
+
+#else
 static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
                            CPUIOTLBEntry *iotlbentry, uintptr_t retaddr) {
+#endif
   ram_addr_t ram_addr = mem_vaddr + iotlbentry->addr;
 
   // bmbt_trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);

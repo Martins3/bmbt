@@ -7,6 +7,9 @@
 #include <env/cpu.h>
 #include <qemu/seqloch.h>
 #include <qemu/timer.h>
+#ifdef
+#include <accel/hamt_misc.h>
+#endif
 
 // [interface 11]
 static bool iothread_locked = false;
@@ -169,6 +172,9 @@ static int tcg_cpu_exec(CPUState *cpu) {
 void *qemu_tcg_rr_cpu_thread_fn(void *arg) {
   CPUState *cpu = arg;
 
+#ifdef HAMT
+  hamt_init();
+#endif
   assert(tcg_enabled());
   rcu_register_thread();
   tcg_register_thread();
