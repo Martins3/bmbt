@@ -2162,6 +2162,11 @@ void cpu_set_ignne(void);
 
 typedef int X86CPUVersion;
 
+#if 1
+/* excp_helper.c */
+hwaddr get_hphys(CPUState *cs, hwaddr gphys, MMUAccessType access_type, int *prot);
+#endif
+
 /*
  * Set default CPU model version for CPU models having
  * version == CPU_VERSION_AUTO.

@@ -184,6 +184,18 @@ void QEMU_NORETURN cpu_loop_exit(CPUState *cpu);
 void QEMU_NORETURN cpu_loop_exit_restore(CPUState *cpu, uintptr_t pc);
 void QEMU_NORETURN cpu_loop_exit_atomic(CPUState *cpu, uintptr_t pc);
 
+// #ifdef HAMT
+#if 1
+uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
+                  CPUTLBEntry *entry, int mmu_idx, target_ulong vaddr,
+                  uintptr_t retaddr, MMUAccessType access_type, MemOp op);
+void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, CPUTLBEntry *entry,
+               int mmu_idx, uint64_t val, target_ulong vaddr, uintptr_t retaddr,
+               MemOp op);
+void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
+                    CPUIOTLBEntry *iotlbentry, uintptr_t retaddr);
+#endif
+
 /* cputlb.c */
 /**
  * tlb_init - initialize a CPU's TLB
