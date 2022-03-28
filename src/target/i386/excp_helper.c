@@ -129,7 +129,7 @@ void raise_exception_ra(CPUX86State *env, int exception_index, uintptr_t retaddr
 }
 
 #if !defined(CONFIG_USER_ONLY)
-static hwaddr get_hphys(CPUState *cs, hwaddr gphys, MMUAccessType access_type,
+hwaddr get_hphys(CPUState *cs, hwaddr gphys, MMUAccessType access_type,
                         int *prot)
 {
     CPUX86State *env = &X86_CPU(cs)->env;

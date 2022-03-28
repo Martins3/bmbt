@@ -211,7 +211,26 @@ void fw_init_memory(void) {
 
   init_pages();
   init_ram_range();
-  bool check_bios_memory = false;
+  // memory occupied by the kernel
+  u64 bss_end = kernel_image_range.end;
+
+  bool kernel_img_in_range = false;
+  // allocate address space for data_storage and code_storage
+  // before memory parse, because in `kernel_mmap`, 'addr' must be 0.
+  uint64_t data_storage;
+  uint64_t code_storage;
+  // allocate for data_storage
+  // data_storage = 0x9000000000de4000
+  data_storage = TO_CAC(PFN_ALIGN(bss_end));
+  bss_end += 4096;
+  bss_end = PFN_ALIGN(bss_end);
+  // allocate for code_storage
+  // code_storage = 0x9000000000de8000
+  code_storage = TO_CAC(PFN_ALIGN(bss_end));
+  bss_end += 4096;
+  bss_end = PFN_ALIGN(bss_end);
+  printf("data_storage:0x%lx, code_storage:0x%lx\n", data_storage,
+         code_storage);
 
   /* parse memory information */
   for (i = 0; i < loongson_mem_map->map_count; i++) {
