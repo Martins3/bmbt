@@ -44,6 +44,7 @@ BIN_FILES = $(wildcard image/*.bin)
 # "invalid argument to built-in function"
 ifeq ($(ENV_KERNEL), 1)
   KERNEL_SRC_FILES += $(wildcard env/loongarch/*/*.c)
+	KERNEL_SRC_FILES += $(wildcard env/loongarch/accel/*/*.c)
   KERNEL_SRC_FILES += $(wildcard env/loongarch/drivers/*/*.c)
   KERNEL_OBJS_FILES=$(KERNEL_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
   $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O3
@@ -162,6 +163,7 @@ NETWORK_CONFIG=-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1
 NVME_CONFIG=-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=0x1 -drive file=$(EXT4_IMG),format=raw,if=none,id=nvme1
 NVME_CONFIG=-device nvme,drive=nvme1,serial=foo -drive file=$(EXT4_IMG),format=raw,if=none,id=nvme1
 RUN_IN_QEMU=$(LA_QEMU) $(NETWORK_CONFIG) $(PCI_BRIDGE_CONFIG) $(NVME_CONFIG) -m 8G -cpu Loongson-3A5000 -nographic -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt)
+
 
 run: all clear_gcda
 	if [[ $(ENV_KERNEL) == 1 ]];then \
