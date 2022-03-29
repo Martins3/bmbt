@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+void handle_bp(void);
+
 extern void tlb_do_page_fault_protect(void);
 extern void handle_reserved(void);
 extern void *vector_table[];
@@ -140,6 +142,8 @@ void trap_init(void) {
 
   for (i = EXCCODE_ADE; i <= EXCCODE_WATCH; i++)
     set_handler(i * VECSIZE, exception_table[i], VECSIZE);
+
+  set_handler(EXCCODE_BP * VECSIZE, handle_bp, VECSIZE);
 
   cache_error_setup();
 }

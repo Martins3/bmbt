@@ -30,7 +30,35 @@
 #define CSR_TLBRELO_V (_ULCAST_(0x1) << CSR_TLBRELO_V_SHIFT)
 #define CSR_TLBELO_V (_ULCAST_(0x1) << CSR_TLBRELO_V_SHIFT)
 
-// 512M 从 INIT_VALUE_PRCFG2 中获取
+/* TLB refill registers */
+#define LOONGARCH_CSR_TLBREBASE 0x88 /* TLB refill exception base address */
+#define LOONGARCH_CSR_TLBRBADV 0x89  /* TLB refill badvaddr */
+#define LOONGARCH_CSR_TLBREPC 0x8a   /* TLB refill EPC */
+#define LOONGARCH_CSR_TLBRSAVE 0x8b  /* KScratch for TLB refill exception */
+#define LOONGARCH_CSR_TLBRELO0 0x8c  /* TLB refill entrylo0 */
+#define LOONGARCH_CSR_TLBRELO1 0x8d  /* TLB refill entrylo1 */
+#define LOONGARCH_CSR_TLBREHI 0x8e   /* TLB refill entryhi */
+#define LOONGARCH_CSR_TLBRPRMD 0x8f  /* TLB refill mode info */
+#define LOONGARCH_CSR_ASID 0x18      /* ASID */
+#define LOONGARCH_CSR_EPC 0x6        /* EPC */
+#define LOONGARCH_CSR_BADV 0x7       /* Bad virtual address */
+#define LOONGARCH_CSR_TLBEHI 0x11    /* TLB EntryHi */
+#define LOONGARCH_CSR_TLBIDX 0x10
+#define LOONGARCH_CSR_TLBELO0 0x12
+#define LOONGARCH_CSR_TLBELO1 0x13
+
+#define HYPERCALL .word(0x002b8000)
+#define UNEXPECTED_TLBL .word(0x002b8001)
+#define UNEXPECTED_TLBS .word(0x002b8002)
+#define UNEXPECTED_TLBI .word(0x002b8003)
+#define UNEXPECTED_TLBM .word(0x002b8004)
+#define UNEXPECTED_TLBRI .word(0x002b800f)
+#define UNEXPECTED_TLBXI .word(0x002b8006)
+#define UNEXPECTED_TLBPE .word(0x002b8007)
+#define UNEXPECTED_ADE .word(0x002b8008)
+#define UNEXPECTED_ALE .word(0x002b8009)
+#define UNEXPECTED_TRAP .word(0x002b800a)
+
 #define TLB_PS_4K 0xc
 #define TLB_PS_1G 0x1e
 #define TLB_PS_1G_shift 30
@@ -42,6 +70,15 @@
 
 #define TLBELO_STANDARD_BITS                                                   \
   (CSR_TLBELO_V | CSR_TLBELO_WE | CSR_TLBELO_CCA | CSR_TLBELO_GLOBAL)
+
+#define ERA_INDEX 32
+#define BADV_INDEX 33
+#define TRAP_CODE_INDEX 506
+#define ASID_INDEX 507
+#define TLBELO1_INDEX 508
+#define TLBELO0_INDEX 509
+#define TLBEHI_INDEX 510
+#define TLBIDX_INDEX 511
 
 #define MAPPING_BASE_ADDRESS 0x0
 #define DATA_STORAGE_ADDRESS 0x8100000000
