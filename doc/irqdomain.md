@@ -77,7 +77,7 @@
 Backtrace stopped: frame did not save the PC
 ```
 在 acpi_register_gsi 组装了 fwspec 其中的 gsi 为 66，但是在 pch_pic_domain_translate 中，其被转换为 2 (66-64)了
-```c
+```txt
       struct irq_fwspec fwspec;
 
       fwspec.fwnode = handle;
@@ -85,7 +85,7 @@ Backtrace stopped: frame did not save the PC
       fwspec.param_count = 1;
 ```
 并且其中选择 pch_pic 作为起点，逐步向上分析:
-```c
+```txt
     handle = pch_pic_get_fwnode(id);
 ```
 
@@ -125,7 +125,7 @@ Backtrace stopped: frame did not save the PC
 ```
 
 3. 在 serial 驱动启动的时候，会访问 irq resource
-```c
+```txt
 #0  serial_pnp_probe (dev=0x900000027d32f000, dev_id=0x9000000001068570 <pnp_dev_table+1248>) at drivers/tty/serial/8250/8250_pnp.c:440
 #1  0x9000000000959b54 in pnp_device_probe (dev=0x900000027d32f000) at drivers/pnp/driver.c:109
 #2  0x9000000000a294cc in really_probe (dev=0x900000027d32f000, drv=0x9000000001428160 <serial_pnp_driver+64>) at drivers/base/dd.c:506
@@ -149,7 +149,7 @@ Backtrace stopped: frame did not save the PC
 Backtrace stopped: frame did not save the PC
 ```
 4. 然后 serial 驱动注册 irq=19 的 irq_desc 的 irq_action
-```c
+```txt
 #0  request_threaded_irq (irq=19, handler=0x900000000098dd20 <serial8250_interrupt>, thread_fn=0x0, irqflags=0, devname=0x900000027cff6780 "ttyS0", dev_id=0x900000027cf
 1de80) at kernel/irq/manage.c:1884
 #1  0x900000000098ecf4 in request_irq (dev=<optimized out>, name=<optimized out>, flags=<optimized out>, handler=<optimized out>, irq=<optimized out>) at ./include/linu
@@ -182,7 +182,7 @@ Backtrace stopped: frame did not save the PC
 
 其他问题的讨论:
 1. 虽然创建了很多 irq_desc，但是不是所有的都会在 /proc/interrupts 中显示出来，具体代码看 show_interrupts
-```c
+```txt
   if ((!desc->action || irq_desc_is_chained(desc)) && !any_count)
     goto outsparse;
 ```
@@ -203,7 +203,7 @@ IPI1:          0       Call Function interrupts
  ERR:          0
 ```
 
-```c
+```txt
 #0  serial8250_interrupt (irq=19, dev_id=0x900000027da3ca00) at ./include/linux/spinlock_api_smp.h:141
 #1  0x9000000000282070 in __handle_irq_event_percpu (desc=0x900000027d7f5a00, flags=0x900000027c0cbeec) at kernel/irq/handle.c:152
 #2  0x90000000002822dc in handle_irq_event_percpu (desc=0x900000027d7f5a00) at kernel/irq/handle.c:192
@@ -218,7 +218,7 @@ IPI1:          0       Call Function interrupts
 #11 0x90000000002033d4 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
 ```
 
-```c
+```txt
 #0  request_threaded_irq (irq=61, handler=0x9000000000208430 <constant_timer_interrupt>, thread_fn=0x0, irqflags=83456, devname=0x90000000011ee470 "timer", dev_id=0x0)
 at kernel/irq/manage.c:1884
 #1  0x9000000000208764 in request_irq (dev=<optimized out>, name=<optimized out>, flags=<optimized out>, handler=<optimized out>, irq=<optimized out>) at ./include/linu
@@ -231,8 +231,7 @@ x/interrupt.h:147
 Backtrace stopped: frame did not save the PC
 ```
 
-```c
-/*
+```txt
 #0  hrtimer_interrupt (dev=0x9000000006000080) at kernel/time/hrtimer.c:1511
 #1  0x90000000002084a8 in constant_timer_interrupt (irq=<optimized out>, data=<optimized out>) at arch/loongarch/kernel/time.c:49
 #2  0x900000000029d4ac in __handle_irq_event_percpu (desc=0x9000000006000080, flags=0x0) at kernel/irq/handle.c:149
@@ -256,7 +255,7 @@ x86 中 irq_domain_ops:
 
 
 在 early_irq_init 中一次性分配完成所有的 irq desc 的
-```c
+```txt
 #0  x86_vector_alloc_irqs (domain=0xffff88800304d180, virq=1, nr_irqs=1, arg=0xffffffff82403dd8) at arch/x86/kernel/apic/vector.c:533
 #1  0xffffffff8104d77f in mp_irqdomain_alloc (domain=0xffff8880030f6a00, virq=1, nr_irqs=1, arg=0xffffffff82403dd8) at arch/x86/kernel/apic/io_apic.c:3022
 #2  0xffffffff810c8d35 in irq_domain_alloc_irqs_hierarchy (arg=0xffffffff82403dd8, nr_irqs=1, irq_base=1, domain=0xffff8880030f6a00) at kernel/irq/irqdomain.c:1423
@@ -275,7 +274,7 @@ x86 中 irq_domain_ops:
 ```
 此时的 irq desc 只是只是创建了，但是其 irq_desc::action_handler 没有创建。
 
-```c
+```txt
 #0  serial8250_interrupt (irq=4, dev_id=0xffff88800317b8c0) at ./include/linux/spinlock.h:349
 #1  0xffffffff810c2465 in __handle_irq_event_percpu (desc=desc@entry=0xffff8880030f5000, flags=flags@entry=0xffffc90000003f74) at kernel/irq/handle.c:158
 #2  0xffffffff810c25dc in handle_irq_event_percpu (desc=desc@entry=0xffff8880030f5000) at kernel/irq/handle.c:198
@@ -292,12 +291,12 @@ Backtrace stopped: Cannot access memory at address 0xffffc90000004018
 
 1. pnp_add_resource : 在 acpi 初始化中添加 serial dev 的 irq=4 的 resource
 2. serial_pnp_probe : 在 serial 驱动初始化过程中访问资源
-```c
+```txt
   if (pnp_irq_valid(dev, 0))
     uart.port.irq = pnp_irq(dev, 0);
 ```
 3. 驱动注册
-```c
+```txt
 #0  request_threaded_irq (irq=4, handler=handler@entry=0xffffffff814f3b30 <serial8250_interrupt>, thread_fn=thread_fn@entry=0x0 <fixed_percpu_data>, irqflags=0, devname
 =0xffff88800339a550 "ttyS0", dev_id=dev_id@entry=0xffff88800305d8c0) at kernel/irq/manage.c:2120
 ```
@@ -305,7 +304,7 @@ Backtrace stopped: Cannot access memory at address 0xffffc90000004018
 注意，这里的 irq=4 就是 acpi 中获取的 gsi，而在 Loongson 的 irq=19 是系统分配的，其从 acpi 获取的是 gsi=66
 
 ### x86 doc
-```c
+```txt
            CPU0
   0:         38   IO-APIC   2-edge      timer
   1:        198   IO-APIC   1-edge      i8042
@@ -318,14 +317,14 @@ Backtrace stopped: Cannot access memory at address 0xffffc90000004018
  15:         82   IO-APIC  15-edge      ata_piix
 ```
 
-```c
+```txt
 #0  hrtimer_interrupt (dev=0xffff888007a1af40) at kernel/time/hrtimer.c:1783
 #1  0xffffffff81048d5b in local_apic_timer_interrupt () at arch/x86/kernel/apic/apic.c:1086
 #2  __sysvec_apic_timer_interrupt (regs=0xffffc9000022fbb8) at arch/x86/kernel/apic/apic.c:1103
 #3  0xffffffff81bd09f9 in sysvec_apic_timer_interrupt (regs=0xffffc9000022fbb8) at arch/x86/kernel/apic/apic.c:1097
 ```
 
-```c
+```txt
 #0  e1000_intr (irq=11, data=0xffff8880031aa000) at drivers/net/ethernet/intel/e1000/e1000_main.c:3749
 #1  0xffffffff810c2465 in __handle_irq_event_percpu (desc=desc@entry=0xffff8880030f5e00, flags=flags@entry=0xffffc90000003f6c) at kernel/irq/handle.c:158
 #2  0xffffffff810c25dc in handle_irq_event_percpu (desc=desc@entry=0xffff8880030f5e00) at kernel/irq/handle.c:198
