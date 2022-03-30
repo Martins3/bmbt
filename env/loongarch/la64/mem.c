@@ -1,5 +1,9 @@
 #include <asm/mach-la64/boot_param.h>
+#include <assert.h>
+#include <exec/hwaddr.h>
+#include <exec/ram_addr.h>
 #include <linux/pfn.h>
+#include <qemu/config-target.h> // CONFIG_GUEST_RAM_SIZE
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -8,6 +12,12 @@ void init_pages();
 extern bool mmap_ready;
 
 extern char __bss_stop[];
+
+static hwaddr pc_ram_offset;
+hwaddr get_pc_ram_offset() {
+  assert(pc_ram_offset != 0);
+  return pc_ram_offset;
+}
 
 void fw_init_memory(void) {
   int i;
@@ -48,6 +58,17 @@ void fw_init_memory(void) {
       printf("start_pfn:0x%lx, end_pfn:0x%lx\n", mem_start >> PAGE_SHIFT,
              (mem_start + mem_size) >> PAGE_SHIFT);
       printf("pfn number %lx\n", mem_size >> PAGE_SHIFT);
+
+      if (pc_ram_offset == 0) {
+        assert(mem_size + mem_start >= CONFIG_GUEST_RAM_SIZE);
+        assert(mem_start < CONFIG_GUEST_RAM_SIZE);
+        pc_ram_offset = mem_start;
+        mem_size -= (CONFIG_GUEST_RAM_SIZE - mem_start);
+        mem_start = CONFIG_GUEST_RAM_SIZE;
+      }
+
+      if ((mem_size >> PAGE_SHIFT) < 1)
+        continue;
 
       fw_add_mem(mem_start, mem_size);
 

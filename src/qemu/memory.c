@@ -809,6 +809,7 @@ static void setup_dirty_memory() {
 
 static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
 
+// isa-bios / pc.bios's host point to file
 static void x86_bios_rom_init() {
   FILE *f = fopen("image/bios.bin", "r");
   bmbt_check(f != NULL);
@@ -818,8 +819,17 @@ static void x86_bios_rom_init() {
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->host = (void *)(&__pc_bios[0]);
+  // pc.bios's block::offset is not same with it's mr.offset
+  block->offset = CONFIG_GUEST_RAM_SIZE;
 
   // isa-bios is handled in function isa_bios_access
+}
+
+static void x86_pc_ram_init() {
+  RAMBlock *block = &ram_list.blocks[PC_RAM_INDEX].block;
+  /* block->offset = get_pc_ram_offset(); */
+  assert(block->offset == get_pc_ram_offset());
+  block->host = (u8 *)TO_CAC(block->mr->offset);
 }
 
 static void *alloc_ram(hwaddr size) {
@@ -851,7 +861,7 @@ static inline void init_ram_block(const char *name, unsigned int index,
  *  - smm
  */
 static void ram_init() {
-  void *host = alloc_ram(CONFIG_GUEST_RAM_SIZE);
+  void *host = alloc_ram(get_pc_ram_offset());
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -884,8 +894,10 @@ static void ram_init() {
                  ram_list.blocks[PAM_BIOS_INDEX].mr.size ==
              X86_BIOS_MEM_SIZE);
 
-  init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
-                 CONFIG_GUEST_RAM_SIZE - X86_BIOS_MEM_SIZE);
+  init_ram_block("pc.ram.x", PC_RAM_X_INDEX, false, X86_BIOS_MEM_SIZE,
+                 get_pc_ram_offset() - X86_BIOS_MEM_SIZE);
+  init_ram_block("pc.ram", PC_RAM_INDEX, false, get_pc_ram_offset(),
+                 CONFIG_GUEST_RAM_SIZE - get_pc_ram_offset());
   init_ram_block("pc.bios", PC_BIOS_INDEX, true,
                  4 * GiB - CONFIG_GUEST_BIOS_SIZE, CONFIG_GUEST_BIOS_SIZE);
 
@@ -898,17 +910,15 @@ static void ram_init() {
     block->host = host + block->offset;
   }
 
-  // pc.bios's block::offset is not same with it's mr.offset
-  RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
-  block->offset = CONFIG_GUEST_RAM_SIZE;
+  x86_bios_rom_init();
+  x86_pc_ram_init();
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     MemoryRegion *mr = &ram_list.blocks[i].mr;
     mem_add_memory_region(mr);
   }
 
-  // isa-bios / pc.bios's host point to file
-  x86_bios_rom_init();
+  // TMP_TODO 有必要增加一个防护，让 ram 的大小和 dirty memory 的大小正好匹配的
   setup_dirty_memory();
 }
 
