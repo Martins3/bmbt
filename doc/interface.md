@@ -145,3 +145,5 @@
     - 这实在是太复杂了，我们直接硬编码了
 61. pci bus
     - 在 Linux 内核中, pci_bus_read_config_word 之类的函数都是有参数 pci_bus 的,在 bmbt 中,这个的参数简化掉了.
+62. pch_msi_allocate_hwirq
+    - 为了开发方便，guest 需要什么 irq 直接加上 msi_irqbase 就分配出去了
