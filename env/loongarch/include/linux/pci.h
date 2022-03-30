@@ -1,6 +1,8 @@
 #ifndef PCI_H_65PSRQAZ
 #define PCI_H_65PSRQAZ
 
+#define PCI_FIND_CAP_TTL 48
+
 #include <asm/io.h>
 struct pci_bus {
   struct pci_ops *ops;  /* Configuration access functions */

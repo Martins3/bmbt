@@ -172,6 +172,9 @@ void fw_init_env(void) {
     // parse_bpi_flags();
   }
 
+  // code below are useless, even in loongarch kernel. For example,
+  // loongson_sysconf.msi_base_irq is not used, it's read from hardware in
+  // register_pch_pic
 #ifdef BMBT
   loongson_regaddr_set(smp_group, 0x800000001fe01000, 16);
 
@@ -186,8 +189,10 @@ void fw_init_env(void) {
   loongson_sysconf.io_last_irq = LOONGSON_PCH_IRQ_BASE + 256;
   loongson_sysconf.msi_base_irq = LOONGSON_PCI_MSI_IRQ_BASE;
   loongson_sysconf.msi_last_irq = LOONGSON_PCI_MSI_IRQ_BASE + 192;
+#endif
   loongson_sysconf.msi_address_hi = 0;
   loongson_sysconf.msi_address_lo = 0x2FF00000;
+#ifdef BMBT
   loongson_sysconf.dma_mask_bits = LOONGSON_DMA_MASK_BIT;
   if (!loongson_sysconf.is_soc_cpu)
     loongson_sysconf.pcie_wake_enabled =
