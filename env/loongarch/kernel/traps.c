@@ -115,8 +115,7 @@ void set_tlb_handler(void) {
   for (i = 0; i < 64; i++)
     set_handler(i * VECSIZE, handle_reserved, VECSIZE);
 
-// #ifndef HAMT
-#if 0
+#ifndef HAMT
   for (i = EXCCODE_TLBL; i <= EXCCODE_TLBPE; i++)
     set_handler(i * VECSIZE, exception_table[i], VECSIZE);
 #else

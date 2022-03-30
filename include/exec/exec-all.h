@@ -184,8 +184,7 @@ void QEMU_NORETURN cpu_loop_exit(CPUState *cpu);
 void QEMU_NORETURN cpu_loop_exit_restore(CPUState *cpu, uintptr_t pc);
 void QEMU_NORETURN cpu_loop_exit_atomic(CPUState *cpu, uintptr_t pc);
 
-// #ifdef HAMT
-#if 1
+#ifdef HAMT
 uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                   CPUTLBEntry *entry, int mmu_idx, target_ulong vaddr,
                   uintptr_t retaddr, MMUAccessType access_type, MemOp op);
