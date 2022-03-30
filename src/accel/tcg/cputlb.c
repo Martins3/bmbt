@@ -1,3 +1,6 @@
+#include "cpu.h"
+#include "exec/helper-proto.h"
+#include "translate-all.h"
 #include <exec/cpu-all.h>
 #include <exec/cpu-common.h>
 #include <exec/cpu-defs.h>
@@ -13,9 +16,6 @@
 #include <qemu/error-report.h>
 #include <qemu/host-utils.h>
 #include <qemu/log.h>
-#include "cpu.h"
-#include "exec/helper-proto.h"
-#include "translate-all.h"
 #include <qemu/timer.h>
 
 #include "tcg/tcg.h"
@@ -304,14 +304,14 @@ static void tlb_flush_by_mmuidx_async_work(CPUState *cpu,
 
   if (to_clean == ALL_MMUIDX_BITS) {
     qatomic_set(&env_tlb(env)->c.full_flush_count,
-               env_tlb(env)->c.full_flush_count + 1);
+                env_tlb(env)->c.full_flush_count + 1);
   } else {
     qatomic_set(&env_tlb(env)->c.part_flush_count,
-               env_tlb(env)->c.part_flush_count + ctpop16(to_clean));
+                env_tlb(env)->c.part_flush_count + ctpop16(to_clean));
     if (to_clean != asked) {
       qatomic_set(&env_tlb(env)->c.elide_flush_count,
-                 env_tlb(env)->c.elide_flush_count +
-                     ctpop16(asked & ~to_clean));
+                  env_tlb(env)->c.elide_flush_count +
+                      ctpop16(asked & ~to_clean));
     }
   }
 }
@@ -905,11 +905,10 @@ static void iotlb_check(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
   }
 }
 
-// #ifdef HAMT
-#if 1
+#ifdef HAMT
 uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                   CPUTLBEntry *entry, int mmu_idx, target_ulong vaddr,
-                  uintptr_t retaddr, MMUAccessType access_type, MemOp op){
+                  uintptr_t retaddr, MMUAccessType access_type, MemOp op) {
 #else
 static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                          CPUTLBEntry *entry, int mmu_idx, target_ulong vaddr,
@@ -966,7 +965,7 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
 #if 1
 void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, CPUTLBEntry *entry,
                int mmu_idx, uint64_t val, target_ulong vaddr, uintptr_t retaddr,
-               MemOp op){
+               MemOp op) {
 #else
 static void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                       CPUTLBEntry *entry, int mmu_idx, uint64_t val,
@@ -1122,7 +1121,7 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr) {
 // #ifdef HAMT
 #if 1
 void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
-                           CPUIOTLBEntry *iotlbentry, uintptr_t retaddr) {
+                    CPUIOTLBEntry *iotlbentry, uintptr_t retaddr) {
 
 #else
 static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
@@ -1996,9 +1995,9 @@ void helper_be_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
 #undef EXTRA_ARGS
 #undef ATOMIC_NAME
 #undef ATOMIC_MMU_LOOKUP
-#define EXTRA_ARGS         , TCGMemOpIdx oi
-#define ATOMIC_NAME(X)     HELPER(glue(glue(atomic_ ## X, SUFFIX), END))
-#define ATOMIC_MMU_LOOKUP  atomic_mmu_lookup(env, addr, oi, GETPC())
+#define EXTRA_ARGS , TCGMemOpIdx oi
+#define ATOMIC_NAME(X) HELPER(glue(glue(atomic_##X, SUFFIX), END))
+#define ATOMIC_MMU_LOOKUP atomic_mmu_lookup(env, addr, oi, GETPC())
 
 #define DATA_SIZE 1
 #include "atomic_template.h"

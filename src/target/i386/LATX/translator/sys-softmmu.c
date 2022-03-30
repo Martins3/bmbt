@@ -72,8 +72,7 @@ static int convert_to_tcgmemop(IR2_OPCODE op)
     }
 }
 
-// #ifndef HAMT
-#if 0
+#ifndef HAMT
 static int get_ldst_align_bits(IR2_OPCODE opc)
 {
     if (option_fast_fpr_ldst) {
@@ -110,8 +109,7 @@ static int get_ldst_align_bits(IR2_OPCODE opc)
 #endif
 
 /* return label point to slow path */
-// #ifndef HAMT
-#if 0
+#ifndef HAMT
 static void tr_gen_lookup_qemu_tlb(
         IR2_OPCODE op,
         IR2_OPND *gpr_opnd,
@@ -328,8 +326,7 @@ static void tr_gen_lookup_qemu_tlb(
 }
 #endif
 
-// #ifndef HAMT
-#if 0
+#ifndef HAMT
 static void td_rcd_softmmu_slow_path(
         IR2_OPCODE op,
         IR2_OPND *gpr_ir2_opnd,
@@ -394,8 +391,7 @@ static void td_rcd_softmmu_slow_path(
 }
 #endif
 
-// #ifndef HAMT
-#if 0
+#ifndef HAMT
 static void tr_gen_ldst_slow_path(
         IR2_OPCODE op,
         IR2_OPND  *gpr_opnd, /* temp(t0-t7) or mapping(s1-s8) */
@@ -414,8 +410,7 @@ static void tr_gen_ldst_slow_path(
 #endif
 
 /* option_fast_fpr_ldst : opnd_gpr can be fpr */
-// #ifndef HAMT
-#if 0
+#ifndef HAMT
 static void __gen_ldst_softmmu_helper_native(
         IR2_OPCODE op,
         IR2_OPND *opnd_gpr,
@@ -725,8 +720,7 @@ void gen_ldst_softmmu_helper(
         int save_temp)
 {
     if (is_ldst_realized_by_softmmu(op)) {
-// #ifdef HAMT
-#if 1
+#ifdef HAMT
         IR2_OPND base = latxs_ir2_opnd_mem_get_base(opnd_mem);
         int offset  = latxs_ir2_opnd_mem_get_offset(opnd_mem);
         assert(offset == 0);

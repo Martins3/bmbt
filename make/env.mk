@@ -5,6 +5,7 @@ ARCH_APPENDIX :=loongson
 CFLAGS := -g -Wall -Werror -O3
 
 ENV_KERNEL ?= 1
+HAMT ?= 1
 
 USE_LIBC ?= 0
 USE_GLIB ?= 0
@@ -25,6 +26,10 @@ else
   ifeq ($(USE_ULIBC_FILE), 0)
 	  $(error ulibc doesn't implement fread,fwrite,etc. )
   endif
+endif
+
+ifeq ($(HAMT), 1)
+	CFLAGS += -DHAMT
 endif
 
 ifeq ($(USE_ULIBC_FILE), 1)

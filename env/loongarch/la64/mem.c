@@ -216,6 +216,7 @@ void fw_init_memory(void) {
   u64 bss_end = TO_PHYS(PFN_ALIGN((u64)__bss_stop));
 
   bool kernel_img_in_range = false;
+#ifdef HAMT
   // allocate address space for data_storage and code_storage
   // before memory parse, because in `kernel_mmap`, 'addr' must be 0.
   uint64_t data_storage;
@@ -232,6 +233,7 @@ void fw_init_memory(void) {
   bss_end = PFN_ALIGN(bss_end);
   printf("data_storage:0x%lx, code_storage:0x%lx\n", data_storage,
          code_storage);
+#endif
 
   /* parse memory information */
   for (i = 0; i < loongson_mem_map->map_count; i++) {
