@@ -7,7 +7,7 @@
 #include <env/cpu.h>
 #include <qemu/seqloch.h>
 #include <qemu/timer.h>
-#ifdef
+#ifdef HAMT
 #include <accel/hamt_misc.h>
 #endif
 
