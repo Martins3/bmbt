@@ -2,6 +2,7 @@
 #include <asm/mach-la64/irq.h>
 #include <asm/mach-la64/loongson-pch.h>
 #include <asm/setup.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -106,6 +107,34 @@ void register_pch_pic(int id, u32 address, u32 irq_base) {
   msi_irqbase = entries;
 }
 
+static void pch_msi_domain_init(int start, int count) {
+#ifdef BMBT
+  struct fwnode_handle *irq_handle, *parent_handle;
+#endif
+  u64 msg_address;
+  int i;
+  for_each_pch_pic(i) {
+    assert(i == 0); // only support one pch_pic
+    msg_address = loongson_sysconf.msi_address_lo;
+    msg_address |= ((u64)loongson_sysconf.msi_address_hi << 32);
+#ifdef BMBT
+    irq_handle = irq_domain_alloc_fwnode((void *)msg_address);
+    irq_handle = irq_domain_alloc_named_id_fwnode("msintc", 0);
+    if (!irq_handle) {
+      panic("Unable to allocate domain handle  for pch_msi irqdomain.\n");
+    }
+
+    if (get_irq_route_model() == PCH_IRQ_ROUTE_EXT) {
+      parent_handle = eiointc_get_fwnode(i);
+    } else {
+      parent_handle = htvec_get_fwnode();
+    }
+#endif
+    pch_msi_init(msg_address, get_irq_route_model() == PCH_IRQ_ROUTE_EXT, start,
+                 count);
+  }
+}
+
 static void irqchip_init_default(void) {
 #ifdef BMBT
   loongarch_cpu_irq_init();
@@ -119,6 +148,7 @@ static void irqchip_init_default(void) {
   pch_lpc_domain_init();
 #endif
   extioi_vec_init();
+  pch_msi_domain_init(msi_irqbase, 256 - msi_irqbase);
   pch_pic_init();
 }
 

@@ -411,11 +411,11 @@ pcibus_t pci_get_bar_addr(PCIDevice *pci_dev, int region_num);
 #ifdef BMBT
 int pci_add_capability(PCIDevice *pdev, uint8_t cap_id, uint8_t offset,
                        uint8_t size, Error **errp);
-#endif
 
 void pci_del_capability(PCIDevice *pci_dev, uint8_t cap_id, uint8_t cap_size);
 
 uint8_t pci_find_capability(PCIDevice *pci_dev, uint8_t cap_id);
+#endif
 
 uint32_t pci_default_read_config(PCIDevice *d, uint32_t address, int len);
 void pci_default_write_config(PCIDevice *d, uint32_t address, uint32_t val,

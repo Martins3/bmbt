@@ -26,4 +26,7 @@
   (BUILD_PCIMEM_START - LOONGSON_PCI_MEM_START)
 #define LOONGSON_X86_PCI_IO_OFFSET (X86_PCI_IO_START - LOONGSON_PCI_IO_START)
 
+/* arch/x86/kernel/apic/msi.c:irq_msi_compose_msg */
+#define X86_MSI_ADDR_BASE_LO 0xfee0100c
+
 #endif /* end of include guard: DEVICE_H_V9602GXP */

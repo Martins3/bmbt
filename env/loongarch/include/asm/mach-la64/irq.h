@@ -108,17 +108,12 @@ extern void register_pch_pic(int id, u32 address, u32 irq_base);
 extern int liointc_init(struct resource *res, int parent_irq_num,
                         u32 *parent_irq, u32 *parent_int_map,
                         struct fwnode_handle *domain_handle, int model);
-extern int pch_msi_init(struct fwnode_handle *irq_handle,
-                        struct fwnode_handle *parent_handle, u64 msg_address,
-                        bool ext, int start, int count);
 extern int htvec_init(unsigned long addr, unsigned int num_parents,
                       unsigned int *parent_irq,
                       struct fwnode_handle *irq_handle);
-extern int extioi_vec_init(struct fwnode_handle *fwnode, int cascade_irq,
-                           u32 vec_count, u32 misc_func, u32 eio_en_off,
-                           u64 node_map, u32 node);
 extern void fixup_irqs(void);
 #endif
+extern int pch_msi_init(u64 msg_address, bool ext, int start, int count);
 extern int pch_pic_init();
 extern void extioi_vec_init(void);
 extern void extioi_init(void);

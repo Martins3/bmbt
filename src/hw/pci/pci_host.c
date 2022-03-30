@@ -170,6 +170,13 @@ static void pci_host_data_write(void *opaque, hwaddr addr, uint64_t val,
   PCIHostState *s = opaque;
   PCI_DPRINTF("write addr " TARGET_FMT_plx " len %d val %x\n", addr, len,
               (unsigned)val);
+#ifndef RELEASE_VERSION
+  if ((s->config_reg) & (0xf00 << 16)) {
+    // QEMU think guest shall not access PCIe extended space
+    g_assert_not_reached();
+  }
+#endif
+
   if (s->config_reg & (1u << 31))
     pci_data_write(s->bus, s->config_reg | (addr & 3), val, len);
 }
