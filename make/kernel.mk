@@ -21,7 +21,7 @@ setup_src:
 		tar -xvf linux.tar.xz -C $(KERNEL_PATH) --strip-components 1; \
 	fi
 	# skip "set_video" because we didn't implemented the devices
-	sed -i 's/set_video/\/\/ set_videio/' $(KERNEL_PATH)/arch/x86/boot/main.c
+	sed -i 's/set_video/\/\/ skip this /' $(KERNEL_PATH)/arch/x86/boot/main.c
 
 minimal_config:
 	# copy modified kconfig
@@ -32,14 +32,18 @@ minimal_config:
 def_config:
 	if [[ ! -f $(KERNEL_PATH)/.config ]]; then \
 		make -C $(KERNEL_PATH) i386_defconfig; \
+                # find a better way to add debug info config to guest kernel \
+	        sed -i 's/# CONFIG_DEBUG_INFO is not set/CONFIG_DEBUG_INFO=y\n# CONFIG_DEBUG_INFO_REDUCED is not set\n# CONFIG_DEBUG_INFO_SPLIT is not set\n# CONFIG_DEBUG_INFO_DWARF4 is not set\n# CONFIG_GDB_SCRIPTS is not set/' $(KERNEL_PATH)/.config; \
 	fi
 
 compile:
 	make -C $(KERNEL_PATH)
-	cp $(KERNEL_PATH)/arch/x86/boot/bzImage  $(BASE_DIR)/image/bzImage.bin
 
 minimal: setup_src minimal_config compile
 	@echo "minimal kernel installed"
 
-def: setup_src def_config compile
+copy:
+	cp $(KERNEL_PATH)/arch/x86/boot/bzImage  $(BASE_DIR)/image/bzImage.bin
+
+def: setup_src def_config compile copy
 	@echo "minimal kernel installed"
