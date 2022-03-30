@@ -638,7 +638,7 @@ static void apic_mem_write(void *opaque, hwaddr addr, uint64_t val,
   if (size < 4) {
     return;
   }
-
+  // [BMBT_OPTIMIZE 4]
   if (addr > 0xfff || !index) {
     /* MSI and MMIO APIC are at the same memory location,
      * but actually not on the global bus: MSI is on PCI bus

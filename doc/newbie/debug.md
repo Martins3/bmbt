@@ -72,6 +72,7 @@ alias bt=/home/loongson/core/bmbt/script/backtrace.sh
 ```c
 #include "cpu.h"
 
+CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
 printf("[huxueshi:%s:%d] %x\n", __FUNCTION__, __LINE__, env->segs[R_CS].base + env->eip);
 ```
 

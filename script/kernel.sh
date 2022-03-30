@@ -43,7 +43,7 @@ if [ $launch_gdb = true ]; then
 fi
 
 network="-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1"
-machine_arg="-m 8192M -serial mon:stdio -cpu Loongson-3A5000 -enable-kvm -M loongson7a_v1.0,accel=kvm"
+machine_arg="-m 8G -serial mon:stdio -cpu Loongson-3A5000 -enable-kvm -M loongson7a_v1.0,accel=kvm"
 if [[ $USE_MINIMAL_INITRD = true ]]; then
   kernel_arg="-kernel ${kernel} -append \"console=ttyS0 earlyprintk root=/dev/ram rdinit=/hello.out\" -initrd ${initrd}"
   img_arg="-bios ${bios}"
