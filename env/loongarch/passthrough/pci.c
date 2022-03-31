@@ -20,8 +20,6 @@ static int __pci_find_next_cap_ttl(unsigned int devfn, u8 pos, int cap,
       break;
     pos &= ~3;
     pci_bus_read_config_word(devfn, pos, &ent);
-    printf("[huxueshi:%s:%d] pos=%x end=%x\n", __FUNCTION__, __LINE__, pos,
-           ent);
 
     id = ent & 0xff;
     if (id == 0xff)
@@ -81,9 +79,6 @@ static msix_table tables[MAX_MSI_TBALE];
 static int table_num;
 
 void insert_msix_table(u8 devfn, u32 offset, int entry_num) {
-  printf("[huxueshi:%s:%d] msix table added try %x %x %x\n", __FUNCTION__,
-         __LINE__, devfn, offset, entry_num);
-
   for (int i = 0; i < table_num; ++i) {
     if (tables[i].devfn == devfn) {
       assert(tables[i].entry_num == entry_num);
@@ -92,8 +87,6 @@ void insert_msix_table(u8 devfn, u32 offset, int entry_num) {
     }
   }
 
-  printf("[huxueshi:%s:%d] msix table added %x %x %x\n", __FUNCTION__, __LINE__,
-         devfn, offset, entry_num);
   tables[table_num].offset = offset;
   tables[table_num].devfn = devfn;
   tables[table_num].entry_num = entry_num;
@@ -105,11 +98,6 @@ int msix_table_overlapped(hwaddr addr, unsigned size) {
   for (int i = 0; i < table_num; ++i) {
     if (ranges_overlap(tables[i].offset,
                        tables[i].entry_num * PCI_MSIX_ENTRY_SIZE, addr, size)) {
-      // only one PCIe device now
-      /* printf("[huxueshi:%s:%d] [%x %x] [%lx %x]\n", __FUNCTION__, __LINE__,
-       */
-      /*        tables[i].offset, tables->entry_num, addr, size); */
-      assert(i == 0);
       return i;
     }
   }
@@ -328,10 +316,6 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
     return;
   }
 
-#ifdef PCI_PASS_DEBUG
-  printf("[huxueshi:%s:%d] %lx %lx\n", __FUNCTION__, __LINE__, addr,
-         addr - LOONGSON_X86_PCI_MEM_OFFSET);
-#endif
   switch (size) {
   case 1:
     writeb(val, (void *)TO_UNCAC(addr));
