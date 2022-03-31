@@ -9,18 +9,18 @@
 /* 0000000020000000-0000000027ffffff (prio 0, i/o): pcie-mmcfg-mmio */
 #define LS_PCI_CONFIG_IO_BASE ((void *)TO_UNCAC(0x20000000))
 
-/* macros in seabios/src/config.h start */
+/* seabios/src/config.h */
 #define BUILD_PCIMEM_START 0xe0000000
 #define BUILD_PCIMEM_END 0xfec00000 /* IOAPIC is mapped at */
-/* macros in seabios/src/config.h end */
+
+/* seabios/src/fw/pciinit.c:pci_bios_init_root_regions_io */
 #define X86_PCI_IO_START 0xc000
 #define X86_PCI_IO_END 0xffff
 
-/* define arch/loongarch/include/asm/mach-la64/pci.h start */
+/* arch/loongarch/include/asm/mach-la64/pci.h */
 #define LOONGSON_PCI_MEM_START 0x40000000UL
 #define LOONGSON_PCI_MEM_END 0x7fffffffUL
 #define LOONGSON_PCI_IO_START 0x00004000UL
-/* define arch/loongarch/include/asm/mach-la64/pci.h end */
 
 #define LOONGSON_X86_PCI_MEM_OFFSET                                            \
   (BUILD_PCIMEM_START - LOONGSON_PCI_MEM_START)
