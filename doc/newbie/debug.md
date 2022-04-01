@@ -7,7 +7,7 @@
 ```
 然后在 gdb 中 disass
 
-如果是 seabios，启动 gdb 的方法: gdb out/rom.o
+如果是 seabios ，启动 gdb 的方法: gdb out/rom.o
 或者 gdb out/rom16.o
 
 ### 在源码中间添加 log

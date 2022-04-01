@@ -40,7 +40,10 @@ mkdir build && cd build
             --enable-virtfs
 ```
 
-注意，这个东西是无法在 x86 上编译的，因为 kvm 的之类的 macro 需要系统的头文件。
+这个东西是无法在 x86 上编译的，因为 kvm 的之类的 macro 需要系统的头文件。
+
+- 如果需要调试串口，可以给 QEMU 添加上 patch/qemu_debugcon.patch
+- 如果需要增加 nvme 设备，需要添加上 patch/qemu_nvme.patch
 
 ## 生成镜像
 在 x86 上 make -f make/image.mk 自动生成:
