@@ -1,0 +1,11 @@
+diff --git a/default-configs/loongarch64-softmmu.mak b/default-configs/loongarch64-softmmu.mak
+index 869cf6765a..2063210093 100644
+--- a/default-configs/loongarch64-softmmu.mak
++++ b/default-configs/loongarch64-softmmu.mak
+@@ -1,5 +1,6 @@
+ # Default configuration for loongarch-softmmu
+
++CONFIG_NVME_PCI=y
+ #include pci.mak
+ #include sound.mak
+ #include usb.mak
