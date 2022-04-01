@@ -141,6 +141,7 @@ typedef struct PCIIORegion {
 
 #define PCI_ROM_SLOT 6
 #define PCI_NUM_REGIONS 7
+#define PCI_BRIDGE_NUM_REGIONS 2
 
 enum {
   QEMU_PCI_VGA_MEM,

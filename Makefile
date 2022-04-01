@@ -142,11 +142,14 @@ clean:
 clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
 
+EXT4_IMG=$(BASE_DIR)/img1.ext4
+
 QEMU_DIR=/home/loongson/core/centos-qemu
 LA_BIOS=$(QEMU_DIR)/pc-bios/loongarch_bios.bin
 LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
 NETWORK_CONFIG=-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1
-RUN_IN_QEMU=$(LA_QEMU) $(NETWORK_CONFIG) -m 8G -cpu Loongson-3A5000 -nographic -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt)
+NVME_CONFIG=-device nvme,drive=nvme1,serial=foo -drive file=$(EXT4_IMG),format=raw,if=none,id=nvme1
+RUN_IN_QEMU=$(LA_QEMU) $(NETWORK_CONFIG) $(NVME_CONFIG) -m 8G -cpu Loongson-3A5000 -nographic -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt)
 
 run: all clear_gcda
 	if [[ $(ENV_KERNEL) == 1 ]];then \

@@ -23,7 +23,7 @@
 #define LOONGSON_PCI_IO_START 0x00004000UL
 
 #define LOONGSON_X86_PCI_MEM_OFFSET                                            \
-  (BUILD_PCIMEM_START - LOONGSON_PCI_MEM_START)
+  (BUILD_PCIMEM_START - LOONGSON_PCI_MEM_START - 0x20000000)
 #define LOONGSON_X86_PCI_IO_OFFSET (X86_PCI_IO_START - LOONGSON_PCI_IO_START)
 
 /* arch/x86/kernel/apic/msi.c:irq_msi_compose_msg */

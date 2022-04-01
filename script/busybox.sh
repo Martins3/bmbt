@@ -59,7 +59,7 @@ fi
 INITRAMFS_BUILD=$BUILDS/$initramfs
 
 if [[ ! -d $INITRAMFS_BUILD ]]; then
-  make -j && make install -j
+  # make -j && make install -j
 
   mkdir -p $INITRAMFS_BUILD
   cd $INITRAMFS_BUILD || exit 0
@@ -89,6 +89,10 @@ Welcome to mini_linux
 
 !
 ifup eth0
+
+mkdir mnt
+mknod /dev/nvme b 259 0
+mount /dev/nvme /mnt
 
 exec /bin/sh
 EOF
