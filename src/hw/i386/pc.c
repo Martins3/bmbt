@@ -1162,9 +1162,9 @@ void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
   *ram_memory = NULL;
 #endif
 
-  e820_add_entry(0, X86_BIOS_MEM_SIZE, E820_RAM);
-  e820_add_entry(0x200000, x86ms->below_4g_mem_size - 0x200000, E820_RAM);
-  /* e820_add_entry(0, x86ms->below_4g_mem_size, E820_RAM); */
+  /* e820_add_entry(0, X86_BIOS_MEM_SIZE, E820_RAM); */
+  /* e820_add_entry(0x200000, x86ms->below_4g_mem_size - 0x200000, E820_RAM); */
+  e820_add_entry(0, x86ms->below_4g_mem_size, E820_RAM);
 
   // bigger RAM size will be supported later
   bmbt_check(x86ms->above_4g_mem_size == 0);

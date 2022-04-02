@@ -1,8 +1,9 @@
 ENTRY(start_entry)
 
 SECTIONS {
-    . = 0x9000000000200000;
+    . = 0x9000000008000000;
 
+    __text_start = .;
     .text :
     {
         *(.text)

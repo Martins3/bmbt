@@ -832,7 +832,7 @@ static void x86_pc_ram_init() {
   block->host = (u8 *)TO_CAC(block->mr->offset);
 }
 
-static void *alloc_ram(hwaddr size) {
+void *alloc_ram(hwaddr size) {
   // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
   void *host = mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -861,7 +861,8 @@ static inline void init_ram_block(const char *name, unsigned int index,
  *  - smm
  */
 static void ram_init() {
-  void *host = alloc_ram(get_pc_ram_offset());
+  /* void *host = alloc_ram(get_pc_ram_offset()); */
+  void *host = (void *)TO_CAC(0);
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
     MemoryRegion *mr = &ram_list.blocks[i].mr;

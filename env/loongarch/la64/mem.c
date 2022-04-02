@@ -12,6 +12,7 @@ void init_pages();
 extern bool mmap_ready;
 
 extern char __bss_stop[];
+extern char __text_start[];
 
 static hwaddr pc_ram_offset;
 hwaddr get_pc_ram_offset() {
@@ -23,13 +24,17 @@ void fw_init_memory(void) {
   int i;
   u32 mem_type;
   u64 mem_start, mem_end, mem_size;
-  static unsigned long num_physpages;
+  // static unsigned long num_physpages;
   // unsigned long start_pfn, end_pfn;
   // unsigned long kernel_end_pfn;
   u64 total_mem = 0;
 
   init_pages();
+  // memory occupied by the kernel
+  u64 text_start = TO_PHYS(PFN_ALIGN((u64)__text_start));
   u64 bss_end = TO_PHYS(PFN_ALIGN((u64)__bss_stop));
+
+  bool kernel_img_in_range = false;
 
   /* parse memory information */
   for (i = 0; i < loongson_mem_map->map_count; i++) {
@@ -44,33 +49,33 @@ void fw_init_memory(void) {
       mem_end = PFN_ALIGN(mem_end - PAGE_SIZE + 1);
       if (mem_start >= mem_end)
         break;
-      if (mem_end <= bss_end)
+
+      printf("mem_start:0x%lx, mem_size:0x%lx Bytes\n", mem_start, mem_size);
+
+      if (mem_start <= text_start && mem_end >= bss_end) {
+        kernel_img_in_range = true;
+        // @todo physical memory are hard coded
+        // 1. 0 ~ 2M is occupied by the bios
+        // 2. and kernel image in the 128M
+        // 3. 2M ~ 128M used by guest
+        assert(mem_start == 0x200000);
+        assert(text_start == 0x8000000);
+        assert(mem_end > bss_end);
+        fw_add_mem(bss_end, mem_end - bss_end);
+        total_mem += mem_end - bss_end;
+
+        pc_ram_offset = 0x200000;
         break;
-      if (mem_start < bss_end) {
-        mem_start = bss_end;
-        mem_size = mem_end - mem_start;
       }
 
-      num_physpages += (mem_size >> PAGE_SHIFT);
-      total_mem += mem_size;
       // printf("mem_start:0x%lx, mem_size:0x%lx Bytes\n", mem_start,
       // mem_size);
       printf("start_pfn:0x%lx, end_pfn:0x%lx\n", mem_start >> PAGE_SHIFT,
              (mem_start + mem_size) >> PAGE_SHIFT);
       printf("pfn number %lx\n", mem_size >> PAGE_SHIFT);
 
-      if (pc_ram_offset == 0) {
-        assert(mem_size + mem_start >= CONFIG_GUEST_RAM_SIZE);
-        assert(mem_start < CONFIG_GUEST_RAM_SIZE);
-        pc_ram_offset = mem_start;
-        mem_size -= (CONFIG_GUEST_RAM_SIZE - mem_start);
-        mem_start = CONFIG_GUEST_RAM_SIZE;
-      }
-
-      if ((mem_size >> PAGE_SHIFT) < 1)
-        continue;
-
       fw_add_mem(mem_start, mem_size);
+      total_mem += mem_size;
 
       // add_memory_region(mem_start, mem_size, BOOT_MEM_RAM);
       // memblock_set_node(mem_start, mem_size, &memblock.memory, 0);
@@ -99,4 +104,5 @@ void fw_init_memory(void) {
   }
   mmap_ready = true;
   printf("total_mem %lx bytes\n", total_mem);
+  assert(kernel_img_in_range);
 }
