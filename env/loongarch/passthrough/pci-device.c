@@ -50,14 +50,14 @@ static inline void init_bar(BAR *bar, bool bottom, bool top, int type,
 }
 
 // [BMBT_OPTIMIZE 6]
-#define MAX_MSI_TBALE 10
-static BMBT_PCIExpressDevice pcie_devices[MAX_MSI_TBALE];
+#define MAX_PCI_DEV_NUM 10
+static BMBT_PCIExpressDevice pcie_devices[MAX_PCI_DEV_NUM];
 static int nr_dev;
 
 static inline int alloc_pci_dev() {
   int res = nr_dev;
   nr_dev++;
-  assert(nr_dev < MAX_MSI_TBALE);
+  assert(nr_dev < MAX_PCI_DEV_NUM);
   return res;
 }
 
