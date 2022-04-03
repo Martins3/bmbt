@@ -22,6 +22,7 @@
 #include <hw/timer/i8254.h>
 #include <qemu/log.h>
 #include <uglib.h>
+#include <env/device.h>
 
 /* debug PC/ISA interrupts */
 // #define DEBUG_IRQ
@@ -1344,7 +1345,6 @@ static const MemoryRegionOps ioportF0_io_ops = {
         },
 };
 
-void setup_serial_pass_through();
 static void pc_superio_init(ISABus *isa_bus, bool create_fdctrl,
                             bool no_vmport) {
 

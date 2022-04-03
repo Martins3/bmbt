@@ -6,6 +6,7 @@
 #include <linux/irqflags.h>
 #include <linux/pci-ecam.h>
 #include <linux/stack.h>
+#include <env/device.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -729,8 +729,6 @@ static void apic_mem_write(void *opaque, hwaddr addr, uint64_t val,
   }
 }
 
-/* void apic_mem_write(void *opaque, hwaddr addr, uint64_t val, */
-/*                            unsigned size) { */
 void msix_pass_apic_mem_write(int irq) {
   apic_mem_write(NULL, 0x100c, 0x4100 | irq, 4);
 }

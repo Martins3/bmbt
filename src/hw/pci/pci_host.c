@@ -22,6 +22,7 @@
 #include "hw/pci/pci.h"
 #include "hw/pci/pci_bus.h"
 #include "qemu/osdep.h"
+#include <env/device.h>
 
 /* debug PCI */
 //#define DEBUG_PCI
@@ -102,9 +103,6 @@ uint32_t pci_host_config_read_common(PCIDevice *pci_dev, uint32_t addr,
 
   return ret;
 }
-
-void pci_pass_through_write(uint32_t addr, uint32_t val, int l);
-uint32_t pci_pass_through_read(uint32_t addr, int l);
 
 void pci_data_write(PCIBus *s, uint32_t addr, uint32_t val, int len) {
   PCIDevice *pci_dev = pci_dev_find_by_addr(s, addr);
