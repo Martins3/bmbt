@@ -4,7 +4,7 @@
 #include <linux/pci.h>
 #include <qemu/range.h>
 
-// functions defined in ./pci-device.h
+// functions defined in ./pci-device.c
 int add_PCIe_devices(u8 devfn);
 int msix_table_overlapped(hwaddr addr, unsigned size);
 int get_msix_table_entry_offset(hwaddr addr, int idx);
