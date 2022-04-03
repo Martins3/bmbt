@@ -35,8 +35,7 @@ typedef struct RAMBlock {
 #define PAM_BIOS_NUM 1
 #define PAM_NUM (PAM_EXPAN_NUM + PAM_EXBIOS_NUM + PAM_BIOS_NUM)
 // pc.ram
-#define PC_RAM_X_INDEX (PAM_INDEX + PAM_NUM)
-#define PC_RAM_INDEX (PC_RAM_X_INDEX + 1)
+#define PC_RAM_INDEX (PAM_INDEX + PAM_NUM)
 // pc.bios
 #define PC_BIOS_INDEX (PC_RAM_INDEX + 1)
 
@@ -54,7 +53,7 @@ typedef struct RAMBlock {
  * pc.ram      * 1
  * pc.bios     * 1
  */
-QEMU_BUILD_BUG_ON(RAM_BLOCK_NUM != (1 + 1 + 12 + 1 + 1 + 1 + 1));
+QEMU_BUILD_BUG_ON(RAM_BLOCK_NUM != (1 + 1 + 12 + 1 + 1 + 1));
 QEMU_BUILD_BUG_ON(PAM_EXBIOS_SIZE * 4 + PAM_BIOS_SIZE != 128 * KiB);
 
 typedef struct RAMList {
@@ -282,6 +281,4 @@ cpu_physical_memory_range_includes_clean(ram_addr_t start, ram_addr_t length,
 }
 
 void tb_invalidate_phys_range(ram_addr_t start, ram_addr_t end);
-
-hwaddr get_pc_ram_offset();
 #endif /* end of include guard: RAM_ADDR_H_ACNMERX5 */

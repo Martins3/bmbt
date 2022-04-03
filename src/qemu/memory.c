@@ -825,21 +825,6 @@ static void x86_bios_rom_init() {
   // isa-bios is handled in function isa_bios_access
 }
 
-static void x86_pc_ram_init() {
-  RAMBlock *block = &ram_list.blocks[PC_RAM_INDEX].block;
-  /* block->offset = get_pc_ram_offset(); */
-  assert(block->offset == get_pc_ram_offset());
-  block->host = (u8 *)TO_CAC(block->mr->offset);
-}
-
-void *alloc_ram(hwaddr size) {
-  // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
-  void *host = mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
-                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  assert(host != (void *)-1);
-  return host;
-}
-
 static inline void init_ram_block(const char *name, unsigned int index,
                                   bool readonly, hwaddr offset, uint64_t size) {
   MemoryRegion *mr = &ram_list.blocks[index].mr;
@@ -861,8 +846,7 @@ static inline void init_ram_block(const char *name, unsigned int index,
  *  - smm
  */
 static void ram_init() {
-  /* void *host = alloc_ram(get_pc_ram_offset()); */
-  void *host = (void *)TO_CAC(0);
+  void *host = alloc_ram(CONFIG_GUEST_RAM_SIZE);
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -895,10 +879,8 @@ static void ram_init() {
                  ram_list.blocks[PAM_BIOS_INDEX].mr.size ==
              X86_BIOS_MEM_SIZE);
 
-  init_ram_block("pc.ram.x", PC_RAM_X_INDEX, false, X86_BIOS_MEM_SIZE,
-                 get_pc_ram_offset() - X86_BIOS_MEM_SIZE);
-  init_ram_block("pc.ram", PC_RAM_INDEX, false, get_pc_ram_offset(),
-                 CONFIG_GUEST_RAM_SIZE - get_pc_ram_offset());
+  init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
+                 CONFIG_GUEST_RAM_SIZE - X86_BIOS_MEM_SIZE);
   init_ram_block("pc.bios", PC_BIOS_INDEX, true,
                  4 * GiB - CONFIG_GUEST_BIOS_SIZE, CONFIG_GUEST_BIOS_SIZE);
 
@@ -912,7 +894,6 @@ static void ram_init() {
   }
 
   x86_bios_rom_init();
-  x86_pc_ram_init();
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     MemoryRegion *mr = &ram_list.blocks[i].mr;

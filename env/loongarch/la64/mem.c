@@ -14,12 +14,6 @@ extern bool mmap_ready;
 extern char __bss_stop[];
 extern char __text_start[];
 
-static hwaddr pc_ram_offset;
-hwaddr get_pc_ram_offset() {
-  assert(pc_ram_offset != 0);
-  return pc_ram_offset;
-}
-
 void fw_init_memory(void) {
   int i;
   u32 mem_type;
@@ -60,11 +54,10 @@ void fw_init_memory(void) {
         // 3. 2M ~ 128M used by guest
         assert(mem_start == 0x200000);
         assert(text_start == 0x8000000);
+        assert(CONFIG_GUEST_RAM_SIZE == 0x8000000);
         assert(mem_end > bss_end);
         fw_add_mem(bss_end, mem_end - bss_end);
         total_mem += mem_end - bss_end;
-
-        pc_ram_offset = 0x200000;
         break;
       }
 
@@ -105,4 +98,9 @@ void fw_init_memory(void) {
   mmap_ready = true;
   printf("total_mem %lx bytes\n", total_mem);
   assert(kernel_img_in_range);
+}
+
+void *alloc_ram(hwaddr size) {
+  assert(size == 0x8000000);
+  return (void *)TO_CAC(0);
 }
