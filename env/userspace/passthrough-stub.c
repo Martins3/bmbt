@@ -1,5 +1,6 @@
 #include <assert.h>
-#include <stdint.h>
+#include <env/device.h>
+#include <env/memory.h>
 #include <sys/mman.h>
 #include <uglib.h>
 

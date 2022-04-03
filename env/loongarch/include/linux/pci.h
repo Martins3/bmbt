@@ -38,9 +38,4 @@ int pci_bus_write_config_byte(unsigned int devfn, int where, u8 val);
 int pci_bus_write_config_word(unsigned int devfn, int where, u16 val);
 int pci_bus_write_config_dword(unsigned int devfn, int where, u32 val);
 
-// bmbt: pci pass through
-void pci_pass_through_write(uint32_t addr, uint32_t val, int l);
-uint32_t pci_pass_through_read(uint32_t addr, int l);
-void pci_pass_through_init();
-void loongarch_pci_init();
 #endif /* end of include guard: PCI_H_65PSRQAZ */

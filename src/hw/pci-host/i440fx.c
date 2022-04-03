@@ -26,6 +26,7 @@
  * I440FX chipset data sheet.
  * https://wiki.qemu.org/File:29054901.pdf
  */
+#include <env/device.h>
 #include <exec/memory.h>
 #include <exec/ram_addr.h>
 #include <hw/i386/pc.h>
@@ -274,7 +275,6 @@ PCIHostState *QOM_init_pci_host_bridge() {
   return &pci_host_state->parent_obj;
 }
 
-void pci_pass_through_init();
 PCIBus *i440fx_init(const char *host_type, const char *pci_type,
                     PCII440FXState **pi440fx_state,
                     MemoryRegion *address_space_mem,

@@ -3,6 +3,7 @@
 #include "../../include/hw/southbridge/piix.h"
 #include "../../include/qemu/bswap.h"
 #include "../../include/qemu/units.h"
+#include <env/memory.h>
 #include <hw/pci-host/pam.h>
 #include <stdio.h>
 #include <sys/mman.h>
