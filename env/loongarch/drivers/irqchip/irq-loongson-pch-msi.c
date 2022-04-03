@@ -1,5 +1,7 @@
+#include <asm/device.h>
 #include <asm/mach-la64/irq.h>
 #include <assert.h>
+#include <exec/hwaddr.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -10,11 +12,13 @@ struct pch_msi_data {
   u64 msg_address;
 } pch_msi_priv;
 
-void msix_pass_apic_mem_write(int irq);
+void apic_mem_write(void *opaque, hwaddr addr, uint64_t val, unsigned size);
 
 static void msix_irq_passthrogh(int hwirq) {
   int guest_irq = hwirq - pch_msi_priv.irq_first;
-  msix_pass_apic_mem_write(guest_irq);
+#define APIC_DEFAULT_ADDRESS 0xfee00000
+  apic_mem_write(NULL, X86_MSI_ADDR_BASE_LO - APIC_DEFAULT_ADDRESS,
+                 X86_MSI_ENTRY_DATA_FLAG | guest_irq, 4);
 }
 
 int pch_msi_init(u64 msg_address, bool ext, int start, int count) {

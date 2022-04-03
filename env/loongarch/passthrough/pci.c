@@ -109,7 +109,7 @@ static uint64_t pass_mmio_pass_read(void *opaque, hwaddr addr, unsigned size) {
       break;
     case PCI_MSIX_ENTRY_DATA:
       assert(val > 0 && val < 256);
-      val |= 0x4100;
+      val |= X86_MSI_ENTRY_DATA_FLAG;
       break;
     case PCI_MSIX_ENTRY_VECTOR_CTRL:
       break;
@@ -154,7 +154,7 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
     case PCI_MSIX_ENTRY_DATA:
       // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
       // maybe fail on other operating system
-      assert((val & 0xff00) == 0x4100);
+      assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);
       val &= 0xff;
       assert(val > 0 && val < 256);
       val = pch_msi_allocate_hwirq(val);

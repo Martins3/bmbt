@@ -630,8 +630,7 @@ static void apic_send_msi(MSIMessage *msi) {
   apic_deliver_irq(dest, dest_mode, delivery, vector, trigger_mode);
 }
 
-static void apic_mem_write(void *opaque, hwaddr addr, uint64_t val,
-                           unsigned size) {
+void apic_mem_write(void *opaque, hwaddr addr, uint64_t val, unsigned size) {
   APICCommonState *s;
   int index = (addr >> 4) & 0xff;
 
@@ -727,10 +726,6 @@ static void apic_mem_write(void *opaque, hwaddr addr, uint64_t val,
     s->esr |= APIC_ESR_ILLEGAL_ADDRESS;
     break;
   }
-}
-
-void msix_pass_apic_mem_write(int irq) {
-  apic_mem_write(NULL, 0x100c, 0x4100 | irq, 4);
 }
 
 static void apic_pre_save(APICCommonState *s) {
