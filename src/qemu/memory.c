@@ -799,6 +799,15 @@ static void setup_dirty_memory() {
   DirtyMemoryBlocks *new_blocks = g_malloc(
       sizeof(*new_blocks) + sizeof(new_blocks->blocks[0]) * new_num_blocks);
 
+#ifndef RELEASE_VERSION
+  uint64_t total_size = 0;
+  for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
+    RAMBlock *blk = &ram_list.blocks[i].block;
+    total_size += blk->max_length;
+  }
+  assert(total_size == DIRTY_MEMORY_BLOCK_SIZE);
+#endif
+
   for (int j = 0; j < new_num_blocks; j++) {
     new_blocks->blocks[j] = bitmap_new(DIRTY_MEMORY_BLOCK_SIZE);
   }
@@ -901,7 +910,6 @@ static void ram_init() {
     mem_add_memory_region(mr);
   }
 
-  // TMP_TODO 有必要增加一个防护，让 ram 的大小和 dirty memory 的大小正好匹配的
   setup_dirty_memory();
 }
 
