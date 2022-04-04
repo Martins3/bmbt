@@ -18,3 +18,5 @@ void *alloc_ram(hwaddr size) {
   assert(host != (void *)-1);
   return host;
 }
+
+void cpu_wait(void) {}
