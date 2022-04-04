@@ -66,7 +66,7 @@ if [[ ! -d $INITRAMFS_BUILD ]]; then
   mkdir -p bin sbin etc proc sys usr/bin usr/sbin
   cp -a "$BUILDS"/_install/* .
 
-  cat <<EOF >$INITRAMFS_BUILD/init
+  cat << 'EOF' >$INITRAMFS_BUILD/init
 #!/bin/sh
 
 mount -t proc none /proc
