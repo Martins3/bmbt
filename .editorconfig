@@ -26,7 +26,7 @@ emacs_mode = c
 
 [*.sh]
 indent_style = space
-indent_size = 4
+indent_size = 2
 
 [*.{s,S}]
 indent_style = tab
