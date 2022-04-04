@@ -1,49 +1,6 @@
 # 总体思路
-
-- [ ] 看手册实际上，根本看不懂 pcie_f0_0 之类的东西
-- [ ] loongarch 的 msi 的中断号是如何确定的
-- [ ] x86 的 msi 的中断号是如何确定的
-- [ ] 利用 initramfs 手动 mount 一个 nvme root 进去，然后启动 systemd
-
-- [ ] 想把 msi table 的位置找到，这是一个很容易的事情
-  - [ ] 但是 e1000e-msix 中的 msix-pba 是什么东西
-
-- 了解一下 mkinitrd 这个命令吧
-- 好消息现在注入中断是一个很容易的事情了。
-  - 直接调用 apic_mem_write 就可以了
-
-## 搞一个 initramfs 可以测试网络的吧
-配置工具，只要让网卡发出了响应就可以了。
-- 可以在 centos-qemu 和 bmbt 的 interrupt handler 中检测到
-
-这似乎是没有发送中断的:
-```txt
-udhcpc: started, v1.35.0
-udhcpc: broadcasting discover
-udhcpc: broadcasting discover
-udhcpc: broadcasting discover
-udhcpc: no lease, failing
-[   20.204815] udhcpc (821) used greatest stack depth: 6520 bytes left
-ifup: can't open '/var/run/ifstate.new': No such file or directory
-/bin/sh: can't access tty; job control turned off
-```
-
-正确的是这样的:
-```txt
-udhcpc: broadcasting discover
-udhcpc: broadcasting select for 10.0.2.15, server 10.0.2.2
-udhcpc: lease of 10.0.2.15 obtained from 10.0.2.2, lease time 86400
-[    3.595958] udhcpc (939) used greatest stack depth: 6520 bytes left
-run-parts: /etc/network/if-up.d: No such file or directory
-ifup: can't open '/var/run/ifstate.new': No such file or directory
-/bin/sh: can't access tty; job control turned off
-/ # ping 10.0.2.2
-PING 10.0.2.2 (10.0.2.2): 56 data bytes
-ping: sendto: Network is unreachable
-```
-
-## pci 分配 irq 的规则是什么
-这些 interrupt irq 总是正好顺着的，分析 pch_msi_allocate_hwirq 实际上，msi 就是从 32 开始，逐个分配，没有什么要求。
+## Loonarch PCIe 分配 irq 的规则
+这些 interrupt irq 总是正好顺着的，分析 `pch_msi_allocate_hwirq` 实际上，msi 就是从 32 开始，逐个分配，没有什么要求。
 
 从哪里知道是 7A1000 table 5.1 中的数值的
 
@@ -114,7 +71,7 @@ Backtrace stopped: frame did not save the PC
 ## reference
 drivers/net/ethernet/intel/e1000e/netdev.c 中注册函数。
 
-arch/x86/kernel/apic/msi.c:irq_msi_compose_msg 中分析 x86 的 msi 组装。
+arch/x86/kernel/apic/msi.c:`irq_msi_compose_msg` 中分析 x86 的 msi 组装。
 
 其中只有低两位是 vector number:
 ```c
@@ -201,9 +158,10 @@ centos-qemu 运行 loongarch 的
 ```
 两个完全对应的，所以。
 
-## msg_address
-- pch_msi_compose_msi_msg 构建的地址是什么，为什么要构建
-  - 告诉 PCIe 设备当想要发送 PCIe 中断的时候，应该写什么位置，已经携带的信息是什么
+## `msg_address`
+
+- `pch_msi_compose_msi_msg` 构建的地址 X
+- 告诉 PCIe 设备当想要发送 PCIe 中断的时候，会写地址空间中的 X 写对应的信息
 
 ```txt
 #0  pch_msi_compose_msi_msg (data=0x900000027da57e28, msg=0x900000027d9cbb48) at drivers/irqchip/irq-loongson-pch-msi.c:48
@@ -248,7 +206,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
     000000002ff00000-000000002ff00007 (prio 0, i/o): ls3a_msi
 ```
 
-这些地址是的生成方法： msix_capability_init => msix_map_region
+这些地址是的生成方法： `msix_capability_init` => `msix_map_region`
 ```txt
 [    1.297477] [huxueshi:__pci_write_msi_msg:306] ffff800002ff8000
 [    1.298276] [huxueshi:__pci_write_msi_msg:306] ffff800002ff8010
@@ -259,13 +217,13 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
 ```
 那么最后，这个地址是什么的?
 
-pch_msi_compose_msi_msg 的 address 是 :
+`pch_msi_compose_msi_msg` 的 address 是 :
 ```txt
 $2 = 0x2ff00000
 ```
 
-## ls3a_msi
-将 ls3a_msi 的地址放到 msi 中了
+## `ls3a_msi`
+将 `ls3a_msi` 的地址放到 msi 中了
 ```c
 static uint64_t ls3a_msi_mem_read(void *opaque, hwaddr addr, unsigned size)
 {
@@ -340,11 +298,8 @@ oongson/core/centos-qemu/exec.c:3269
 #27 0x000000fff74aafe4 in  () at /lib/loongarch64-linux-gnu/libc.so.6
 ```
 
-## [ ] 找到 Loongson 裸机的 ls3a_msi 吧
+## x86 的 `irq_msi_compose_msg` 中的地址使用的是 apic
 
-## x86 的 irq_msi_compose_msg 中的地址使用的是 apic
-
-符合预期，就是向 apic_mem_write 的地址中写的
 ```txt
 #0  0x000000aaab1db304 in apic_mem_write (opaque=0xaaabe11c00, addr=4108, val=16705, size=4) at ../hw/intc/apic.c:745
 #1  0x000000aaab1bfaa0 in memory_region_write_accessor (mr=0xaaabe11c90, addr=4108, value=<optimized out>, size=<optimized out>, shift=<optimized out>, mask=<optimized9
@@ -423,19 +378,17 @@ oongson/core/centos-qemu/exec.c:3269
  25:         10   PCI-MSI 49153-edge      eth0-tx-0
  26:          2   PCI-MSI 49154-edge      eth0
 ```
+
 现在似乎两个架构中间，都是从某一个数值开始的哦!
 
 - [x] 这里的 41 51 61 应该是 idt 编号吧！
   - 只要将所有的 msix table 的位置全部记录下来，然后就可以知道到时候，中断到底注入到什么，到时候，应该拉高什么中断了。
-- [x] irq_msi_compose_msg 中的 `cfg->vector` 是规定的?
-  - 为什么分配的总是 41 51 和 61 啊
+- [x] `irq_msi_compose_msg` 中的 `cfg->vector` 是如何获取的, 为什么分配的总是 41 51 和 61 ?
     - 因为 `__assign_irq_vector` 中，应该是出于 cpumask 之类的操作，每次都是 irq += 16 的
 
-## [ ] 跟踪一下 e1000e 的中断处理在 loongarch / x86 的响应过程
+## loongarch 和 `compose_msi_msg` 和 x86 的不同，但是无所谓
 
-## loongarch 和 compose_msi_msg 和 x86 的不同，但是无所谓
-
-loongarch 的 msg 和 x86 的 arch/x86/kernel/apic/msi.c:irq_msi_compose_msg 的内容就很不一样:
+loongarch 的 msg 和 x86 的 arch/x86/kernel/apic/msi.c:`irq_msi_compose_msg` 的内容就很不一样:
 ```c
 static void pch_msi_compose_msi_msg(struct irq_data *data,
                                         struct msi_msg *msg)
@@ -449,32 +402,9 @@ static void pch_msi_compose_msi_msg(struct irq_data *data,
         msg->data = data->hwirq;
 }
 ```
-## 分析一下，如何截获
-https://www.pcietech.com/313.html/
 
-- msix_init
-  - pci_add_capability : 从这里看，这个东西是一个链表啊
-  - 的确是，PCI_MSIX_TABLE 中使用一个 bar 作为 addr 的可能性
+### 从 `pci_host.c` 看，只能访问 256K 的配置空间，但是 PCIe 要求访问 2K 的配置空间
 
-### [ ] 找到是哪一个 bar 的位置，从而知道 bar 的空间是什么的
-
-```c
-static u8 pci_hdr_type(struct pci_dev *dev)
-{
-        u8 hdr_type;
-
-#ifdef CONFIG_PCI_IOV
-        if (dev->is_virtfn)
-                return dev->physfn->sriov->hdr_type;
-#endif
-        pci_read_config_byte(dev, PCI_HEADER_TYPE, &hdr_type);
-        return hdr_type;
-}
-```
-
-### ecam 和普通地址空间的装换
-
-### [ ] 为什么 pci_host.c 可以给 e1000e 提供支持啊
 从 QEMU 看，两者的编码空间显然不同
 ```c
 /*
@@ -519,7 +449,7 @@ static inline PCIDevice *pci_dev_find_by_addr(PCIBus *bus, uint32_t addr)
 
 从 https://en.wikipedia.org/wiki/PCI_configuration_space 才知道
 
-CONFIG_ADDRESS 的编码发生了如下改变:
+`CONFIG_ADDRESS` 的编码发生了如下改变:
 ```txt
 0x80000000 | (offset & 0xf00) << 16 | bus << 16 | device << 11 | function <<  8 | (offset & 0xff)
 ```
@@ -533,56 +463,13 @@ CONFIG_ADDRESS 的编码发生了如下改变:
 
 这个应该是 loongarch  bios 中的数值了。
 
-## msix table 的格式是什么
-
-从 /home/maritns3/core/5000/core/centos-qemu/include/standard-headers/linux/pci_regs.h 中可以知道
-```c
-/* MSI-X Table entry format (in memory mapped by a BAR) */
-#define PCI_MSIX_ENTRY_SIZE             16
-#define PCI_MSIX_ENTRY_LOWER_ADDR       0  /* Message Address */
-#define PCI_MSIX_ENTRY_UPPER_ADDR       4  /* Message Upper Address */
-#define PCI_MSIX_ENTRY_DATA             8  /* Message Data */
-#define PCI_MSIX_ENTRY_VECTOR_CTRL      12 /* Vector Control */
-#define  PCI_MSIX_ENTRY_CTRL_MASKBIT    0x00000001
-```
-
-```c
-/*
- * This internal function does not flush PCI writes to the device.
- * All users must ensure that they read from the device before either
- * assuming that the device state is up to date, or returning out of this
- * file.  This saves a few milliseconds when initialising devices with lots
- * of MSI-X interrupts.
- */
-u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
-{
-        u32 mask_bits = desc->masked;
-        unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
-                                                PCI_MSIX_ENTRY_VECTOR_CTRL;
-
-        if (pci_msi_ignore_mask)
-                return 0;
-
-        mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
-        if (flag)
-                mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
-        writel(mask_bits, desc->mask_base + offset);
-
-        return mask_bits;
-}
-```
-只有一个 bit
-
-## 理解一下两个代码的差异
-在 fw_init_env 中
-
-在 QEMU 中，就是 pch_pic 实际上被叫做 ioapic 的
+## 在 QEMU 中，就是 `pch_pic` 实际上被叫做 ioapic 的
 ```txt
     0000000010000000-0000000010000fff (prio 0, i/o): ioapic
     0000000010002000-0000000010002013 (prio 1, i/o): 0x10002000
 ```
 
-## affinity
+## `pch_pic` 和 msi 都需要调用 `ext_set_irq_affinity`
 
 ```txt
 #0  ext_set_irq_affinity (d=0x900000027cf4c880, affinity=0x900000027cf98e18, force=false) at drivers/irqchip/irq-loongarch-extioi.c:110
@@ -674,221 +561,4 @@ mized out>) at ./include/linux/virtio_config.h:192
 Backtrace stopped: frame did not save the PC
 ```
 
-容易找到，是在 extioi_domain_alloc 中设置的 irq_data 的。
-
-## 如何实现 GVA 等于 GPA 的操作
-
-- [ ] e820 的物理内存探测的时候
-- [ ] 在 host 的物理内存探测的时候就需要给 guest 留下内存出来啊
-  - [ ] 现在两个设备互相形成的空洞会形成问题吗?
-- [ ] 告诉其可用的物理内存的范围就可以了
-
-### loongarch host 的物理内存的分布
-
-```txt
-00200000-0effffff : System RAM
-  00200000-00fa2463 : Kernel code
-  00fa2464-014cbfff : Kernel data
-  014cc000-0156ffff : reserved
-  01570000-016814f7 : Kernel bss
-  016814f8-056effff : reserved
-  06000000-0601bfff : reserved
-  06800000-0681bfff : reserved
-  07000000-0701bfff : reserved
-  07800000-0781bfff : reserved
-10080000-10080007 : serial
-10080100-10080107 : serial
-10080200-10080207 : serial
-10080300-10080307 : serial
-10090000-10090007 : LOON0004:00
-  10090000-10090007 : LOON0004:00
-10090100-10090107 : LOON0004:01
-  10090100-10090107 : LOON0004:01
-10090200-10090207 : LOON0004:02
-  10090200-10090207 : LOON0004:02
-10090300-10090307 : LOON0004:03
-  10090300-10090307 : LOON0004:03
-10090400-10090407 : LOON0004:04
-  10090400-10090407 : LOON0004:04
-10090500-10090507 : LOON0004:05
-  10090500-10090507 : LOON0004:05
-100a0000-100a000f : LOON0006:00
-  100a0000-100a000f : LOON0006:00
-100a0100-100a010f : LOON0006:01
-  100a0100-100a010f : LOON0006:01
-100a0200-100a020f : LOON0006:02
-  100a0200-100a020f : LOON0006:02
-100a0300-100a030f : LOON0006:03
-  100a0300-100a030f : LOON0006:03
-100d000c-100d0013 : ACPI PM1a_EVT_BLK
-100d0014-100d0017 : ACPI PM1a_CNT_BLK
-100d0018-100d001b : ACPI PM_TMR
-100d0028-100d002f : ACPI GPE0_BLK
-100d0100-100d01ff : LOON0001:00
-  100d0100-100d01ff : LOON0001:00
-100e0000-100e0bff : LOON0002:00
-  100e0000-100e0bff : LOON0002:00
-1fe001e0-1fe001e7 : serial
-90200000-bfffffff : System RAM
-c0020000-fd127fff : System RAM
-fd134000-fd2ebfff : System RAM
-fd388000-fe407fff : System RAM
-  fe000000-fe407fff : reserved
-fe460000-47fffffff : System RAM
-  fe460000-ffffffff : reserved
-  3f8000000-3fdffffff : reserved
-  3fffec000-3ffff3fff : reserved
-  47fff4000-47fffbfff : reserved
-  47fffc000-47fffffff : reserved
-e0040000000-e007fffffff : PCI Bus 0000:00
-  e0040000000-e0043ffffff : 0000:00:06.0
-  e0044000000-e0044ffffff : 0000:00:16.0
-  e0045000000-e00450fffff : PCI Bus 0000:01
-    e0045000000-e004500ffff : 0000:01:00.0
-    e0045010000-e00450107ff : 0000:01:00.0
-      e0045010000-e00450107ff : ahci
-  e0045100000-e004513ffff : 0000:00:06.0
-  e0045140000-e004514ffff : 0000:00:06.0
-  e0045150000-e004515ffff : 0000:00:06.1
-    e0045150000-e004515ffff : loongsonfb_mmio
-  e0045160000-e004516ffff : 0000:00:07.0
-    e0045160000-e004516ffff : Loongson HDA
-  e0045170000-e0045177fff : 0000:00:03.0
-    e0045170000-e0045177fff : 0000:00:03.0
-  e0045178000-e004517ffff : 0000:00:03.1
-    e0045178000-e004517ffff : 0000:00:03.1
-  e0045180000-e0045187fff : 0000:00:04.0
-    e0045180000-e0045187fff : ohci_hcd
-  e0045188000-e004518ffff : 0000:00:04.1
-    e0045188000-e004518ffff : ehci_hcd
-  e0045190000-e0045197fff : 0000:00:05.0
-    e0045190000-e0045197fff : ohci_hcd
-  e0045198000-e004519ffff : 0000:00:05.1
-    e0045198000-e004519ffff : ehci_hcd
-  e00451a0000-e00451a1fff : 0000:00:08.0
-    e00451a0000-e00451a1fff : ahci
-  e00451a2000-e00451a3fff : 0000:00:08.1
-    e00451a2000-e00451a3fff : ahci
-  e00451a4000-e00451a5fff : 0000:00:08.2
-    e00451a4000-e00451a5fff : ahci
-  e00451a6000-e00451a6fff : 0000:00:0a.0
-  e00451a7000-e00451a7fff : ls-spi.0
-    e00451a7000-e00451a7fff : 0000:00:16.0
-      e00451a7000-e00451a7fff : ls-spi io
-efe00000000-efe1fffffff : PCI ECAM
-```
-
-```txt
-memory-region: system
-  0000000000000000-ffffffffffffffff (prio 0, i/o): system
-    0000000000000000-000000000fffffff (prio 0, i/o): alias loongarch_ls3a.node0.lowram @loongarch_ls3a.ram 0000000000000000-000000000fffffff
-    00000000000a0000-00000000000bffff (prio 1, i/o): cirrus-lowmem-container
-      00000000000a0000-00000000000a7fff (prio 1, i/o): alias vga.bank0 @vga.vram 0000000000000000-0000000000007fff
-      00000000000a0000-00000000000bffff (prio 0, i/o): cirrus-low-memory
-      00000000000a8000-00000000000affff (prio 1, i/o): alias vga.bank1 @vga.vram 0000000000008000-000000000000ffff
-    0000000010000000-0000000010000fff (prio 0, i/o): ioapic
-    0000000010002000-0000000010002013 (prio 1, i/o): 0x10002000
-    000000001001041c-000000001001041f (prio 1, i/o): 0x1001041c
-    0000000010013ffc-0000000010013fff (prio 1, i/o): 0x10013ffc
-    0000000010080000-00000000100800ff (prio 0, i/o): ls3a_pm
-    00000000100d0000-00000000100d00ff (prio 0, i/o): ls7a_pm
-      00000000100d000c-00000000100d0013 (prio 0, i/o): acpi-evt
-      00000000100d0014-00000000100d0017 (prio 0, i/o): acpi-cnt
-      00000000100d0018-00000000100d001b (prio 0, i/o): acpi-tmr
-      00000000100d0028-00000000100d002f (prio 0, i/o): acpi-gpe0
-      00000000100d0030-00000000100d0033 (prio 0, i/o): acpi-reset
-    00000000100d0100-00000000100d01ff (prio 0, i/o): ls7a_rtc
-    0000000018000000-0000000019ffffff (prio 0, i/o): alias isa-io @io 0000000000000000-0000000001ffffff
-    000000001c000000-000000001c3fffff (prio 0, rom): loongarch.bios
-    000000001e000000-000000001e00000b (prio 0, i/o): acpi-mem-hotplug
-    000000001e020000-000000001e020001 (prio 0, i/o): fwcfg.ctl
-    000000001e020008-000000001e02000f (prio 0, i/o): fwcfg.data
-    000000001f000000-000000001f0000ff (prio 0, i/o): gipi0
-    000000001f010000-000000001f02ffff (prio 0, i/o): apic0
-    000000001fe00008-000000001fe0000f (prio 1, i/o): ((hwaddr)0x1fe00008 | off)
-    000000001fe00010-000000001fe00017 (prio 1, i/o): ((hwaddr)0x1fe00010 | off)
-    000000001fe00020-000000001fe00027 (prio 1, i/o): ((hwaddr)0x1fe00020 | off)
-    000000001fe00180-000000001fe00187 (prio 1, i/o): ((hwaddr)0x1fe00180 | off)
-    000000001fe0019c-000000001fe001a3 (prio 1, i/o): ((hwaddr)0x1fe0019c | off)
-    000000001fe001d0-000000001fe001d7 (prio 1, i/o): ((hwaddr)0x1fe001d0 | off)
-    000000001fe001e0-000000001fe001e7 (prio 0, i/o): serial
-    000000001fe002e0-000000001fe002e0 (prio 0, i/o): debugcon
-    000000001fe00420-000000001fe00427 (prio 1, i/o): ((hwaddr)0x1fe00420 | off)
-    0000000020000000-0000000027ffffff (prio 0, i/o): pcie-mmcfg-mmio
-    000000002ff00000-000000002ff00007 (prio 0, i/o): ls3a_msi
-    0000000040000000-0000000041ffffff (prio 1, i/o): cirrus-pci-bar0
-      0000000040000000-00000000403fffff (prio 1, ram): vga.vram
-      0000000040000000-00000000403fffff (prio 0, i/o): cirrus-linear-io
-      0000000041000000-00000000413fffff (prio 0, i/o): cirrus-bitblt-mmio
-    0000000040000000-000000007fffffff (prio 0, i/o): isa-mem
-    0000000042040000-000000004205ffff (prio 1, i/o): e1000e-mmio
-    0000000042060000-000000004207ffff (prio 1, i/o): e1000e-flash
-    0000000042080000-0000000042083fff (prio 1, i/o): e1000e-msix
-      0000000042080000-000000004208004f (prio 0, i/o): msix-table
-      0000000042082000-0000000042082007 (prio 0, i/o): msix-pba
-    0000000042084000-0000000042087fff (prio 1, i/o): virtio-pci
-      0000000042084000-0000000042084fff (prio 0, i/o): virtio-pci-common
-      0000000042085000-0000000042085fff (prio 0, i/o): virtio-pci-isr
-      0000000042086000-0000000042086fff (prio 0, i/o): virtio-pci-device
-      0000000042087000-0000000042087fff (prio 0, i/o): virtio-pci-notify
-    0000000042088000-0000000042088fff (prio 1, i/o): cirrus-mmio
-    0000000042089000-0000000042089fff (prio 1, i/o): virtio-blk-pci-msix
-      0000000042089000-000000004208901f (prio 0, i/o): msix-table
-      0000000042089800-0000000042089807 (prio 0, i/o): msix-pba
-    0000000090000000-000000027fffffff (prio 0, i/o): alias loongarch_ls3a.node0.highram @loongarch_ls3a.ram 0000000010000000-00000001ffffffff
-```
-
-分布的空间是多少:
-```txt
-                                     100000
-start_pfn:0x3b1, end_pfn:0x3c00 : [0xec4000 ~ 0xf000000]
-pfn number 384f
-start_pfn:0x30000, end_pfn:0xa0000 : [0xc0000000 ~ 0x280000000]
-pfn number 70000
-start_pfn:0x24000, end_pfn:0x2f174 : [0x90000000 ~ 0xbc5d0000]
-pfn number b174
-start_pfn:0x2f18c, end_pfn:0x2fe40 : [0xbc630000 ~ 0xbf900000]
-pfn number cb4
-start_pfn:0x2ff10, end_pfn:0x30000 : [0xbfc40000 ~ 0xc0000000]
-pfn number f0
-total_mem 1fdd9c000 bytes
-```
-
-## 方案
-
-- 1M 之类的空间使用其他的位置替代
-- 其余的位置报告说无法提供
-
-- e820_add_entry 的 offset = 0 到底意味着什么?
-  - [ ] e820 的类型都是 RAM, 但是 1M 之内的显然不是啊，为什么也是计算为是的
-- seabios 扫描的结果是什么?
-- 内核扫描结果是什么?
-- [ ] 为什么操作系统现在在这里说哪里 usable，哪里不是 usable 的
-
-## 需要处理的事情
-- [ ] e820 汇报直接从 bss 之后开始吧!
-- [ ] 1M 里面的映射修改为一个新的地方
-  - [ ] 据说 4G - …… 的是如何映射的
-- [ ] dirty map 需要修改的
-  - [x] 为什么 pc.bios 有 256k 啊
-
-## kernel 被加载的物理地址是什么
-
-- 希望，不要使用这些位置，可以吗?
-  - 让 LA 内核换一个地方加载，如何?
-
-## 如何让 dma 的范围确定啊
-
-```txt
-[   11.194849] e1000e: [huxueshi:e1000_clean_tx_irq:1237] [-a] c7b19000 1 100 addr=c7b19000
-[huxueshi:apic_send_msi:636] 51
-[   11.637254] e1000e: [huxueshi:e1000_clean_tx_irq:1237] [-a] c7b19010 1 100 addr=c7b19010
-[huxueshi:apic_send_msi:636] 51
-[   11.923434] e1000e: [huxueshi:e1000_clean_tx_irq:1237] [-a] c7b19020 1 100 addr=c7b19020
-[huxueshi:apic_send_msi:636] 51
-[   12.927688] e1000e: [huxueshi:e1000_clean_tx_irq:1237] [-a] c7b19030 1 100 addr=c7b19030
-[huxueshi:apic_send_msi:636] 51
-[   12.933657] e1000e: [huxueshi:e1000_clean_tx_irq:1237] [-a] c7b19040 1 100 addr=c7b19040
-[huxueshi:apic_send_msi:636] 41
-udhcpc: broadcasting discover
-```
+容易找到，是在 `extioi_domain_alloc` 中设置的 `irq_data` 的。
