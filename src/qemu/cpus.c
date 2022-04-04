@@ -4,6 +4,7 @@
 #include "../../include/qemu/rcu.h"
 #include "../i386/LATX/include/latx-config.h"
 #include "../tcg/tcg.h"
+#include <env/cpu.h>
 #include <qemu/seqloch.h>
 #include <qemu/timer.h>
 
@@ -115,8 +116,16 @@ static void qemu_tcg_rr_wait_io_event(void) {
   while (all_cpu_threads_idle()) {
     stop_tcg_kick_timer();
     // qemu_cond_wait(first_cpu->halt_cond, &qemu_global_mutex);
+
+    /*
+     * BQL still hold here, qemu_cond_wait will release it. Now that the
+     * condition variable are removed, qemu_mutex_unlock_iothread shall be
+     * called explicitly
+     */
     if (qemu_mutex_iothread_locked())
       qemu_mutex_unlock_iothread();
+
+    cpu_wait();
   }
 
   if (!qemu_mutex_iothread_locked()) {
