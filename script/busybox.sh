@@ -52,6 +52,18 @@ sure() {
 cd $BUILDS || exit 0
 
 if [[ ! -f ${BUILDS}/.config ]]; then
+  echo "Modify the ->Setting<-"
+  echo "----------------"
+  echo "[x] Build static binary (no shared libs)      <-----------"
+  echo "[ ]   Build position independent executable"
+  echo "[ ] Force NOMMU build"
+  echo "[ ] Build shared libbusybox"
+  echo "()  Cross compiler prefix"
+  echo "()  Path to sysroot"
+  echo "(-m32 -march=i386)  Additional CFLAGS        <------------"
+  echo "(-m32)  Additional LDFLAGS                   <------------"
+  echo "----------------"
+  sure "do you remember it ?"
   make menuconfig
   sure "continue to make"
 fi
