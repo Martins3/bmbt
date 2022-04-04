@@ -362,8 +362,14 @@ PIIX3State *piix3_create(PCIBus *pci_bus, ISABus **isa_bus) {
   PIIX3State *piix3;
   PCIDevice *pci_dev;
 
-  pci_dev =
-      pci_create_simple_multifunction(pci_bus, -1, true, TYPE_PIIX3_DEVICE);
+  /**
+   * assign piix3 with maximum [^1] dev numbers so that host PCIe devfn will not
+   * overlapped with guest piix3
+   *
+   * [^1]: #define PCI_SLOT(devfn)         (((devfn) >> 3) & 0x1f)
+   */
+  pci_dev = pci_create_simple_multifunction(pci_bus, (0x1f << 3), true,
+                                            TYPE_PIIX3_DEVICE);
   piix3 = PIIX3_PCI_DEVICE(pci_dev);
   pci_bus_irqs(pci_bus, piix3_set_irq, pci_slot_get_pirq, piix3,
                PIIX_NUM_PIRQS);
