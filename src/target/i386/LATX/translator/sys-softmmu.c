@@ -723,8 +723,7 @@ void gen_ldst_softmmu_helper(
 #ifdef HAMT
         IR2_OPND base = latxs_ir2_opnd_mem_get_base(opnd_mem);
         int offset  = latxs_ir2_opnd_mem_get_offset(opnd_mem);
-        assert(offset == 0);
-        // map guest to 1 - 5G
+        // map guest to 4 - 7G
         IR2_OPND reg1 = latxs_ra_alloc_itemp();
         latxs_load_imm64(&reg1, 0x100000000);
         latxs_append_ir2_opnd3(LISA_ADD_D, &base, &base, &reg1);
