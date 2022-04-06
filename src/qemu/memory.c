@@ -106,6 +106,7 @@ static void unimplemented_io(AddressSpaceDispatch *dispatch, hwaddr offset) {
 // [BMBT_OPTIMIZE 0]
 static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
                                            hwaddr offset) {
+  printf("visit in [%s] with offset=[%lx]\n", dispatch->name, offset);
   for (int i = 0; i < dispatch->segment_num; ++i) {
     MemoryRegion *mr = dispatch->segments[i];
     bmbt_check(mr != NULL);
@@ -874,20 +875,18 @@ static void setup_dirty_memory() {
   cpu_physical_memory_set_dirty_range(0, total_size, 1 << DIRTY_MEMORY_CODE);
 }
 
-static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
+// static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
 
-// isa-bios / pc.bios's host point to file
-static void x86_bios_rom_init() {
+static void x86_bios_rom_init(uint8_t *bios_offset) {
   FILE *f = fopen("image/bios.bin", "r");
   bmbt_check(f != NULL);
-  int rc = fread(__pc_bios, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
+  // int rc = fread(__pc_bios, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
+  int rc = fread(bios_offset, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
   bmbt_check(rc == CONFIG_GUEST_BIOS_SIZE);
   fclose(f);
 
-  RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
-  block->host = (void *)(&__pc_bios[0]);
-  // pc.bios's block::offset is not same with it's mr.offset
-  block->offset = get_guest_total_ram();
+  // RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
+  // block->host = (void *)(&__pc_bios[0]);
 
   // isa-bios is handled in function isa_bios_access
 }
@@ -974,6 +973,7 @@ static void ram_init() {
   init_ram_block("pc.bios", PC_BIOS_INDEX, true,
                  4 * GiB - CONFIG_GUEST_BIOS_SIZE, CONFIG_GUEST_BIOS_SIZE);
 
+  uint8_t *bios_offset;
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -981,6 +981,9 @@ static void ram_init() {
     block->offset = mr->offset;
     block->max_length = mr->size;
     block->host = host + block->offset;
+    if (i == 16) {
+      bios_offset = block->host;
+    }
   }
 
   x86_bios_rom_init();
@@ -991,6 +994,8 @@ static void ram_init() {
     mem_add_memory_region(mr);
   }
 
+  // isa-bios / pc.bios's host point to file
+  x86_bios_rom_init(bios_offset);
   setup_dirty_memory();
 }
 
