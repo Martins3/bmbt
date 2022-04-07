@@ -726,8 +726,8 @@ void gen_ldst_softmmu_helper(
         // map guest to 4 - 7G
         IR2_OPND reg1 = latxs_ra_alloc_itemp();
         latxs_load_imm64(&reg1, 0x100000000);
-        latxs_append_ir2_opnd3(LISA_ADD_D, &base, &base, &reg1);
-        latxs_append_ir2_opnd2i(op, opnd_gpr, &base, offset);
+        latxs_append_ir2_opnd3(LISA_ADD_D, &reg1, &reg1, &base);
+        latxs_append_ir2_opnd2i(op, opnd_gpr, &reg1, offset);
 #else
         __gen_ldst_softmmu_helper_native(op, opnd_gpr, opnd_mem, save_temp);
 #endif
