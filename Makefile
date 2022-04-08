@@ -178,4 +178,14 @@ gdb: all
 	fi
 
 s: all
-		$(RUN_IN_QEMU) -S -s;
+	$(RUN_IN_QEMU) -S -s;
+
+# @todo move this config
+USB_DIR=/media/loongson/fb891a8e-d5a5-4e70-98fd-54bb019bd86b
+usb: all
+	if [[ ! -d $(USB_DIR) ]];then \
+	  echo "Please Plug USB"; \
+	  exit 1; \
+	fi
+	cp $(bmbt) $(USB_DIR)/boot/bmbt.bin
+	umount $(USB_DIR)
