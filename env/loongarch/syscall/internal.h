@@ -1,6 +1,7 @@
 #ifndef INTERNAL_H_IMYZ2RLB
 #define INTERNAL_H_IMYZ2RLB
 
+void uart_putc(char c);
 int kern_printf(const char *fmt, ...);
 
 _Noreturn void __kern_assert_fail(const char *expr, const char *file, int line,
