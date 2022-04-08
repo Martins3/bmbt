@@ -14,6 +14,7 @@
  * it."
  *
  */
+#include "internal.h"
 #include <asm/addrspace.h>
 #include <asm/device.h>
 #include <asm/io.h>
@@ -298,7 +299,10 @@ int kern_sprintf(char *buf, const char *fmt, ...) {
   return i;
 }
 
-void prom_putchar(char c) { writeb(c, LS_ISA_SERIAL_IO_BASE); }
+void prom_putchar(char c) {
+  uart_putc(c);
+  /* writeb(c, LS_ISA_SERIAL_IO_BASE); */
+}
 
 void early_console_write(const char *s, unsigned n) {
   while (n-- && *s) {
