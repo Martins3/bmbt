@@ -440,7 +440,7 @@ static void timer_interrupt_handler() {
                                     timerlistgroup_deadline_ns(&main_loop_tlg));
   if (timeout_ns == -1) {
     // if this functions called, which means interrupt triggered. The interrupt
-    // is schedule by the time out timer even.
+    // is schedule by the time out timer event.
     error_report("no timer to fire\n");
   }
   soonest_interrupt_ns(timeout_ns);
