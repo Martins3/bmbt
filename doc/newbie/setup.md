@@ -100,4 +100,34 @@ make -j
 ./run_xqm.sh
 ```
 
+## 硬件环境搭建
+找到 grub 的位置，例如
+```sh
+sudo vim /boot/grub/grub.cfg
+```
+参考 grub 中其他的内容
+```txt
+menuentry 'USB Test' --class loongnix_desktop_20 --class gnu-linux --class gnu --class os --unrestricted $menuentry_id_option 'gnulinux-simple-e0289ba3-2285-418a-9068-e98d5800315f' {
+        set gfxpayload=keep
+        insmod part_msdos
+        insmod ext2
+        set root='hd0,gpt1'
+        if [ x$feature_platform_search_hint = xy ]; then
+          search --no-floppy --fs-uuid --set=root --hint-ieee1275='ieee1275//disk@0,msdos2' --hint-bios=hd0,msdos2 --hint-efi=hd0,msdos2 --hint-baremetal=ahci0,msdos2  fb891a8e-d5a5-4e70-98fd-54bb019bd86b
+        else
+          search --no-floppy --fs-uuid --set=root fb891a8e-d5a5-4e70-98fd-54bb019bd86b
+        fi
+        echo    'Loading BMBT'
+        linux   /boot/bmbt.bin
+        boot
+}
+```
+
+需要修改的地方:
+- set root='hd0,gpt1' : hd0,gpt1 需要进入到 grub 查找，就目前的知识量，实在不行，一个个尝试，或者观察插上 U 盘前后的区别
+- 两处 UUID 修改为 U 盘的
+- linux /boot/bmbt.bin
+
+将 bmbt.bin 拷贝到 U 盘中 /boot/bmbt.bin 位置。
+
 [^1]: https://unix.stackexchange.com/questions/340844/how-to-enable-diffie-hellman-group1-sha1-key-exchange-on-debian-8-0

@@ -39,3 +39,8 @@ emacs_mode = glsl
 [*.json]
 indent_style = space
 emacs_mode = python
+
+[{Makefile,**.mk}]
+# Use tabs for indentation (Makefiles require tabs)
+indent_style = tab
+© 2022 GitHub, Inc.
