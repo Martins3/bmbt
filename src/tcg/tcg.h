@@ -1,12 +1,11 @@
 #ifndef TCG_H_FXBBEZAS
 #define TCG_H_FXBBEZAS
 
-#include "../../include/exec/cpu-all.h"
-#include "../../include/exec/exec-all.h"
-#include "../../include/exec/memop.h"
-#include "../../include/qemu/config-target.h"
-#include "../../src/tcg/loongarch/tcg-target.h"
 #include "loongarch/tcg-target.h"
+#include <exec/cpu-all.h>
+#include <exec/exec-all.h>
+#include <exec/memop.h>
+#include <qemu/config-target.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <uglib.h>
@@ -137,7 +136,7 @@ void helper_le_stq_mmu(CPUArchState *env, target_ulong addr, uint64_t val,
 
 #if defined(TARGET_I386) && defined(CONFIG_LATX)
 void latxs_helper_le_lddq_mmu(CPUArchState *env, target_ulong addr,
-                           TCGMemOpIdx oi, uintptr_t retaddr);
+                              TCGMemOpIdx oi, uintptr_t retaddr);
 void latxs_helper_le_stdq_mmu(CPUArchState *env, target_ulong addr,
                               uint64_t val, TCGMemOpIdx oi, uintptr_t retaddr);
 #endif

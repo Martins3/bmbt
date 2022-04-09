@@ -1,14 +1,14 @@
 #ifndef RAM_ADDR_H_ACNMERX5
 #define RAM_ADDR_H_ACNMERX5
-#include "../qemu/atomic.h"
-#include "../qemu/bitmap.h"
-#include "../qemu/rcu.h"
-#include "cpu-all.h"
-#include "cpu-common.h"
-#include "cpu-para.h"
-#include "ramlist.h"
 #include <assert.h>
+#include <exec/cpu-all.h>
+#include <exec/cpu-common.h>
+#include <exec/cpu-para.h>
+#include <exec/ramlist.h>
 #include <hw/pci-host/pam.h>
+#include <qemu/atomic.h>
+#include <qemu/bitmap.h>
+#include <qemu/rcu.h>
 #include <qemu/units.h>
 
 typedef struct RAMBlock {

@@ -1,7 +1,7 @@
 #ifndef BITMAP_H_ENRPTXFD
 #define BITMAP_H_ENRPTXFD
 
-#include "bitops.h"
+#include <qemu/bitops.h>
 #include <uglib.h>
 
 #include <stdlib.h>
