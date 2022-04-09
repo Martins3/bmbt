@@ -1,5 +1,5 @@
-#include "../../../include/sysemu/reset.h"
-#include "../../../include/qemu/queue.h"
+#include <qemu/queue.h>
+#include <sysemu/reset.h>
 #include <uglib.h>
 
 /* reset/shutdown handler */

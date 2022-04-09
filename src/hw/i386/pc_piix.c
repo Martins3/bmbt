@@ -1,11 +1,11 @@
-#include "../../../include/hw/firmware/smbios.h"
-#include "../../../include/hw/i386/pc.h"
-#include "../../../include/hw/pci-host/i440fx.h"
-#include "../../../include/qemu/error-report.h"
-#include "../../../include/qemu/units.h"
 #include "cpu.h"
+#include <hw/firmware/smbios.h>
+#include <hw/i386/pc.h>
+#include <hw/pci-host/i440fx.h>
 #include <hw/rtc/mc146818rtc.h>
 #include <hw/southbridge/piix.h>
+#include <qemu/error-report.h>
+#include <qemu/units.h>
 
 /* PC hardware initialisation */
 static void pc_init1(MachineState *machine, const char *host_type,

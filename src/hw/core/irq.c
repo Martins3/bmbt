@@ -1,4 +1,4 @@
-#include "../../../include/hw/irq.h"
+#include <hw/irq.h>
 #include <uglib.h>
 
 struct IRQState {

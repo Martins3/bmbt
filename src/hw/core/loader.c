@@ -1,4 +1,4 @@
-#include "../../../include/hw/nvram/fw_cfg.h"
+#include <hw/nvram/fw_cfg.h>
 #include <errno.h>
 #include <file.h>
 #include <qemu/error-report.h>

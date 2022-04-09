@@ -1,7 +1,7 @@
-#include "../../../include/hw/core/cpu.h"
-#include "../../../include/qemu/log.h"
-#include "../../../include/qemu/main-loop.h"
-#include "../../../include/sysemu/tcg.h"
+#include <hw/core/cpu.h>
+#include <qemu/log.h>
+#include <qemu/main-loop.h>
+#include <sysemu/tcg.h>
 
 CPUState *cpu_by_arch_id(int64_t id) {
   CPUState *cpu;
