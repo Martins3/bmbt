@@ -1,11 +1,11 @@
 #ifndef EXEC_ALL_H_SFIHOIQZ
 #define EXEC_ALL_H_SFIHOIQZ
-#include "../hw/core/cpu.h"
-#include "../qemu/atomic.h"
-#include "../qemu/main-loop.h"
-#include "cpu-defs.h"
 #include "cpu.h"
-#include "memop.h"
+#include <exec/cpu-defs.h>
+#include <exec/memop.h>
+#include <hw/core/cpu.h>
+#include <qemu/atomic.h>
+#include <qemu/main-loop.h>
 
 #ifdef CONFIG_LATX
 #include "latx-types.h" // for int8

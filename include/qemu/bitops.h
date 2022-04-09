@@ -1,9 +1,9 @@
 #ifndef BITOPS_H_Z29X3LYD
 #define BITOPS_H_Z29X3LYD
-#include "atomic.h"
-#include "osdep.h"
 #include <assert.h>
 #include <limits.h>
+#include <qemu/atomic.h>
+#include <qemu/osdep.h>
 
 #define BIT(nr) (1UL << (nr))
 

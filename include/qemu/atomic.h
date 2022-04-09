@@ -14,8 +14,8 @@
 
 #ifndef QEMU_ATOMIC_H
 #define QEMU_ATOMIC_H
-#include "compiler.h"
-#include "qemu/config-host.h"
+#include <qemu/compiler.h>
+#include <qemu/config-host.h>
 #include <stdint.h>
 
 /* Compiler barrier */

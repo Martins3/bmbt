@@ -1,19 +1,19 @@
 #include "tcg.h"
-#include "../../include/exec/cpu-all.h"
-#include "../../include/exec/cpu-defs.h"
-#include "../../include/exec/exec-all.h"
-#include "../../include/exec/tb-hash.h"
-#include "../../include/exec/tb-lookup.h"
-#include "../../include/hw/boards.h"
-#include "../../include/hw/core/cpu.h"
-#include "../../include/qemu/atomic.h"
-#include "../../include/qemu/main-loop.h"
-#include "../../include/qemu/osdep.h"
-#include "../../include/qemu/thread.h"
-#include "../../include/sysemu/replay.h"
+#include <exec/cpu-all.h>
+#include <exec/cpu-defs.h>
+#include <exec/exec-all.h>
+#include <exec/tb-hash.h>
+#include <exec/tb-lookup.h>
+#include <hw/boards.h>
+#include <hw/core/cpu.h>
+#include <qemu/atomic.h>
+#include <qemu/main-loop.h>
+#include <qemu/osdep.h>
+#include <qemu/thread.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <sysemu/replay.h>
 
 #define TCG_HIGHWATER 1024
 
