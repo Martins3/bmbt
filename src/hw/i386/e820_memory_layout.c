@@ -1,5 +1,5 @@
 #include "e820_memory_layout.h"
-#include "../../../include/qemu/bswap.h"
+#include <qemu/bswap.h>
 #include <errno.h>
 #include <uglib.h>
 

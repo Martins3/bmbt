@@ -1,7 +1,7 @@
-#include "../../../include/hw/i386/pc.h"
-#include "../../../include/hw/i386/topology.h"
 #include "cpu.h"
 #include <exec/cpu-all.h>
+#include <hw/i386/pc.h>
+#include <hw/i386/topology.h>
 #include <standard-headers/asm-x86/bootparam.h>
 
 #define BIOS_FILENAME "bios.bin"

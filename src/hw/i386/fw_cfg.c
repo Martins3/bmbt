@@ -1,7 +1,7 @@
-#include "../../../include/hw/nvram/fw_cfg.h"
-#include "../../../include/exec/cpu-common.h"
-#include "../../../include/hw/i386/pc.h"
-#include "../../../include/qemu/osdep.h"
+#include <hw/nvram/fw_cfg.h>
+#include <exec/cpu-common.h>
+#include <hw/i386/pc.h>
+#include <qemu/osdep.h>
 #include "cpu.h"
 #include "e820_memory_layout.h"
 #include "fw_cfg.h"
