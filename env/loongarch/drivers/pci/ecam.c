@@ -103,7 +103,7 @@ struct pci_config_window *pci_ecam_create(struct pci_ecam_ops *ops) {
   cfg->ops = ops;
   cfg->busr.start = 0;
   cfg->busr.end = 127;
-  cfg->win = LS_PCI_CONFIG_IO_BASE;
+  cfg->win = MCFG_EXT_PCICFG_BASE;
   return cfg;
 }
 
