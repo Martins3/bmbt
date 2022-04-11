@@ -1,3 +1,8 @@
+#include "cpu.h"
+#include "latx-config.h"
+#include "svm.h"
+#include "tcg/tcg.h"
+#include <assert.h>
 #include <disas/disas.h>
 #include <exec/cpu-all.h>
 #include <exec/cpu-defs.h>
@@ -13,14 +18,9 @@
 #include <qemu/plugin.h>
 #include <qemu/qht.h>
 #include <qemu/rcu.h>
-#include <sysemu/replay.h>
-#include "latx-config.h"
-#include "cpu.h"
-#include "svm.h"
-#include "tcg/tcg.h"
-#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <sysemu/replay.h>
 
 /* -icount align implementation. */
 
@@ -125,17 +125,16 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
   return ret;
 }
 
-void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr)
-{
-    if (TCG_TARGET_HAS_direct_jump) {
-        uintptr_t offset = tb->jmp_target_arg[n];
-        uintptr_t tc_ptr = (uintptr_t)tb->tc.ptr;
-        uintptr_t jmp_rx = tc_ptr + offset;
-        uintptr_t jmp_rw = jmp_rx - 0;
-        tb_target_set_jmp_target(tc_ptr, jmp_rx, jmp_rw, addr);
-    } else {
-        tb->jmp_target_arg[n] = addr;
-    }
+void tb_set_jmp_target(TranslationBlock *tb, int n, uintptr_t addr) {
+  if (TCG_TARGET_HAS_direct_jump) {
+    uintptr_t offset = tb->jmp_target_arg[n];
+    uintptr_t tc_ptr = (uintptr_t)tb->tc.ptr;
+    uintptr_t jmp_rx = tc_ptr + offset;
+    uintptr_t jmp_rw = jmp_rx - 0;
+    tb_target_set_jmp_target(tc_ptr, jmp_rx, jmp_rw, addr);
+  } else {
+    tb->jmp_target_arg[n] = addr;
+  }
 }
 
 static inline void tb_add_jump(TranslationBlock *tb, int n,
@@ -263,8 +262,9 @@ static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
 #endif
 }
 
-static inline TranslationBlock *
-tb_find(CPUState *cpu, TranslationBlock *last_tb, int tb_exit, uint32_t cf_mask) {
+static inline TranslationBlock *tb_find(CPUState *cpu,
+                                        TranslationBlock *last_tb, int tb_exit,
+                                        uint32_t cf_mask) {
   TranslationBlock *tb;
   target_ulong cs_base, pc;
   uint32_t flags;
@@ -683,7 +683,7 @@ TranslationBlock *tb_htable_lookup(CPUState *cpu, target_ulong pc,
   }
   desc.phys_page1 = phys_pc & TARGET_PAGE_MASK;
   h = tb_hash_func(phys_pc, pc, flags, cf_mask, *cpu->trace_dstate);
-#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX) &&                    \
+#if defined(CONFIG_SOFTMMU) && defined(CONFIG_LATX) &&                         \
     defined(CONFIG_XTM_PROFILE)
   tb_hash_cmp_cnt = 0;
 
