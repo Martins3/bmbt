@@ -3,7 +3,7 @@ include make/env.mk
 
 bmbt := $(BUILD_DIR)/bmbt.bin
 GCC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
-I386_FLAGS = -I./src/target/i386/LATX/include -I./src/target/i386 -I./src
+I386_FLAGS = -I$(BASE_DIR)/src/target/i386/LATX/include -I$(BASE_DIR)/src/target/i386 -I./src
 
 # @todo it's so ugly to define two options out of the gcc option --coverage
 # https://gcc.gnu.org/onlinedocs/gcc-9.3.0/gcc/Instrumentation-Options.html
@@ -158,7 +158,7 @@ run: all clear_gcda
 		$(bmbt); \
 	fi
 
-qemu:
+qemu: all
 	if [[ $(ENV_KERNEL) == 1 ]];then \
 		# in cpus.c:qemu_cpu_kick_thread, SIG_IPI (which is SIGUSR1) will cause \
 		# the gdb stopped unexpectedly \

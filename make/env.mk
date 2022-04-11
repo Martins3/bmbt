@@ -53,7 +53,7 @@ ifeq ($(ENV_KERNEL), 1)
   endif
   LDFLAGS = -T env/loongarch/linker.ld
   ASM_SRC_FILES += $(wildcard env/loongarch/*/*.S)
-  ENV_CFLAGS += -DENV_KERNEL -I./env/loongarch/include/
+  ENV_CFLAGS += -DENV_KERNEL -I$(BASE_DIR)/env/loongarch/include/
   ENV_CFLAGS += -isystem /usr/lib/gcc/loongarch64-linux-gnu/8/include
   ENV_CFLAGS += -fno-omit-frame-pointer
 else
