@@ -163,17 +163,106 @@ TEST test_pio(void) {
   PASS();
 }
 
+TEST test_1M_2M_write(void) {
+  unsigned char *x = (unsigned char *)TO_CAC(0);
+  for (int i = 0x100000; i < 0x200000; ++i) {
+    unsigned char *ptr = (x + i);
+    *ptr = 0x33;
+  }
+  for (int i = 0x100000; i < 0x200000; ++i) {
+    unsigned char *ptr = (x + i);
+    assert(*ptr == 0x33);
+  }
+  PASS();
+}
+
+#define DLAB 0x80
+
+#define TXR 0 /*  Transmit register (WRITE) */
+#define RXR 0 /*  Receive register  (READ)  */
+#define IER 1 /*  Interrupt Enable          */
+#define IIR 2 /*  Interrupt ID              */
+#define FCR 2 /*  FIFO control              */
+#define LCR 3 /*  Line control              */
+#define MCR 4 /*  Modem control             */
+#define LSR 5 /*  Line Status               */
+#define MSR 6 /*  Modem Status              */
+#define DLL 0 /*  Divisor Latch Low         */
+#define DLH 1 /*  Divisor latch High        */
+
+TEST test_baud_rate() {
+
+  void *port = LS_ISA_SERIAL_IO_BASE;
+  int baud = 115200;
+  unsigned char t;
+  unsigned divisor;
+  printf("[huxueshi:%s:%d] read \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] read \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] read \n", __FUNCTION__, __LINE__);
+  divisor = 6220800 / baud;
+  writeb(0x3, port + LCR); /* 8n1 */
+  writeb(0, port + IER);   /* no interrupt */
+  writeb(0, port + FCR);   /* no fifo */
+  writeb(0x3, port + MCR); /* DTR + RTS */
+
+  t = readb(port + LCR);
+  writeb(t | DLAB, port + LCR);
+  writeb(divisor & 0xff, port + DLL);
+  writeb((divisor >> 8) & 0xff, port + DLH);
+  writeb(t & ~DLAB, port + LCR);
+
+  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
+  PASS();
+}
+
+TEST test_read_freq() {
+  void *port = LS_ISA_SERIAL_IO_BASE;
+  unsigned char a;
+  unsigned char b;
+  unsigned char t;
+  printf("[huxueshi:%s:%d] read \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] read \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] read \n", __FUNCTION__, __LINE__);
+
+  t = readb(port + LCR);
+  writeb(t | DLAB, port + LCR);
+  a = readb(port + DLL);
+  b = readb(port + DLH);
+  writeb(t & ~DLAB, port + LCR);
+
+  printf("[huxueshi:%s:%d] %x %x\n", __FUNCTION__, __LINE__, a, b);
+  PASS();
+}
+
+extern void asm_init_uart();
+TEST test_baud_rate_asm() {
+  printf("[huxueshi:%s:%d] before \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] before \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] before \n", __FUNCTION__, __LINE__);
+  asm_init_uart();
+  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
+  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
+  PASS();
+}
+
 SUITE(env_test) {
-  RUN_TEST(test_pio);
-  RUN_TEST(test_pci);
-  RUN_TEST(test_debugcon);
-  RUN_TEST(test_timer);
-  RUN_TEST(test_rdtime);
-  RUN_TEST(test_bad_instruction);
-  RUN_TEST(test_sqrt);
-  RUN_TEST(test_float);
-  RUN_TEST(test_interrupt);
-  RUN_TEST(test_syscall);
-  RUN_TEST(test_segmentfault);
+  RUN_TEST(test_read_freq);
+  RUN_TEST(test_baud_rate);
+  /* RUN_TEST(test_baud_rate_asm); */
+  /* RUN_TEST(test_1M_2M_write); */
+  /* RUN_TEST(test_pio); */
+  /* RUN_TEST(test_pci); */
+  /* RUN_TEST(test_debugcon); */
+  /* RUN_TEST(test_timer); */
+  /* RUN_TEST(test_rdtime); */
+  /* RUN_TEST(test_bad_instruction); */
+  /* RUN_TEST(test_sqrt); */
+  /* RUN_TEST(test_float); */
+  /* RUN_TEST(test_interrupt); */
+  /* RUN_TEST(test_syscall); */
+  /* RUN_TEST(test_segmentfault); */
   /* RUN_TEST(test_mmap); */
 }
