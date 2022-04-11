@@ -11,11 +11,11 @@
 或者 gdb out/rom16.o
 
 ### 在源码中间添加 log
-- tb_find : 打印 pc 可以知道当前跑到哪里去了
-- 在 tr_ir2_generate 中打开 ir1_dump 的 log 可以看到将要执行的每条执行的反汇编结果
-- x86_to_mips_before_exec_tb 和 x86_to_mips_after_exec_tb 中分析打开 CONFIG_XTM_TEST 的内容
+- `tb_find` : 打印 pc 可以知道当前跑到哪里去了
+- 在 `tr_ir2_generate` 中打开 `ir1_dump` 的 log 可以看到将要执行的每条执行的反汇编结果
+- `x86_to_mips_before_exec_tb` 和 `x86_to_mips_after_exec_tb` 中分析打开 `CONFIG_XTM_TEST` 的内容
 
-- 错误的 : target_x86_to_mips_host 的参数 max_insns 替换为 1
+- 错误的 : `target_x86_to_mips_host` 的参数 `max_insns` 替换为 1
 
 ## 在 Loongarch 上交叉编译内核
 ```c
@@ -35,8 +35,8 @@ export LD_LIBRARY_PATH=$CC_PREFIX/loongarch64-linux-gnu/sysroot/usr/lib/:$LD_LIB
 有时候，kvm 本身可能的出现 bug，这导致 guest 无法测试:
 
 如果 kvm 不是 modulus 的话:
-- 在 make menuconfig 中将 kvm 修改为 modulus
-- sudo make install && sudo make modules_install
+- 在 `make menuconfig` 中将 kvm 修改为 modulus
+- `sudo make install` && `sudo make modules_install`
 - 重启
 
 之后:
@@ -52,11 +52,12 @@ make -j && sudo rmmod kvm && sudo insmod ./arch/loongarch/kvm/kvm.ko
 ```sh
 sudo dmesg -w|tee b.txt
 ```
+也可以通过修改 grub 指定内核启动参数的方法设置 dmesg buffer 的大小 4M，[参考](https://stackoverflow.com/questions/27640173/enlarge-linux-kernel-log-buffer-more-that-2m)
 
 ## 处理 QEMU 的 macro
 
 生成中间文件
-```plain
+```sh
 ../configure --target-list=x86_64-softmmu  --disable-werror --extra-cflags='-save-temps'
 ```
 但是这似乎导致无法 `make -j10`, 只能串行编译

@@ -5,7 +5,7 @@
 * [`tcg_register_thread`](#tcg_register_thread)
 * [多核编程需要增加考虑的事情](#多核编程需要增加考虑的事情)
   * [内核的初始化需要考虑多核的初始化了](#内核的初始化需要考虑多核的初始化了)
-* [出现需要 lock 的位置会被 `BMBT_MTTCG` 标记出来](#出现需要-lock-的位置会被-bmbt_mttcg-标记出来)
+* [`BMBT_MTTCG`](#bmbt_mttcg)
 * [中断对于多核的挑战](#中断对于多核的挑战)
 
 <!-- vim-markdown-toc -->
@@ -56,7 +56,11 @@ void tcg_register_thread(void) {
 ### 内核的初始化需要考虑多核的初始化了
 - 比如在 `cpu_logical_map` 根本不初始化，应为我们知道 logical cpu 和 physical cpu 存在 0 到 0 的映射
 
-## 出现需要 lock 的位置会被 `BMBT_MTTCG` 标记出来
+## `BMBT_MTTCG`
+1. 目前对于单核 logical cpu 和 physical cpu 的映射直接就是 0 -> 0，但是多核就不一定了
+2. 最多支持一个 `pch_pic` 控制器，但是对于 NUMA 是需要支持多个的
+3. 因为只有 CPU，所以 affinity 的计算结果总是 0，但是在多核中，就不一定了。
+  - 如何正确的反映 Guest 的 CPU affinity 似乎也是一个问题。 如果 Guest 设置 Guest CPU 0 来接受中断，但是实际上中断是 Host CPU 1 接受的，也许需要让 Host CPU 1 将中断注入到 Host CPU 0 中间
 
 ## 中断对于多核的挑战
 - 中断处理函数访问的内容需要上锁的
