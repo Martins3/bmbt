@@ -6,8 +6,8 @@
 #define LS_ISA_SERIAL_IO_BASE ((void *)TO_UNCAC(LOONGSON_REG_BASE + 0x1e0))
 #define LS_ISA_DEBUGCON_IO_BASE                                                \
   ((void *)TO_UNCAC(LOONGSON_REG_BASE + 0x1e0 + 0x100))
-/* 0000000020000000-0000000027ffffff (prio 0, i/o): pcie-mmcfg-mmio */
-#define LS_PCI_CONFIG_IO_BASE ((void *)TO_UNCAC(0x20000000))
+/* arch/loongarch/include/asm/mach-la64/loongson-pch.h */
+#define MCFG_EXT_PCICFG_BASE ((void *)TO_UNCAC(0xefe00000000UL))
 
 /* seabios/src/config.h */
 #define BUILD_PCIMEM_START 0xe0000000
