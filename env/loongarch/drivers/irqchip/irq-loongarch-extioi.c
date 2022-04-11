@@ -3,11 +3,15 @@
 #include <asm/mach-la64/irq.h>
 #include <asm/setup.h>
 #include <hw/core/cpu.h>
+#include <linux/cpumask.h>
+#include <linux/nodemask.h>
 #include <linux/smp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define VEC_COUNT_PER_REG 64
+#define MAX_EIO_NODES (NR_CPUS / CORES_PER_EXTIOI_NODE)
 
 struct extioi {
   u32 vec_count;
@@ -15,9 +19,7 @@ struct extioi {
   u32 eio_en_off;
   struct irq_domain *extioi_domain;
   struct fwnode_handle *domain_handle;
-#ifdef BMBT
   nodemask_t node_map;
-#endif
   u32 node;
 #ifdef BMBT
   /* struct cpumask cpuspan_map; */
@@ -26,24 +28,139 @@ struct extioi {
 
 unsigned int extioi_en[IOCSR_EXTIOI_VECTOR_NUM / 32];
 
+int nr_extioi;
+
 static void extioi_irq_dispatch(int irq);
 
-int nr_extioi;
-void extioi_vec_init() {
+static void virt_extioi_set_irq_route(int pos, unsigned int cpu) {
+  iocsr_writeb(cpu_logical_map(cpu), LOONGARCH_IOCSR_EXTIOI_ROUTE_BASE + pos);
+}
+
+static int group_of_node(int node) {
+  int i;
+  for (i = 0; i < nr_extioi; i++) {
+    if (node_isset(node, extioi_priv[i]->node_map))
+      return i;
+  }
+  return -1;
+}
+
+static int cpu_to_eio_node(int cpu) {
+  return cpu_logical_map(cpu) / CORES_PER_EXTIOI_NODE;
+}
+
+void extioi_vec_init(struct fwnode_handle *fwnode, int cascade, u32 vec_count,
+                     u32 misc_func, u32 eio_en_off, u64 node_map, u32 node) {
+  int i;
   extioi_priv[nr_extioi] = calloc(1, sizeof(struct extioi));
+  if (!extioi_priv[nr_extioi])
+    abort();
+
+#ifdef BMBT
+  extioi_priv[nr_extioi]->extioi_domain = irq_domain_create_linear(
+      fwnode, vec_count, &extioi_domain_ops, extioi_priv[nr_extioi]);
+  if (!extioi_priv[nr_extioi]->extioi_domain) {
+    pr_err("loongson-extioi: cannot add IRQ domain\n");
+    err = -ENOMEM;
+    goto failed_exit;
+  }
+#endif
+  extioi_priv[nr_extioi]->misc_func = misc_func;
+  extioi_priv[nr_extioi]->eio_en_off = eio_en_off;
+  extioi_priv[nr_extioi]->vec_count = vec_count;
+
+  node_map = node_map ? node_map : -1ULL;
+
+  for_each_possible_cpu(i) {
+    if (node_map & (1ULL << (cpu_to_eio_node(i)))) {
+      node_set(cpu_to_eio_node(i), extioi_priv[nr_extioi]->node_map);
+#ifdef BMBT
+      cpumask_or(&extioi_priv[nr_extioi]->cpuspan_map,
+                 &extioi_priv[nr_extioi]->cpuspan_map, cpumask_of(i));
+#endif
+    }
+  }
+
+  extioi_priv[nr_extioi]->node = node;
+
+#ifdef BMBT
+  irq_set_chained_handler_and_data(cascade, extioi_irq_dispatch,
+                                   extioi_priv[nr_extioi]);
+  extioi_priv[nr_extioi]->domain_handle = fwnode;
+#endif
+
+  if (get_irq_route_model() == PCH_IRQ_ROUTE_EXT_SOC) {
+    abort();
+    /* irq_set_default_host(extioi_priv[nr_extioi]->extioi_domain); */
+  }
+
   nr_extioi++;
   extioi_init();
 
   set_vi_handler(EXCCODE_IP1, extioi_irq_dispatch);
 }
 
-static void virt_extioi_set_irq_route(int pos, unsigned int cpu) {
-  iocsr_writeb(cpu_logical_map(cpu), LOONGARCH_IOCSR_EXTIOI_ROUTE_BASE + pos);
+static void extioi_set_irq_route(int pos, unsigned int cpu,
+                                 nodemask_t *node_map, unsigned int on_node) {
+  uint32_t pos_off;
+  unsigned int node, dst_node, route_node;
+  unsigned char coremap[MAX_EIO_NODES];
+  uint32_t data, data_byte, data_mask;
+  unsigned int cpu_iter;
+
+  pos_off = pos & ~3;
+  data_byte = pos & (3);
+  data_mask = ~BIT_MASK(data_byte) & 0xf;
+  memset(coremap, 0, sizeof(unsigned char) * MAX_EIO_NODES);
+
+  /* calculate dst node and coremap of target irq */
+  dst_node = cpu_to_eio_node(cpu);
+  coremap[dst_node] |= (1 << (cpu_logical_map(cpu) % CORES_PER_EXTIOI_NODE));
+
+  for_each_online_cpu(cpu_iter) {
+    node = cpu_to_eio_node(cpu_iter);
+    if (node_isset(node, *node_map)) {
+      data = 0ULL;
+
+      /* extioi node 0 is in charge of inter-node interrupt dispatch */
+      route_node = (node == on_node) ? dst_node : node;
+      data |= ((coremap[node] | (route_node << 4)) << (data_byte * 8));
+      csr_any_send(LOONGARCH_IOCSR_EXTIOI_ROUTE_BASE + pos_off, data, data_mask,
+                   node * CORES_PER_EXTIOI_NODE);
+    } else {
+      abort();
+    }
+  }
 }
 
-void ext_set_irq_affinity(int hwirq) {
+int ext_set_irq_affinity(int hwirq) {
   uint32_t vector, pos_off;
+  /* unsigned long flags; */
+
+  /* [BMBT_MTTCG 3] only one CPU available, there's no need to */
+#ifdef BMBT
+  struct extioi *priv = (struct extioi *)d->domain->host_data;
+  struct cpumask intersect_affinity;
+
+  if (!IS_ENABLED(CONFIG_SMP))
+    return -EPERM;
+
+  spin_lock_irqsave(&affinity_lock, flags);
+  if (!cpumask_intersects(affinity, cpu_online_mask)) {
+    spin_unlock_irqrestore(&affinity_lock, flags);
+    return -EINVAL;
+  }
+
+  cpumask_and(&intersect_affinity, affinity, cpu_online_mask);
+  cpumask_and(&intersect_affinity, &intersect_affinity, &priv->cpuspan_map);
+  if (cpumask_empty(&intersect_affinity)) {
+    spin_unlock_irqrestore(&affinity_lock, flags);
+    return -EINVAL;
+  }
+  cpu = cpumask_first(&intersect_affinity);
+#endif
   unsigned int cpu = 0;
+  struct extioi *priv = extioi_priv[0];
 
   /*
    * control interrupt enable or disalbe through cpu 0
@@ -61,11 +178,17 @@ void ext_set_irq_affinity(int hwirq) {
   } else {
     csr_any_send(LOONGARCH_IOCSR_EXTIOI_EN_BASE + (pos_off << 2),
                  extioi_en[pos_off] & (~((1 << (vector & 0x1F)))), 0x0, 0);
-    /* extioi_set_irq_route(vector, cpu, &priv->node_map, priv->node); */
-    abort();
+    extioi_set_irq_route(vector, cpu, &priv->node_map, priv->node);
     csr_any_send(LOONGARCH_IOCSR_EXTIOI_EN_BASE + (pos_off << 2),
                  extioi_en[pos_off], 0x0, 0);
   }
+
+#ifdef BMBT
+  irq_data_update_effective_affinity(d, cpumask_of(cpu));
+  spin_unlock_irqrestore(&affinity_lock, flags);
+#endif
+
+  return 0;
 }
 
 /* Initializing a extioi controller */
@@ -74,9 +197,16 @@ void extioi_init(void) {
   uint32_t data;
   uint64_t tmp;
 
-  int extioi_node = 0;
-  int group = 0;
+  int extioi_node = cpu_to_eio_node(smp_processor_id());
+  int group = group_of_node(extioi_node);
 
+  assert(extioi_node == 0);
+  assert(group == 0);
+
+  if (group < 0) {
+    printf("Error: no node map for extioi group!\n");
+    return;
+  }
   /* init irq en bitmap */
   if (extioi_node == 0) {
     for (i = 0; i < IOCSR_EXTIOI_VECTOR_NUM / 32; i++)

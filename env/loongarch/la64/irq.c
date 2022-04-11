@@ -1,8 +1,11 @@
+#include <asm/io.h>
 #include <asm/loongarchregs.h>
 #include <asm/mach-la64/irq.h>
 #include <asm/mach-la64/loongson-pch.h>
 #include <asm/setup.h>
 #include <assert.h>
+#include <linux/cpumask.h>
+#include <linux/nodemask.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -78,7 +81,9 @@ void register_pch_pic(int id, u32 address, u32 irq_base) {
 
   pch_pics[idx].config.pch_pic_addr = address;
   if (id) {
-    abort(); // bmbt : no support for numa
+    // [BMBT_MTTCG 2]
+    printf("only one pch_pic supported");
+    abort();
     // pch_pics[idx].config.pch_pic_addr |= nid_to_addrbase(id) | HT1LO_OFFSET;
   }
   pch_pics[idx].config.pch_pic_id = id;
@@ -105,6 +110,29 @@ void register_pch_pic(int id, u32 address, u32 irq_base) {
 
   nr_pch_pics++;
   msi_irqbase = entries;
+}
+
+void static pch_pic_domains_init(void) {
+  struct fwnode_handle *irq_handle = NULL;
+  struct pch_pic_irq *irq_cfg;
+  int i;
+  /* u64 address; */
+
+  for_each_pch_pic(i) {
+    irq_cfg = pch_pic_irq_routing(i);
+    if (!irq_cfg)
+      continue;
+#ifdef BMBT
+    address = pch_pic_addr(i);
+    irq_handle = irq_domain_alloc_fwnode((void *)address);
+    if (!irq_handle) {
+      panic("Unable to allocate domain handle  for pch_pic irqdomains.\n");
+    }
+#endif
+
+    pch_pic_init(irq_handle, pch_pic_addr(i), PCH_PIC_SIZE,
+                 get_irq_route_model(), irq_cfg->irq_base);
+  }
 }
 
 static void pch_msi_domain_init(int start, int count) {
@@ -135,36 +163,70 @@ static void pch_msi_domain_init(int start, int count) {
   }
 }
 
-static void irqchip_init_default(void) {
+static void eiointc_domain_init(void) {
+  struct fwnode_handle *irq_fwnode = NULL;
+  int i, j;
+
+  u64 node_map;
+  u32 on_node[2] = {0, 5};
+
+  // [interface 65]
 #ifdef BMBT
-  loongarch_cpu_irq_init();
-  liointc_domain_init();
+  nodemask_t possible_nodes = node_possible_map;
+  for_each_pch_pic(i) { node_clear(on_node[i], possible_nodes); }
+#endif
+
+  for_each_pch_pic(i) {
+    node_map = 0;
+    node_map |= (1 << on_node[i]);
+    for_each_possible_cpu(j) {
+      if (((j / CORES_PER_EXTIOI_NODE) % nr_pch_pics == i) &&
+          (j % CORES_PER_EXTIOI_NODE == 0))
+        node_map |= (1 << (j / CORES_PER_EXTIOI_NODE));
+    }
+
+#ifdef BMBT
+    irq_fwnode = irq_domain_alloc_named_id_fwnode("eiointc", 0);
+    if (!irq_fwnode) {
+      panic("Unable to allocate domain handle for eiointc irqdomain.\n");
+    }
+#endif
+    assert(node_map == 1);
+    extioi_vec_init(irq_fwnode, LOONGSON_BRIDGE_IRQ + i,
+                    IOCSR_EXTIOI_VECTOR_NUM, 0, 0, node_map, on_node[i]);
+  }
+}
+
+static void irqchip_init_default(void) {
+  /* loongarch_cpu_irq_init(); */
+  /* liointc_domain_init(); */ // TMP_TODO
   printf("Support EXT interrupt.\n");
 #ifdef CONFIG_LOONGARCH_EXTIOI
   eiointc_domain_init();
   pch_msi_domain_init(msi_irqbase, 256 - msi_irqbase);
 #endif
   pch_pic_domains_init();
-  pch_lpc_domain_init();
-#endif
-  extioi_vec_init();
-  pch_msi_domain_init(msi_irqbase, 256 - msi_irqbase);
-  pch_pic_init();
+  /* pch_lpc_domain_init(); */ // TMP_TODO
 }
 
 void setup_IRQ(void) {
-  // [interface 59]
-#ifdef BMBT
   u64 node;
 
-  if (loongson_sysconf.is_soc_cpu)
+  if (loongson_sysconf.is_soc_cpu) {
     pch_irq_route_model = PCH_IRQ_ROUTE_EXT_SOC;
-  else {
-    for_each_node(node) writel(
-        0x40000000 | (node << 12),
-        (volatile void __iomem *)(((node << 44) | LOONGSON_HT1_CFG_BASE) +
-                                  0x274));
+    abort();
+  } else {
+    printf("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
+    for_each_node(node) {
+      writel(0x40000000 | (node << 12),
+             (volatile void __iomem *)(((node << 44) | LOONGSON_HT1_CFG_BASE) +
+                                       0x274));
+    }
+    printf("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
   }
+
+  // [interface 59]
+#ifdef BMBT
   if (!acpi_disabled) {
     if (loongson_sysconf.bpi_version > BPI_VERSION_V1) {
       irqchip_init();
