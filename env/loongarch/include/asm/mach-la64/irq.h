@@ -95,6 +95,8 @@ struct pch_pic_config {
   unsigned long pch_pic_addr;
 };
 
+struct fwnode_handle {};
+
 /*
  * # of PCH_PICs and # of IRQ routing registers
  */
@@ -115,7 +117,9 @@ extern void fixup_irqs(void);
 #endif
 extern int pch_msi_init(u64 msg_address, bool ext, int start, int count);
 extern int pch_pic_init();
-extern void extioi_vec_init(void);
+extern void extioi_vec_init(struct fwnode_handle *fwnode, int cascade,
+                            u32 vec_count, u32 misc_func, u32 eio_en_off,
+                            u64 node_map, u32 node);
 extern void extioi_init(void);
 #ifdef BMBT
 extern void loongson3_ipi_interrupt(int irq);
