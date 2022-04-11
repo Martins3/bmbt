@@ -11,8 +11,10 @@
 #define CONFIG_CPU_HAS_LBT 1
 #define CONFIG_NR_CPUS 1
 #define CONFIG_64BIT 1
+#define CONFIG_NODES_SHIFT 6
 
 #define _LOONGARCH_SZLONG 64
 #define _LOONGARCH_SZPTR 64
+#define CONFIG_LOONGARCH_EXTIOI 1
 
 #endif /* end of include guard: AUTOCONF_H_PX8WHTBN */

@@ -178,8 +178,6 @@ void fw_init_env(void) {
 #ifdef BMBT
   loongson_regaddr_set(smp_group, 0x800000001fe01000, 16);
 
-  loongson_sysconf.ht_control_base = 0x80000EFDFB000000;
-
   loongson_regaddr_set(loongson_chipcfg, 0x800000001fe00180, 16);
 
   loongson_regaddr_set(loongson_chiptemp, 0x800000001fe0019c, 16);
@@ -190,6 +188,7 @@ void fw_init_env(void) {
   loongson_sysconf.msi_base_irq = LOONGSON_PCI_MSI_IRQ_BASE;
   loongson_sysconf.msi_last_irq = LOONGSON_PCI_MSI_IRQ_BASE + 192;
 #endif
+  loongson_sysconf.ht_control_base = 0x80000EFDFB000000;
   loongson_sysconf.msi_address_hi = 0;
   loongson_sysconf.msi_address_lo = 0x2FF00000;
 #ifdef BMBT

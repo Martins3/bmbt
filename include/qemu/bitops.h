@@ -10,6 +10,7 @@
 #define MAKE_64BIT_MASK(shift, length) (((~0ULL) >> (64 - (length))) << (shift))
 
 #define BITS_PER_BYTE CHAR_BIT
+// TMP_TODO 重新考虑一下这个问题，要不要 reference env 中东西
 #ifdef ENV_KERNEL
 #include <autoconf.h>
 #define BITS_PER_LONG _LOONGARCH_SZLONG
@@ -29,6 +30,30 @@
  */
 static inline int test_bit(long nr, const unsigned long *addr) {
   return 1UL & (addr[BIT_WORD(nr)] >> (nr & (BITS_PER_LONG - 1)));
+}
+
+/**
+ * clear_bit - Clears a bit in memory
+ * @nr: Bit to clear
+ * @addr: Address to start counting from
+ */
+static inline void clear_bit(long nr, unsigned long *addr) {
+  unsigned long mask = BIT_MASK(nr);
+  unsigned long *p = addr + BIT_WORD(nr);
+
+  *p &= ~mask;
+}
+
+/**
+ * set_bit - Set a bit in memory
+ * @nr: the bit to set
+ * @addr: the address to start counting from
+ */
+static inline void set_bit(long nr, unsigned long *addr) {
+  unsigned long mask = BIT_MASK(nr);
+  unsigned long *p = addr + BIT_WORD(nr);
+
+  *p |= mask;
 }
 
 /**
