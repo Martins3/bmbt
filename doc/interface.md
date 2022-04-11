@@ -140,6 +140,7 @@
     - 并且向其中添加一个 trace_mem_build_info 的空定义
 59. 暂时不支持 acpi
     - 龙芯的代码中似乎总是存在不支持 acpi 的那一条道路，为了简化代码，总是直接选择不支持 acpi 的那个道路
+    - 在裸机上测试的结果总是是支持 acpi 的
 60. irqdomain
     - Loongonix 构建了三个 irq domain，以及对应的几个文件 irq-loongarch-extioi.c irq-loongson-pch-pic.c irq-loongarch-cpu.c irq-loongson-pch-msi.c
     - 这实在是太复杂了，我们直接硬编码了
@@ -150,3 +151,7 @@
 63. `X86_MSI_ENTRY_DATA_FLAG` 和 `PCI_MSIX_ENTRY_DATA`
     - 0x41 和写入到 apic 的偏移的是 0x100c 是通过 `arch/x86/kernel/apic/msi.c:irq_msi_compose_msg` 中推测出来的
     - 当操作系统的行为改变，也许这会产生问题
+64. struct extioi::cpuspan_map
+    - 被删除了，其作用是在 `ext_set_irq_affinity` 中确定最后 CPU 指向谁，但是现在只有一个 CPU
+65. `eiointc_domain_init`
+    - 这里是手动 enable 两个 memory node ，测试了一下，感觉这两句话并没有什么作用
