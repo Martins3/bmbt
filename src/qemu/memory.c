@@ -101,11 +101,13 @@ static void unimplemented_io(AddressSpaceDispatch *dispatch, hwaddr offset) {
 // [BMBT_OPTIMIZE 0]
 static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
                                            hwaddr offset) {
-  printf("visit in [%s] with offset=[%lx]\n", dispatch->name, offset);
+  // printf("visit in [%s] with offset=[%lx]\n", dispatch->name, offset);
   for (int i = 0; i < dispatch->segment_num; ++i) {
     MemoryRegion *mr = dispatch->segments[i];
     assert(mr != NULL);
     if (mr_match(mr, offset)) {
+      printf("visit in [%s] with offset=[%lx], mr.name: %s\n", dispatch->name,
+             offset, mr->name);
       return mr;
     }
   }
@@ -903,12 +905,18 @@ static void setup_dirty_memory() {
 static void x86_bios_rom_init(uint8_t *bios_offset) {
   FILE *f = fopen("image/bios.bin", "r");
   assert(f != NULL);
+  void *__pc_bios =
+      mmap(0, CONFIG_GUEST_BIOS_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE,
+           MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   int rc = fread(__pc_bios, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
+  // int rc = fread(bios_offset, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
+  printf("__pc_bios: %lx\n", (uint64_t)__pc_bios);
   assert(rc == CONFIG_GUEST_BIOS_SIZE);
   fclose(f);
 
-  // RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
-  // block->host = (void *)(&__pc_bios[0]);
+  RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
+  // block->host = (void *)(&__pc_bios);
+  block->host = __pc_bios;
 
   // isa-bios is handled in function isa_bios_access
 }
