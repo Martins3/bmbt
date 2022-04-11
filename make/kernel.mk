@@ -46,4 +46,4 @@ copy:
 	cp $(KERNEL_PATH)/arch/x86/boot/bzImage  $(BASE_DIR)/image/bzImage.bin
 
 def: setup_src def_config compile copy
-	@echo "minimal kernel installed"
+	@echo "define kernel installed"
