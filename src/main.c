@@ -153,7 +153,7 @@ GREATEST_MAIN_DEFS();
 int main(int argc, char **argv) {
   qemu_init();
   GREATEST_MAIN_BEGIN(); /* command-line options, initialization. */
-  /* RUN_SUITE(env_test); */
+  RUN_SUITE(env_test);
   /* RUN_SUITE(timer); */
   /* RUN_SUITE(basic_test); */
   /* RUN_SUITE(basic_test); */
