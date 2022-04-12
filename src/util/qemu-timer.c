@@ -241,7 +241,7 @@ bool timerlist_run_timers(QEMUTimerList *timer_list) {
     error_report("trace it, understand it and fix it");
     goto out;
   }
-
+/* [BMBT_OPTIMIZE 8] */
 #ifdef BMBT
   switch (timer_list->clock->type) {
   case QEMU_CLOCK_REALTIME:
@@ -443,6 +443,8 @@ static void timer_interrupt_handler() {
     // is schedule by the time out timer event.
     error_report("no timer to fire\n");
   }
+
+  // TMP_TODO 如果 timeout_ns == 0 直接重复运行一次，不科学一点吗 ?
   soonest_interrupt_ns(timeout_ns);
 }
 
