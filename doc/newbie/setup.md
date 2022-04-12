@@ -125,7 +125,7 @@ menuentry 'USB Test' --class loongnix_desktop_20 --class gnu-linux --class gnu -
 
 需要修改的地方:
 - set root='hd0,gpt1' : hd0,gpt1 需要进入到 grub 查找，就目前的知识量，实在不行，一个个尝试，或者观察插上 U 盘前后的区别
-- 两处 UUID 修改为 U 盘的
+- 两处 UUID 修改为 U 盘的 UUID
 - linux /boot/bmbt.bin
 
 将 bmbt.bin 拷贝到 U 盘中 /boot/bmbt.bin 位置。

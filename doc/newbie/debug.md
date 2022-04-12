@@ -54,6 +54,11 @@ sudo dmesg -w|tee b.txt
 ```
 也可以通过修改 grub 指定内核启动参数的方法设置 dmesg buffer 的大小 4M，[参考](https://stackoverflow.com/questions/27640173/enlarge-linux-kernel-log-buffer-more-that-2m)
 
+在 grub 中增加:
+```sh
+log_buf_len=4M
+```
+
 ## 处理 QEMU 的 macro
 
 生成中间文件
