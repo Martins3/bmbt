@@ -11,6 +11,14 @@ static MemoryRegion mr;
 static const hwaddr X86_ISA_SERIAL_IO_BASE = 0x3f8;
 static const int ISA_SERIAL_IRQ = 4;
 
+/*
+ * if Divisor Latch Access Bit, DLAB setted, DLL and DLH can be used for
+ * reading divisor
+ */
+static bool is_dlab_set = false;
+
+bool can_write() { return !is_dlab_set; }
+
 static uint64_t serial_ioport_pass_read(void *opaque, hwaddr addr,
                                         unsigned size) {
   assert(size == 1);
@@ -23,6 +31,21 @@ static void serial_ioport_pass_write(void *opaque, hwaddr addr, uint64_t val,
   assert(size == 1);
   /* debugcon_puts("pass write\n"); */
   writeb(val, LS_ISA_SERIAL_IO_BASE + addr);
+
+  if (addr == LCR) {
+    is_dlab_set = readb(LS_ISA_SERIAL_IO_BASE + LCR) & DLAB;
+  }
+
+  if (is_dlab_set) {
+    switch (addr) {
+    case DLL:
+      writeb(0x36, LS_ISA_SERIAL_IO_BASE + addr);
+      break;
+    case DLH:
+      writeb(0, LS_ISA_SERIAL_IO_BASE + addr);
+      break;
+    }
+  }
 }
 
 static const MemoryRegionOps serial_pass_ops = {

@@ -1,4 +1,5 @@
 #include <asm/addrspace.h>
+#include <stdbool.h>
 
 #define UART_BASE 0x1fe001e0
 #define PORT(offset) (TO_UNCAC(UART_BASE) + (offset))
@@ -15,12 +16,16 @@
 #define UART_LSR_THRE 0x20 /* Transmit-hold-register empty */
 #define UART_TX 0          /* Out: Transmit buffer */
 
+// TMP_TODO : 之后仅仅允许一个位置持有 0x1fe001e0 的这个东西吧
+bool can_write();
+
 static inline unsigned int serial_in(int offset) {
   return *((volatile IOTYPE *)PORT(offset)) & 0xFF;
 }
 
 static inline void serial_out(int offset, int value) {
-  *((volatile IOTYPE *)PORT(offset)) = value & 0xFF;
+  if (can_write())
+    *((volatile IOTYPE *)PORT(offset)) = value & 0xFF;
 }
 
 void uart_putc(char c) {
