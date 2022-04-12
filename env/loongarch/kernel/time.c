@@ -18,10 +18,14 @@ static int constant_set_state_oneshot() {
   return 0;
 }
 
+// TMP_TODO 是不是，可以是
 int constant_timer_next_event(unsigned long delta) {
   unsigned long timer_config;
   delta = delta / NS_PER_CYCLE;
   delta &= CSR_TCFG_VAL;
+  if (delta == 0) {
+    delta = 10 << CSR_TCFG_VAL_SHIFT;
+  }
   timer_config = delta | CSR_TCFG_EN;
   timer_config &= ~CSR_TCFG_PERIOD;
   // timer_config |= CSR_TCFG_PERIOD;
