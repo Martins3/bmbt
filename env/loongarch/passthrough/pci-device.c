@@ -1,3 +1,4 @@
+#include "internal.h"
 #include <asm/device.h>
 #include <exec/memory.h>
 #include <hw/pci/pci.h>
@@ -35,7 +36,7 @@ typedef struct {
 
 typedef struct {
   MSIxTable table;
-  u8 devfn;
+  u16 bdf;
   u16 class;
   u8 header_type;
   BAR bar[PCI_NUM_REGIONS];
@@ -49,47 +50,55 @@ static inline void init_bar(BAR *bar, bool bottom, bool top, int type,
   bar->size = size;
 }
 
+// TMP_TODO 现在这里超过了 30 个，也许之前的算法有问题了
 // [BMBT_OPTIMIZE 6]
-#define MAX_PCI_DEV_NUM 10
+#define MAX_PCI_DEV_NUM 30
 static BMBT_PCIExpressDevice pcie_devices[MAX_PCI_DEV_NUM];
 static int nr_dev;
 
-static inline int alloc_pci_dev() {
+static inline BMBT_PCIExpressDevice *get_pcie_dev(int idx) {
+  assert(idx >= 0 && idx < nr_dev);
+  return &(pcie_devices[idx]);
+}
+
+static inline int alloc_pcie_dev() {
   int res = nr_dev;
   nr_dev++;
   assert(nr_dev < MAX_PCI_DEV_NUM);
   return res;
 }
 
-static inline int try_devfn_to_idx(u8 devfn) {
+static inline int try_bdf_to_idx(u16 bdf) {
   for (int i = 0; i < nr_dev; ++i) {
-    if (pcie_devices[i].devfn == devfn)
+    if (get_pcie_dev(i)->bdf == bdf)
       return i;
   }
   return -1;
 }
 
-static inline int devfn_to_idx(u8 devfn) {
-  int idx = try_devfn_to_idx(devfn);
+static inline int bdf_to_idx(u16 bdf) {
+  int idx = try_bdf_to_idx(bdf);
   assert(idx != -1);
   return idx;
 }
 
-static inline BMBT_PCIExpressDevice *devfn_to_dev(u8 devfn) {
-  return &pcie_devices[devfn_to_idx(devfn)];
+static inline BMBT_PCIExpressDevice *bdf_to_dev(u16 bdf) {
+  return get_pcie_dev(bdf_to_idx(bdf));
 }
 
 static inline MSIxTable *msix_table(int idx) {
-  assert(idx < nr_dev);
-  return &(pcie_devices[idx].table);
+  return &(get_pcie_dev(idx)->table);
 }
 
+// TMP_TODO 实际上，将两个代码直接
 int msix_table_overlapped(hwaddr addr, unsigned size) {
   for (int i = 0; i < nr_dev; ++i) {
     MSIxTable *table = msix_table(i);
-    if (ranges_overlap(table->offset, table->entry_num * PCI_MSIX_ENTRY_SIZE,
-                       addr, size)) {
-      return i;
+    if (table->offset != 0) {
+      if (ranges_overlap(table->offset, table->entry_num * PCI_MSIX_ENTRY_SIZE,
+                         addr, size)) {
+        return i;
+      }
     }
   }
   return -1;
@@ -110,7 +119,7 @@ static void pci_bios_get_bar(BMBT_PCIExpressDevice *pci, int bar, int *ptype,
   u64 mask;
 
   u32 ofs = bmbt_pci_bar(pci, bar);
-  u16 bdf = pci->devfn;
+  u16 bdf = pci->bdf;
   u32 old;
   pci_bus_read_config_dword(bdf, ofs, &old);
 
@@ -163,8 +172,16 @@ static void pci_bios_check_devices(BMBT_PCIExpressDevice *pci) {
     // with (X), (X - LOONGSON_X86_PCI_MEM_OFFSET) will be written to loongarch
     // PCIe config. But if wmask is bigger than the LOONGSON_X86_PCI_MEM_OFFSET,
     // x86 guest can't read X again.
-    if (size != 0)
-      assert(((size - 1) & LOONGSON_X86_PCI_MEM_OFFSET) == 0);
+    if (size != 0) {
+      printf("[huxueshi:%s:%d] bdf=%x bar=%d size=%lx\n", __FUNCTION__,
+             __LINE__, pci->bdf, i, size);
+      // TMP_TODO 和做主板的核实一下吧，很难啊!
+      if (pci->bdf == 0xb8) {
+        size = 0;
+      } else {
+        assert(((size - 1) & LOONGSON_X86_PCI_MEM_OFFSET) == 0);
+      }
+    }
 
     init_bar(&pci->bar[i], is64, false, type, size);
     if (is64) {
@@ -175,20 +192,21 @@ static void pci_bios_check_devices(BMBT_PCIExpressDevice *pci) {
 }
 
 /* reference seabios/src/hw/pcidevice.c:pci_probe_devices */
-int add_PCIe_devices(u8 devfn) {
+int add_PCIe_devices(u16 bdf) {
   u32 classrev;
   BMBT_PCIExpressDevice *pci;
-  int idx = try_devfn_to_idx(devfn);
+  int idx = try_bdf_to_idx(bdf);
   if (idx != -1)
     return idx;
 
-  idx = alloc_pci_dev();
-  pci = &pcie_devices[idx];
-  pci->devfn = devfn;
+  idx = alloc_pcie_dev();
+  pci = get_pcie_dev(idx);
+  pci->bdf = bdf;
 
-  pci_bus_read_config_dword(devfn, PCI_CLASS_REVISION, &classrev);
+  pci_bus_read_config_dword(bdf, PCI_CLASS_REVISION, &classrev);
   pci->class = classrev >> 16;
-  pci_bus_read_config_byte(devfn, PCI_HEADER_TYPE, &(pci->header_type));
+  pci_bus_read_config_byte(bdf, PCI_HEADER_TYPE, &(pci->header_type));
+  printf("[huxueshi:%s:%d] %x\n", __FUNCTION__, __LINE__, pci->bdf);
 
   pci_bios_check_devices(pci);
 
@@ -199,13 +217,41 @@ int get_msix_table_entry_offset(hwaddr addr, int idx) {
   MSIxTable *table = msix_table(idx);
   int entry = (addr - table->offset) / PCI_MSIX_ENTRY_SIZE;
   int entry_offset = (addr - table->offset) % PCI_MSIX_ENTRY_SIZE;
-  assert(entry >= 0 && entry < table->entry_num);
+  if (!(entry >= 0 && entry < table->entry_num)) {
+    BMBT_PCIExpressDevice *pci = get_pcie_dev(idx);
+    printf("[huxueshi:%s:%d] bdf=%x table->offset=%d table->entry_num=%d\n",
+           __FUNCTION__, __LINE__, pci->bdf, table->offset, table->entry_num);
+    assert(false);
+  }
   return entry_offset;
 }
 
-u32 pcie_mmio_space_translate(int idx, u32 config_addr, u32 val,
-                              bool is_write) {
-  BMBT_PCIExpressDevice *pci = &pcie_devices[idx];
+static bool is_bar_access(BMBT_PCIExpressDevice *pci, int l,
+                          uint32_t config_addr) {
+  if (l != 4) {
+    assert(pci->class == PCI_CLASS_BRIDGE_PCI);
+    assert(!ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 8));
+    return false;
+  }
+
+  if (pci->class == PCI_CLASS_BRIDGE_PCI) {
+    return ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 8) ||
+           ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4);
+  }
+
+  return true;
+}
+
+u32 pcie_mmio_space_translate(uint32_t addr, int l, u32 val, bool is_write,
+                              bool *msix_table_updated) {
+  int idx = add_PCIe_devices(get_bdf(addr));
+  u32 config_addr = get_config_addr(addr);
+  BMBT_PCIExpressDevice *pci = get_pcie_dev(idx);
+  *msix_table_updated = false;
+  if (!is_bar_access(pci, l, config_addr)) {
+    return val;
+  }
+
   int bar_idx = (config_addr - PCI_BASE_ADDRESS_0) / 4;
   if (bar_idx > 6) {
     assert(config_addr == PCI_ROM_ADDRESS || config_addr == PCI_ROM_ADDRESS1);
@@ -234,21 +280,22 @@ u32 pcie_mmio_space_translate(int idx, u32 config_addr, u32 val,
     }
   }
 
+  *msix_table_updated = true;
+
   return val;
 }
 
-static int __pci_find_next_cap_ttl(unsigned int devfn, u8 pos, int cap,
-                                   int *ttl) {
+static int __pci_find_next_cap_ttl(u16 bdf, u8 pos, int cap, int *ttl) {
   u8 id;
   u16 ent;
 
-  pci_bus_read_config_byte(devfn, pos, &pos);
+  pci_bus_read_config_byte(bdf, pos, &pos);
 
   while ((*ttl)--) {
     if (pos < 0x40)
       break;
     pos &= ~3;
-    pci_bus_read_config_word(devfn, pos, &ent);
+    pci_bus_read_config_word(bdf, pos, &ent);
 
     id = ent & 0xff;
     if (id == 0xff)
@@ -260,16 +307,16 @@ static int __pci_find_next_cap_ttl(unsigned int devfn, u8 pos, int cap,
   return 0;
 }
 
-static int __pci_find_next_cap(unsigned int devfn, u8 pos, int cap) {
+static int __pci_find_next_cap(u16 bdf, u8 pos, int cap) {
   int ttl = PCI_FIND_CAP_TTL;
 
-  return __pci_find_next_cap_ttl(devfn, pos, cap, &ttl);
+  return __pci_find_next_cap_ttl(bdf, pos, cap, &ttl);
 }
 
-static int __pci_bus_find_cap_start(unsigned int devfn, u8 hdr_type) {
+static int __pci_bus_find_cap_start(u16 bdf, u8 hdr_type) {
   u16 status;
 
-  pci_bus_read_config_word(devfn, PCI_STATUS, &status);
+  pci_bus_read_config_word(bdf, PCI_STATUS, &status);
   if (!(status & PCI_STATUS_CAP_LIST))
     return 0;
 
@@ -284,46 +331,61 @@ static int __pci_bus_find_cap_start(unsigned int devfn, u8 hdr_type) {
   return 0;
 }
 
-int pci_find_capability(unsigned int devfn, int cap) {
+int pci_find_capability(u16 bdf, int cap) {
   int pos;
   u8 hdr_type;
 
-  pci_bus_read_config_byte(devfn, PCI_HEADER_TYPE, &hdr_type);
-  pos = __pci_bus_find_cap_start(devfn, hdr_type);
+  pci_bus_read_config_byte(bdf, PCI_HEADER_TYPE, &hdr_type);
+  pos = __pci_bus_find_cap_start(bdf, hdr_type);
   if (pos)
-    pos = __pci_find_next_cap(devfn, pos, cap);
+    pos = __pci_find_next_cap(bdf, pos, cap);
 
   return pos;
 }
 
-static inline void add_msix_table(u8 devfn, u32 offset, int entry_num) {
-  MSIxTable *table = msix_table(devfn_to_idx(devfn));
+static inline void add_msix_table(u16 bdf, u32 offset, int entry_num) {
+  MSIxTable *table = msix_table(bdf_to_idx(bdf));
   table->offset = offset;
   table->entry_num = entry_num;
 }
 
-void msix_map_region(u8 devfn) {
+void msix_map_region(u16 bdf) {
   u32 table_offset;
   u8 bir;
   u32 msix_base_offset;
   u16 entry_num;
-  int msix_cap = pci_find_capability(devfn, PCI_CAP_ID_MSIX);
+  int msix_cap = pci_find_capability(bdf, PCI_CAP_ID_MSIX);
   if (!msix_cap) {
     return;
   }
 
-  pci_bus_read_config_dword(devfn, msix_cap + PCI_MSIX_TABLE, &table_offset);
-  pci_bus_read_config_word(devfn, msix_cap + PCI_MSIX_FLAGS, &entry_num);
+  // TMP_TODO 需要优化一下如何，根本没必要每次 bir 之类的
+  pci_bus_read_config_dword(bdf, msix_cap + PCI_MSIX_TABLE, &table_offset);
+  pci_bus_read_config_word(bdf, msix_cap + PCI_MSIX_FLAGS, &entry_num);
 
   bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
-  pci_bus_read_config_dword(devfn, PCI_BASE_ADDRESS_0 + bir * 4,
+  pci_bus_read_config_dword(bdf, PCI_BASE_ADDRESS_0 + bir * 4,
                             &msix_base_offset);
 
-  BAR *bar = &(devfn_to_dev(devfn)->bar[bir]);
-  assert(bar->is_64bit_bottom_half == false);
+  BAR *bar = &(bdf_to_dev(bdf)->bar[bir]);
+  if (bar->size == 0) {
+    printf("[huxueshi:%s:%d] oooooooo ???\n", __FUNCTION__, __LINE__);
+  }
+
+  printf("[huxueshi:%s:%d] msix_base_offset=%x table_offset=%x entry_num=%x\n",
+         __FUNCTION__, __LINE__, msix_base_offset, table_offset, entry_num);
+  printf("[huxueshi:%s:%d] bar num= %d\n", __FUNCTION__, __LINE__, bir);
+  printf("[huxueshi:%s:%d] size=%lx\n", __FUNCTION__, __LINE__, bar->size);
+  // 很有可能根本没人初始化这个东西啊
+  /* TMP_TODO // 如果这个 assert 取消，那么很多的地方都需要修改关于 msix table
+   * 的数值长度
+   */
+  /* assert(bar->is_64bit_bottom_half == false); */
+  /* assert((msix_base_offset & ~PCI_BASE_ADDRESS_MEM_MASK) == 0); */
+
   assert(bar->type == PCI_REGION_TYPE_MEM);
-  assert((msix_base_offset & ~PCI_BASE_ADDRESS_MEM_MASK) == 0);
+  msix_base_offset &= PCI_BASE_ADDRESS_MEM_MASK;
 
   table_offset &= PCI_MSIX_TABLE_OFFSET;
-  add_msix_table(devfn, msix_base_offset + table_offset, entry_num);
+  add_msix_table(bdf, msix_base_offset + table_offset, entry_num);
 }

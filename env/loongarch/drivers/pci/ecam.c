@@ -1,3 +1,4 @@
+#include <asm/cpu-features.h>
 #include <asm/device.h>
 #include <asm/io.h>
 #include <autoconf.h>
@@ -103,11 +104,32 @@ struct pci_config_window *pci_ecam_create(struct pci_ecam_ops *ops) {
   cfg->ops = ops;
   cfg->busr.start = 0;
   cfg->busr.end = 127;
+  cfg->win = QEMU_PCI_CONFIG_IO_BASE;
+  return cfg;
+}
+
+struct pci_config_window *arch_pci_ecam_create(struct pci_ecam_ops *ops) {
+  struct pci_config_window *cfg = &__pci_config_window;
+  cfg->ops = ops;
+  cfg->busr.start = 0;
+  cfg->busr.end = 127;
   cfg->win = MCFG_EXT_PCICFG_BASE;
   return cfg;
 }
 
+extern struct pci_ecam_ops loongson_pci_ecam_ops;
+
 void loongarch_pci_init() {
-  struct pci_config_window *cfg = pci_ecam_create(&pci_generic_ecam_ops);
-  init_pci_bus(&pci_generic_ecam_ops, cfg);
+  struct pci_config_window *cfg;
+  if (cpu_has_hypervisor) {
+    cfg = pci_ecam_create(&pci_generic_ecam_ops);
+  } else {
+    cfg = arch_pci_ecam_create(&loongson_pci_ecam_ops);
+  }
+
+  if (cfg->ops->init) {
+    cfg->ops->init(cfg);
+  }
+
+  init_pci_bus(cfg);
 }

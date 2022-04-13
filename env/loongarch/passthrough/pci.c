@@ -1,36 +1,22 @@
+#include "internal.h"
 #include <asm/device.h>
 #include <exec/memory.h>
 #include <hw/pci/pci.h>
 #include <linux/pci.h>
 #include <qemu/range.h>
 
-// functions defined in ./pci-device.c
-int add_PCIe_devices(u8 devfn);
-int msix_table_overlapped(hwaddr addr, unsigned size);
-int get_msix_table_entry_offset(hwaddr addr, int idx);
-u32 pcie_mmio_space_translate(int idx, u32 addr, u32 val, bool is_write);
-void add_msix_table(u8 devfn, u32 offset, int entry_num);
-void msix_map_region(u8 devfn);
-
-u64 msi_message_addr();
-u32 pch_msi_allocate_hwirq(unsigned int irq);
-
-static u8 get_devfn(uint32_t addr) { return addr >> 8; }
-
-static u8 get_offset(uint32_t addr) { return addr & 0xff; }
-
 static void pci_config_write(uint32_t addr, uint32_t val, int l) {
-  uint8_t devfn = get_devfn(addr);
-  uint8_t where = get_offset(addr);
+  u16 bdf = get_bdf(addr);
+  int where = get_where(addr);
   switch (l) {
   case 1:
-    pci_bus_write_config_byte(devfn, where, val);
+    pci_bus_write_config_byte(bdf, where, val);
     break;
   case 2:
-    pci_bus_write_config_word(devfn, where, val);
+    pci_bus_write_config_word(bdf, where, val);
     break;
   case 4:
-    pci_bus_write_config_dword(devfn, where, val);
+    pci_bus_write_config_dword(bdf, where, val);
     break;
   default:
     g_assert_not_reached();
@@ -42,53 +28,52 @@ static uint32_t pci_config_read(uint32_t addr, int l) {
   uint32_t val32;
   uint16_t val16;
   uint8_t val8;
-  uint8_t devfn = get_devfn(addr);
-  uint8_t where = get_offset(addr);
+  u16 bdf = get_bdf(addr);
+  int where = get_where(addr);
   switch (l) {
   case 1:
-    pci_bus_read_config_byte(devfn, where, &val8);
+    pci_bus_read_config_byte(bdf, where, &val8);
     return val8;
   case 2:
-    pci_bus_read_config_word(devfn, where, &val16);
+    pci_bus_read_config_word(bdf, where, &val16);
     return val16;
   case 4:
-    pci_bus_read_config_dword(devfn, where, &val32);
+    pci_bus_read_config_dword(bdf, where, &val32);
     return val32;
   default:
     g_assert_not_reached();
   }
 }
 
+// TMP_TODO 将这个名称和 MMIO 的修改对称一点
 void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
-  uint32_t config_addr = addr & (PCI_CONFIG_SPACE_SIZE - 1);
+  uint32_t config_addr = get_config_addr(addr);
   bool msix_table_updated = false;
   if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
       ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
       ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4)) {
-    assert(l == 4);
-    val = pcie_mmio_space_translate(add_PCIe_devices(get_devfn(addr)),
-                                    config_addr, val, true);
-    msix_table_updated = true;
+    val = pcie_mmio_space_translate(addr, l, val, true, &msix_table_updated);
   }
 
   pci_config_write(addr, val, l);
 
   if (msix_table_updated)
-    msix_map_region(get_devfn(addr));
+    msix_map_region(get_bdf(addr));
 }
 
 uint32_t pci_pass_through_read(uint32_t addr, int l) {
-  uint32_t config_addr = addr & (PCI_CONFIG_SPACE_SIZE - 1);
+  uint32_t config_addr = get_config_addr(addr);
+  bool unused;
   if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
       ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
       ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4)) {
-    assert(l == 4);
     u32 val = pci_config_read(addr, l);
-    return pcie_mmio_space_translate(add_PCIe_devices(get_devfn(addr)),
-                                     config_addr, val, false);
+    return pcie_mmio_space_translate(addr, l, val, false, &unused);
   }
   return pci_config_read(addr, l);
 }
+
+#include "cpu.h"
 
 static uint64_t pass_mmio_pass_read(void *opaque, hwaddr addr, unsigned size) {
   addr += BUILD_PCIMEM_START;
