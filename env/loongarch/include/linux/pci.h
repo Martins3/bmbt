@@ -31,11 +31,14 @@ struct pci_ops {
                u32 val);
 };
 
-int pci_bus_read_config_byte(unsigned int devfn, int where, u8 *val);
-int pci_bus_read_config_word(unsigned int devfn, int where, u16 *val);
-int pci_bus_read_config_dword(unsigned int devfn, int where, u32 *val);
-int pci_bus_write_config_byte(unsigned int devfn, int where, u8 val);
-int pci_bus_write_config_word(unsigned int devfn, int where, u16 val);
-int pci_bus_write_config_dword(unsigned int devfn, int where, u32 val);
+int pci_bus_read_config_byte(u16 bfd, int where, u8 *val);
+int pci_bus_read_config_word(u16 bfd, int where, u16 *val);
+int pci_bus_read_config_dword(u16 bfd, int where, u32 *val);
+int pci_bus_write_config_byte(u16 bfd, int where, u8 val);
+int pci_bus_write_config_word(u16 bfd, int where, u16 val);
+int pci_bus_write_config_dword(u16 bfd, int where, u32 val);
+
+int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn, int where,
+                             int size, u32 val);
 
 #endif /* end of include guard: PCI_H_65PSRQAZ */
