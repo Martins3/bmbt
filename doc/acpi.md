@@ -7,6 +7,10 @@
 4. [ACPI: Design Principles and Concerns](https://www.ssi.gouv.fr/uploads/IMG/pdf/article_acpi.pdf)
 5. [Getting started with ACPI](https://dortania.github.io/Getting-Started-With-ACPI/#a-quick-explainer-on-acpi)
 
+## 反汇编 acpi table
+- /sys/firmware/acpi/tables 中用 iasl -i
+- 如果在 Loongarch 上没有 isal ，可以 scp 到 x86 机器上拷贝
+
 ## 问题
 - [ ] 需要体用动态构建 ACPI 表吗?
 
