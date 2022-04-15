@@ -33,7 +33,8 @@ static void build_tlb_handler(int cpu) {
 
 void kernel_tlb_init(int cpu) {
   write_csr_pagesize(PS_DEFAULT_SIZE);
-  write_csr_stlbpgsize(PS_DEFAULT_SIZE);
+  // write_csr_stlbpgsize(PS_DEFAULT_SIZE);
+  write_csr_stlbpgsize(PS_4K);
   write_csr_tlbrefill_pagesize(PS_DEFAULT_SIZE);
 
   if (read_csr_pagesize() != PS_DEFAULT_SIZE) {
