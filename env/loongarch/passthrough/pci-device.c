@@ -16,7 +16,7 @@ typedef struct {
  * PCI_BASE_ADDRESS_MEM_TYPE_64 bar are always 0 or 0xffffffff, if the guest
  * operating system or firmware are rational.
  */
-QEMU_BUILD_BUG_ON(LOONGSON_X86_PCI_MEM_OFFSET != 0x80000000);
+/* QEMU_BUILD_BUG_ON(LOONGSON_X86_PCI_MEM_OFFSET != 0x80000000); */
 QEMU_BUILD_BUG_ON(BUILD_PCIMEM_END >= 0xffffffff);
 QEMU_BUILD_BUG_ON(LOONGSON_PCI_MEM_END >= 0xffffffff);
 
@@ -142,6 +142,8 @@ static void pci_bios_get_bar(BMBT_PCIExpressDevice *pci, int bar, int *ptype,
   u64 val = 0;
   pci_bus_read_config_dword(bdf, ofs, (u32 *)&val);
   pci_bus_write_config_dword(bdf, ofs, old);
+  printf("[huxueshi:%s:%d] bdf=%x barnum=%d low=%x\n", __FUNCTION__, __LINE__,
+         pci->bdf, ofs, old);
   if (is64) {
     u32 hold, high;
     pci_bus_read_config_dword(bdf, ofs + 4, &hold);
@@ -149,11 +151,15 @@ static void pci_bios_get_bar(BMBT_PCIExpressDevice *pci, int bar, int *ptype,
     pci_bus_read_config_dword(bdf, ofs + 4, &high);
     pci_bus_write_config_dword(bdf, ofs + 4, hold);
     val |= ((u64)high << 32);
+    printf("[huxueshi:%s:%d] bdf=%x barnum=%d high=%x\n", __FUNCTION__,
+           __LINE__, pci->bdf, ofs, hold);
     mask |= ((u64)0xffffffff << 32);
     *psize = (~(val & mask)) + 1;
   } else {
     *psize = ((~(val & mask)) + 1) & 0xffffffff;
   }
+  printf("[huxueshi:%s:%d] bdf=%x barnum=%d size=%lx\n", __FUNCTION__, __LINE__,
+         pci->bdf, ofs, *psize);
   *ptype = type;
   *pis64 = is64;
 }
@@ -206,7 +212,10 @@ int add_PCIe_devices(u16 bdf) {
   pci_bus_read_config_dword(bdf, PCI_CLASS_REVISION, &classrev);
   pci->class = classrev >> 16;
   pci_bus_read_config_byte(bdf, PCI_HEADER_TYPE, &(pci->header_type));
-  printf("[huxueshi:%s:%d] %x\n", __FUNCTION__, __LINE__, pci->bdf);
+  printf("[huxueshi:%s:%d] bdf=%x type=%d\n", __FUNCTION__, __LINE__, pci->bdf,
+         is_pci_bridge(idx));
+
+  // TMP_TODO 应该对于 header type 做点假设才可以的啊
 
   pci_bios_check_devices(pci);
 
@@ -234,6 +243,7 @@ static bool is_bar_access(BMBT_PCIExpressDevice *pci, int l,
     return false;
   }
 
+  // TMP_TODO 使用 is_pci_bridge 来替代一下
   if (pci->class == PCI_CLASS_BRIDGE_PCI) {
     return ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 8) ||
            ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4);
@@ -242,8 +252,89 @@ static bool is_bar_access(BMBT_PCIExpressDevice *pci, int l,
   return true;
 }
 
-u32 pcie_mmio_space_translate(uint32_t addr, int l, u32 val, bool is_write,
-                              bool *msix_table_updated) {
+static inline void assert_access_cover_config(u32 config_addr, int l,
+                                              int offset, int size) {
+  // this is the base of following algorithm
+  bool x = (config_addr <= offset && config_addr + l >= offset + size);
+  // see seabios/src/fw/pciinit.c:pci_bridge_has_region
+  bool y = (config_addr == offset);
+  assert(x || y);
+}
+
+static inline u32 clear_lower_bits(u32 val, int s) {
+  assert(s >= 0 && s <= 3);
+  s *= 8;
+  return (val >> s) << s;
+}
+
+static inline u32 clear_upper_bits(u32 val, int s) {
+  assert(s >= 0 && s <= 3);
+  s *= 8;
+  return (val << s) >> s;
+}
+
+u32 get_value_in_range(u32 val, int offset, int size) {
+  u32 tmp1 = clear_lower_bits(val, offset);
+  u32 tmp2 = clear_upper_bits(val, 4 - offset - size);
+  return tmp1 & tmp2;
+}
+
+u32 get_value_out_range(u32 val, int offset, int size) {
+  return val ^ get_value_in_range(val, offset, size);
+}
+
+u32 win_trans(u32 config_addr, int l, int offset, int size, bool is_write,
+              u32 val, u32 shift) {
+  if (ranges_overlap(config_addr, l, offset, size)) {
+    assert_access_cover_config(config_addr, l, offset, size);
+    u32 val_in = get_value_in_range(val, offset - config_addr, size);
+    u32 val_out = get_value_out_range(val, offset - config_addr, size);
+    val_in = val_in >> (offset - config_addr) * 8;
+    if (is_write) {
+      val_in -= shift;
+    } else {
+      val_in += shift;
+    }
+    val_in = val_in << (offset - config_addr) * 8;
+    val = val_in | val_out;
+  }
+  return val;
+}
+
+#define PCI_IO_SHIFT 8
+#define PCI_MEMORY_SHIFT 16
+#define PCI_PREF_MEMORY_SHIFT 16
+
+#define IO_SHIFT (LOONGSON_X86_PCI_IO_OFFSET >> PCI_IO_SHIFT)
+#define MEM_SHIFT (LOONGSON_X86_PCI_MEM_OFFSET >> PCI_MEMORY_SHIFT)
+#define PREF_MEM_SHIFT (LOONGSON_X86_PCI_MEM_OFFSET >> PCI_PREF_MEMORY_SHIFT)
+
+// TMP_TODO 分析 /home/maritns3/core/kvmqemu/hw/pci/pci_bridge.c 之后，其实
+// - memory 和 prefetch 都是有 mask 的 需要使用 QEMU_BUILD_BUG_ON 分析 assert
+// offset 超过 0x20 bit (0xf 的 mask 和 PCI_MEMORY_SHIFT)，这样才可以处理
+// - 而且 offset 小于 32bit，这就是那些 uppper 为什么都是 0 的原因
+//  - io 的有类似的要求
+u32 pcie_bridge_window_translate(int idx, uint32_t addr, int l, u32 val,
+                                 bool is_write) {
+  u32 config_addr = get_config_addr(addr);
+  if (is_pci_bridge(idx)) {
+    val = win_trans(config_addr, l, PCI_IO_BASE, 1, is_write, val, IO_SHIFT);
+    val = win_trans(config_addr, l, PCI_IO_LIMIT, 1, is_write, val, IO_SHIFT);
+    val =
+        win_trans(config_addr, l, PCI_MEMORY_BASE, 2, is_write, val, MEM_SHIFT);
+    val = win_trans(config_addr, l, PCI_MEMORY_LIMIT, 2, is_write, val,
+                    MEM_SHIFT);
+    val = win_trans(config_addr, l, PCI_PREF_MEMORY_BASE, 2, is_write, val,
+                    PREF_MEM_SHIFT);
+    val = win_trans(config_addr, l, PCI_PREF_MEMORY_LIMIT, 2, is_write, val,
+                    PREF_MEM_SHIFT);
+  }
+
+  return val;
+}
+
+u32 pcie_bar_translate(uint32_t addr, int l, u32 val, bool is_write,
+                       bool *msix_table_updated) {
   int idx = add_PCIe_devices(get_bdf(addr));
   u32 config_addr = get_config_addr(addr);
   BMBT_PCIExpressDevice *pci = get_pcie_dev(idx);
@@ -278,9 +369,8 @@ u32 pcie_mmio_space_translate(uint32_t addr, int l, u32 val, bool is_write,
     } else {
       val += LOONGSON_X86_PCI_MEM_OFFSET;
     }
+    *msix_table_updated = true;
   }
-
-  *msix_table_updated = true;
 
   return val;
 }
@@ -372,10 +462,10 @@ void msix_map_region(u16 bdf) {
     printf("[huxueshi:%s:%d] oooooooo ???\n", __FUNCTION__, __LINE__);
   }
 
-  printf("[huxueshi:%s:%d] msix_base_offset=%x table_offset=%x entry_num=%x\n",
-         __FUNCTION__, __LINE__, msix_base_offset, table_offset, entry_num);
-  printf("[huxueshi:%s:%d] bar num= %d\n", __FUNCTION__, __LINE__, bir);
-  printf("[huxueshi:%s:%d] size=%lx\n", __FUNCTION__, __LINE__, bar->size);
+  printf("[huxueshi:%s:%d] bdf=%x msix_base_offset=%x table_offset=%x "
+         "entry_num=%x barnum=%d size=%lx\n",
+         __FUNCTION__, __LINE__, bdf, msix_base_offset, table_offset, entry_num,
+         bir, bar->size);
   // 很有可能根本没人初始化这个东西啊
   /* TMP_TODO // 如果这个 assert 取消，那么很多的地方都需要修改关于 msix table
    * 的数值长度
@@ -388,4 +478,9 @@ void msix_map_region(u16 bdf) {
 
   table_offset &= PCI_MSIX_TABLE_OFFSET;
   add_msix_table(bdf, msix_base_offset + table_offset, entry_num);
+}
+
+bool is_pci_bridge(int idx) {
+  BMBT_PCIExpressDevice *pci = get_pcie_dev(idx);
+  return pci->class == PCI_CLASS_BRIDGE_PCI;
 }

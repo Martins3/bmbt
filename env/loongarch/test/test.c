@@ -13,6 +13,8 @@
 #include <linux/pci.h>
 #include <math.h>
 #include <qemu/queue.h>
+#include <qemu/range.h>
+#include <standard-headers/linux/pci_regs.h>
 #include <sys/mman.h>
 #include <unitest/greatest.h>
 
@@ -248,9 +250,163 @@ TEST test_baud_rate_asm() {
   PASS();
 }
 
+TEST test_range_api() {
+  // notice: ranges_overlap is undefined if length == 0
+  ASSERT_EQ(ranges_overlap(0, 0, 1, 3), 1);
+  PASS();
+}
+
+// 不会出现问题吗? 存在一个就是 128M 的设备
+/* e0040000000-e007fffffff : PCI Bus 0000:00 */
+/*   e0040000000-e004fffffff : PCI Bus 0000:04 */
+/*     e0040000000-e004fffffff : 0000:04:00.0 */
+
+u16 get_bdf(int bus, int dev, int func) {
+  return bus << 8 | (dev & 0x1f) << 3 | (func & 0x7);
+}
+
+void show_bdf(u16 bdf, char a[100]) {
+  int bus = bdf >> 8;
+  int dev = (bdf >> 3) & 0x1f;
+  int func = bdf & 0x7;
+  sprintf(a, "%02x:%02x:%x", bus, dev, func);
+}
+
+void show_window(u16 bdf) {
+  u16 mem_addr;
+  u16 mem_limit;
+  u16 pref_mem_addr;
+  u16 pref_mem_limit;
+  u8 io_addr;
+  char str[100];
+  show_bdf(bdf, str);
+  pci_bus_read_config_byte(bdf, PCI_IO_BASE, &io_addr);
+  pci_bus_read_config_word(bdf, PCI_MEMORY_BASE, &mem_addr);
+  pci_bus_read_config_word(bdf, PCI_MEMORY_LIMIT, &mem_limit);
+  pci_bus_read_config_word(bdf, PCI_PREF_MEMORY_BASE, &pref_mem_addr);
+  pci_bus_read_config_word(bdf, PCI_PREF_MEMORY_LIMIT, &pref_mem_limit);
+
+  /* [show_window:285] bdf= 0:09:0 io_addr=21 mem=5b30 pref_mem=fff1 */
+  /* [show_window:285] bdf= 0:0b:0 io_addr=f1 mem=5b20 pref_mem=fff1 */
+  /* [show_window:285] bdf= 0:0c:0 io_addr=11 mem=5b10 pref_mem=fff1 <----- */
+  /* [show_window:285] bdf= 0:11:0 io_addr=1 mem=5b00 pref_mem=4001 */
+  // TMP_TODO 可以调查一下的了
+  // io addr 是什么? 为什么是 0 1 2 的啊，不是范围都是 0x4000 的吗
+  printf("[huxueshi:%s:%d] bdf=%s io=%x mem=%x pref_mem=%x mem_limit=%x "
+         "pref_mem_limit=%x\n",
+         __FUNCTION__, __LINE__, str, io_addr, mem_addr, pref_mem_addr,
+         mem_limit, pref_mem_limit);
+}
+#define WINDOW_OFFSET 0x10000000
+
+#define PCI_IO_SHIFT 8
+#define PCI_MEMORY_SHIFT 16
+#define PCI_PREF_MEMORY_SHIFT 16
+void change_window(u16 bdf, bool with_pref) {
+  u16 mem_addr;
+  u16 pref_mem_addr = 0;
+  u16 mem_limit;
+  pci_bus_read_config_word(bdf, PCI_MEMORY_BASE, &mem_addr);
+  mem_addr += (WINDOW_OFFSET >> PCI_MEMORY_SHIFT);
+  pci_bus_write_config_word(bdf, PCI_MEMORY_BASE, mem_addr);
+
+  pci_bus_read_config_word(bdf, PCI_MEMORY_LIMIT, &mem_limit);
+  mem_limit += (WINDOW_OFFSET >> PCI_MEMORY_SHIFT);
+  pci_bus_write_config_word(bdf, PCI_MEMORY_LIMIT, mem_limit);
+
+  if (with_pref) {
+    pci_bus_read_config_word(bdf, PCI_PREF_MEMORY_BASE, &pref_mem_addr);
+    pref_mem_addr += (WINDOW_OFFSET >> PCI_PREF_MEMORY_SHIFT);
+    pci_bus_write_config_word(bdf, PCI_PREF_MEMORY_BASE, pref_mem_addr);
+  }
+
+  pci_bus_read_config_word(bdf, PCI_MEMORY_BASE, &mem_addr);
+  printf("[huxueshi:%s:%d] change_window mem=%x\n", __FUNCTION__, __LINE__,
+         mem_addr);
+
+  if (with_pref) {
+    pci_bus_read_config_word(bdf, PCI_PREF_MEMORY_BASE, &pref_mem_addr);
+    printf("[huxueshi:%s:%d] change_window pref mem=%x\n", __FUNCTION__,
+           __LINE__, pref_mem_addr);
+  }
+}
+
+TEST test_network() {
+  // test_network
+  u32 addr;
+  int region_num;
+  int TxConfig = 0x40;
+  for (region_num = 0; region_num < 6; ++region_num) {
+    pci_bus_read_config_dword(0x300, PCI_BASE_ADDRESS_0 + region_num * 4,
+                              &addr);
+    u32 val = readl((void *)TO_UNCAC(addr + TxConfig));
+    printf("[huxueshi:%s:%d] addr=%x val=%x\n", __FUNCTION__, __LINE__, addr,
+           val);
+  }
+
+  show_window(get_bdf(0, 0x9, 0));
+  show_window(get_bdf(0, 0xb, 0));
+  show_window(get_bdf(0, 0xc, 0));
+  show_window(get_bdf(0, 0x11, 0));
+
+  change_window(get_bdf(0, 0xc, 0), false);
+
+  for (region_num = 0; region_num < 6; ++region_num) {
+    pci_bus_read_config_dword(0x300, PCI_BASE_ADDRESS_0 + region_num * 4,
+                              &addr);
+    u32 val = readl((void *)TO_UNCAC(addr + TxConfig));
+    printf("[huxueshi:%s:%d] addr=%x val=%x\n", __FUNCTION__, __LINE__, addr,
+           val);
+    if (region_num == 2 || region_num == 4) {
+      addr += WINDOW_OFFSET;
+      pci_bus_write_config_dword(0x300, PCI_BASE_ADDRESS_0 + region_num * 4,
+                                 addr);
+      u32 val = readl((void *)TO_UNCAC(addr + TxConfig));
+      printf("[huxueshi:%s:%d] addr=%x val=%x\n", __FUNCTION__, __LINE__, addr,
+             val);
+    }
+  }
+
+  change_window(get_bdf(0, 0xc, 0), true);
+  for (region_num = 0; region_num < 6; ++region_num) {
+    pci_bus_read_config_dword(0x300, PCI_BASE_ADDRESS_0 + region_num * 4,
+                              &addr);
+    u32 val = readl((void *)TO_UNCAC(addr + TxConfig));
+    printf("[huxueshi:%s:%d] addr=%x val=%x\n", __FUNCTION__, __LINE__, addr,
+           val);
+    if (region_num == 2 || region_num == 4) {
+      addr += WINDOW_OFFSET;
+      pci_bus_write_config_dword(0x300, PCI_BASE_ADDRESS_0 + region_num * 4,
+                                 addr);
+      u32 val = readl((void *)TO_UNCAC(addr + TxConfig));
+      printf("[huxueshi:%s:%d] addr=%x val=%x\n", __FUNCTION__, __LINE__, addr,
+             val);
+    }
+  }
+  PASS();
+}
+
+// 如果全部覆盖，怎么操作，如果完全不覆盖，如何操作?
+TEST test_bit_ops() {
+  u32 win_trans(u32 config_addr, int l, int offset, int size, bool is_write,
+                u32 val, u32 shift);
+  ASSERT_EQ(win_trans(0, 4, 2, 2, true, 0xffffffff, 0xf), 0xfff0ffff);
+  ASSERT_EQ(win_trans(0, 4, 2, 2, false, 0xfff0ffff, 0xf), 0xffffffff);
+  ASSERT_EQ(win_trans(0, 4, 0, 2, true, 0xffffffff, 0xf), 0xfffffff0);
+  ASSERT_EQ(win_trans(0, 4, 0, 2, false, 0xfffffff0, 0xf), 0xffffffff);
+  ASSERT_EQ(win_trans(0, 4, 0, 4, true, 0xffffffff, 0xf), 0xfffffff0);
+  ASSERT_EQ(win_trans(0, 4, 0, 4, false, 0xfffffff0, 0xf), 0xffffffff);
+  ASSERT_EQ(win_trans(0, 4, 3, 1, true, 0xffffffff, 0xf), 0xf0ffffff);
+  ASSERT_EQ(win_trans(0, 4, 3, 1, false, 0xf1000000, 0xf), 0xffffffff);
+  PASS();
+}
+
 SUITE(env_test) {
-  RUN_TEST(test_read_freq);
-  RUN_TEST(test_baud_rate);
+  RUN_TEST(test_bit_ops);
+  /* RUN_TEST(test_range_api); */
+  /* RUN_TEST(test_network); */
+  /* RUN_TEST(test_read_freq); */
+  /* RUN_TEST(test_baud_rate); */
   /* RUN_TEST(test_baud_rate_asm); */
   /* RUN_TEST(test_1M_2M_write); */
   /* RUN_TEST(test_pio); */
