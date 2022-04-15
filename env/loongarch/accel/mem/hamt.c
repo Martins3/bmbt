@@ -441,9 +441,37 @@ static inline void disable_pg(void) {
  *     tlbelo0 / tlbelo1 may not be right
  */
 static void hamt_set_tlb(uint64_t vaddr, uint64_t paddr, int prot, bool mode) {
+  // flash 0x1000f0000 entry in tlb byhand.
+  if (vaddr == 0x1ffff0000) {
+    uint64_t t_csr_tlbehi, t_csr_tlbelo0, t_csr_tlbelo1;
+    int32_t t_csr_tlbidx;
+    uint32_t t_csr_asid;
+    t_csr_tlbehi = 0x1000f0000 & ~0x1fffULL;
+    t_csr_asid = asid_value | 0xa0000;
+    write_csr_tlbehi(t_csr_tlbehi);
+    write_csr_asid(t_csr_asid);
+    tlb_probe();
+    t_csr_tlbidx = read_csr_tlbidx();
+    // printf("\n0.t_csr_tlbidx: %x\n", t_csr_tlbidx);
+
+    // 0x1000f0000 already exists, but the mapping info is out of date
+    if (t_csr_tlbidx >= 0) {
+      t_csr_tlbelo0 = 0x0;
+      t_csr_tlbelo1 = 0x0;
+      t_csr_tlbehi = 0x1000f0000 & ~0x1fffULL;
+      t_csr_asid = asid_value | 0xa0000;
+      write_csr_asid(t_csr_asid);
+      write_csr_tlbehi(t_csr_tlbehi);
+      write_csr_tlbelo0(t_csr_tlbelo0);
+      write_csr_tlbelo1(t_csr_tlbelo1);
+      write_csr_tlbidx(t_csr_tlbidx);
+      valid_index(t_csr_tlbidx) ? tlb_write_indexed() : tlb_write_random();
+    }
+  }
+
   uint64_t csr_tlbehi, csr_tlbelo0, csr_tlbelo1;
   int32_t csr_tlbidx;
-  uint32_t csr_asid = asid_value;
+  uint32_t csr_asid = asid_value | 0xa0000;
 
   int w = prot & PAGE_WRITE ? 1 : 0;
   int r = prot & PAGE_READ ? 1 : 0;
@@ -451,16 +479,27 @@ static void hamt_set_tlb(uint64_t vaddr, uint64_t paddr, int prot, bool mode) {
 
   disable_pg();
 
+  printf("tlb: vaddr: %lx, paddr: %lx\n", vaddr, paddr);
+  // uint64_t p = *(uint64_t *)(paddr - 0x1000);
+  // printf("hamt_set_tlb: value in %lx: %lx\n",
+  // vaddr - mapping_base_address - 0x1000, p);
   // to see whether there is already a valid adjacent tlb entry
   csr_tlbehi = vaddr & ~0x1fffULL;
+  // printf("csr_tlbehi: %lx\n", csr_tlbehi);
   write_csr_tlbehi(csr_tlbehi);
   write_csr_asid(csr_asid);
   tlb_probe();
   csr_tlbidx = read_csr_tlbidx();
+  // printf("csr_tlbidx: %x\n", csr_tlbidx);
   if (csr_tlbidx >= 0) {
     tlb_read();
     csr_tlbelo0 = read_csr_tlbelo0();
     csr_tlbelo1 = read_csr_tlbelo1();
+    // printf("0.csr_tlbidx: %lx\n", read_csr_tlbidx());
+    // printf("0.csr_tlbelo0: %lx\n", csr_tlbelo0);
+    // printf("0.csr_tlbelo1: %lx\n", csr_tlbelo1);
+    // printf("0.csr_tlbehi: %lx\n", read_csr_tlbehi());
+    // printf("0.csr_asid: %lx\n", read_csr_asid());
   }
 
   // FIX
@@ -510,13 +549,57 @@ static void hamt_set_tlb(uint64_t vaddr, uint64_t paddr, int prot, bool mode) {
   // set page size 4K
   csr_tlbidx &= 0xc0ffffff;
   csr_tlbidx |= PS_4K << PS_SHIFT;
+
+  // printf("1.csr_asid: %x\n", csr_asid);
+  // printf("1.csr_tlbehi: %lx\n", csr_tlbehi);
+  // printf("1.csr_tlbelo0: %lx\n", csr_tlbelo0);
+  // printf("1.csr_tlbelo1: %lx\n", csr_tlbelo1);
+  // printf("1.csr_tlbidx: %x\n", csr_tlbidx);
+
   write_csr_asid(csr_asid);
+  // printf("2.csr_asid: %x\n", csr_asid);
   write_csr_tlbehi(csr_tlbehi);
+  // printf("2.csr_tlbehi: %lx\n", csr_tlbehi);
   write_csr_tlbelo0(csr_tlbelo0);
+  // printf("2.csr_tlbelo0: %lx\n", csr_tlbelo0);
   write_csr_tlbelo1(csr_tlbelo1);
+  // printf("2.csr_tlbelo1: %lx\n", csr_tlbelo1);
   write_csr_tlbidx(csr_tlbidx);
+  // printf("2.csr_tlbidx: %x\n", csr_tlbidx);
 
   valid_index(csr_tlbidx) ? tlb_write_indexed() : tlb_write_random();
+
+  // uint64_t t_csr_tlbehi, t_csr_tlbelo0, t_csr_tlbelo1;
+  // int32_t t_csr_tlbidx;
+  // uint32_t t_csr_asid;
+
+  // t_csr_asid = read_csr_asid();
+  // t_csr_tlbehi = read_csr_tlbehi();
+  // t_csr_tlbelo0 = read_csr_tlbelo0();
+  // t_csr_tlbelo1 = read_csr_tlbelo1();
+  // t_csr_tlbidx = read_csr_tlbidx();
+  // printf("1.t_csr_asid: %x\n", t_csr_asid);
+  // printf("1.t_csr_tlbehi: %lx\n", t_csr_tlbehi);
+  // printf("1.t_csr_tlbelo0: %lx\n", t_csr_tlbelo0);
+  // printf("1.t_csr_tlbelo1: %lx\n", t_csr_tlbelo1);
+  // printf("1.t_csr_tlbidx: %x\n", t_csr_tlbidx);
+
+  // t_csr_asid = asid_value;
+  // t_csr_tlbehi = vaddr & ~0x1fffULL;
+  // write_csr_tlbehi(t_csr_tlbehi);
+  // write_csr_asid(t_csr_asid);
+  // tlb_probe();
+  // t_csr_tlbidx = read_csr_tlbidx();
+  // if (t_csr_tlbidx >= 0) {
+  //   tlb_read();
+  //   t_csr_tlbelo0 = read_csr_tlbelo0();
+  //   t_csr_tlbelo1 = read_csr_tlbelo1();
+  // }
+  // printf("2.t_csr_asid: %x\n", t_csr_asid);
+  // printf("2.t_csr_tlbehi: %lx\n", t_csr_tlbehi);
+  // printf("2.t_csr_tlbelo0: %lx\n", t_csr_tlbelo0);
+  // printf("2.t_csr_tlbelo1: %lx\n", t_csr_tlbelo1);
+  // printf("2.t_csr_tlbidx: %x\n", t_csr_tlbidx);
 
   enable_pg();
 }
@@ -1005,6 +1088,9 @@ void hamt_exception_handler(uint64_t hamt_badvaddr, CPUX86State *env,
   }
 #endif
 
+  // printf("hamt.c:1058:csr_asid: %lx\n", read_csr_asid());
+  // uint32_t ecode = read_csr_excode();
+  // printf("exception code for tlb: %x\n", ecode);
   uint64_t addr = hamt_badvaddr - mapping_base_address;
 
   CPUState *cs = env_cpu(env);
