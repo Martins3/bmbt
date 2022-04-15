@@ -1,3 +1,4 @@
+#include "accel/hamt.h"
 #include "cpu.h"
 #include "exec/helper-proto.h"
 #include "translate-all.h"
@@ -327,7 +328,13 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap) {
   }
 }
 
-void tlb_flush(CPUState *cpu) { tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS); }
+void tlb_flush(CPUState *cpu) {
+#ifdef HAMT
+  hamt_flush_all();
+  from_tlb_flush++;
+#endif
+  tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS);
+}
 
 void tlb_flush_by_mmuidx_all_cpus(CPUState *src_cpu, uint16_t idxmap) {
   const run_on_cpu_func fn = tlb_flush_by_mmuidx_async_work;
@@ -399,6 +406,11 @@ static void tlb_flush_page_locked(CPUArchState *env, int midx,
   target_ulong lp_addr = env_tlb(env)->d[midx].large_page_addr;
   target_ulong lp_mask = env_tlb(env)->d[midx].large_page_mask;
 
+#ifdef HAMT
+  hamt_flush_all();
+  from_tlb_flush_page_locked++;
+#endif
+
   /* Check if we need to flush due to large pages.  */
   if ((page & lp_mask) == lp_addr) {
     tlb_debug("forcing full flush midx %d (" TARGET_FMT_lx "/" TARGET_FMT_lx
@@ -451,6 +463,11 @@ void tlb_flush_page_by_mmuidx(CPUState *cpu, target_ulong addr,
   /* This should already be page aligned */
   addr_and_mmu_idx = addr & TARGET_PAGE_MASK;
   addr_and_mmu_idx |= idxmap;
+
+#ifdef HAMT
+  from_by_mmuidx++;
+  hamt_flush_all();
+#endif
 
   if (!qemu_cpu_is_self(cpu)) {
     async_run_on_cpu(cpu, tlb_flush_page_by_mmuidx_async_work,
