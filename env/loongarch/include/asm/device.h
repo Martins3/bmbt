@@ -20,9 +20,9 @@
 #define X86_PCI_IO_END 0xffff
 
 /* arch/loongarch/include/asm/mach-la64/pci.h */
-#define LOONGSON_PCI_MEM_START 0x40000000UL
-#define LOONGSON_PCI_MEM_END 0x7fffffffUL
-#define LOONGSON_PCI_IO_START 0x00004000UL
+#define LOONGSON_PCI_MEM_START 0x40000000
+#define LOONGSON_PCI_MEM_END 0x7fffffff
+#define LOONGSON_PCI_IO_START 0x00004000
 
 #define LOONGSON_X86_PCI_MEM_OFFSET                                            \
   (BUILD_PCIMEM_START - LOONGSON_PCI_MEM_START - 0x20000000)

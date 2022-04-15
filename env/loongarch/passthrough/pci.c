@@ -49,10 +49,14 @@ static uint32_t pci_config_read(uint32_t addr, int l) {
 void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
   uint32_t config_addr = get_config_addr(addr);
   bool msix_table_updated = false;
-  if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
-      ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
-      ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4)) {
-    val = pcie_mmio_space_translate(addr, l, val, true, &msix_table_updated);
+  if (!ranges_overlap(config_addr, l, 0, PCI_BASE_ADDRESS_0)) {
+    int idx = add_PCIe_devices(get_bdf(addr));
+    val = pcie_bridge_window_translate(idx, addr, l, val, true);
+    if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
+        ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
+        ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4)) {
+      val = pcie_bar_translate(addr, l, val, true, &msix_table_updated);
+    }
   }
 
   pci_config_write(addr, val, l);
@@ -63,13 +67,20 @@ void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
 
 uint32_t pci_pass_through_read(uint32_t addr, int l) {
   uint32_t config_addr = get_config_addr(addr);
-  bool unused;
-  if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
-      ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
-      ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4)) {
+
+  if (!ranges_overlap(config_addr, l, 0, PCI_BASE_ADDRESS_0)) {
+    bool unused;
+    int idx = add_PCIe_devices(get_bdf(addr));
     u32 val = pci_config_read(addr, l);
-    return pcie_mmio_space_translate(addr, l, val, false, &unused);
+    val = pcie_bridge_window_translate(idx, addr, l, val, false);
+    if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
+        ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
+        ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4)) {
+
+      return pcie_bar_translate(addr, l, val, false, &unused);
+    }
   }
+
   return pci_config_read(addr, l);
 }
 
