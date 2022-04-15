@@ -728,6 +728,7 @@ void gen_ldst_softmmu_helper(
         latxs_load_imm64(&reg1, 0x100000000);
         latxs_append_ir2_opnd3(LISA_ADD_D, &reg1, &reg1, &base);
         latxs_append_ir2_opnd2i(op, opnd_gpr, &reg1, offset);
+        latxs_ra_free_temp(&reg1);
 #else
         __gen_ldst_softmmu_helper_native(op, opnd_gpr, opnd_mem, save_temp);
 #endif
