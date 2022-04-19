@@ -113,16 +113,16 @@ long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
       continue;
     }
 
+    unsigned long addr = mem->start;
     if (len == mem->len) {
-      unsigned long addr = mem->start;
-      unsigned long size = mem->len;
-      memset((void *)addr, 0, size);
+      memset((void *)addr, 0, len);
       free_mem_node(mem);
       return addr;
     }
     mem->len -= len;
-    memset((void *)mem->start + mem->len, 0, len);
-    return mem->start + mem->len;
+    mem->start += len;
+    memset((void *)addr, 0, len);
+    return addr;
   }
   kern_not_reach("mmap never failed !");
 }
