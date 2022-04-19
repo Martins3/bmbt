@@ -139,9 +139,9 @@ static FreeMem *merge(FreeMem *left, FreeMem *node) {
 void print_freemem() {
   FreeMem *mem = NULL;
   QLIST_FOREACH(mem, &free_mem, mem_next) {
-    kern_printf("idx=%d  %016lx -- %016lx %08lx\n", mem->idx,
+    kern_printf("idx=%d  %016lx -- %016lx %10lx %8lx\n", mem->idx,
                 TO_PHYS(mem->start) >> PAGE_SHIFT,
-                TO_PHYS((mem->start + mem->len)) >> PAGE_SHIFT,
+                TO_PHYS((mem->start + mem->len)) >> PAGE_SHIFT, mem->len,
                 mem->len >> PAGE_SHIFT);
   }
 }
@@ -184,9 +184,8 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
 
   add_head_sentinel();
 #ifdef DEBUG_MEM
-  kern_printf("after free\n");
   print_freemem();
-  print_freenodes();
+  /* print_freenodes(); */
 #endif
   return 0;
 }
