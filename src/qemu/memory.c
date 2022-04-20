@@ -1,10 +1,10 @@
-#include "../../include/exec/memory.h"
-#include "../../include/exec/ram_addr.h"
-#include "../../include/hw/southbridge/piix.h"
-#include "../../include/qemu/bswap.h"
-#include "../../include/qemu/units.h"
 #include <env/memory.h>
+#include <exec/memory.h>
+#include <exec/ram_addr.h>
 #include <hw/pci-host/pam.h>
+#include <hw/southbridge/piix.h>
+#include <qemu/bswap.h>
+#include <qemu/units.h>
 #include <stdio.h>
 #include <sys/mman.h>
 
