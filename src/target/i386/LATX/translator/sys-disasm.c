@@ -294,11 +294,14 @@ void latxs_tr_disasm(TranslationBlock *tb)
     tb->icount = ir1_num;
 }
 
+struct IR1_INST ir1_buffer[MAX_IR1_NUM_PER_TB + 1];
+
 IR1_INST *latxs_get_ir1_list(TranslationBlock *tb, ADDRX pc, int *p_ir1_num)
 {
     lsassert(lsenv->cpu_state != NULL);
+    lsassert(sizeof(ir1_buffer) == (MAX_IR1_NUM_PER_TB + 1) * sizeof(IR1_INST));
 
-    IR1_INST *ir1_list = mm_calloc(MAX_IR1_NUM_PER_TB + 1, sizeof(IR1_INST));
+    IR1_INST *ir1_list = (IR1_INST *)ir1_buffer;
 
     IR1_INST *pir1 = ir1_list;
     int ir1_num = 0;
