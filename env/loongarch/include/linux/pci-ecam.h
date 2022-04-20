@@ -2,12 +2,8 @@
 #define PCI_ECAM_H_QNWUDIJ9
 
 #include <asm/io.h>
+#include <linux/ioport.h>
 #include <linux/pci.h>
-
-struct resource {
-  u64 start;
-  u64 end;
-};
 
 /*
  * struct to hold the mappings of a config space window. This
