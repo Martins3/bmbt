@@ -197,9 +197,29 @@ static void eiointc_domain_init(void) {
   }
 }
 
+static void liointc_domain_init(void) {
+#ifdef CONFIG_LOONGSON_LIOINTC
+  struct fwnode_handle *irq_handle = NULL;
+  struct resource res;
+  u32 parent_int_map[2] = {LIOINTC_VECS_TO_IP2, LIOINTC_VECS_TO_IP3};
+  u32 parent_irq[2] = {LOONGSON_LINTC_IRQ, LOONGSON_BRIDGE_IRQ};
+
+#ifdef BMBT
+  irq_handle = irq_domain_alloc_fwnode((void *)liointc_base);
+  if (!irq_handle) {
+    panic("Unable to allocate domain handle for liointc irqdomain.\n");
+  }
+#endif
+  res.start = liointc_base;
+  res.end = liointc_base + LIOINTC_MEM_SIZE;
+  liointc_init(&res, 2, parent_irq, parent_int_map, irq_handle,
+               pch_irq_route_model);
+#endif
+}
+
 static void irqchip_init_default(void) {
   /* loongarch_cpu_irq_init(); */
-  /* liointc_domain_init(); */ // TMP_TODO
+  liointc_domain_init();
   printf("Support EXT interrupt.\n");
 #ifdef CONFIG_LOONGARCH_EXTIOI
   eiointc_domain_init();

@@ -5,6 +5,7 @@
 #include <asm/mach-la64/boot_param.h>
 #include <asm/mach-la64/loongson.h>
 #include <autoconf.h>
+#include <linux/ioport.h>
 #include <stdbool.h>
 
 #ifdef CONFIG_CPU_LOONGSON64
@@ -106,10 +107,10 @@ extern int find_pch_pic(u32 gsi);
 extern unsigned long pch_pic_addr(int pch_pic);
 extern struct pch_pic_irq *pch_pic_irq_routing(int pch_pic);
 extern void register_pch_pic(int id, u32 address, u32 irq_base);
-#ifdef BMBT
 extern int liointc_init(struct resource *res, int parent_irq_num,
                         u32 *parent_irq, u32 *parent_int_map,
                         struct fwnode_handle *domain_handle, int model);
+#ifdef BMBT
 extern int htvec_init(unsigned long addr, unsigned int num_parents,
                       unsigned int *parent_irq,
                       struct fwnode_handle *irq_handle);

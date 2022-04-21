@@ -3,6 +3,7 @@
 #include <asm/mach-la64/irq.h>
 #include <asm/setup.h>
 #include <hw/core/cpu.h>
+#include <linux/bitops.h>
 #include <linux/cpumask.h>
 #include <linux/nodemask.h>
 #include <linux/smp.h>
@@ -264,26 +265,13 @@ void extioi_init(void) {
   }
 }
 
-#ifndef __always_inline
-#define __always_inline inline __attribute__((always_inline))
-#endif
-
-/**
- * __ffs - find first bit in word.
- * @word: The word to search
- *
- * Undefined if no bit exists, so code should check against 0 first.
- */
-static __always_inline unsigned long __ffs(unsigned long word) {
-  return __builtin_ctzl(word);
-}
-
 static irq_action extioi_actions[IOCSR_EXTIOI_VECTOR_NUM];
 
 static void extioi_irq_dispatch(int irq) {
   int i;
   u64 pending;
   int reg_count = IOCSR_EXTIOI_VECTOR_NUM >> 6;
+  abort();
 
   for (i = 0; i < reg_count; i++) {
     pending = iocsr_readq(LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
