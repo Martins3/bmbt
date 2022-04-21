@@ -17,4 +17,6 @@
 #define _LOONGARCH_SZPTR 64
 #define CONFIG_LOONGARCH_EXTIOI 1
 
+#define CONFIG_LOONGSON_LIOINTC 1
+
 #endif /* end of include guard: AUTOCONF_H_PX8WHTBN */
