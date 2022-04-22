@@ -10,6 +10,7 @@
 #include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/tcg.h"
 #include <capstone/capstone.h>
+#include <env/memory.h>
 #include <hw/i386/ioapic.h>
 #include <hw/timer/i8254.h>
 
@@ -255,8 +256,8 @@ PCMachineState *machine_init() {
   qemu_opt_foreach(machine_opts, machine_set_property, current_machine,
                    &error_fatal);
 #endif
-  current_machine->ram_size = CONFIG_GUEST_RAM_SIZE;
-  current_machine->maxram_size = CONFIG_GUEST_RAM_SIZE;
+  current_machine->ram_size = get_guest_total_ram();
+  current_machine->maxram_size = current_machine->ram_size;
   current_machine->ram_slots = 0;
 
   current_machine->boot_order = "cad";

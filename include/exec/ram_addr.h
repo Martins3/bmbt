@@ -1,6 +1,7 @@
 #ifndef RAM_ADDR_H_ACNMERX5
 #define RAM_ADDR_H_ACNMERX5
 #include <assert.h>
+#include <env/memory.h>
 #include <exec/cpu-all.h>
 #include <exec/cpu-common.h>
 #include <exec/cpu-para.h>
@@ -37,23 +38,25 @@ typedef struct RAMBlock {
 // pc.ram
 #define PC_RAM_INDEX (PAM_INDEX + PAM_NUM)
 // pc.bios
-#define PC_BIOS_INDEX (PC_RAM_INDEX + 1)
+#define PC_BIOS_INDEX (PC_RAM_INDEX + get_guest_ram_num())
 
 #define RAM_BLOCK_NUM (PC_BIOS_INDEX + 1)
+#define MAX_RAM_BLOCK_NUM (PC_RAM_INDEX + MAX_PC_RAM_NUM + 1)
+
 #define X86_BIOS_MEM_SIZE (PAM_BIOS_END + 1)
 #define PC_RAM_SIZE (CONFIG_GUEST_RAM_SIZE - X86_BIOS_MEM_SIZE)
 
 /**
- * pc.ram low  * 1
- * smram       * 1
- * 0x4000 pam  * 12
- *  * pam expan  * 8
- *  * pam extend * 4 ----\ pc.bios 128k
- * system bios * 1   ----/
- * pc.ram      * 1
- * pc.bios     * 1
+ * pc.ram low    * 1
+ * smram         * 1
+ * 0x4000 pam    * 12
+ *    * pam expan  * 8
+ *    * pam extend * 4   ----\ pc.bios 128k
+ * system bios   * 1     ----/
+ * pc.ram[1-10]  * 10
+ * pc.bios       * 1
  */
-QEMU_BUILD_BUG_ON(RAM_BLOCK_NUM != (1 + 1 + 12 + 1 + 1 + 1));
+QEMU_BUILD_BUG_ON(MAX_RAM_BLOCK_NUM != (1 + 1 + 12 + 1 + 10 + 1));
 QEMU_BUILD_BUG_ON(PAM_EXBIOS_SIZE * 4 + PAM_BIOS_SIZE != 128 * KiB);
 
 typedef struct RAMList {
@@ -63,7 +66,7 @@ typedef struct RAMList {
   struct {
     RAMBlock block;
     MemoryRegion mr;
-  } blocks[RAM_BLOCK_NUM];
+  } blocks[MAX_RAM_BLOCK_NUM];
   RAMBlock *mru_block;
 } RAMList;
 

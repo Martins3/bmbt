@@ -8,31 +8,24 @@
 #include <unitest/greatest.h>
 
 TEST test_env_setup(void) {
-  memory_map_init(128 * MiB);
-  RAMBlock *block;
-  uint64_t end = 0;
-
-  RAMBLOCK_FOREACH(block) {
-    if (block->mr->offset != end) {
-      ASSERT_GT(block->mr->offset, 128 * MiB);
-    }
-    end = block->mr->size + block->mr->offset;
-  }
-
   MemTxAttrs attrs = {.secure = 1};
 
-  // pam extend and system bios are originally mapped to pc.bios, so we can't
-  // test all the block ram with following loop
-  for (int i = 0; i < PAM_EXBIOS_INDEX; ++i) {
+  for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
+    // 1. pam extend and system bios are mapped to pc.bios
+    // 2. smram is mapped into low.vga
+    // so, skip them
+    if (i >= SMRAM_INDEX && i < PC_RAM_INDEX) {
+      continue;
+    }
     MemoryRegion *mr = &ram_list.blocks[i].mr;
     hwaddr addr = mr->offset + rand() % PAM_EXBIOS_SIZE;
     hwaddr xlat;
-    uint64_t len = 0xfffffff;
+    uint64_t len = 0xffffffffffffffffULL;
     MemoryRegion *look_up_mr = address_space_translate(
         &address_space_memory, addr, &xlat, &len, false, attrs);
-    ASSERT_EQ(mr, look_up_mr);
-    ASSERT_EQ(xlat, addr - mr->offset);
-    ASSERT_EQ(len, mr->size - xlat);
+    assert(mr == look_up_mr);
+    assert(xlat == addr - mr->offset);
+    assert(len == mr->size - xlat);
   }
 
   PASS();
@@ -62,7 +55,6 @@ static const MemoryRegionOps ops1 = {
 };
 
 TEST test_rw(void) {
-
   // initialize
   qemu_init_cpu_loop();
   MemTxAttrs attrs = {.secure = 1};
@@ -93,21 +85,49 @@ TEST test_rw(void) {
 
 TEST test_memory_rw(void) {
   MemTxAttrs attrs = {.secure = 1};
-  hwaddr addr = 0x100000;
   uint32_t msg_size = 0x100;
   char *msg = (char *)g_malloc0(msg_size + 1);
   char *msg2 = (char *)g_malloc0(msg_size + 1);
   for (int i = 0; i < msg_size; ++i) {
-    msg[i] = 'x';
+    msg[i] = i;
   }
 
-  address_space_rw(&address_space_memory, addr, attrs, (void *)msg, msg_size,
-                   true);
-  address_space_rw(&address_space_memory, addr, attrs, (void *)msg2, msg_size,
-                   false);
-  for (int i = 0; i < msg_size; ++i) {
-    ASSERT_EQ(msg[i], msg2[i]);
+  uint64_t total_size = get_guest_total_ram() + CONFIG_GUEST_BIOS_SIZE;
+  for (int addr = 0; addr < total_size; addr += TARGET_PAGE_SIZE) {
+    cpu_physical_memory_test_and_clear_dirty(addr, TARGET_PAGE_SIZE,
+                                             DIRTY_MEMORY_CODE);
   }
+
+  int guest_ram_num = get_guest_ram_num();
+  hwaddr offset = 0;
+  for (int i = 0; i < guest_ram_num; ++i) {
+    assert(!cpu_physical_memory_get_dirty(offset, 4, DIRTY_MEMORY_CODE));
+    assert(!cpu_physical_memory_get_dirty(offset + msg_size, 4,
+                                          DIRTY_MEMORY_CODE));
+    offset += (guest_ram(i).end - guest_ram(i).start);
+  }
+
+  for (int i = 0; i < guest_ram_num; ++i) {
+    hwaddr addr = guest_ram(i).start;
+    address_space_rw(&address_space_memory, addr, attrs, (void *)msg, msg_size,
+                     true);
+    address_space_rw(&address_space_memory, addr, attrs, (void *)msg2, msg_size,
+                     false);
+    for (int i = 0; i < msg_size; ++i) {
+      ASSERT_EQ(msg[i], msg2[i]);
+    }
+  }
+
+  offset = 0;
+  for (int i = 0; i < guest_ram_num; ++i) {
+    assert(!cpu_physical_memory_get_dirty(offset, 4, DIRTY_MEMORY_CODE));
+    assert(!cpu_physical_memory_get_dirty(offset + msg_size, 4,
+                                          DIRTY_MEMORY_CODE));
+    offset += (guest_ram(i).end - guest_ram(i).start);
+  }
+
+  cpu_physical_memory_set_dirty_range(0, total_size, 1 << DIRTY_MEMORY_CODE);
+
   PASS();
 }
 

@@ -32,9 +32,8 @@
  * anymore it is freed by RCU (but the underlying blocks stay because they are
  * pointed to from the new DirtyMemoryBlocks).
  */
-// #define DIRTY_MEMORY_BLOCK_SIZE ((ram_addr_t)256 * 1024 * 8)
-#define DIRTY_MEMORY_BLOCK_SIZE                                                \
-  ((ram_addr_t)(CONFIG_GUEST_RAM_SIZE + CONFIG_GUEST_BIOS_SIZE))
+#define DIRTY_MEMORY_BLOCK_SIZE ((ram_addr_t)256 * 1024 * 8)
+
 typedef struct {
   struct rcu_head rcu;
   unsigned long *blocks[];
