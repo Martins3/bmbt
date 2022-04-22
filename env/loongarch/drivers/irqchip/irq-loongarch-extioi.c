@@ -79,6 +79,8 @@ void extioi_vec_init(struct fwnode_handle *fwnode, int cascade, u32 vec_count,
       cpumask_or(&extioi_priv[nr_extioi]->cpuspan_map,
                  &extioi_priv[nr_extioi]->cpuspan_map, cpumask_of(i));
 #endif
+    } else {
+      abort();
     }
   }
 
@@ -88,6 +90,8 @@ void extioi_vec_init(struct fwnode_handle *fwnode, int cascade, u32 vec_count,
   irq_set_chained_handler_and_data(cascade, extioi_irq_dispatch,
                                    extioi_priv[nr_extioi]);
   extioi_priv[nr_extioi]->domain_handle = fwnode;
+#else
+  set_vi_handler(EXCCODE_IP1, extioi_irq_dispatch);
 #endif
 
   if (get_irq_route_model() == PCH_IRQ_ROUTE_EXT_SOC) {
@@ -97,8 +101,6 @@ void extioi_vec_init(struct fwnode_handle *fwnode, int cascade, u32 vec_count,
 
   nr_extioi++;
   extioi_init();
-
-  set_vi_handler(EXCCODE_IP1, extioi_irq_dispatch);
 }
 
 static void extioi_set_irq_route(int pos, unsigned int cpu,
@@ -120,6 +122,7 @@ static void extioi_set_irq_route(int pos, unsigned int cpu,
 
   for_each_online_cpu(cpu_iter) {
     node = cpu_to_eio_node(cpu_iter);
+    assert(cpu_iter == 0 && node == 0);
     if (node_isset(node, *node_map)) {
       data = 0ULL;
 
@@ -138,7 +141,8 @@ int ext_set_irq_affinity(int hwirq) {
   uint32_t vector, pos_off;
   /* unsigned long flags; */
 
-  /* [BMBT_MTTCG 3] only one CPU available, there's no need to */
+  /* [BMBT_MTTCG 3] */
+  /* only one CPU available, there's no need to calculate affinity */
 #ifdef BMBT
   struct extioi *priv = (struct extioi *)d->domain->host_data;
   struct cpumask intersect_affinity;
@@ -159,8 +163,9 @@ int ext_set_irq_affinity(int hwirq) {
     return -EINVAL;
   }
   cpu = cpumask_first(&intersect_affinity);
-#endif
+#else
   unsigned int cpu = 0;
+#endif
   struct extioi *priv = extioi_priv[0];
 
   /*
@@ -271,7 +276,6 @@ static void extioi_irq_dispatch(int irq) {
   int i;
   u64 pending;
   int reg_count = IOCSR_EXTIOI_VECTOR_NUM >> 6;
-  abort();
 
   for (i = 0; i < reg_count; i++) {
     pending = iocsr_readq(LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
