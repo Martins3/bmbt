@@ -44,7 +44,6 @@ typedef struct RAMBlock {
 #define MAX_RAM_BLOCK_NUM (PC_RAM_INDEX + MAX_PC_RAM_NUM + 1)
 
 #define X86_BIOS_MEM_SIZE (PAM_BIOS_END + 1)
-#define PC_RAM_SIZE (CONFIG_GUEST_RAM_SIZE - X86_BIOS_MEM_SIZE)
 
 /**
  * pc.ram low    * 1
