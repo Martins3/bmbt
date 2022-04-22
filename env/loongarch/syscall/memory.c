@@ -9,7 +9,8 @@
 #include <string.h>
 #include <sys/mman.h>
 
-bool mmap_ready = false;
+// [BMBT_MTTCG 4]
+bool memory_ready = false;
 
 static inline unsigned long len_pagesize_up(unsigned long len) {
   return PFN_UP(len) << PAGE_SHIFT;
@@ -91,7 +92,7 @@ static const unsigned long valid_flags = (MAP_PRIVATE | MAP_ANON);
 long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
                  long arg5, long arg6) {
 
-  kern_assert(mmap_ready);
+  kern_assert(memory_ready);
   unsigned long addr = arg0;
   unsigned long len = arg1;
   unsigned long prot = arg2;
@@ -196,7 +197,12 @@ void init_pages() {
   add_sentinels();
 }
 
-void fw_add_mem(unsigned long addr, unsigned long len) {
-  unsigned long va = TO_CAC(addr);
-  kernel_unmmap(va, len, 0, 0, 0, 0, 0);
+void fw_add_mem(unsigned long start, unsigned long end) {
+  kern_assert(end >= start);
+  kern_assert((start & PAGE_OFFSET_MASK) == 0);
+  kern_assert((end & PAGE_OFFSET_MASK) == 0);
+  if (start == end)
+    return;
+  unsigned long va = TO_CAC(start);
+  kernel_unmmap(va, end - start, 0, 0, 0, 0, 0);
 }

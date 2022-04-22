@@ -88,12 +88,12 @@ static inline bool mr_match(const MemoryRegion *mr, hwaddr offset) {
 }
 
 static void unimplemented_io(AddressSpaceDispatch *dispatch, hwaddr offset) {
+  printf("unimplemented memory access in [%s : %lx]\n", dispatch->name, offset);
   if (current_cpu != NULL) {
     CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
     printf("guest ip : %x\n", env->segs[R_CS].base + env->eip);
-    printf("failed in [%s] with offset=[%lx]\n", dispatch->name, offset);
   } else {
-    printf("weird! current_cpu is NULL\n");
+    printf("current_cpu is NULL\n");
   }
 }
 
@@ -795,26 +795,24 @@ uint8_t memory_region_get_dirty_log_mask(MemoryRegion *mr) {
 
 // originally defined in dirty_memory_extend
 static void setup_dirty_memory() {
-  ram_addr_t new_num_blocks = 1;
-  DirtyMemoryBlocks *new_blocks = g_malloc(
-      sizeof(*new_blocks) + sizeof(new_blocks->blocks[0]) * new_num_blocks);
-
-#ifndef RELEASE_VERSION
   uint64_t total_size = 0;
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *blk = &ram_list.blocks[i].block;
     total_size += blk->max_length;
   }
-  assert(total_size == DIRTY_MEMORY_BLOCK_SIZE);
-#endif
+
+  ram_addr_t new_num_blocks = DIV_ROUND_UP(total_size, DIRTY_MEMORY_BLOCK_SIZE);
+  DirtyMemoryBlocks *new_blocks = g_malloc(
+      sizeof(*new_blocks) + sizeof(new_blocks->blocks[0]) * new_num_blocks);
+
+  assert(get_guest_total_ram() + CONFIG_GUEST_BIOS_SIZE == total_size);
 
   for (int j = 0; j < new_num_blocks; j++) {
     new_blocks->blocks[j] = bitmap_new(DIRTY_MEMORY_BLOCK_SIZE);
   }
   ram_list.dirty_memory[DIRTY_MEMORY_CODE] = new_blocks;
 
-  cpu_physical_memory_set_dirty_range(0, DIRTY_MEMORY_BLOCK_SIZE,
-                                      1 << DIRTY_MEMORY_CODE);
+  cpu_physical_memory_set_dirty_range(0, total_size, 1 << DIRTY_MEMORY_CODE);
 }
 
 static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
@@ -830,9 +828,21 @@ static void x86_bios_rom_init() {
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
   block->host = (void *)(&__pc_bios[0]);
   // pc.bios's block::offset is not same with it's mr.offset
-  block->offset = CONFIG_GUEST_RAM_SIZE;
+  block->offset = get_guest_total_ram();
 
   // isa-bios is handled in function isa_bios_access
+}
+
+static void fix_pc_ram_block_offset() {
+  RamRange first_pc_ram = guest_ram(0);
+  uint64_t block_offset = first_pc_ram.end - first_pc_ram.start;
+  for (int i = 1; i < get_guest_ram_num(); ++i) {
+    RamRange ram = guest_ram(i);
+    RAMBlock *block = &ram_list.blocks[PC_RAM_INDEX + i].block;
+    block->host = (void *)(ram.start + get_host_offset());
+    block->offset = block_offset;
+    block_offset += ram.end - ram.start;
+  }
 }
 
 static inline void init_ram_block(const char *name, unsigned int index,
@@ -856,7 +866,11 @@ static inline void init_ram_block(const char *name, unsigned int index,
  *  - smm
  */
 static void ram_init() {
-  void *host = alloc_ram(CONFIG_GUEST_RAM_SIZE);
+  RamRange first_pc_ram = guest_ram(0);
+  void *host = (void *)(first_pc_ram.start + get_host_offset());
+#ifdef ENV_KERNEL
+#endif
+
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -890,7 +904,14 @@ static void ram_init() {
              X86_BIOS_MEM_SIZE);
 
   init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
-                 CONFIG_GUEST_RAM_SIZE - X86_BIOS_MEM_SIZE);
+                 first_pc_ram.end - X86_BIOS_MEM_SIZE);
+
+  for (int i = 1; i < get_guest_ram_num(); ++i) {
+    RamRange ram = guest_ram(i);
+    init_ram_block("pc.ram", PC_RAM_INDEX + i, false, ram.start,
+                   ram.end - ram.start);
+  }
+
   init_ram_block("pc.bios", PC_BIOS_INDEX, true,
                  4 * GiB - CONFIG_GUEST_BIOS_SIZE, CONFIG_GUEST_BIOS_SIZE);
 
@@ -904,6 +925,7 @@ static void ram_init() {
   }
 
   x86_bios_rom_init();
+  fix_pc_ram_block_offset();
 
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     MemoryRegion *mr = &ram_list.blocks[i].mr;

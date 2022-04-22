@@ -15,6 +15,8 @@
 #include "acpi-build.h"
 #include "cpu.h"
 #include "e820_memory_layout.h"
+#include <env/device.h>
+#include <env/memory.h>
 #include <exec/ram_addr.h>
 #include <hw/audio/pcspk.h>
 #include <hw/char/serial.h>
@@ -22,7 +24,6 @@
 #include <hw/timer/i8254.h>
 #include <qemu/log.h>
 #include <uglib.h>
-#include <env/device.h>
 
 /* debug PC/ISA interrupts */
 // #define DEBUG_IRQ
@@ -1165,7 +1166,11 @@ void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
 
   /* e820_add_entry(0, X86_BIOS_MEM_SIZE, E820_RAM); */
   /* e820_add_entry(0x200000, x86ms->below_4g_mem_size - 0x200000, E820_RAM); */
-  e820_add_entry(0, x86ms->below_4g_mem_size, E820_RAM);
+  int guest_ram_num = get_guest_ram_num();
+  for (int i = 0; i < guest_ram_num; ++i) {
+    RamRange ram = guest_ram(i);
+    e820_add_entry(ram.start, ram.end - ram.start, E820_RAM);
+  }
 
   // bigger RAM size will be supported later
   bmbt_check(x86ms->above_4g_mem_size == 0);
