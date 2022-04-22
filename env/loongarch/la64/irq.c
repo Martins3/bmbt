@@ -177,9 +177,11 @@ static void eiointc_domain_init(void) {
 #endif
 
   for_each_pch_pic(i) {
+    assert(i == 0);
     node_map = 0;
     node_map |= (1 << on_node[i]);
     for_each_possible_cpu(j) {
+      assert(j == 0);
       if (((j / CORES_PER_EXTIOI_NODE) % nr_pch_pics == i) &&
           (j % CORES_PER_EXTIOI_NODE == 0))
         node_map |= (1 << (j / CORES_PER_EXTIOI_NODE));
