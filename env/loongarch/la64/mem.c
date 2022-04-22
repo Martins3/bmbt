@@ -4,7 +4,6 @@
 #include <exec/hwaddr.h>
 #include <exec/ram_addr.h>
 #include <linux/pfn.h>
-#include <qemu/config-target.h> // CONFIG_GUEST_RAM_SIZE
 #include <qemu/queue.h>
 #include <qemu/units.h>
 #include <stdbool.h>

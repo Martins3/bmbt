@@ -1,10 +1,10 @@
-#include <hw/nvram/fw_cfg.h>
-#include <exec/cpu-common.h>
-#include <hw/i386/pc.h>
-#include <qemu/osdep.h>
+#include "fw_cfg.h"
 #include "cpu.h"
 #include "e820_memory_layout.h"
-#include "fw_cfg.h"
+#include <exec/cpu-common.h>
+#include <hw/i386/pc.h>
+#include <hw/nvram/fw_cfg.h>
+#include <qemu/osdep.h>
 
 const char *fw_cfg_arch_key_name(uint16_t key) {
   static const struct {
@@ -97,7 +97,7 @@ FWCfgState *fw_cfg_arch_create(MachineState *ms, uint16_t boot_cpus,
    * "etc/max-cpus" actually being apic_id_limit
    */
   fw_cfg_add_i16(fw_cfg, FW_CFG_MAX_CPUS, apic_id_limit);
-  fw_cfg_add_i64(fw_cfg, FW_CFG_RAM_SIZE, (uint64_t)CONFIG_GUEST_RAM_SIZE);
+  /* fw_cfg_add_i64(fw_cfg, FW_CFG_RAM_SIZE, ms->ram_size); */
 #ifdef NEED_LATER
   fw_cfg_add_bytes(fw_cfg, FW_CFG_ACPI_TABLES, acpi_tables, acpi_tables_len);
 #endif
