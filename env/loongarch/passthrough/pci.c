@@ -51,6 +51,9 @@ void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
   bool msix_table_updated = false;
   if (!ranges_overlap(config_addr, l, 0, PCI_BASE_ADDRESS_0)) {
     int idx = add_PCIe_devices(get_bdf(addr));
+
+    val = msi_translate(addr, val, true);
+
     val = pcie_bridge_window_translate(idx, addr, l, val, true);
     if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
         ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
@@ -72,6 +75,9 @@ uint32_t pci_pass_through_read(uint32_t addr, int l) {
     bool unused;
     int idx = add_PCIe_devices(get_bdf(addr));
     u32 val = pci_config_read(addr, l);
+
+    // TMP_TODO 这里是有 bug 的，如果读取是 bridege
+    // window，那么实际上就可能直接走了
     val = pcie_bridge_window_translate(idx, addr, l, val, false);
     if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
         ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
@@ -135,6 +141,7 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
   addr -= LOONGSON_X86_PCI_MEM_OFFSET;
 
   int idx = msix_table_overlapped(addr, size);
+  // TMP_TODO 将这个放到 PCI-device.c 中吧
   if (idx != -1) {
     assert(size == 4); // QEMU tell me guest access size is 4
     assert((val >> 32) == 0);
@@ -148,6 +155,7 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
       assert(val == 0);
       break;
     case PCI_MSIX_ENTRY_DATA:
+      // TMP_TODO 将这个合并一下
       // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
       // maybe fail on other operating system
       assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);

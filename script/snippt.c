@@ -26,3 +26,10 @@ static int insert_counter(long data) {
   }
   return 1;
 }
+
+static void debug(const char *x) {
+  while (*x != '\0') {
+    outb(*x, 0x402);
+    x++;
+  }
+}

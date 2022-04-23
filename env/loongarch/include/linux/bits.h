@@ -4,6 +4,7 @@
 
 #define DONT_CONFLIG_WITH_QEMU_BITS_PER_LONG 64
 
+// TMP_TODO : 又是一个经典的冲突的位置
 #define BIT(nr) (1UL << (nr))
 #define BIT_ULL(nr) (1ULL << (nr))
 // bmbt : conflicted with include/qemu/bitops.h

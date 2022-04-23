@@ -147,9 +147,13 @@ EXT4_IMG=$(BASE_DIR)/img1.ext4
 QEMU_DIR=/home/loongson/core/centos-qemu
 LA_BIOS=$(QEMU_DIR)/pc-bios/loongarch_bios.bin
 LA_QEMU=$(QEMU_DIR)/build/loongarch64-softmmu/qemu-system-loongarch64
+# TMP_TODO 观测一下，对于 WINDOW 是如何处理的
 NETWORK_CONFIG=-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1
+# PCI_BRIDGE_CONFIG=-device pci-bridge,chassis_nr=1,id=mybridge
+#,bus=mybridge,addr=3
 NVME_CONFIG=-device nvme,drive=nvme1,serial=foo -drive file=$(EXT4_IMG),format=raw,if=none,id=nvme1
-RUN_IN_QEMU=$(LA_QEMU) $(NETWORK_CONFIG) $(NVME_CONFIG) -m 8G -cpu Loongson-3A5000 -nographic -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt)
+RUN_IN_QEMU=$(LA_QEMU) $(NETWORK_CONFIG) $(PCI_BRIDGE_CONFIG) $(NVME_CONFIG) -m 8G -cpu Loongson-3A5000 -nographic -bios $(LA_BIOS) --enable-kvm -M loongson7a_v1.0,accel=kvm -kernel $(bmbt)
+# -device nvme,bus=mybridge,serial=foo,drive=nvme_drive -drive file=1t.qcow2,format=qcow2,id=nvme_drive,if=none
 
 run: all clear_gcda
 	if [[ $(ENV_KERNEL) == 1 ]];then \
@@ -181,7 +185,7 @@ s: all
 	$(RUN_IN_QEMU) -S -s;
 
 # @todo move this config
-USB_DIR=/media/loongson/fb891a8e-d5a5-4e70-98fd-54bb019bd86b
+USB_DIR=/media/loongson/a8160021-7f79-4f1f-ac3d-6b9946f485f7
 usb: all
 	if [[ ! -d $(USB_DIR) ]];then \
 	  echo "Please Plug USB"; \

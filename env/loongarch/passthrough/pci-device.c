@@ -5,6 +5,15 @@
 #include <linux/pci.h>
 #include <qemu/range.h>
 
+static const char *show_bdf(u16 bdf) {
+  static char tmp[100];
+  int bus = bdf >> 8;
+  int dev = (bdf >> 3) & 0x1f;
+  int func = bdf & 0x7;
+  sprintf(tmp, "%02x:%02x:%x", bus, dev, func);
+  return tmp;
+}
+
 typedef struct {
   u32 offset;
   int entry_num;
@@ -445,6 +454,12 @@ void msix_map_region(u16 bdf) {
   u32 msix_base_offset;
   u16 entry_num;
   int msix_cap = pci_find_capability(bdf, PCI_CAP_ID_MSIX);
+
+  int msi_cap = pci_find_capability(bdf, PCI_CAP_ID_MSI);
+  if (msi_cap) {
+    printf("[huxueshi:%s:%d] %s\n", __FUNCTION__, __LINE__, show_bdf(bdf));
+  }
+
   if (!msix_cap) {
     return;
   }
@@ -483,4 +498,59 @@ void msix_map_region(u16 bdf) {
 bool is_pci_bridge(int idx) {
   BMBT_PCIExpressDevice *pci = get_pcie_dev(idx);
   return pci->class == PCI_CLASS_BRIDGE_PCI;
+}
+
+uint32_t translate_msi_entry_data(bool is_write, uint32_t val) {
+  // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
+  // maybe fail on other operating system
+  if (is_write) {
+    assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);
+    val &= 0xff;
+    assert(val > 0 && val < 256);
+    val = pch_msi_allocate_hwirq(val);
+  } else {
+    assert(val > 0 && val < 256);
+    val |= X86_MSI_ENTRY_DATA_FLAG;
+  }
+  return val;
+}
+
+/* bmbt_linux/drivers/pci/msi.c:__pci_write_msi_msg */
+// TMP_TODO 应该给 pci_pass_through_read 也使用上吧
+uint32_t msi_translate(uint32_t addr, uint32_t val, bool is_write) {
+  u16 bdf = get_bdf(addr);
+  uint32_t config_addr = get_config_addr(addr);
+  int msi_cap = pci_find_capability(bdf, PCI_CAP_ID_MSI);
+  int cap_offset = config_addr - msi_cap;
+  if (!msi_cap || cap_offset < 0) {
+    return val;
+  }
+
+  printf("[huxueshi:%s:%d] bdf=%s\n", __FUNCTION__, __LINE__, show_bdf(bdf));
+
+  u16 msgctl;
+  pci_bus_read_config_word(bdf, msi_cap + PCI_MSI_FLAGS, &msgctl);
+  bool is_64 = !!(msgctl & PCI_MSI_FLAGS_64BIT);
+  if (cap_offset == PCI_MSI_ADDRESS_LO) {
+    printf("[huxueshi:%s:%d] addr lo val=%x\n", __FUNCTION__, __LINE__, val);
+    assert(val == X86_MSI_ADDR_BASE_LO);
+    return msi_message_addr();
+  }
+
+  if (is_64 && cap_offset == PCI_MSI_ADDRESS_HI) {
+    assert(val == 0);
+    return val;
+  }
+
+  if (is_64 && cap_offset == PCI_MSI_DATA_64) {
+    printf("[huxueshi:%s:%d] data 64 val=%x\n", __FUNCTION__, __LINE__, val);
+    return translate_msi_entry_data(is_write, val);
+  }
+
+  if (!is_64 && cap_offset == PCI_MSI_DATA_32) {
+    printf("[huxueshi:%s:%d] data 32 val=%x\n", __FUNCTION__, __LINE__, val);
+    return translate_msi_entry_data(is_write, val);
+  }
+
+  return val;
 }

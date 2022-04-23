@@ -4,7 +4,7 @@
 #include <sysemu/reset.h>
 #include <sysemu/sysemu.h>
 
-#define DEBUG_CMOS
+/* #define DEBUG_CMOS */
 #define DEBUG_COALESCED
 
 #ifdef DEBUG_CMOS
@@ -502,6 +502,11 @@ static int update_in_progress(RTCState *s) {
   if (timer_pending(s->update_timer)) {
     int64_t next_update_time = timer_expire_time_ns(s->update_timer);
     /* Latch UIP until the timer expires.  */
+
+    if(next_update_time < qemu_clock_get_ns(rtc_clock)){
+      assert(false);
+    }
+
     if (qemu_clock_get_ns(rtc_clock) >= (next_update_time - UIP_HOLD_LENGTH)) {
       s->cmos_data[RTC_REG_A] |= REG_A_UIP;
       return 1;

@@ -29,5 +29,7 @@ static inline int get_where(uint32_t addr) {
   return (addr & 0xff) | ((addr >> 16) & 0xf00);
 }
 
+uint32_t msi_translate(uint32_t addr, uint32_t val, bool is_write);
+
 bool is_pci_bridge(int idx);
 #endif /* end of include guard: INTERNAL_H_WCRWRL9K */

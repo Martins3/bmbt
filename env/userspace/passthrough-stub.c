@@ -31,7 +31,7 @@ static GuestRam user_guest_ram[GUEST_RAM_COUNT] = {
         .size = 32 * MiB,
     },
     {
-        .size = 0x1d * MiB,
+        .size = 32 * MiB,
     },
 };
 /*
