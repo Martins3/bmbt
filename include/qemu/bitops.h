@@ -174,6 +174,18 @@ unsigned long find_next_zero_bit(const unsigned long *addr, unsigned long size,
                                  unsigned long offset);
 
 /**
+ * find_first_zero_bit - find the first cleared bit in a memory region
+ * @addr: The address to start the search at
+ * @size: The maximum size to search
+ *
+ * Returns the bit number of the first cleared bit.
+ */
+static inline unsigned long find_first_zero_bit(const unsigned long *addr,
+                                                unsigned long size) {
+  return find_next_zero_bit(addr, size, 0);
+}
+
+/**
  * sextract32:
  * @value: the value to extract the bit field from
  * @start: the lowest bit in the bit field (numbered from 0)

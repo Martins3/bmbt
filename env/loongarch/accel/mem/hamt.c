@@ -69,8 +69,8 @@ static uint64_t asid_map[16];
 static struct htable_ele hamt_cr3_htable[MAX_ASID];
 
 static uint64_t flush_tlb_all_count = 0;
-// static uint64_t new_round_asid = 0;
-// static uint64_t delete_some_pgtable = 0;
+static uint64_t new_round_asid = 0;
+static uint64_t delete_some_pgtable = 0;
 static uint64_t write_2111 = 0;
 static uint64_t other_source = 0;
 uint64_t from_tlb_flush = 0;
@@ -121,11 +121,9 @@ void alloc_target_addr_space(void) {
   mapping_base_address -= 0x10000;
 }
 
-#if 0
 static uint8_t cr3_hash_2_index(uint64_t cr3) {
   return qemu_xxhash2(cr3) % MAX_ASID;
 }
-#endif
 
 /*
  * check_cr3_in_htable is for two purposes:
@@ -133,7 +131,6 @@ static uint8_t cr3_hash_2_index(uint64_t cr3) {
  *    in hamt_cr3_htable
  * 2. get cr3 corresponding page table head
  */
-#if 0
 static struct pgtable_head *check_cr3_in_htable(uint64_t cr3) {
   uint32_t index = cr3_hash_2_index(cr3);
 
@@ -151,27 +148,24 @@ static struct pgtable_head *check_cr3_in_htable(uint64_t cr3) {
 
   return NULL;
 }
-#endif
 
-#if 0
 static bool check_asid_value_used(uint16_t asid) {
   bool res = test_bit(asid, (unsigned long *)asid_map);
 
   return res;
 }
-#endif
 
-#if 0
 static uint16_t find_first_unused_asid_value(void) {
   uint64_t first = find_first_zero_bit((unsigned long *)asid_map, MAX_ASID);
 
   if (first > MAX_ASID) {
-    die("find_first_unused_asid_value return invalid value: %llx", first);
+    printf("find_first_unused_asid_value return invalid value: %lx", first);
+    exit(0);
+    // die("find_first_unused_asid_value return invalid value: %llx", first);
   }
 
   return (uint16_t)first;
 }
-#endif
 
 /*
  * invtlb op info addr
@@ -189,7 +183,6 @@ static inline void local_flush_tlb_all(void) {
                        :);
 }
 
-#if 0
 static uint16_t allocate_new_asid_value(void) {
   uint16_t new_asid_value = find_first_unused_asid_value();
 
@@ -209,21 +202,16 @@ static uint16_t allocate_new_asid_value(void) {
     new_asid_value = find_first_unused_asid_value();
     assert(new_asid_value == 0);
     set_bit(new_asid_value, (unsigned long *)asid_map);
-
   } else {
-
     set_bit(new_asid_value, (unsigned long *)asid_map);
   }
 
   return new_asid_value;
 }
-#endif
 
-#if 0
 static struct pgtable_head *insert_new_pgtable_node(uint64_t new_cr3,
                                                     uint16_t new_asid_value) {
   int index = cr3_hash_2_index(new_cr3);
-
   hamt_cr3_htable[index].pgtable_num++;
 
   struct pgtable_head *new_pgtable_head =
@@ -235,16 +223,11 @@ static struct pgtable_head *insert_new_pgtable_node(uint64_t new_cr3,
 
   QLIST_INSERT_HEAD(&(hamt_cr3_htable[index].pgtables_list), new_pgtable_head,
                     entry);
-
   new_pgtable_head->asid = FORM_NEW_ASID(asid_version, new_asid_value);
-
   new_pgtable_head->cr3_value = new_cr3;
-
   return new_pgtable_head;
 }
-#endif
 
-#if 0
 void hamt_set_context(uint64_t new_cr3) {
   /*
    * already in hamt_cr3_htable?
@@ -259,36 +242,24 @@ void hamt_set_context(uint64_t new_cr3) {
 
   struct pgtable_head *dest_pgtable_head = check_cr3_in_htable(new_cr3);
   if (dest_pgtable_head != NULL) {
-
     if (GET_ASID_VERSION(dest_pgtable_head->asid) != asid_version) {
-
       if (check_asid_value_used(GET_ASID_VALUE(dest_pgtable_head->asid))) {
-
         uint16_t new_asid_value = allocate_new_asid_value();
-
         dest_pgtable_head->asid = FORM_NEW_ASID(asid_version, new_asid_value);
-
       } else {
-
         dest_pgtable_head->asid = FORM_NEW_ASID(
             asid_version, GET_ASID_VALUE(dest_pgtable_head->asid));
       }
     }
-
   } else {
-
     uint16_t new_asid_value = allocate_new_asid_value();
-
     dest_pgtable_head = insert_new_pgtable_node(new_cr3, new_asid_value);
   }
 
   asid_value = GET_ASID_VALUE(dest_pgtable_head->asid);
-
   write_csr_asid(asid_value & 0x3ff);
 }
-#endif
 
-#if 0
 void delete_pgtable(uint64_t cr3) {
   /*
    * 1. delete cr3 corresponding page table
@@ -302,14 +273,10 @@ void delete_pgtable(uint64_t cr3) {
   delete_some_pgtable++;
 
   struct pgtable_head *dest_pghead = check_cr3_in_htable(cr3);
-
   QLIST_REMOVE(dest_pghead, entry);
-
   --(hamt_cr3_htable[cr3_hash_2_index(cr3)].pgtable_num);
-
   free(dest_pghead);
 }
-#endif
 
 static inline int is_write_inst(uint32_t *epc) {
   uint32_t inst = *epc;
@@ -444,7 +411,7 @@ static inline void disable_pg(void) {
 static void hamt_set_tlb(uint64_t vaddr, uint64_t paddr, int prot, bool mode) {
   uint64_t csr_tlbehi, csr_tlbelo0, csr_tlbelo1;
   int32_t csr_tlbidx;
-  uint32_t csr_asid = asid_value | 0xa0000;
+  uint32_t csr_asid = asid_value;
 
   int w = prot & PAGE_WRITE ? 1 : 0;
   int r = prot & PAGE_READ ? 1 : 0;
@@ -569,12 +536,10 @@ static void hamt_set_tlb(uint64_t vaddr, uint64_t paddr, int prot, bool mode) {
   enable_pg();
 }
 
-#if 0
 void hamt_invlpg_helper(uint32_t i386_addr) {
   uint64_t hamt_vaddr = i386_addr + mapping_base_address;
   hamt_set_tlb(hamt_vaddr, 0x0, 0x0, false);
 }
-#endif
 
 static TCGMemOpIdx hamt_get_oi(uint32_t *epc, int mmu_idx) {
   uint32_t inst = *epc;
@@ -1047,11 +1012,9 @@ void hamt_exception_handler(uint64_t hamt_badvaddr, CPUX86State *env,
 
   tlb_lsm++;
 
-#if 0
   if (env->cr[3] == 0 && check_cr3_in_htable(0) == NULL) {
     hamt_set_context(0);
   }
-#endif
 
   // printf("hamt.c:1058:csr_asid: %lx\n", read_csr_asid());
   // uint32_t ecode = read_csr_excode();

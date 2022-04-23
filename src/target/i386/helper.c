@@ -14,6 +14,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#ifdef HAMT
+#include "accel/hamt.h"
+#endif
 
 // notes: mce related code not copied
 // it seems they are useless, but further investigation is needed
@@ -501,11 +504,21 @@ void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0) {
 /* XXX: in legacy PAE mode, generate a GPF if reserved bits are set in
    the PDPT */
 void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3) {
+#ifdef HAMT
+  target_ulong old_cr3 = env->cr[3];
+#endif
   env->cr[3] = new_cr3;
   if (env->cr[0] & CR0_PG_MASK) {
+#ifdef HAMT
+    if (old_cr3 == new_cr3)
+      delete_pgtable(old_cr3);
+#endif
     qemu_log_mask(CPU_LOG_MMU, "CR3 update: CR3=" TARGET_FMT_lx "\n", new_cr3);
     tlb_flush(env_cpu(env));
   }
+#ifdef HAMT
+  hamt_set_context(new_cr3);
+#endif
 }
 
 void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4) {
