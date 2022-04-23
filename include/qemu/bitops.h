@@ -28,12 +28,11 @@
  * @nr: the bit to set
  * @addr: the address to start counting from
  */
-static inline void set_bit(long nr, unsigned long *addr)
-{
-    unsigned long mask = BIT_MASK(nr);
-    unsigned long *p = addr + BIT_WORD(nr);
+static inline void set_bit(long nr, unsigned long *addr) {
+  unsigned long mask = BIT_MASK(nr);
+  unsigned long *p = addr + BIT_WORD(nr);
 
-    *p  |= mask;
+  *p |= mask;
 }
 
 /**
@@ -41,12 +40,11 @@ static inline void set_bit(long nr, unsigned long *addr)
  * @nr: Bit to clear
  * @addr: Address to start counting from
  */
-static inline void clear_bit(long nr, unsigned long *addr)
-{
-    unsigned long mask = BIT_MASK(nr);
-    unsigned long *p = addr + BIT_WORD(nr);
+static inline void clear_bit(long nr, unsigned long *addr) {
+  unsigned long mask = BIT_MASK(nr);
+  unsigned long *p = addr + BIT_WORD(nr);
 
-    *p &= ~mask;
+  *p &= ~mask;
 }
 
 /**
@@ -198,6 +196,18 @@ unsigned long find_next_bit(const unsigned long *addr, unsigned long size,
 
 unsigned long find_next_zero_bit(const unsigned long *addr, unsigned long size,
                                  unsigned long offset);
+
+/**
+ * find_first_zero_bit - find the first cleared bit in a memory region
+ * @addr: The address to start the search at
+ * @size: The maximum size to search
+ *
+ * Returns the bit number of the first cleared bit.
+ */
+static inline unsigned long find_first_zero_bit(const unsigned long *addr,
+                                                unsigned long size) {
+  return find_next_zero_bit(addr, size, 0);
+}
 
 /**
  * sextract32:
