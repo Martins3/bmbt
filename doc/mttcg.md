@@ -61,7 +61,11 @@ void tcg_register_thread(void) {
 2. 最多支持一个 `pch_pic` 控制器，但是对于 NUMA 是需要支持多个的
 3. 因为只有 CPU，所以 affinity 的计算结果总是 0，但是在多核中，就不一定了。
   - 如何正确的反映 Guest 的 CPU affinity 似乎也是一个问题。 如果 Guest 设置 Guest CPU 0 来接受中断，但是实际上中断是 Host CPU 1 接受的，也许需要让 Host CPU 1 将中断注入到 Host CPU 0 中间
+4. 这个物理内存分配器无法支持多核 
+  - 一个最简单的方法给每一个 CPU 物理内存一个分配池，类似 percpu 的那种
 
 ## 中断对于多核的挑战
 - 中断处理函数访问的内容需要上锁的
 - 多核的出现导致需要考虑中断路由，如何模拟出来 guest 的中断路由出来
+- Guest 多核的 ipi 如何装换为 host 多核 ipi
+- Remote TLB flush 操作的模拟

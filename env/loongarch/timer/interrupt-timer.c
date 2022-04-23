@@ -9,8 +9,14 @@
 #include <linux/irqflags.h>
 #include <stdio.h>
 
-
 static TimerHandler signal_timer_handler;
+
+static int x = 0;
+void dump_extioi_state();
+void dump_uart_state();
+void dump_interrupt();
+void irq_gc_unmask_enable_reg();
+
 static void timer_handler(int irq) {
   assert(irq == ECFGB_TIMER);
   if (cpu_has_hypervisor)
@@ -21,6 +27,11 @@ static void timer_handler(int irq) {
   /* Clear Timer Interrupt at the end of timer interrupt handler, otherwise kvm
    * will inject timer interrupt again. */
   write_csr_tintclear(CSR_TINTCLR_TI);
+  x++;
+  if (x % 5000 == 1000) {
+    /* dump_extioi_state(); */
+  }
+  /* irq_gc_unmask_enable_reg(); */
 }
 
 void setup_timer(TimerHandler handler) {

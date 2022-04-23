@@ -1,3 +1,4 @@
+#include <asm/cpu-features.h>
 #include <asm/io.h>
 #include <asm/loongarchregs.h>
 #include <asm/mach-la64/irq.h>
@@ -5,6 +6,7 @@
 #include <asm/setup.h>
 #include <assert.h>
 #include <linux/cpumask.h>
+#include <linux/ioport.h>
 #include <linux/nodemask.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,6 +132,7 @@ void static pch_pic_domains_init(void) {
     }
 #endif
 
+    // TMP_TODO 我不能理解为什么这个东西不会报错啊
     pch_pic_init(irq_handle, pch_pic_addr(i), PCH_PIC_SIZE,
                  get_irq_route_model(), irq_cfg->irq_base);
   }
@@ -221,14 +224,20 @@ static void liointc_domain_init(void) {
 
 static void irqchip_init_default(void) {
   /* loongarch_cpu_irq_init(); */
-  liointc_domain_init();
+  // TMP_TODO 标记一下 cpu_has_hypervisor
+  if (!cpu_has_hypervisor) {
+    liointc_domain_init();
+  }
   printf("Support EXT interrupt.\n");
 #ifdef CONFIG_LOONGARCH_EXTIOI
   eiointc_domain_init();
   pch_msi_domain_init(msi_irqbase, 256 - msi_irqbase);
 #endif
-  pch_pic_domains_init();
-  /* pch_lpc_domain_init(); */ // TMP_TODO
+  // TMP_TODO 标记一下 cpu_has_hypervisor
+  if (cpu_has_hypervisor) {
+    pch_pic_domains_init();
+  }
+  /* pch_lpc_domain_init(); */
 }
 
 void setup_IRQ(void) {
@@ -238,13 +247,11 @@ void setup_IRQ(void) {
     pch_irq_route_model = PCH_IRQ_ROUTE_EXT_SOC;
     abort();
   } else {
-    printf("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
     for_each_node(node) {
       writel(0x40000000 | (node << 12),
              (volatile void __iomem *)(((node << 44) | LOONGSON_HT1_CFG_BASE) +
                                        0x274));
     }
-    printf("[huxueshi:%s:%d] \n", __FUNCTION__, __LINE__);
   }
 
   // [interface 59]

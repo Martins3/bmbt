@@ -84,6 +84,15 @@ if [[ ! -d $INITRAMFS_BUILD ]]; then
 mount -t proc none /proc
 mount -t sysfs none /sys
 
+mknod /dev/ttyS0 c 4 64
+mknod /dev/tty c 5 0
+mknod dev/tty1 c 4 1
+mknod dev/tty2 c 4 2
+mknod dev/tty3 c 4 3
+mknod dev/tty4 c 4 4
+
+set -m
+
 cat <<!
 
 
@@ -100,11 +109,11 @@ Welcome to mini_linux
 
 
 !
-ifup eth0
+# ifup eth0
 
 mkdir mnt
-mknod /dev/nvme b 259 0
-mount /dev/nvme /mnt
+# mknod /dev/nvme b 259 0
+# mount /dev/nvme /mnt
 
 exec /bin/sh
 EOF
@@ -116,6 +125,22 @@ EOF
 auto eth0
 iface eth0 inet dhcp
 _EOF_
+
+  cat <<_EOF_ >$INITRAMFS_BUILD/etc/inittab
+::respawn:/bin/cttyhack /bin/sh
+_EOF_
+
+  cat <<_EOF_ >$INITRAMFS_BUILD/startup.sh
+mknod /dev/x b 8 1
+sleep 3
+mount /dex/x mnt
+chroot /mnt
+mount -t proc /proc proc/
+mount --rbind /sys sys/
+mount --rbind /dev dev/
+_EOF_
+
+  chmod +x $INITRAMFS_BUILD/startup.sh
 
   find . -print0 | cpio --null -ov --format=newc | gzip -9 >$BUILDS/initramfs.cpio.gz
 fi

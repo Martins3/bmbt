@@ -113,7 +113,7 @@ void hello() {
   printf("huxueshi:%s tval=%lx\n", __FUNCTION__, tval);
   printf("huxueshi:%s estate=%lx\n", __FUNCTION__, estat);
   printf("huxueshi:%s %d\n\n", __FUNCTION__, x);
-  constant_timer_next_event(100000000);
+  constant_timer_next_event(1000000000);
 }
 
 TEST test_timer(void) {
@@ -265,7 +265,8 @@ u16 get_bdf(int bus, int dev, int func) {
   return bus << 8 | (dev & 0x1f) << 3 | (func & 0x7);
 }
 
-void show_bdf(u16 bdf, char a[100]) {
+// TMP_TODO 这个函数整合一下
+static void show_bdf(u16 bdf, char a[100]) {
   int bus = bdf >> 8;
   int dev = (bdf >> 3) & 0x1f;
   int func = bdf & 0x7;
@@ -386,7 +387,6 @@ TEST test_network() {
   PASS();
 }
 
-// 如果全部覆盖，怎么操作，如果完全不覆盖，如何操作?
 TEST test_bit_ops() {
   u32 win_trans(u32 config_addr, int l, int offset, int size, bool is_write,
                 u32 val, u32 shift);
@@ -401,8 +401,20 @@ TEST test_bit_ops() {
   PASS();
 }
 
+TEST test_serial_irq() {
+  // I think this will tirgger a abort in extioi，but nothing happended
+  /* serial_out(up, UART_IER, 0x0f);	/1* enable all intrs *1/ */
+  /* serial_in(up, UART_LSR); */
+  /* serial_in(up, UART_RX); */
+  /* serial_in(up, UART_IIR); */
+  /* serial_in(up, UART_MSR); */
+  /* serial_out(up, UART_TX, 0xFF); */
+  PASS();
+}
+
 SUITE(env_test) {
-  RUN_TEST(test_bit_ops);
+  /* RUN_TEST(test_serial_irq); */
+  /* RUN_TEST(test_bit_ops); */
   /* RUN_TEST(test_range_api); */
   /* RUN_TEST(test_network); */
   /* RUN_TEST(test_read_freq); */

@@ -32,7 +32,7 @@ minimal_config:
 def_config:
 	if [[ ! -f $(KERNEL_PATH)/.config ]]; then \
 		make -C $(KERNEL_PATH) i386_defconfig; \
-                # find a better way to add debug info config to guest kernel \
+                # TMP_TODO find a better way to add debug info config to guest kernel \
 	        sed -i 's/# CONFIG_DEBUG_INFO is not set/CONFIG_DEBUG_INFO=y\n# CONFIG_DEBUG_INFO_REDUCED is not set\n# CONFIG_DEBUG_INFO_SPLIT is not set\n# CONFIG_DEBUG_INFO_DWARF4 is not set\n# CONFIG_GDB_SCRIPTS is not set/' $(KERNEL_PATH)/.config; \
 	fi
 

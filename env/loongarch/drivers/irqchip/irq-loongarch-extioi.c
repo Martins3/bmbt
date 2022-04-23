@@ -302,7 +302,33 @@ static void extioi_irq_dispatch(int irq) {
   }
 }
 
+void dump_extioi_state() {
+  int i;
+  u64 pending;
+  int reg_count = IOCSR_EXTIOI_VECTOR_NUM >> 6;
+  printf("[huxueshi:%s:%d]\n", __FUNCTION__, __LINE__);
+
+  for (i = 0; i < reg_count; i++) {
+    pending = iocsr_readq(LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
+    /* Do not write ISR register since it is zero already */
+    if (pending == 0)
+      continue;
+
+    iocsr_writeq(pending, LOONGARCH_IOCSR_EXTIOI_ISR_BASE + (i << 3));
+
+    while (pending) {
+      int bit = __ffs(pending);
+      int hwirq = bit + VEC_COUNT_PER_REG * i;
+      printf(" %d", hwirq);
+      pending &= ~BIT(bit);
+    }
+  }
+  printf("\n");
+}
+
 void set_extioi_action_handler(int hwirq, irq_action action) {
   extioi_actions[hwirq] = action;
-  ext_set_irq_affinity(hwirq);
+  // TMP_TODO 这个新增的 cpu_has_hypervisor 需要理解一下
+  if (cpu_has_hypervisor)
+    ext_set_irq_affinity(hwirq);
 }

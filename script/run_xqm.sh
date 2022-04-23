@@ -47,8 +47,12 @@ else
 fi
 bios=${BASE_DIR}/seabios/out/bios.bin
 
+pci_bridge="-device pci-bridge,chassis_nr=1,id=mybridge"
 network="-netdev user,id=n1,ipv6=off -device e1000e,netdev=n1"
-arg_nvme="-device nvme,drive=nvme1,serial=foo -drive file=${BASE_DIR}/img1.ext4,format=raw,if=none,id=nvme1"
+arg_nvme="-device nvme,drive=nvme1,serial=foo,bus=mybridge,addr=1 -drive file=${BASE_DIR}/img1.ext4,format=raw,if=none,id=nvme1"
+
+network=""
+arg_nvme=""
 
 # assign stdio to debugcon and serial, then qemu complaints like this:
 # > qemu-system-i386: -serial stdio: cannot use stdio by multiple character devices
@@ -74,6 +78,6 @@ if [[ $run_tiny_kernel == true ]]; then
   arg_img=""
 fi
 
-cmd="${debug_qemu} ${qemu} ${arg_img} ${arg_kernel} ${arg_xqm} ${arg_bios} ${arg_kernel_cmdline} ${arg_initrd} ${network} ${arg_nvme} ${arg_serial}"
+cmd="${debug_qemu} ${qemu} ${arg_img} ${arg_kernel} ${arg_xqm} ${arg_bios} ${arg_kernel_cmdline} ${arg_initrd} ${network} ${pci_bridge} ${arg_nvme} ${arg_serial}"
 echo "${cmd}"
 eval "${cmd}"

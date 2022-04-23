@@ -153,14 +153,26 @@ void machine_initfn(MachineState *ms) {
   ms->enable_graphics = true;
 
   // qemu option is too complex, hard code it here.
-  ms->kernel_filename = "image/vmlinuz-2.6.32";
   ms->kernel_filename = "image/bzImage.bin";
   ms->initrd_filename = "image/initrd.bin";
-  ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial debug";
+  ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial";
+
+  if (0) {
+    ms->initrd_filename = NULL;
+    ms->kernel_cmdline =
+        "console=ttyS0 earlyprintk=serial root=PARTUUID=ee917107-01 "
+        "init=/lib/systemd/systemd systemd.unit=emergency.service";
+
+    ms->kernel_cmdline = "console=ttyS0 earlyprintk=serial "
+                         "root=PARTUUID=ee917107-01 init=/bin/bash";
+
+    ms->kernel_cmdline = "root=PARTUUID=616e86aa-a573-4d60-bb44-b1b701d5a552 "
+                         "rw console=ttyS0 init=/bin/bash";
+  }
   /*
-   - use initrd as hello.out
+   - use hello.out
       - "console=ttyS0 earlyprintk=serial debug root=/dev/ram rdinit=/hello.out"
-   - use busybox as hello.out
+   - use busybox
       - "console=ttyS0 earlyprintk=serial debug";
   */
 

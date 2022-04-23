@@ -19,6 +19,7 @@ static void msix_irq_passthrogh(int hwirq) {
 #define APIC_DEFAULT_ADDRESS 0xfee00000
   apic_mem_write(NULL, X86_MSI_ADDR_BASE_LO - APIC_DEFAULT_ADDRESS,
                  X86_MSI_ENTRY_DATA_FLAG | guest_irq, 4);
+  /* printf("--- MSI %d--- \n", guest_irq); */
 }
 
 int pch_msi_init(u64 msg_address, bool ext, int start, int count) {

@@ -64,7 +64,7 @@ mkdir build && cd build
 - 内核下载地址 : https://mirrors.edge.kernel.org/pub/linux/kernel/v4.x/
 - 版本 : linux-4.4.142.tar.gz
 
-在 arch/x86/boot/main.c 中将 set_video 注释掉就可以继续向下运行了。
+在 arch/x86/boot/main.c 中将 `set_video` 注释掉就可以继续向下运行了。
 
 ## 复现 xqm 的工作
 - 从 http://rd.loongson.cn/ 中下载:
