@@ -13,6 +13,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#ifdef HAMT
+#include "accel/hamt.h"
+#endif
 
 void helper_raise_interrupt(CPUX86State *env, int intno, int next_eip_addend)
 {
@@ -95,6 +98,32 @@ static void QEMU_NORETURN raise_interrupt2(CPUX86State *env, int intno,
     env->error_code = error_code;
     env->exception_is_int = is_int;
     env->exception_next_eip = env->eip + next_eip_addend;
+
+#ifdef HAMT
+    // hamt_flush_all();
+    // from_tlb_flush++;
+    if (is_int && (intno == 0x80)) {
+      /*
+       * in x86_64
+       * __SYSCALL(1, sys_write)
+       * __SYSCALL(252, sys_ioprio_get)
+       * __SYSCALL(11, sys_munmap)
+       * __SYSCALL(358, sys_ni_syscall)
+       *
+       * in x86_32
+       * __SYSCALL(1, sys_exit)
+       * __SYSCALL(252, sys_exit_group)
+       * __SYSCALL_WITH_COMPAT(11, sys_execve, compat_sys_execve)
+       * __SYSCALL_WITH_COMPAT(358, sys_execveat, compat_sys_execveat)
+       */
+      bool special_syscall = env->regs[0] == 1 || env->regs[0] == 252 ||
+                             env->regs[0] == 11 || env->regs[0] == 358;
+
+      if (special_syscall)
+        delete_pgtable(env->cr[3]);
+    }
+#endif
+
     cpu_loop_exit_restore(cs, retaddr);
 }
 
