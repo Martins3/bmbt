@@ -956,10 +956,8 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
 
 static void save_into_mem(CPUX86State *env) {
   int i;
-  // uint32_t *reg_pos = (uint64_t *)data_storage + 24;
-  // uint32_t *dest = (uint8_t *)env + 928;
-  uint64_t *reg_pos = (uint64_t *)data_storage + 24;
-  uint8_t *dest = (uint8_t *)env + 928;
+  uint32_t *reg_pos = (uint64_t *)data_storage + 24;
+  uint32_t *dest = (uint8_t *)env + 928;
 
   for (i = 0; i < 8; ++i) {
     *dest++ = *reg_pos;
