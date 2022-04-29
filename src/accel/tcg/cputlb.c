@@ -211,6 +211,11 @@ static inline void tlb_table_flush_by_mmuidx(CPUArchState *env, int mmu_idx) {
   tlb_mmu_resize_locked(env, mmu_idx);
   memset(env_tlb(env)->f[mmu_idx].table, -1, sizeof_tlb(env, mmu_idx));
   env_tlb(env)->d[mmu_idx].n_used_entries = 0;
+
+#ifdef HAMT
+  hamt_flush_all();
+  from_tlb_flush++;
+#endif
 }
 
 static inline void tlb_n_used_entries_inc(CPUArchState *env,
@@ -275,6 +280,11 @@ static void tlb_flush_one_mmuidx_locked(CPUArchState *env, int mmu_idx) {
   env_tlb(env)->d[mmu_idx].vindex = 0;
   memset(env_tlb(env)->d[mmu_idx].vtable, -1,
          sizeof(env_tlb(env)->d[0].vtable));
+
+#ifdef HAMT
+  hamt_flush_all();
+  from_tlb_flush++;
+#endif
 }
 
 static void tlb_flush_by_mmuidx_async_work(CPUState *cpu,
@@ -328,13 +338,7 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap) {
   }
 }
 
-void tlb_flush(CPUState *cpu) {
-#ifdef HAMT
-  hamt_flush_all();
-  from_tlb_flush++;
-#endif
-  tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS);
-}
+void tlb_flush(CPUState *cpu) { tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS); }
 
 void tlb_flush_by_mmuidx_all_cpus(CPUState *src_cpu, uint16_t idxmap) {
   const run_on_cpu_func fn = tlb_flush_by_mmuidx_async_work;
@@ -380,6 +384,10 @@ static inline bool tlb_entry_is_empty(const CPUTLBEntry *te) {
 /* Called with tlb_c.lock held */
 static inline bool tlb_flush_entry_locked(CPUTLBEntry *tlb_entry,
                                           target_ulong page) {
+#ifdef HAMT
+  hamt_invlpg_helper(page);
+#endif
+
   if (tlb_hit_page_anyprot(tlb_entry, page)) {
     memset(tlb_entry, -1, sizeof(*tlb_entry));
     return true;
@@ -465,7 +473,7 @@ void tlb_flush_page_by_mmuidx(CPUState *cpu, target_ulong addr,
   addr_and_mmu_idx |= idxmap;
 
 #ifdef HAMT
-  from_by_mmuidx++;
+  from_tlb_flush_page_locked++;
   hamt_flush_all();
 #endif
 
