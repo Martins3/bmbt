@@ -44,7 +44,9 @@ BIN_FILES = $(wildcard image/*.bin)
 # "invalid argument to built-in function"
 ifeq ($(ENV_KERNEL), 1)
   KERNEL_SRC_FILES += $(wildcard env/loongarch/*/*.c)
-	KERNEL_SRC_FILES += $(wildcard env/loongarch/accel/*/*.c)
+	ifeq ($(HAMT), 1)
+		KERNEL_SRC_FILES += $(wildcard env/loongarch/accel/*/*.c)
+	endif
   KERNEL_SRC_FILES += $(wildcard env/loongarch/drivers/*/*.c)
   KERNEL_OBJS_FILES=$(KERNEL_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
   $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O3
