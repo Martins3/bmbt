@@ -59,10 +59,16 @@ int64_t cpu_get_clock(void);
 
 /* get host real time in nanosecond */
 static inline int64_t get_clock_realtime(void) {
+#ifdef ENV_KERNEL
+  extern const int NS_PER_CYCLE;
+  // TMP_TODO 我常常感到好奇，为什么这里会自动可以 reference drdtime
+  return drdtime() * NS_PER_CYCLE;
+#else
   struct timeval tv;
 
   gettimeofday(&tv, NULL);
   return tv.tv_sec * 1000000000LL + (tv.tv_usec * 1000);
+#endif
 }
 
 /**
