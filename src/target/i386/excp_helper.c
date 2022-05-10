@@ -100,8 +100,6 @@ static void QEMU_NORETURN raise_interrupt2(CPUX86State *env, int intno,
     env->exception_next_eip = env->eip + next_eip_addend;
 
 #ifdef HAMT
-    // hamt_flush_all();
-    // from_tlb_flush++;
     if (is_int && (intno == 0x80)) {
       /*
        * in x86_64
