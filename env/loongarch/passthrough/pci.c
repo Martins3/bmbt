@@ -92,10 +92,13 @@ uint32_t pci_pass_through_read(uint32_t addr, int l) {
 
 #include "cpu.h"
 
+#define ENABLE_MSIX 1
+
 static uint64_t pass_mmio_pass_read(void *opaque, hwaddr addr, unsigned size) {
   addr += BUILD_PCIMEM_START;
   addr -= LOONGSON_X86_PCI_MEM_OFFSET;
 
+#ifdef ENABLE_MSIX
   int idx = msix_table_overlapped(addr, size);
   if (idx != -1) {
     assert(size == 4); // QEMU say guest access size is always 4
@@ -120,6 +123,7 @@ static uint64_t pass_mmio_pass_read(void *opaque, hwaddr addr, unsigned size) {
     }
     return val;
   }
+#endif
 
   switch (size) {
   case 1:
@@ -140,6 +144,7 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
   addr += BUILD_PCIMEM_START;
   addr -= LOONGSON_X86_PCI_MEM_OFFSET;
 
+#ifdef ENABLE_MSIX
   int idx = msix_table_overlapped(addr, size);
   // TMP_TODO 将这个放到 PCI-device.c 中吧
   if (idx != -1) {
@@ -171,6 +176,7 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
     writel(val, (void *)TO_UNCAC(addr));
     return;
   }
+#endif
 
   switch (size) {
   case 1:
