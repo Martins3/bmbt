@@ -232,12 +232,12 @@ void hamt_set_context(uint64_t new_cr3) {
   /*
    * already in hamt_cr3_htable?
    * |_ yes -> same version?
-   * |         |_ yes -> set asid_value and return
-   * |	     |_ no  -> asid has been used?
+   * |         |_ yes -> same process, set asid_value and return
+   * |	       |_ no  -> different process, asid has been used?
    * |	               |_ yes -> allocate a new asid
-   * |			       |_ no -> use old asid, change asid_version
+   * |			           |_ no -> use old asid, change asid_version
    * |
-   * |_ no  -> allocate a new asid
+   * |_ no  -> new process, allocate a new asid
    */
 
   struct pgtable_head *dest_pgtable_head = check_cr3_in_htable(new_cr3);
@@ -247,6 +247,11 @@ void hamt_set_context(uint64_t new_cr3) {
         uint16_t new_asid_value = allocate_new_asid_value();
         dest_pgtable_head->asid = FORM_NEW_ASID(asid_version, new_asid_value);
       } else {
+        /*
+         * i think this will not execute, so i add a assert here to comfirm my
+         * suppose
+         */
+        g_assert_not_reached();
         dest_pgtable_head->asid = FORM_NEW_ASID(
             asid_version, GET_ASID_VALUE(dest_pgtable_head->asid));
       }
@@ -419,15 +424,12 @@ static void hamt_set_tlb(uint64_t vaddr, uint64_t paddr, int prot, bool mode) {
 
   disable_pg();
 
-  // printf("tlb: vaddr: %lx, paddr: %lx\n", vaddr, paddr);
   // to see whether there is already a valid adjacent tlb entry
   csr_tlbehi = vaddr & ~0x1fffULL;
-  // printf("csr_tlbehi: %lx\n", csr_tlbehi);
   write_csr_tlbehi(csr_tlbehi);
   write_csr_asid(csr_asid);
   tlb_probe();
   csr_tlbidx = read_csr_tlbidx();
-  // printf("csr_tlbidx: %x\n", csr_tlbidx);
   if (csr_tlbidx >= 0) {
     tlb_read();
     csr_tlbelo0 = read_csr_tlbelo0();
@@ -482,56 +484,13 @@ static void hamt_set_tlb(uint64_t vaddr, uint64_t paddr, int prot, bool mode) {
   csr_tlbidx &= 0xc0ffffff;
   csr_tlbidx |= PS_4K << PS_SHIFT;
 
-  // printf("1.csr_asid: %x\n", csr_asid);
-  // printf("1.csr_tlbehi: %lx\n", csr_tlbehi);
-  // printf("1.csr_tlbelo0: %lx\n", csr_tlbelo0);
-  // printf("1.csr_tlbelo1: %lx\n", csr_tlbelo1);
-  // printf("1.csr_tlbidx: %x\n", csr_tlbidx);
-
   write_csr_asid(csr_asid);
-  // printf("2.csr_asid: %x\n", csr_asid);
   write_csr_tlbehi(csr_tlbehi);
-  // printf("2.csr_tlbehi: %lx\n", csr_tlbehi);
   write_csr_tlbelo0(csr_tlbelo0);
-  // printf("2.csr_tlbelo0: %lx\n", csr_tlbelo0);
   write_csr_tlbelo1(csr_tlbelo1);
-  // printf("2.csr_tlbelo1: %lx\n", csr_tlbelo1);
   write_csr_tlbidx(csr_tlbidx);
-  // printf("2.csr_tlbidx: %x\n", csr_tlbidx);
 
   valid_index(csr_tlbidx) ? tlb_write_indexed() : tlb_write_random();
-
-  // uint64_t t_csr_tlbehi, t_csr_tlbelo0, t_csr_tlbelo1;
-  // int32_t t_csr_tlbidx;
-  // uint32_t t_csr_asid;
-
-  // t_csr_asid = read_csr_asid();
-  // t_csr_tlbehi = read_csr_tlbehi();
-  // t_csr_tlbelo0 = read_csr_tlbelo0();
-  // t_csr_tlbelo1 = read_csr_tlbelo1();
-  // t_csr_tlbidx = read_csr_tlbidx();
-  // printf("1.t_csr_asid: %x\n", t_csr_asid);
-  // printf("1.t_csr_tlbehi: %lx\n", t_csr_tlbehi);
-  // printf("1.t_csr_tlbelo0: %lx\n", t_csr_tlbelo0);
-  // printf("1.t_csr_tlbelo1: %lx\n", t_csr_tlbelo1);
-  // printf("1.t_csr_tlbidx: %x\n", t_csr_tlbidx);
-
-  // t_csr_asid = asid_value;
-  // t_csr_tlbehi = vaddr & ~0x1fffULL;
-  // write_csr_tlbehi(t_csr_tlbehi);
-  // write_csr_asid(t_csr_asid);
-  // tlb_probe();
-  // t_csr_tlbidx = read_csr_tlbidx();
-  // if (t_csr_tlbidx >= 0) {
-  //   tlb_read();
-  //   t_csr_tlbelo0 = read_csr_tlbelo0();
-  //   t_csr_tlbelo1 = read_csr_tlbelo1();
-  // }
-  // printf("2.t_csr_asid: %x\n", t_csr_asid);
-  // printf("2.t_csr_tlbehi: %lx\n", t_csr_tlbehi);
-  // printf("2.t_csr_tlbelo0: %lx\n", t_csr_tlbelo0);
-  // printf("2.t_csr_tlbelo1: %lx\n", t_csr_tlbelo1);
-  // printf("2.t_csr_tlbidx: %x\n", t_csr_tlbidx);
 
   enable_pg();
 }
@@ -873,7 +832,7 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
     addend = (uintptr_t)memory_region_get_ram_ptr(mr) + xlat;
   } else {
     /* I/O does not; force the host address to NULL. */
-#ifdef CONFIG_HAMT
+#ifdef HAMT
     addend = 0;
 #endif
     // [interface 34]
@@ -1014,9 +973,6 @@ void hamt_exception_handler(uint64_t hamt_badvaddr, CPUX86State *env,
     hamt_set_context(0);
   }
 
-  // printf("hamt.c:1058:csr_asid: %lx\n", read_csr_asid());
-  // uint32_t ecode = read_csr_excode();
-  // printf("exception code for tlb: %x\n", ecode);
   uint64_t addr = hamt_badvaddr - mapping_base_address;
 
   CPUState *cs = env_cpu(env);

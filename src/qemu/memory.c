@@ -902,7 +902,7 @@ static void setup_dirty_memory() {
 
 // static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
 
-static void x86_bios_rom_init(uint8_t *bios_offset) {
+static void x86_bios_rom_init() {
   FILE *f = fopen("image/bios.bin", "r");
   assert(f != NULL);
   void *__pc_bios =
