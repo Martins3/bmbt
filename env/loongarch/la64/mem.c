@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+void setup_buddy();
 void fw_add_mem(unsigned long addr, long len);
 void init_pages();
 
@@ -242,6 +243,7 @@ void fw_init_memory(void) {
   assert(check_bios_memory);
   reserve_memory();
   memory_ready = true;
+  setup_buddy();
 }
 
 int get_guest_ram_num() {
