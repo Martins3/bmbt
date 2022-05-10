@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <sys/mman.h>
 
+#define MR_CACHE 1
+
 static bool mr_initialized(const MemoryRegion *mr) {
   bmbt_check(mr != NULL);
   int is_mmio = mr->ops != NULL;
@@ -84,6 +86,10 @@ static bool is_isa_bios_access(hwaddr offset) {
 typedef bool (*MemoryRegionMatch)(const MemoryRegion *mr, hwaddr offset);
 
 static inline bool mr_match(const MemoryRegion *mr, hwaddr offset) {
+#ifdef MR_CACHE
+  if (mr == NULL)
+    return false;
+#endif
   return offset >= mr->offset && offset < mr->offset + mr->size;
 }
 
@@ -111,16 +117,35 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
   g_assert_not_reached();
 }
 
+#ifdef MR_CACHE
+MemoryRegion *cache = NULL;
+#endif
+
 static MemoryRegion *io_mr_look_up(struct AddressSpace *as, hwaddr offset,
                                    hwaddr *xlat, hwaddr *plen) {
   MemoryRegion *mr;
+#ifdef MR_CACHE
+  if (mr_match(cache, offset)) {
+    mr = cache;
+    goto found;
+  }
+#endif
+
   if (offset == PIIX_RCR_IOPORT) {
     // guest shouldn't access to piix3-reset
     g_assert_not_reached();
   } else {
     mr = memory_region_look_up(as->dispatch, offset);
   }
+
+#ifdef MR_CACHE
+found:
+#endif
   *xlat = offset - mr->offset;
+
+#ifdef MR_CACHE
+  cache = mr;
+#endif
   return mr;
 }
 
@@ -141,9 +166,32 @@ static inline MemoryRegion *isa_bios_access(hwaddr offset, hwaddr *xlat,
 
 static MemoryRegion low_vga;
 
+#ifdef MR_CACHE
+MemoryRegion *cache1 = NULL;
+MemoryRegion *cache2 = NULL;
+#endif
+
 static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
                                     hwaddr *xlat, hwaddr *plen) {
-  MemoryRegion *mr = isa_bios_access(offset, xlat, plen);
+  MemoryRegion *mr;
+#ifdef MR_CACHE
+  bool hit = false;
+  if (offset >= 0x100000) {
+    if (mr_match(cache1, offset)) {
+      mr = cache1;
+      hit = true;
+      goto found;
+    }
+
+    if (mr_match(cache2, offset)) {
+      mr = cache2;
+      hit = true;
+      goto found;
+    }
+  }
+#endif
+
+  mr = isa_bios_access(offset, xlat, plen);
   if (mr) {
     return mr;
   }
@@ -167,6 +215,9 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
     mr = memory_region_look_up(as->dispatch, offset);
   }
 
+#ifdef MR_CACHE
+found:
+#endif
   *xlat = offset - mr->offset;
 
   if (memory_region_is_ram(mr)) {
@@ -174,6 +225,14 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
     hwaddr diff = mr->size - *xlat;
     *plen = MIN(diff, *plen);
   }
+
+#ifdef MR_CACHE
+  if (!hit) {
+    cache2 = cache1;
+    cache1 = mr;
+  }
+#endif
+
   return mr;
 }
 
