@@ -986,8 +986,7 @@ static uint64_t io_readx(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
   return 0;
 }
 
-// #ifdef HAMT
-#if 1
+#ifdef HAMT
 void io_writex(CPUArchState *env, CPUIOTLBEntry *iotlbentry, CPUTLBEntry *entry,
                int mmu_idx, uint64_t val, target_ulong vaddr, uintptr_t retaddr,
                MemOp op) {
@@ -1143,8 +1142,7 @@ tb_page_addr_t get_page_addr_code(CPUArchState *env, target_ulong addr) {
   return get_page_addr_code_hostp(env, addr, NULL);
 }
 
-// #ifdef HAMT
-#if 1
+#ifdef HAMT
 void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
                     CPUIOTLBEntry *iotlbentry, uintptr_t retaddr) {
 

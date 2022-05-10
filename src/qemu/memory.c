@@ -879,7 +879,7 @@ static void setup_dirty_memory() {
 
 // static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
 
-static void x86_bios_rom_init(uint8_t *bios_offset) {
+static void x86_bios_rom_init() {
   FILE *f = fopen("image/bios.bin", "r");
   bmbt_check(f != NULL);
   void *__pc_bios =
@@ -1001,8 +1001,6 @@ static void ram_init() {
     mem_add_memory_region(mr);
   }
 
-  // isa-bios / pc.bios's host point to file
-  x86_bios_rom_init(bios_offset);
   setup_dirty_memory();
 }
 
