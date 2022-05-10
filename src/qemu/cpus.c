@@ -492,10 +492,6 @@ void vm_start(void) {
 int64_t cpu_get_icount(void) { g_assert_not_reached(); }
 
 typedef struct TimersState {
-  /* Protected by BQL.  */
-  int64_t cpu_ticks_prev;
-  int64_t cpu_ticks_offset;
-
   /* Protect fields that can be respectively read outside the
    * BQL, and written from multiple threads.
    */
@@ -513,7 +509,6 @@ typedef struct TimersState {
 
   int64_t vm_clock_warp_start;
 #endif
-  int64_t cpu_clock_offset;
 
 #ifdef BMBT
   /* Only written by TCG thread */
@@ -528,16 +523,7 @@ typedef struct TimersState {
 
 static TimersState timers_state;
 
-static int64_t cpu_get_clock_locked(void) {
-  int64_t time;
-
-  time = timers_state.cpu_clock_offset;
-  if (timers_state.cpu_ticks_enabled) {
-    time += get_clock();
-  }
-
-  return time;
-}
+static int64_t cpu_get_clock_locked(void) { return get_clock(); }
 
 /* Return the monotonic time elapsed in VM, i.e.,
  * the time between vm_start and vm_stop
@@ -554,21 +540,7 @@ int64_t cpu_get_clock(void) {
   return ti;
 }
 
-static int64_t cpu_get_ticks_locked(void) {
-  int64_t ticks = timers_state.cpu_ticks_offset;
-  if (timers_state.cpu_ticks_enabled) {
-    ticks += cpu_get_host_ticks();
-  }
-
-  if (timers_state.cpu_ticks_prev > ticks) {
-    /* Non increasing ticks may happen if the host uses software suspend.  */
-    timers_state.cpu_ticks_offset += timers_state.cpu_ticks_prev - ticks;
-    ticks = timers_state.cpu_ticks_prev;
-  }
-
-  timers_state.cpu_ticks_prev = ticks;
-  return ticks;
-}
+static int64_t cpu_get_ticks_locked(void) { return cpu_get_host_ticks(); }
 
 /* return the time elapsed in VM between vm_start and vm_stop.  Unless
  * icount is active, cpu_get_ticks() uses units of the host CPU cycle
@@ -576,10 +548,6 @@ static int64_t cpu_get_ticks_locked(void) {
  */
 int64_t cpu_get_ticks(void) {
   int64_t ticks;
-
-  if (use_icount) {
-    return cpu_get_icount();
-  }
 
   qemu_spin_lock(&timers_state.vm_clock_lock);
   ticks = cpu_get_ticks_locked();
@@ -604,8 +572,6 @@ void cpu_enable_ticks(void) {
   seqlock_write_lock(&timers_state.vm_clock_seqlock,
                      &timers_state.vm_clock_lock);
   if (!timers_state.cpu_ticks_enabled) {
-    timers_state.cpu_ticks_offset -= cpu_get_host_ticks();
-    timers_state.cpu_clock_offset -= get_clock();
     timers_state.cpu_ticks_enabled = 1;
   }
   seqlock_write_unlock(&timers_state.vm_clock_seqlock,
