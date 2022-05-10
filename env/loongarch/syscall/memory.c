@@ -1,5 +1,7 @@
+#include "buddy.h"
 #include "internal.h"
 #include <asm/addrspace.h>
+#include <asm/debug.h>
 #include <linux/pfn.h>
 #include <qemu/config-target.h>
 #include <qemu/queue.h>
@@ -16,7 +18,17 @@ static inline unsigned long len_pagesize_up(unsigned long len) {
   return PFN_UP(len) << PAGE_SHIFT;
 }
 
-// #define DEBUG_MEM
+#define USE_BUDDY
+/* #define DEBUG_MEM */
+/* #define DEBUG_MEM_NODE */
+/* #define DEBUG_BUDDY */
+
+#ifdef USE_BUDDY
+static struct buddy *buddy;
+#define BUDDY_LEVEL 17
+#define BUDDY_MAX_PAGE_NUM 16
+#endif
+
 /**
  * pages:
  *
@@ -51,15 +63,32 @@ static FreeMem *get_mem_node(unsigned long start, unsigned long size) {
   node->start = start;
   node->len = size;
   QLIST_REMOVE(node, mem_next);
-#ifdef DEBUG_MEM
+#ifdef DEBUG_MEM_NODE
   kern_printf("huxueshi:%s %d\n", __FUNCTION__, node->idx);
 #endif
   return node;
 }
 
+#ifdef DEBUG_MEM_NODE
+static void check_double_free(FreeMem *node) {
+  FreeMem *mem;
+  bool in_free_mem = false;
+  QLIST_FOREACH(mem, &free_mem, mem_next) {
+    if (mem == node) {
+      in_free_mem = true;
+      break;
+    }
+  }
+  if (!in_free_mem) {
+    kern_assert(false);
+  }
+}
+#endif
+
 static void free_mem_node(FreeMem *node) {
-#ifdef DEBUG_MEM
+#ifdef DEBUG_MEM_NODE
   kern_printf("huxueshi:%s %d \n", __FUNCTION__, node->idx);
+  check_double_free(node);
 #endif
   QLIST_REMOVE(node, mem_next);
   node->start = -1;
@@ -101,12 +130,26 @@ long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   unsigned long offset = arg5;
   kern_assert(addr == 0);
   // kern_assert(!(len & PAGE_MASK)); // no alignment guarantee
-  kern_assert(offset == 0);
   kern_assert(fd == -1);
   kern_assert(!(flags & (~valid_flags)));
   kern_assert(!(prot & (~valid_prot)));
+  kern_assert(offset == 0);
 
   len = len_pagesize_up(len);
+#ifdef USE_BUDDY
+  if (len < PAGE_SIZE * BUDDY_MAX_PAGE_NUM) {
+    int idx = buddy_alloc(buddy, len >> PAGE_SHIFT);
+    if (idx == -1)
+      kern_not_reach("alloc failed");
+    addr = buddy_base(buddy) + idx * PAGE_SIZE;
+#ifdef DEBUG_BUDDY
+    kern_printf("---> addr=%lx idx=%d size=%d\n", addr, idx, len >> PAGE_SHIFT);
+    buddy_dump(buddy);
+#endif
+    memset((void *)addr, 0, len);
+    return addr;
+  }
+#endif
 
   FreeMem *mem;
   QLIST_FOREACH(mem, &free_mem, mem_next) {
@@ -116,16 +159,19 @@ long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
 
     unsigned long addr = mem->start;
     if (len == mem->len) {
-      memset((void *)addr, 0, len);
       free_mem_node(mem);
-      return addr;
+    } else {
+      mem->len -= len;
+      mem->start += len;
     }
-    mem->len -= len;
-    mem->start += len;
     memset((void *)addr, 0, len);
     return addr;
   }
   kern_not_reach("mmap never failed !");
+}
+
+long alloc_pages(long pages) {
+  return kernel_mmap(0, pages << PAGE_SHIFT, 0, 0, -1, 0, 0);
 }
 
 static FreeMem *merge(FreeMem *left, FreeMem *node) {
@@ -158,9 +204,34 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   unsigned long addr = arg0;
   unsigned long len = arg1;
   kern_assert(!(addr & PAGE_OFFSET_MASK));
-  // kern_assert(!(len & PAGE_OFFSET_MASK)); // no alignment guarantee
+#ifdef DEBUG_MEM
+  // TMP_TODO 之后增加更深入的分析，为什么 musl 中会使用 4096
+  // 例如 malloc 中的 g->maplen = (needed + 4095) / 4096;
+  if (len & (0x1000 - 1)) {
+    kern_printf("---> %lx\n", len);
+  }
+#endif
+  kern_assert(!(len & (0x1000 - 1))); // no alignment guarantee
 
   len = len_pagesize_up(len);
+
+#ifdef USE_BUDDY
+  if (len < 16 * PAGE_SIZE) {
+    int idx = (addr - buddy_base(buddy)) >> PAGE_SHIFT;
+    kern_assert(idx < (1 << BUDDY_LEVEL));
+    buddy_free(buddy, idx);
+    return 0;
+  }
+#endif
+
+#ifdef DEBUG_MEM
+  kern_printf("[huxueshi:%s:%d] %x %lx %x\n", __FUNCTION__, __LINE__,
+              (unsigned)(addr >> PAGE_SHIFT), len,
+              (unsigned)((addr + len) >> PAGE_SHIFT));
+  if (len == 0x4000) {
+    backtrace(NULL);
+  }
+#endif
 
   FreeMem *right = NULL;
   FreeMem *left = NULL;
@@ -189,6 +260,12 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   /* print_freenodes(); */
 #endif
   return 0;
+}
+
+void setup_buddy() {
+#ifdef USE_BUDDY
+  buddy = buddy_new(BUDDY_LEVEL);
+#endif
 }
 
 void init_pages() {

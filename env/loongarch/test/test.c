@@ -412,7 +412,16 @@ TEST test_serial_irq() {
   PASS();
 }
 
+TEST test_buddy() {
+  for (int i = 0; i < (1 << 4); ++i) {
+    printf("[huxueshi:%s:%d] %d\n", __FUNCTION__, __LINE__, i);
+    mmap(0, PAGE_SIZE, 0, 0, -1, 0);
+  }
+  PASS();
+}
+
 SUITE(env_test) {
+  RUN_TEST(test_buddy);
   /* RUN_TEST(test_serial_irq); */
   /* RUN_TEST(test_bit_ops); */
   /* RUN_TEST(test_range_api); */
