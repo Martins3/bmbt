@@ -91,7 +91,7 @@ mknod dev/tty2 c 4 2
 mknod dev/tty3 c 4 3
 mknod dev/tty4 c 4 4
 
-set -m
+setsid cttyhack /bin/sh
 
 cat <<!
 
@@ -112,8 +112,8 @@ Welcome to mini_linux
 # ifup eth0
 
 mkdir mnt
-# mknod /dev/nvme b 259 0
-# mount /dev/nvme /mnt
+mknod /dev/nvme b 259 0
+mount /dev/nvme /mnt
 
 exec /bin/sh
 EOF
@@ -149,7 +149,7 @@ if [[ $environment != loongarch ]]; then
   cp $BUILDS/initramfs.cpio.gz "$HOME"/core/5000/core/bmbt/image/initrd.bin
   # root=/dev/ram rdinit=/hello.out
   # run this in x86 kvm to verify the busybox img
-  $qemu -kernel "$kernel" -initrd $initrd -nographic -append "console=ttyS0" -enable-kvm
+  $qemu -kernel "$kernel" -initrd $initrd -nographic -append "console=ttyS0" -m 3g
 else
   QEMU_DIR=/home/loongson/core/centos-qemu
   LA_BIOS=${QEMU_DIR}/pc-bios/loongarch_bios.bin
