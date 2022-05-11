@@ -13,6 +13,7 @@
  * See the COPYING file in the top-level directory.
  */
 
+// [BMBT_MTTCG 5]
 static inline
 void atomic_trace_rmw_pre(CPUArchState *env, target_ulong addr, uint16_t info)
 {
