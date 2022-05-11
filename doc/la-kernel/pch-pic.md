@@ -25,7 +25,7 @@ static struct irq_chip pch_pic_irq_chip = {
 ### pch_pic_startup
 irq desc alread allocated
 
-```c
+```txt
 #0  pch_pic_startup (d=0x900000027d208c28) at drivers/irqchip/irq-loongson-pch-pic.c:172
 #1  0x9000000000287038 in __irq_startup (desc=0x900000027d208c28) at kernel/irq/chip.c:245
 #2  0x9000000000287160 in irq_startup (desc=0x900000027d208c00, resend=true, force=<optimized out>) at kernel/irq/chip.c:268
@@ -50,7 +50,7 @@ Backtrace stopped: frame did not save the PC
 ```
 ### pch_pic_unmask_irq
 
-```c
+```txt
 #0  pch_pic_unmask_irq (d=0x900000027d208c28) at ./include/linux/irq.h:785
 #1  0x90000000008a404c in pch_pic_startup (d=<optimized out>) at drivers/irqchip/irq-loongson-pch-pic.c:172
 #2  0x9000000000287038 in __irq_startup (desc=0x900000027d208c28) at kernel/irq/chip.c:245
@@ -75,13 +75,13 @@ x/interrupt.h:147
 #19 0x900000000020316c in ret_from_kernel_thread () at arch/loongarch/kernel/entry.S:85
 ```
 
-### pch_pic_set_type
+### `pch_pic_set_type`
 - [x] How can I know the type
 - [x] Will CPU receive irq if the level irq transfer high into low
 
 it seems not all irq need this, only irq=18 called it.
 it change the call back from level to edge.
-```c
+```txt
 #0  pch_pic_set_type (d=0x900000027d209028, type=1) at ./include/linux/irq.h:785
 #1  0x90000000002843d0 in __irq_set_trigger (desc=0x900000027d209028, flags=<optimized out>) at kernel/irq/manage.c:780
 #2  0x90000000002848a4 in __setup_irq (irq=18, desc=0x900000027d209000, new=0x900000027ce01680) at kernel/irq/manage.c:1469
@@ -110,9 +110,9 @@ access memory at address 0x40>, dev_id=0x900000027d643640) at kernel/irq/manage.
 #22 0x900000000020316c in ret_from_kernel_thread () at arch/loongarch/kernel/entry.S:85
 ```
 
-### pch_pic_mask_irq / pch_pic_ack_irq / pch_pic_unmask_irq
-- [x] handle_level_irq
-```c
+### `pch_pic_mask_irq` / `pch_pic_ack_irq` / `pch_pic_unmask_irq`
+- [x] `handle_level_irq`
+```txt
 #0  pch_pic_mask_irq (d=0x900000027d429a28) at drivers/irqchip/irq-loongson-pch-pic.c:95
 #1  0x90000000002863a0 in mask_irq (desc=0x900000027d429a00) at kernel/irq/chip.c:424
 #2  0x90000000002865e8 in mask_irq (desc=<optimized out>) at ./include/linux/irq.h:325
@@ -127,7 +127,7 @@ access memory at address 0x40>, dev_id=0x900000027d643640) at kernel/irq/manage.
 #11 0x90000000002033d4 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
 ```
 
-```c
+```txt
 #0  pch_pic_ack_irq (d=0x900000027d429a28) at drivers/irqchip/irq-loongson-pch-pic.c:185
 #1  0x90000000002865fc in mask_ack_irq (desc=<optimized out>) at kernel/irq/chip.c:414
 #2  handle_level_irq (desc=0x900000027d429a00) at kernel/irq/chip.c:633
@@ -140,7 +140,7 @@ access memory at address 0x40>, dev_id=0x900000027d643640) at kernel/irq/manage.
 #9  0x90000000002033d4 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
 ```
 
-```c
+```txt
 #0  pch_pic_unmask_irq (d=0x900000027d429a28) at ./include/linux/irq.h:785
 #1  0x9000000000286484 in unmask_irq (desc=0x900000027d429a00) at kernel/irq/chip.c:435
 #2  0x9000000000286634 in unmask_irq (desc=<optimized out>) at ./include/linux/irq.h:325
@@ -154,7 +154,7 @@ access memory at address 0x40>, dev_id=0x900000027d643640) at kernel/irq/manage.
 #10 0x9000000000f85778 in do_IRQ (irq=<optimized out>) at arch/loongarch/kernel/irq.c:103
 #11 0x90000000002033d4 in except_vec_vi_handler () at arch/loongarch/kernel/genex.S:92
 ```
-- what's `d->hwirq` in pch_pic_ack_irq
+- what's `d->hwirq` in `pch_pic_ack_irq`
 - if it's 2, that's unbelievable, 2 belongs to extioi
 
-## how to program the pch_pic so that ttyS0 will route to 2 in extioi
+## how to program the `pch_pic` so that ttyS0 will route to 2 in extioi
