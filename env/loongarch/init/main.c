@@ -1,12 +1,14 @@
 #include <asm/addrspace.h>
+#include <asm/cpu-features.h>
 #include <asm/irq.h>
 #include <asm/page.h>
 #include <asm/time.h>
+#include <env/cpu.h>
+#include <env/device.h>
 #include <linux/cpu.h>
 #include <linux/irqflags.h>
 #include <linux/pci-ecam.h>
 #include <linux/stack.h>
-#include <env/device.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,4 +33,11 @@ void start_kernel(void) {
 
   char *argv[] = {NULL};
   main(0, argv);
+}
+
+BootParameter get_boot_parameter() {
+  if (cpu_has_hypervisor)
+    return FROM_INIT_RD;
+  else
+    return FROM_DISK;
 }

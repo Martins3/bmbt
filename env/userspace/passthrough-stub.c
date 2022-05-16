@@ -111,4 +111,5 @@ uint64_t get_host_offset() {
   return host_offset;
 }
 
+BootParameter get_boot_parameter() { return FROM_INIT_RD; }
 // TMP_TODO 是否增加捕获，得到的结果不同啊
