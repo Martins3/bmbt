@@ -248,7 +248,7 @@ void setup_IRQ(void) {
     abort();
   } else {
     // loongarch's QEMU doesn't implement, it's only useful in bare metal.
-    // I don't like QEMU's complaint :
+    // I don't like QEMU's complain :
     // "Unassigned mem write 00000efdfb000274 = 0x40000000"
     if (!cpu_has_hypervisor) {
       for_each_node(node) {
