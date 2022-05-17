@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# cd /home/maritns3/core/tcgqemu || exit 1
-# mkdir 32bit
-# cd 32bit || exit 1
-# ../configure --target-list=i386-softmmu
-# make -j4
-
 use32bit=true # compile a 32bit or 64bit
 environment=loongarch
 environment=x86
@@ -70,9 +64,11 @@ fi
 
 INITRAMFS_BUILD=$BUILDS/$initramfs
 
-if [[ ! -d $INITRAMFS_BUILD ]]; then
-  # make -j && make install -j
+if [[ ! -d "$BUILDS"/_install ]]; then
+  make -j && make install -j
+fi
 
+if [[ ! -d $INITRAMFS_BUILD ]]; then
   mkdir -p $INITRAMFS_BUILD
   cd $INITRAMFS_BUILD || exit 0
   mkdir -p bin sbin etc proc sys usr/bin usr/sbin
@@ -90,8 +86,6 @@ mknod dev/tty1 c 4 1
 mknod dev/tty2 c 4 2
 mknod dev/tty3 c 4 3
 mknod dev/tty4 c 4 4
-
-setsid cttyhack /bin/sh
 
 cat <<!
 
@@ -115,6 +109,7 @@ mkdir mnt
 mknod /dev/nvme b 259 0
 mount /dev/nvme /mnt
 
+setsid cttyhack /bin/sh
 exec /bin/sh
 EOF
 
@@ -125,22 +120,6 @@ EOF
 auto eth0
 iface eth0 inet dhcp
 _EOF_
-
-  cat <<_EOF_ >$INITRAMFS_BUILD/etc/inittab
-::respawn:/bin/cttyhack /bin/sh
-_EOF_
-
-  cat <<_EOF_ >$INITRAMFS_BUILD/startup.sh
-mknod /dev/x b 8 1
-sleep 3
-mount /dex/x mnt
-chroot /mnt
-mount -t proc /proc proc/
-mount --rbind /sys sys/
-mount --rbind /dev dev/
-_EOF_
-
-  chmod +x $INITRAMFS_BUILD/startup.sh
 
   find . -print0 | cpio --null -ov --format=newc | gzip -9 >$BUILDS/initramfs.cpio.gz
 fi
@@ -160,10 +139,3 @@ else
   echo "$cmd"
   eval "$cmd"
 fi
-
-# network 的事情参考这个部分：
-# https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
-# 基础的部分参考这个：
-# https://www.cnblogs.com/wipan/p/9272255.html
-# https://gist.github.com/chrisdone/02e165a0004be33734ac2334f215380e
-# https://www.digi.com/resources/documentation/digidocs/90001515/task/yocto/t_configure_network.htm
