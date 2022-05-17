@@ -121,7 +121,7 @@ static char *number(char *str, long num, int base, int size, int precision,
   return str;
 }
 
-int kern_vsprintf(char *buf, const char *fmt, va_list args) {
+static int kern_vsprintf(char *buf, const char *fmt, va_list args) {
   int len;
   unsigned long num;
   int i, base;
@@ -289,19 +289,9 @@ int kern_vsprintf(char *buf, const char *fmt, va_list args) {
   return str - buf;
 }
 
-int kern_sprintf(char *buf, const char *fmt, ...) {
-  va_list args;
-  int i;
-
-  va_start(args, fmt);
-  i = kern_vsprintf(buf, fmt, args);
-  va_end(args);
-  return i;
-}
-
-void prom_putchar(char c) {
+static void prom_putchar(char c) {
+  /* writeb(c, LS_ISA_SERIAL_IO_BASE); will fail in bare metal */
   uart_putc(c);
-  /* writeb(c, LS_ISA_SERIAL_IO_BASE); */
 }
 
 void early_console_write(const char *s, unsigned n) {
