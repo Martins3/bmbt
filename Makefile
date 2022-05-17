@@ -44,7 +44,7 @@ ifeq ($(ENV_KERNEL), 1)
   KERNEL_SRC_FILES += $(wildcard env/loongarch/*/*.c)
   KERNEL_SRC_FILES += $(wildcard env/loongarch/drivers/*/*.c)
   KERNEL_OBJS_FILES=$(KERNEL_SRC_FILES:%.c=$(BUILD_DIR)/%.o)
-  $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O2
+  $(KERNEL_OBJS_FILES): EXTRA_FLAGS = -O3
 endif
 
 CONFIG_LATX=y

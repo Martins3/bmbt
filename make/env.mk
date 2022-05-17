@@ -2,8 +2,7 @@
 SHELL:=/bin/bash
 BASE_DIR := $(shell pwd)
 ARCH_APPENDIX :=loongson
-# TMP_TODO 修改为 -Ofast 导致了需要修复的 warning
-CFLAGS := -g -Wall -Ofast
+CFLAGS := -g -Wall -Werror -O3
 
 ENV_KERNEL ?= 1
 
