@@ -204,13 +204,6 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   unsigned long addr = arg0;
   unsigned long len = arg1;
   kern_assert(!(addr & PAGE_OFFSET_MASK));
-#ifdef DEBUG_MEM
-  // TMP_TODO 之后增加更深入的分析，为什么 musl 中会使用 4096
-  // 例如 malloc 中的 g->maplen = (needed + 4095) / 4096;
-  if (len & (0x1000 - 1)) {
-    kern_printf("---> %lx\n", len);
-  }
-#endif
   kern_assert(!(len & (0x1000 - 1))); // no alignment guarantee
 
   len = len_pagesize_up(len);
@@ -225,12 +218,8 @@ long kernel_unmmap(long arg0, long arg1, long arg2, long arg3, long arg4,
 #endif
 
 #ifdef DEBUG_MEM
-  kern_printf("[huxueshi:%s:%d] %x %lx %x\n", __FUNCTION__, __LINE__,
-              (unsigned)(addr >> PAGE_SHIFT), len,
-              (unsigned)((addr + len) >> PAGE_SHIFT));
-  if (len == 0x4000) {
-    backtrace(NULL);
-  }
+  kern_printf("[huxueshi:%s:%d] %lx %lx %lx\n", __FUNCTION__, __LINE__,
+              addr >> PAGE_SHIFT, len, (addr + len) >> PAGE_SHIFT);
 #endif
 
   FreeMem *right = NULL;
