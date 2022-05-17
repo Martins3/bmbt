@@ -62,7 +62,7 @@ ifeq ($(USE_ULIBC_FILE), 1)
   OBJ_FILES += $(BIN_FILES:%.bin=$(BUILD_DIR)/%.o)
 endif
 
-all: check-and-reinit-submodules check-pre-commit $(bmbt)
+all: check-and-reinit-submodules check-pre-commit $(bmbt) ext4
 
 -include $(dependency_files)
 
@@ -143,6 +143,12 @@ clear_gcda:
 	@find $(BUILD_DIR) -name "*.gcda" -type f -delete
 
 EXT4_IMG=$(BASE_DIR)/img1.ext4
+ext4:$(EXT4_IMG)
+	if [[ ! -f $(EXT4_IMG) ]];then \
+	  # mkfs.ext4 may fail in loongarch, creating the file in x86 is fine \
+	  dd if=/dev/null of=$(EXT4_IMG) bs=1M seek=100; \
+	  mkfs.ext4 -F $(EXT4_IMG); \
+	fi
 
 QEMU_DIR=/home/loongson/core/centos-qemu
 LA_BIOS=$(QEMU_DIR)/pc-bios/loongarch_bios.bin
