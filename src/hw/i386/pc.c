@@ -1273,6 +1273,8 @@ void pc_memory_init(PCMachineState *pcms, MemoryRegion *system_memory,
   if (linux_boot) {
     x86_load_linux(x86ms, fw_cfg, pcmc->acpi_data_size, pcmc->pvh_enabled,
                    pcmc->linuxboot_dma_enabled);
+  } else {
+    g_assert_not_reached();
   }
 
   for (i = 0; i < nb_option_roms; i++) {

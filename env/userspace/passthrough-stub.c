@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <env/cpu.h>
 #include <env/device.h>
 #include <env/memory.h>
 #include <inttypes.h>

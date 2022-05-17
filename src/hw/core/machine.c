@@ -154,6 +154,7 @@ void machine_initfn(MachineState *ms) {
   ms->enable_graphics = true;
 
   // qemu option is too complex, hard code it here.
+  ms->kernel_filename = "image/bzImage.bin";
   switch (get_boot_parameter()) {
   case FROM_INIT_RD:
     ms->initrd_filename = "image/initrd.bin";
