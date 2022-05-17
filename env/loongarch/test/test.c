@@ -238,18 +238,6 @@ TEST test_read_freq() {
   PASS();
 }
 
-extern void asm_init_uart();
-TEST test_baud_rate_asm() {
-  printf("[huxueshi:%s:%d] before \n", __FUNCTION__, __LINE__);
-  printf("[huxueshi:%s:%d] before \n", __FUNCTION__, __LINE__);
-  printf("[huxueshi:%s:%d] before \n", __FUNCTION__, __LINE__);
-  asm_init_uart();
-  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
-  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
-  printf("[huxueshi:%s:%d] after \n", __FUNCTION__, __LINE__);
-  PASS();
-}
-
 TEST test_range_api() {
   // notice: ranges_overlap is undefined if length == 0
   ASSERT_EQ(ranges_overlap(0, 0, 1, 3), 1);
