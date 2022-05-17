@@ -247,10 +247,16 @@ void setup_IRQ(void) {
     pch_irq_route_model = PCH_IRQ_ROUTE_EXT_SOC;
     abort();
   } else {
-    for_each_node(node) {
-      writel(0x40000000 | (node << 12),
-             (volatile void __iomem *)(((node << 44) | LOONGSON_HT1_CFG_BASE) +
-                                       0x274));
+    // loongarch's QEMU doesn't implement, it's only useful in bare metal.
+    // I don't like QEMU's complaint :
+    // "Unassigned mem write 00000efdfb000274 = 0x40000000"
+    if (!cpu_has_hypervisor) {
+      for_each_node(node) {
+        writel(
+            0x40000000 | (node << 12),
+            (volatile void __iomem *)(((node << 44) | LOONGSON_HT1_CFG_BASE) +
+                                      0x274));
+      }
     }
   }
 
