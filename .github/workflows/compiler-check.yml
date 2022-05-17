@@ -22,6 +22,7 @@ jobs:
         touch image/initrd.bin
         touch image/linuxboot_dma.bin
         touch image/bzImage.bin
+        touch img1.ext4
     - name: 00
       run: |
         make USE_LIBC=1 ENV_KERNEL=0 USE_GLIB=0 USE_ULIBC_FILE=0
