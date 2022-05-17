@@ -35,19 +35,14 @@ static GuestRam user_guest_ram[GUEST_RAM_COUNT] = {
         .size = 32 * MiB,
     },
 };
-/*
- * // TMP_TODO 似乎第一个 memory 最小 32 Mib
- * unimplemented memory access in [memory dispatch : 1dc3b3c]
- * guest ip : 100043
- * memory_region_look_up:111: g_assert_not_reachedmake: *** [Makefile:159：run] 错误 1
- */
 
 static uint64_t alloc_ram(hwaddr size) {
+  // surround with inaccessible hole to capture errors
+  mmap(0, size, 0, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   // (qemu) qemu_ram_mmap size=0x180200000 flags=0x22 guardfd=-1
-  mmap(0, size, 0, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0); // hole
   uint64_t host = (uint64_t)mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  mmap(0, size, 0, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0); // hole
+  mmap(0, size, 0, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   assert(host != -1);
   return host;
 }
@@ -113,4 +108,3 @@ uint64_t get_host_offset() {
 }
 
 BootParameter get_boot_parameter() { return FROM_INIT_RD; }
-// TMP_TODO 是否增加捕获，得到的结果不同啊
