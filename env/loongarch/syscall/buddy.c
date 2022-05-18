@@ -1,5 +1,6 @@
 #include "buddy.h"
 #include "internal.h"
+#include <asm/page.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -19,19 +20,17 @@ struct buddy {
 struct buddy *buddy_new(int level) {
   int size = 1 << level;
   int buddy_size = sizeof(struct buddy) + sizeof(uint8_t) * (size * 2 - 2);
-  int buddy_size_page = (buddy_size + 0x4000 - 1) / 0x4000;
-  kern_printf("-----> %d \n", (buddy_size_page + (1 << level)));
+  int buddy_size_page = (buddy_size + PAGE_SIZE - 1) / PAGE_SIZE;
+  kern_printf("buddy system need %d pages \n", (buddy_size_page + size));
   struct buddy *self = (void *)alloc_pages(buddy_size_page + size);
   self->level = level;
-  self->base =
-      (long)self + 0x4000 * buddy_size_page; // TMP_TODO 修改为 PAGESIZE
+  self->base = (long)self + PAGE_SIZE * buddy_size_page;
   memset(self->tree, NODE_UNUSED, size * 2 - 1);
   return self;
 }
 
 long buddy_base(struct buddy *self) { return self->base; }
 
-// TMP_TODO 之后分析一下
 /* void buddy_delete(struct buddy *self) { free(self); } */
 
 static inline int is_pow_of_2(uint32_t x) { return !(x & (x - 1)); }
