@@ -1,12 +1,26 @@
+diff --git a/src/fw/shadow.c b/src/fw/shadow.c
+index 4c627a8..504312d 100644
+--- a/src/fw/shadow.c
++++ b/src/fw/shadow.c
+@@ -46,8 +46,8 @@ __make_bios_writable_intel(u16 bdf, u32 pam0)
+     pam[0] = 0x30;
+
+     // Write PAM settings back to pci config space
+-    pci_config_writel(bdf, ALIGN_DOWN(pam0, 4), pamdata.data32[0]);
+     pci_config_writel(bdf, ALIGN_DOWN(pam0, 4) + 4, pamdata.data32[1]);
++    pci_config_writel(bdf, ALIGN_DOWN(pam0, 4), pamdata.data32[0]);
+
+     if (!ram_present)
+         // Copy bios.
 diff --git a/src/hw/dma.c b/src/hw/dma.c
-index 20c9fbb..f048560 100644
+index 20c9fbb..e64310b 100644
 --- a/src/hw/dma.c
 +++ b/src/hw/dma.c
 @@ -57,6 +57,7 @@ dma_floppy(u32 addr, int count, int isWrite)
  void
  dma_setup(void)
  {
-+  return;
++    return;
      // first reset the DMA controllers
      outb(0, PORT_DMA1_MASTER_CLEAR);
      outb(0, PORT_DMA2_MASTER_CLEAR);
