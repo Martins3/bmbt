@@ -13,14 +13,14 @@ index 4c627a8..504312d 100644
      if (!ram_present)
          // Copy bios.
 diff --git a/src/hw/dma.c b/src/hw/dma.c
-index 20c9fbb..e64310b 100644
+index 20c9fbb..f048560 100644
 --- a/src/hw/dma.c
 +++ b/src/hw/dma.c
 @@ -57,6 +57,7 @@ dma_floppy(u32 addr, int count, int isWrite)
  void
  dma_setup(void)
  {
-+    return;
++  return;
      // first reset the DMA controllers
      outb(0, PORT_DMA1_MASTER_CLEAR);
      outb(0, PORT_DMA2_MASTER_CLEAR);
@@ -37,6 +37,18 @@ index 9b099e8..117bea8 100644
          u8 status = inb(PORT_PS2_STATUS);
          if (! (status & I8042_STR_OBF))
              return 0;
+diff --git a/src/optionroms.c b/src/optionroms.c
+index e906ab9..4427bc4 100644
+--- a/src/optionroms.c
++++ b/src/optionroms.c
+@@ -457,6 +457,7 @@ vgarom_setup(void)
+
+     dprintf(1, "Scan for VGA option rom\n");
+
++    return;
+     // Load some config settings that impact VGA.
+     EnforceChecksum = romfile_loadint("etc/optionroms-checksum", 1);
+     S3ResumeVga = romfile_loadint("etc/s3-resume-vga-init", CONFIG_QEMU);
 diff --git a/src/serial.c b/src/serial.c
 index 88349c8..3ee6ddf 100644
 --- a/src/serial.c
