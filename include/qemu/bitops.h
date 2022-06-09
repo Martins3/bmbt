@@ -57,30 +57,6 @@ static inline int test_bit(long nr, const unsigned long *addr) {
 }
 
 /**
- * clear_bit - Clears a bit in memory
- * @nr: Bit to clear
- * @addr: Address to start counting from
- */
-static inline void clear_bit(long nr, unsigned long *addr) {
-  unsigned long mask = BIT_MASK(nr);
-  unsigned long *p = addr + BIT_WORD(nr);
-
-  *p &= ~mask;
-}
-
-/**
- * set_bit - Set a bit in memory
- * @nr: the bit to set
- * @addr: the address to start counting from
- */
-static inline void set_bit(long nr, unsigned long *addr) {
-  unsigned long mask = BIT_MASK(nr);
-  unsigned long *p = addr + BIT_WORD(nr);
-
-  *p |= mask;
-}
-
-/**
  * deposit32:
  * @value: initial value to insert bit field into
  * @start: the lowest bit in the bit field (numbered from 0)

@@ -111,8 +111,8 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
     MemoryRegion *mr = dispatch->segments[i];
     bmbt_check(mr != NULL);
     if (mr_match(mr, offset)) {
-      printf("visit in [%s] with offset=[%lx], mr.name: %s\n", dispatch->name,
-             offset, mr->name);
+      // printf("visit in [%s] with offset=[%lx], mr.name: %s\n",
+      // dispatch->name, offset, mr->name);
       return mr;
     }
   }

@@ -211,12 +211,13 @@ void fw_init_memory(void) {
   init_pages();
   init_ram_range();
   bool check_bios_memory = false;
-  // memory occupied by the kernel
-  u64 text_start = TO_PHYS(PFN_ALIGN((u64)__text_start));
-  u64 bss_end = TO_PHYS(PFN_ALIGN((u64)__bss_stop));
+  // bool kernel_img_in_range = false;
 
-  bool kernel_img_in_range = false;
 #ifdef HAMT
+  // memory occupied by the kernel
+  u64 text_start = kernel_image_range.start;
+  u64 bss_end = kernel_image_range.end;
+
   // allocate address space for data_storage and code_storage
   // before memory parse, because in `kernel_mmap`, 'addr' must be 0.
   uint64_t data_storage;
