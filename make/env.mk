@@ -2,7 +2,7 @@
 SHELL:=/bin/bash
 BASE_DIR := $(shell pwd)
 ARCH_APPENDIX :=loongson
-CFLAGS := -g -Wall -Werror -O3
+CFLAGS := -g -Wall -O3
 
 ENV_KERNEL ?= 1
 HAMT ?= 1

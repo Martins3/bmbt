@@ -14,10 +14,10 @@
 #include <string.h>
 #ifdef HAMT
 #include <asm/tlb.h>
-void handle_bp(void);
 extern void tlb_do_page_fault_protect(void);
 #endif
 
+void handle_bp(void);
 extern void handle_reserved(void);
 extern void *vector_table[];
 

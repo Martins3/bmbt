@@ -1,4 +1,3 @@
-#include "accel/hamt.h"
 #include "cpu.h"
 #include "exec/helper-proto.h"
 #include "translate-all.h"
@@ -25,6 +24,9 @@
 #include <stdbool.h>
 #include <stdlib.h> // for abort
 #include <string.h>
+#ifdef HAMT
+#include "accel/hamt.h"
+#endif
 
 #ifdef DEBUG_TLB
 #define DEBUG_TLB_GATE 1
