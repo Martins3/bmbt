@@ -877,25 +877,6 @@ static void setup_dirty_memory() {
   cpu_physical_memory_set_dirty_range(0, total_size, 1 << DIRTY_MEMORY_CODE);
 }
 
-#ifndef HAMT
-static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
-
-// isa-bios / pc.bios's host point to file
-static void x86_bios_rom_init() {
-  FILE *f = fopen("image/bios.bin", "r");
-  bmbt_check(f != NULL);
-  int rc = fread(__pc_bios, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
-  bmbt_check(rc == CONFIG_GUEST_BIOS_SIZE);
-  fclose(f);
-
-  RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
-  block->host = (void *)(&__pc_bios[0]);
-  // pc.bios's block::offset is not same with it's mr.offset
-  block->offset = get_guest_total_ram();
-
-  // isa-bios is handled in function isa_bios_access
-}
-#else
 static void x86_bios_rom_init() {
   FILE *f = fopen("image/bios.bin", "r");
   bmbt_check(f != NULL);
@@ -915,7 +896,6 @@ static void x86_bios_rom_init() {
 
   // isa-bios is handled in function isa_bios_access
 }
-#endif
 
 static void fix_pc_ram_block_offset() {
   RamRange first_pc_ram = guest_ram(0);

@@ -1395,5 +1395,6 @@ void hamt_init() {
 
   memset(asid_map, 0, sizeof(uint64_t) * 16);
 
+  printf("HAMT is enabled!!!\n");
   build_tlb_invalid_trampoline();
 }
