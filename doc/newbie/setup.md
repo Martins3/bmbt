@@ -130,4 +130,20 @@ menuentry 'USB Test' --class loongnix_desktop_20 --class gnu-linux --class gnu -
 
 将 bmbt.bin 拷贝到 U 盘中 /boot/bmbt.bin 位置。
 
+## 测试盘准备
+BMBT U 盘里写入的只是最基本的 32 位系统，在进入到系统后
+- 获取 ubuntu server
+- - https://releases.ubuntu.com/16.04/
+
+首先找一个 U 盘或硬盘，使用如下命令：
+`sudo ./qemu-system-i386 -drive file=/dev/sda,format=raw -cdrom ~/research/image/ubuntu-16.04.6-server-i386.iso -m 2g -boot d --enable-kvm`
+这条命令是制作一个 ubuntu server 的启动盘，从 `-cdrom` 写入到 `-drive`，`file` 需要修改成硬盘或 U 盘在自己电脑上的 partitions。
+配置好后进入到 bmbt，然后使用如下命令使用 U 盘的中的 ubuntu service 进行测试，
+```txt
+mknod /dev/abc b 8 3
+mount /dev/abc /mnt
+chroot /mnt
+```
+这里 `b 8 3` 需要使用 `cat /proc/partitions` 查看 U 盘的 major 和 minor。
+
 [^1]: https://unix.stackexchange.com/questions/340844/how-to-enable-diffie-hellman-group1-sha1-key-exchange-on-debian-8-0
