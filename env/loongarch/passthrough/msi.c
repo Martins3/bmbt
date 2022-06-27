@@ -48,43 +48,39 @@ void msix_map_region(u16 bdf) {
   u16 entry_num;
   int msix_cap = pci_find_capability(bdf, PCI_CAP_ID_MSIX);
 
-  int msi_cap = pci_find_capability(bdf, PCI_CAP_ID_MSI);
-  if (msi_cap) {
-    printf("[huxueshi:%s:%d] %s\n", __FUNCTION__, __LINE__, show_bdf(bdf));
-  }
-
   if (!msix_cap) {
     return;
   }
 
-  // TMP_TODO 需要优化一下如何，根本没必要每次 bir 之类的
   pci_bus_read_config_dword(bdf, msix_cap + PCI_MSIX_TABLE, &table_offset);
   pci_bus_read_config_word(bdf, msix_cap + PCI_MSIX_FLAGS, &entry_num);
 
   bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+  table_offset &= PCI_MSIX_TABLE_OFFSET;
   pci_bus_read_config_dword(bdf, PCI_BASE_ADDRESS_0 + bir * 4,
                             &msix_base_offset);
 
   BAR *bar = &(bdf_to_dev(bdf)->bar[bir]);
-  if (bar->size == 0) {
-    printf("[huxueshi:%s:%d] oooooooo ???\n", __FUNCTION__, __LINE__);
-  }
+  assert(bar->size != 0);
 
   printf("[huxueshi:%s:%d] bdf=%x msix_base_offset=%x table_offset=%x "
          "entry_num=%x barnum=%d size=%lx\n",
          __FUNCTION__, __LINE__, bdf, msix_base_offset, table_offset, entry_num,
          bir, bar->size);
-  // 很有可能根本没人初始化这个东西啊
-  /* TMP_TODO // 如果这个 assert 取消，那么很多的地方都需要修改关于 msix table
-   * 的数值长度
+
+  /**
+   * please check QEMU's function : usb_xhci_pci_realize, and you'll find
+   * there's no guarantee for:
+   * 1. assert(bar->is_64bit_bottom_half == false);
+   * 2. assert((msix_base_offset & ~PCI_BASE_ADDRESS_MEM_MASK) == 0);
+   *
+   * and it enables both msix and msi. What's more, it only has one valid bar
+   * and the bar is used for MSIX
    */
-  /* assert(bar->is_64bit_bottom_half == false); */
-  /* assert((msix_base_offset & ~PCI_BASE_ADDRESS_MEM_MASK) == 0); */
 
   assert(bar->type == PCI_REGION_TYPE_MEM);
   msix_base_offset &= PCI_BASE_ADDRESS_MEM_MASK;
 
-  table_offset &= PCI_MSIX_TABLE_OFFSET;
   add_msix_table(bdf, msix_base_offset + table_offset, entry_num);
 }
 
