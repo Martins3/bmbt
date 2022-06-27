@@ -136,9 +136,9 @@ static void pci_bios_check_devices(BMBT_PCIExpressDevice *pci) {
     // loongarch PCIe config. But if wmask is bigger than the
     // LOONGSON_X86_PCI_MEM_OFFSET, x86 guest can't read X again.
     if (size != 0) {
-      // TMP_TODO 和做主板的核实一下吧，很难啊!
-      // TMP_TODO 完全无法理解为什么要针对这个设备啊
       if (pci->bdf == 0xb8) {
+        printf("[huxueshi:%s:%d] %s %d bar's size is %lx\n", __FUNCTION__,
+               __LINE__, show_bdf(pci->bdf), i, size);
         size = 0;
       } else {
         assert(((size - 1) & LOONGSON_X86_PCI_MEM_OFFSET) == 0);
