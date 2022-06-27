@@ -110,7 +110,7 @@ void pci_data_write(PCIBus *s, uint32_t addr, uint32_t val, int len) {
 
   if (!pci_dev) {
     if (pci_pass_through) {
-      pci_pass_through_write(addr, val, len);
+      pci_config_pass_write(addr, val, len);
       return;
     }
     return;
@@ -129,7 +129,7 @@ uint32_t pci_data_read(PCIBus *s, uint32_t addr, int len) {
 
   if (!pci_dev) {
     if (pci_pass_through) {
-      return pci_pass_through_read(addr, len);
+      return pci_config_pass_read(addr, len);
     }
     return ~0x0;
   }
