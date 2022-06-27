@@ -84,6 +84,21 @@ void msix_map_region(u16 bdf) {
   add_msix_table(bdf, msix_base_offset + table_offset, entry_num);
 }
 
+uint32_t translate_msi_entry_data(bool is_write, uint32_t val) {
+  // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
+  // maybe fail on other operating system
+  if (is_write) {
+    assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);
+    val &= 0xff;
+    assert(val > 0 && val < 256);
+    val = pch_msi_allocate_hwirq(val);
+  } else {
+    assert(val > 0 && val < 256);
+    val |= X86_MSI_ENTRY_DATA_FLAG;
+  }
+  return val;
+}
+
 bool msix_pass_read(hwaddr addr, unsigned size, u32 *result) {
   int idx = msix_table_overlapped(addr, size);
   if (idx != -1) {
@@ -99,8 +114,7 @@ bool msix_pass_read(hwaddr addr, unsigned size, u32 *result) {
       assert(val == 0);
       break;
     case PCI_MSIX_ENTRY_DATA:
-      assert(val > 0 && val < 256);
-      val |= X86_MSI_ENTRY_DATA_FLAG;
+      val = translate_msi_entry_data(false, val);
       break;
     case PCI_MSIX_ENTRY_VECTOR_CTRL:
       break;
@@ -128,13 +142,7 @@ bool msix_pass_write(hwaddr addr, uint64_t val, unsigned size) {
       assert(val == 0);
       break;
     case PCI_MSIX_ENTRY_DATA:
-      // TMP_TODO 将这个合并一下
-      // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
-      // maybe fail on other operating system
-      assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);
-      val &= 0xff;
-      assert(val > 0 && val < 256);
-      val = pch_msi_allocate_hwirq(val);
+      val = translate_msi_entry_data(true, val);
       break;
     case PCI_MSIX_ENTRY_VECTOR_CTRL:
       break;
@@ -147,24 +155,7 @@ bool msix_pass_write(hwaddr addr, uint64_t val, unsigned size) {
   return false;
 }
 
-// TMP_TODO 应该就是这个需要进行合并了
-uint32_t translate_msi_entry_data(bool is_write, uint32_t val) {
-  // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
-  // maybe fail on other operating system
-  if (is_write) {
-    assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);
-    val &= 0xff;
-    assert(val > 0 && val < 256);
-    val = pch_msi_allocate_hwirq(val);
-  } else {
-    assert(val > 0 && val < 256);
-    val |= X86_MSI_ENTRY_DATA_FLAG;
-  }
-  return val;
-}
-
 /* bmbt_linux/drivers/pci/msi.c:__pci_write_msi_msg */
-// TMP_TODO 应该给 pci_config_pass_read也使用上吧
 uint32_t msi_translate(uint32_t addr, uint32_t val, bool is_write) {
   u16 bdf = get_bdf(addr);
   uint32_t config_addr = get_config_addr(addr);
