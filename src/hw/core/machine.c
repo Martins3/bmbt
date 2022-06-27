@@ -156,17 +156,15 @@ void machine_initfn(MachineState *ms) {
   // qemu option is too complex, hard code it here.
   ms->kernel_filename = "image/bzImage.bin";
   switch (get_boot_parameter()) {
-  case FROM_DISK:
   case FROM_INIT_RD:
     ms->initrd_filename = "image/initrd.bin";
     ms->kernel_cmdline = "console=ttyS0";
     break;
-    /* there is bug, we start from initrd.
-     * ms->initrd_filename = NULL;
-    ms->kernel_cmdline = "root=PARTUUID=616e86aa-a573-4d60-bb44-b1b701d5a552"
+  case FROM_DISK:
+    ms->initrd_filename = NULL;
+    ms->kernel_cmdline = "root=PARTUUID=616e86aa-a573-4d60-bb44-b1b701d5a552 "
                          "rw console=ttyS0 init=/bin/bash";
     break;
-    */
   default:
     g_assert_not_reached();
   }
