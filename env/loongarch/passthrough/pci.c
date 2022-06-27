@@ -91,40 +91,14 @@ uint32_t pci_config_pass_read(uint32_t addr, int l) {
   return pci_config_read(addr, l);
 }
 
-#include "cpu.h"
-
-#define ENABLE_MSIX 1
-
 static uint64_t pass_mmio_pass_read(void *opaque, hwaddr addr, unsigned size) {
   addr += BUILD_PCIMEM_START;
   addr -= LOONGSON_X86_PCI_MEM_OFFSET;
 
-#ifdef ENABLE_MSIX
-  int idx = msix_table_overlapped(addr, size);
-  if (idx != -1) {
-    assert(size == 4); // QEMU say guest access size is always 4
-    int entry_offset = get_msix_table_entry_offset(addr, idx);
-    u32 val = readl((void *)TO_UNCAC(addr));
-    switch (entry_offset) {
-    case PCI_MSIX_ENTRY_LOWER_ADDR:
-      assert(val == msi_message_addr());
-      val = X86_MSI_ADDR_BASE_LO;
-      break;
-    case PCI_MSIX_ENTRY_UPPER_ADDR:
-      assert(val == 0);
-      break;
-    case PCI_MSIX_ENTRY_DATA:
-      assert(val > 0 && val < 256);
-      val |= X86_MSI_ENTRY_DATA_FLAG;
-      break;
-    case PCI_MSIX_ENTRY_VECTOR_CTRL:
-      break;
-    default:
-      g_assert_not_reached();
-    }
+  u32 val;
+  if (msix_pass_read(addr, size, &val)) {
     return val;
   }
-#endif
 
   switch (size) {
   case 1:
@@ -145,39 +119,8 @@ static void pci_mmio_pass_write(void *opaque, hwaddr addr, uint64_t val,
   addr += BUILD_PCIMEM_START;
   addr -= LOONGSON_X86_PCI_MEM_OFFSET;
 
-#ifdef ENABLE_MSIX
-  int idx = msix_table_overlapped(addr, size);
-  // TMP_TODO 将这个放到 PCI-device.c 中吧
-  if (idx != -1) {
-    assert(size == 4); // QEMU tell me guest access size is 4
-    assert((val >> 32) == 0);
-    int entry_offset = get_msix_table_entry_offset(addr, idx);
-    switch (entry_offset) {
-    case PCI_MSIX_ENTRY_LOWER_ADDR:
-      assert(val == X86_MSI_ADDR_BASE_LO);
-      val = msi_message_addr();
-      break;
-    case PCI_MSIX_ENTRY_UPPER_ADDR:
-      assert(val == 0);
-      break;
-    case PCI_MSIX_ENTRY_DATA:
-      // TMP_TODO 将这个合并一下
-      // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
-      // maybe fail on other operating system
-      assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);
-      val &= 0xff;
-      assert(val > 0 && val < 256);
-      val = pch_msi_allocate_hwirq(val);
-      break;
-    case PCI_MSIX_ENTRY_VECTOR_CTRL:
-      break;
-    default:
-      g_assert_not_reached();
-    }
-    writel(val, (void *)TO_UNCAC(addr));
+  if (msix_pass_write(addr, val, size))
     return;
-  }
-#endif
 
   switch (size) {
   case 1:
