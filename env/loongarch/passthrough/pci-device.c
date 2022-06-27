@@ -79,7 +79,7 @@ static void pci_bios_get_bar(BMBT_PCIExpressDevice *pci, int bar, int *ptype,
   int is64 = 0, type = PCI_REGION_TYPE_MEM;
   u64 mask;
 
-  u32 ofs = bmbt_pci_bar(pci, bar);
+  const u32 ofs = bmbt_pci_bar(pci, bar);
   u16 bdf = pci->bdf;
   u32 old;
   pci_bus_read_config_dword(bdf, ofs, &old);
@@ -103,8 +103,6 @@ static void pci_bios_get_bar(BMBT_PCIExpressDevice *pci, int bar, int *ptype,
   u64 val = 0;
   pci_bus_read_config_dword(bdf, ofs, (u32 *)&val);
   pci_bus_write_config_dword(bdf, ofs, old);
-  printf("[huxueshi:%s:%d] bdf=%x barnum=%d low=%x\n", __FUNCTION__, __LINE__,
-         pci->bdf, ofs, old);
   if (is64) {
     u32 hold, high;
     pci_bus_read_config_dword(bdf, ofs + 4, &hold);
@@ -112,15 +110,13 @@ static void pci_bios_get_bar(BMBT_PCIExpressDevice *pci, int bar, int *ptype,
     pci_bus_read_config_dword(bdf, ofs + 4, &high);
     pci_bus_write_config_dword(bdf, ofs + 4, hold);
     val |= ((u64)high << 32);
-    printf("[huxueshi:%s:%d] bdf=%x barnum=%d high=%x\n", __FUNCTION__,
-           __LINE__, pci->bdf, ofs, hold);
     mask |= ((u64)0xffffffff << 32);
     *psize = (~(val & mask)) + 1;
   } else {
     *psize = ((~(val & mask)) + 1) & 0xffffffff;
   }
-  printf("[huxueshi:%s:%d] bdf=%x barnum=%d size=%lx\n", __FUNCTION__, __LINE__,
-         pci->bdf, ofs, *psize);
+  printf("[huxueshi:%s:%d] bdf=%x barnum=%d size=%lx is64=%d\n", __FUNCTION__,
+         __LINE__, pci->bdf, bar, *psize, is64);
   *ptype = type;
   *pis64 = is64;
 }
@@ -136,13 +132,12 @@ static void pci_bios_check_devices(BMBT_PCIExpressDevice *pci) {
     pci_bios_get_bar(pci, i, &type, &size, &is64);
 
     // wmask equals to (size - 1), everytime x86 guest write PCIe config bar
-    // with (X), (X - LOONGSON_X86_PCI_MEM_OFFSET) will be written to loongarch
-    // PCIe config. But if wmask is bigger than the LOONGSON_X86_PCI_MEM_OFFSET,
-    // x86 guest can't read X again.
+    // with "X", the "X - LOONGSON_X86_PCI_MEM_OFFSET" will be written to
+    // loongarch PCIe config. But if wmask is bigger than the
+    // LOONGSON_X86_PCI_MEM_OFFSET, x86 guest can't read X again.
     if (size != 0) {
-      printf("[huxueshi:%s:%d] bdf=%x bar=%d size=%lx\n", __FUNCTION__,
-             __LINE__, pci->bdf, i, size);
       // TMP_TODO 和做主板的核实一下吧，很难啊!
+      // TMP_TODO 完全无法理解为什么要针对这个设备啊
       if (pci->bdf == 0xb8) {
         size = 0;
       } else {
