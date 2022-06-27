@@ -49,6 +49,13 @@ static uint32_t pci_config_read(uint32_t addr, int l) {
 void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
   uint32_t config_addr = get_config_addr(addr);
   bool msix_table_updated = false;
+  /**
+   * 1. add_PCIe_devices will create one BMBT_PCIExpressDevice.
+   * 2. BIOS or OS probe PCI devices by writting PCI config space and read it
+   * back.
+   *
+   * There's no need to create BMBT_PCIExpressDevice for nonexistent devices.
+   */
   if (!ranges_overlap(config_addr, l, 0, PCI_BASE_ADDRESS_0)) {
     int idx = add_PCIe_devices(get_bdf(addr));
 
@@ -76,8 +83,6 @@ uint32_t pci_pass_through_read(uint32_t addr, int l) {
     int idx = add_PCIe_devices(get_bdf(addr));
     u32 val = pci_config_read(addr, l);
 
-    // TMP_TODO 这里是有 bug 的，如果读取是 bridege
-    // window，那么实际上就可能直接走了
     val = pcie_bridge_window_translate(idx, addr, l, val, false);
     if (ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 24) ||
         ranges_overlap(config_addr, l, PCI_ROM_ADDRESS, 4) ||
