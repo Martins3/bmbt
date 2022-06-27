@@ -261,9 +261,17 @@ static bool is_bar_access(BMBT_PCIExpressDevice *pci, int l,
   return true;
 }
 
+/**
+ * This is the base of following algorithm, Guest access size is bigger than
+ * pcie bridge's window config field.
+ *
+ * The algorithm is simple
+ * 1. shift
+ * 2. minus the offset
+ * 3. shift back
+ */
 static inline void assert_access_cover_config(u32 config_addr, int l,
                                               int offset, int size) {
-  // this is the base of following algorithm
   bool x = (config_addr <= offset && config_addr + l >= offset + size);
   // see seabios/src/fw/pciinit.c:pci_bridge_has_region
   bool y = (config_addr == offset);
@@ -318,11 +326,11 @@ u32 win_trans(u32 config_addr, int l, int offset, int size, bool is_write,
 #define MEM_SHIFT (LOONGSON_X86_PCI_MEM_OFFSET >> PCI_MEMORY_SHIFT)
 #define PREF_MEM_SHIFT (LOONGSON_X86_PCI_MEM_OFFSET >> PCI_PREF_MEMORY_SHIFT)
 
-// TMP_TODO 分析 /home/maritns3/core/kvmqemu/hw/pci/pci_bridge.c 之后，其实
-// - memory 和 prefetch 都是有 mask 的 需要使用 QEMU_BUILD_BUG_ON 分析 assert
-// offset 超过 0x20 bit (0xf 的 mask 和 PCI_MEMORY_SHIFT)，这样才可以处理
-// - 而且 offset 小于 32bit，这就是那些 uppper 为什么都是 0 的原因
-//  - io 的有类似的要求
+/**
+ * To understand the how pci bridge works:
+ * 1. read the source code : qemu/hw/pci/pci_bridge.c
+ * 2. https://www.cnblogs.com/LoyenWang/p/14165852.html
+ */
 u32 pcie_bridge_window_translate(int idx, uint32_t addr, int l, u32 val,
                                  bool is_write) {
   u32 config_addr = get_config_addr(addr);
