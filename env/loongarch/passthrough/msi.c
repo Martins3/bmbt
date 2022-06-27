@@ -88,6 +88,69 @@ void msix_map_region(u16 bdf) {
   add_msix_table(bdf, msix_base_offset + table_offset, entry_num);
 }
 
+bool msix_pass_read(hwaddr addr, unsigned size, u32 *result) {
+  int idx = msix_table_overlapped(addr, size);
+  if (idx != -1) {
+    assert(size == 4); // QEMU say guest access size is always 4
+    int entry_offset = get_msix_table_entry_offset(addr, idx);
+    u32 val = readl((void *)TO_UNCAC(addr));
+    switch (entry_offset) {
+    case PCI_MSIX_ENTRY_LOWER_ADDR:
+      assert(val == msi_message_addr());
+      val = X86_MSI_ADDR_BASE_LO;
+      break;
+    case PCI_MSIX_ENTRY_UPPER_ADDR:
+      assert(val == 0);
+      break;
+    case PCI_MSIX_ENTRY_DATA:
+      assert(val > 0 && val < 256);
+      val |= X86_MSI_ENTRY_DATA_FLAG;
+      break;
+    case PCI_MSIX_ENTRY_VECTOR_CTRL:
+      break;
+    default:
+      g_assert_not_reached();
+    }
+    *result = val;
+    return true;
+  }
+  return false;
+}
+
+bool msix_pass_write(hwaddr addr, uint64_t val, unsigned size) {
+  int idx = msix_table_overlapped(addr, size);
+  if (idx != -1) {
+    assert(size == 4); // QEMU tell me guest access size is 4
+    assert((val >> 32) == 0);
+    int entry_offset = get_msix_table_entry_offset(addr, idx);
+    switch (entry_offset) {
+    case PCI_MSIX_ENTRY_LOWER_ADDR:
+      assert(val == X86_MSI_ADDR_BASE_LO);
+      val = msi_message_addr();
+      break;
+    case PCI_MSIX_ENTRY_UPPER_ADDR:
+      assert(val == 0);
+      break;
+    case PCI_MSIX_ENTRY_DATA:
+      // TMP_TODO 将这个合并一下
+      // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg
+      // maybe fail on other operating system
+      assert((val & 0xff00) == X86_MSI_ENTRY_DATA_FLAG);
+      val &= 0xff;
+      assert(val > 0 && val < 256);
+      val = pch_msi_allocate_hwirq(val);
+      break;
+    case PCI_MSIX_ENTRY_VECTOR_CTRL:
+      break;
+    default:
+      g_assert_not_reached();
+    }
+    writel(val, (void *)TO_UNCAC(addr));
+    return true;
+  }
+  return false;
+}
+
 // TMP_TODO 应该就是这个需要进行合并了
 uint32_t translate_msi_entry_data(bool is_write, uint32_t val) {
   // see arch/x86/kernel/apic/msi.c:irq_msi_compose_msg

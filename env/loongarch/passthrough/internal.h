@@ -69,4 +69,8 @@ uint32_t msi_translate(uint32_t addr, uint32_t val, bool is_write);
 bool is_pci_bridge(int idx);
 int pci_find_capability(u16 bdf, int cap);
 const char *show_bdf(u16 bdf);
+
+bool msix_pass_write(hwaddr addr, uint64_t val, unsigned size);
+bool msix_pass_read(hwaddr addr, unsigned size, u32 *result);
+
 #endif /* end of include guard: INTERNAL_H_WCRWRL9K */
