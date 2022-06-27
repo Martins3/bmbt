@@ -1,9 +1,6 @@
 #include "internal.h"
 #include <asm/device.h>
-#include <exec/memory.h>
-#include <hw/pci/pci.h>
 #include <linux/pci.h>
-#include <qemu/range.h>
 
 static void pci_config_write(uint32_t addr, uint32_t val, int l) {
   u16 bdf = get_bdf(addr);
