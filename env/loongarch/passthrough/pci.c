@@ -45,8 +45,7 @@ static uint32_t pci_config_read(uint32_t addr, int l) {
   }
 }
 
-// TMP_TODO 将这个名称和 MMIO 的修改对称一点
-void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
+void pci_config_pass_write(uint32_t addr, uint32_t val, int l) {
   uint32_t config_addr = get_config_addr(addr);
   bool msix_table_updated = false;
   /**
@@ -75,7 +74,7 @@ void pci_pass_through_write(uint32_t addr, uint32_t val, int l) {
     msix_map_region(get_bdf(addr));
 }
 
-uint32_t pci_pass_through_read(uint32_t addr, int l) {
+uint32_t pci_config_pass_read(uint32_t addr, int l) {
   uint32_t config_addr = get_config_addr(addr);
 
   if (!ranges_overlap(config_addr, l, 0, PCI_BASE_ADDRESS_0)) {
