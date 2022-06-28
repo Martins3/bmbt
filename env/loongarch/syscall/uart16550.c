@@ -20,7 +20,6 @@
 #define UART_LSR_THRE 0x20 /* Transmit-hold-register empty */
 #define UART_TX 0          /* Out: Transmit buffer */
 
-// TMP_TODO : 之后仅仅允许一个位置持有 0x1fe001e0 的这个东西吧
 bool can_write();
 
 static inline unsigned int serial_in(int offset) {

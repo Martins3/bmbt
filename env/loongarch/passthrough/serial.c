@@ -12,11 +12,12 @@ static const hwaddr X86_ISA_SERIAL_IO_BASE = 0x3f8;
 static const int ISA_SERIAL_IRQ = 4;
 
 /*
- * if Divisor Latch Access Bit, DLAB setted, DLL and DLH can be used for
- * reading divisor
+ * if Divisor Latch Access Bit's DLAB bit is set, DLL and DLH can be used for
+ * reading divisor. If the guest is using serial with pass through, in the
+ * meanwhile, the host is using the serial with printf, the serial may set to
+ * abnormal state unexpectly.
  */
 static bool is_dlab_set = false;
-
 bool can_write() { return !is_dlab_set; }
 
 static uint64_t serial_ioport_pass_read(void *opaque, hwaddr addr,
