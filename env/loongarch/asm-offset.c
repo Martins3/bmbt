@@ -1,5 +1,5 @@
 // use double quote to local ptrace.h instead of system's
-#include "asm/ptrace.h"
+#include <asm/ptrace.h>
 #include <stddef.h>
 #include <stdio.h>
 
