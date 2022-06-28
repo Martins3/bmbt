@@ -2,6 +2,7 @@
 #define INTERNAL_H_WCRWRL9K
 
 #include <hw/pci/pci.h>
+#include <linux/type.h>
 
 enum pci_region_type {
   PCI_REGION_TYPE_IO,
