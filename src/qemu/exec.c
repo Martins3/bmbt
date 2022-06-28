@@ -66,7 +66,7 @@ static void breakpoint_invalidate(CPUState *cpu, target_ulong pc) {
   hwaddr phys = cpu_get_phys_page_attrs_debug(cpu, pc, &attrs);
   int asidx = cpu_asidx_from_attrs(cpu, attrs);
   if (phys != -1) {
-    bmbt_check(asidx == 0);
+    assert(asidx == 0);
     /* Locks grabbed by tb_invalidate_phys_addr */
     tb_invalidate_phys_addr(cpu->cpu_ases[asidx].as,
                             phys | (pc & ~TARGET_PAGE_MASK), attrs);
@@ -277,7 +277,7 @@ MemoryRegion *iotlb_to_section(CPUState *cpu, hwaddr index, MemTxAttrs attrs) {
  * Called within RCU critical section.
  */
 void *qemu_map_ram_ptr(RAMBlock *ram_block, ram_addr_t addr) {
-  bmbt_check(ram_block != NULL);
+  assert(ram_block != NULL);
   return ramblock_ptr(ram_block, addr);
 }
 
@@ -316,7 +316,7 @@ bool cpu_physical_memory_test_and_clear_dirty(ram_addr_t start,
   page = start >> TARGET_PAGE_BITS;
 
   WITH_RCU_READ_LOCK_GUARD() {
-    bmbt_check(client == DIRTY_MEMORY_CODE);
+    assert(client == DIRTY_MEMORY_CODE);
     blocks = qatomic_rcu_read(&ram_list.dirty_memory[client]);
     ramblock = qemu_get_ram_block(start);
     /* Range sanity check on the ramblock */
@@ -510,7 +510,7 @@ void cpu_address_space_init(CPUState *cpu, int asidx, const char *prefix) {
 
   /* Target code should have set num_ases before calling us */
   assert(asidx < cpu->num_ases);
-  bmbt_check(cpu->num_ases == 2);
+  assert(cpu->num_ases == 2);
 
 #ifdef BMBT
   if (asidx == 0) {

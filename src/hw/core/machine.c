@@ -220,7 +220,7 @@ void machine_run_board_init(MachineState *machine) {
   }
 
   // PC doesn't check valid_cpu_types
-  bmbt_check(machine_class->valid_cpu_types == NULL);
+  assert(machine_class->valid_cpu_types == NULL);
   /* If the machine supports the valid_cpu_types check and the user
    * specified a CPU with -cpu check here that the user CPU is supported.
    */

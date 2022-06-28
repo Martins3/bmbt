@@ -192,7 +192,7 @@ static inline void stl_le_phys(AddressSpace *as, hwaddr addr, uint32_t val) {
  * @tlb_addr: TLB entry address (a CPUTLBEntry addr_read/write/code value)
  */
 static inline bool tlb_hit_page(target_ulong tlb_addr, target_ulong addr) {
-  bmbt_check(TARGET_PAGE_MASK == 0xfffff000LL);
+  assert(TARGET_PAGE_MASK == 0xfffff000LL);
   return addr == (tlb_addr & (TARGET_PAGE_MASK | TLB_INVALID_MASK));
 }
 
@@ -203,7 +203,7 @@ static inline bool tlb_hit_page(target_ulong tlb_addr, target_ulong addr) {
  * @tlb_addr: TLB entry address (a CPUTLBEntry addr_read/write/code value)
  */
 static inline bool tlb_hit(target_ulong tlb_addr, target_ulong addr) {
-  bmbt_check(TARGET_PAGE_MASK == 0xfffff000LL);
+  assert(TARGET_PAGE_MASK == 0xfffff000LL);
   return tlb_hit_page(tlb_addr, addr & TARGET_PAGE_MASK);
 }
 #endif

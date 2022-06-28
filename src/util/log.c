@@ -12,7 +12,7 @@ FILE *get_logfile(const char *f) {
   char filename[200] = "output/";
   strcat(filename, f);
   FILE *file = fopen(filename, "w");
-  bmbt_check(file != NULL);
+  assert(file != NULL);
   return file;
 #endif
 }

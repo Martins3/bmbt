@@ -187,13 +187,13 @@ struct APICCommonState {
 };
 
 static inline APICCommonClass *APIC_COMMON_GET_CLASS(APICCommonState *s) {
-  bmbt_check(s->info != NULL);
+  assert(s->info != NULL);
   return s->info;
 }
 
 static inline void APIC_COMMON_SET_CLASS(APICCommonState *s,
                                          APICCommonClass *info) {
-  bmbt_check(info != NULL);
+  assert(info != NULL);
   s->info = info;
 }
 

@@ -76,8 +76,6 @@ void *qemu_memalign(size_t alignment, size_t size);
  * machine classes that don't set hw_version.
  */
 #define QEMU_HW_VERSION "2.5+"
-
-#define bmbt_check(x) assert(x)
 extern bool tty_pass_through;
 extern bool pci_pass_through;
 #endif /* end of include guard: OSDEP_H_DXJTBG8M */

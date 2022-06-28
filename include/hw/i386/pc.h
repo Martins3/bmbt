@@ -166,13 +166,13 @@ typedef struct PCMachineClass {
 } PCMachineClass;
 
 static inline PCMachineClass *PC_MACHINE_GET_CLASS(PCMachineState *pcms) {
-  bmbt_check(pcms->pcmc != NULL);
+  assert(pcms->pcmc != NULL);
   return pcms->pcmc;
 }
 
 static inline void PC_MACHINE_SET_CLASS(PCMachineState *pcms,
                                         PCMachineClass *pcmc) {
-  bmbt_check(pcmc != NULL);
+  assert(pcmc != NULL);
   pcms->pcmc = pcmc;
 }
 

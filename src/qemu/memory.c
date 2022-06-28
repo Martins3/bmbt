@@ -11,11 +11,11 @@
 #define MR_CACHE 1
 
 static bool mr_initialized(const MemoryRegion *mr) {
-  bmbt_check(mr != NULL);
+  assert(mr != NULL);
   int is_mmio = mr->ops != NULL;
   int is_ram = mr->ram_block != NULL;
   if (mr->offset == 0) {
-    bmbt_check(strcmp(mr->name, "pc.ram low") == 0);
+    assert(strcmp(mr->name, "pc.ram low") == 0);
   }
   return is_mmio + is_ram == 1;
 }
@@ -23,7 +23,7 @@ static bool mr_initialized(const MemoryRegion *mr) {
 static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
                                  MemoryRegion *mr) {
 #ifndef RELEASE_VERSION
-  bmbt_check(mr_initialized(mr));
+  assert(mr_initialized(mr));
 #endif
   tcg_commit();
 
@@ -49,9 +49,9 @@ static void as_add_memory_regoin(AddressSpaceDispatch *dispatch,
   if (i == dispatch->segment_num) {
     if (i > 0) {
       MemoryRegion *last_mr = dispatch->segments[i - 1];
-      bmbt_check(mr->offset >= last_mr->offset + last_mr->size);
+      assert(mr->offset >= last_mr->offset + last_mr->size);
     } else {
-      bmbt_check(mr->offset >= 0);
+      assert(mr->offset >= 0);
     }
   }
 #endif
@@ -103,7 +103,7 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
                                            hwaddr offset) {
   for (int i = 0; i < dispatch->segment_num; ++i) {
     MemoryRegion *mr = dispatch->segments[i];
-    bmbt_check(mr != NULL);
+    assert(mr != NULL);
     if (mr_match(mr, offset)) {
       return mr;
     }
@@ -251,7 +251,7 @@ found:
   *xlat = offset - mr->offset;
 
   if (memory_region_is_ram(mr)) {
-    bmbt_check(plen != NULL);
+    assert(plen != NULL);
     hwaddr diff = mr->size - *xlat;
     *plen = MIN(diff, *plen);
   }
@@ -267,21 +267,21 @@ found:
 }
 
 void io_add_memory_region(const hwaddr offset, MemoryRegion *mr) {
-  bmbt_check(offset != 0 && mr->offset == 0);
-  bmbt_check(!memory_region_is_ram(mr));
+  assert(offset != 0 && mr->offset == 0);
+  assert(!memory_region_is_ram(mr));
   mr->offset = offset;
   as_add_memory_regoin(address_space_io.dispatch, mr);
 }
 
 void mmio_add_memory_region(const hwaddr offset, MemoryRegion *mr) {
-  bmbt_check(offset != 0 && mr->offset == 0);
-  bmbt_check(!memory_region_is_ram(mr));
+  assert(offset != 0 && mr->offset == 0);
+  assert(!memory_region_is_ram(mr));
   mr->offset = offset;
   as_add_memory_regoin(address_space_memory.dispatch, mr);
 }
 
 void mem_add_memory_region(MemoryRegion *mr) {
-  bmbt_check(memory_region_is_ram(mr));
+  assert(memory_region_is_ram(mr));
   as_add_memory_regoin(address_space_memory.dispatch, mr);
 }
 
@@ -289,8 +289,8 @@ void memory_region_init_io(MemoryRegion *mr, const MemoryRegionOps *ops,
                            void *opaque, const char *name, uint64_t size) {
   // QEMU permits ops == NULL. But in BMBT, if can't find a MemoryRegion, there
   // is a runtime error
-  bmbt_check(ops != NULL);
-  bmbt_check(size != 0);
+  assert(ops != NULL);
+  assert(size != 0);
 
   mr->readonly = false;
   mr->ram = false;
@@ -370,7 +370,7 @@ static void unassigned_io_setup() {
  *                             region
  */
 ram_addr_t memory_region_get_ram_addr(MemoryRegion *mr) {
-  bmbt_check(mr->ram_block != NULL);
+  assert(mr->ram_block != NULL);
   return mr->ram_block ? mr->ram_block->offset : RAM_ADDR_INVALID;
 }
 
@@ -671,7 +671,7 @@ static void *qemu_ram_ptr_length(RAMBlock *ram_block, ram_addr_t addr,
     addr -= block->offset;
   }
 #endif
-  bmbt_check(block != NULL);
+  assert(block != NULL);
   *size = MIN(*size, block->max_length - addr);
 
 #ifdef BMBT
@@ -902,9 +902,9 @@ static char __pc_bios[CONFIG_GUEST_BIOS_SIZE];
 // isa-bios / pc.bios's host point to file
 static void x86_bios_rom_init() {
   FILE *f = fopen("image/bios.bin", "r");
-  bmbt_check(f != NULL);
+  assert(f != NULL);
   int rc = fread(__pc_bios, sizeof(char), CONFIG_GUEST_BIOS_SIZE, f);
-  bmbt_check(rc == CONFIG_GUEST_BIOS_SIZE);
+  assert(rc == CONFIG_GUEST_BIOS_SIZE);
   fclose(f);
 
   RAMBlock *block = &ram_list.blocks[PC_BIOS_INDEX].block;
@@ -968,7 +968,7 @@ static void ram_init() {
   init_ram_block("smram", SMRAM_INDEX, false, SMRAM_C_BASE, SMRAM_C_SIZE);
 
   // pam expan and pam exbios
-  bmbt_check(PAM_EXPAN_SIZE == PAM_EXBIOS_SIZE);
+  assert(PAM_EXPAN_SIZE == PAM_EXBIOS_SIZE);
   for (int i = 0; i < PAM_EXPAN_NUM + PAM_EXBIOS_NUM; ++i) {
     const char *name = i < PAM_EXPAN_NUM ? "pam expan" : "pam exbios";
     hwaddr offset = SMRAM_C_END + i * PAM_EXPAN_SIZE;
@@ -978,10 +978,10 @@ static void ram_init() {
   init_ram_block("system bios", PAM_BIOS_INDEX, true, PAM_BIOS_BASE,
                  PAM_BIOS_SIZE);
 
-  bmbt_check(SMRAM_C_BASE + SMRAM_C_SIZE +
+  assert(SMRAM_C_BASE + SMRAM_C_SIZE +
                  PAM_EXPAN_SIZE * (PAM_EXPAN_NUM + PAM_EXBIOS_NUM) ==
              PAM_BIOS_BASE);
-  bmbt_check(ram_list.blocks[PAM_BIOS_INDEX].mr.offset +
+  assert(ram_list.blocks[PAM_BIOS_INDEX].mr.offset +
                  ram_list.blocks[PAM_BIOS_INDEX].mr.size ==
              X86_BIOS_MEM_SIZE);
 

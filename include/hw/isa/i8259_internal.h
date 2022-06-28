@@ -66,12 +66,12 @@ void pic_reset_common(PICCommonState *s);
 PICCommonState *i8259_init_chip(const char *name, bool master);
 
 static inline PICClass *PIC_GET_CLASS(PICCommonState *i) {
-  bmbt_check(i->pc != NULL);
+  assert(i->pc != NULL);
   return i->pc;
 }
 
 static inline void PIC_SET_CLASS(PICCommonState *i, PICClass *pc) {
-  bmbt_check(pc != NULL);
+  assert(pc != NULL);
   i->pc = pc;
 }
 
