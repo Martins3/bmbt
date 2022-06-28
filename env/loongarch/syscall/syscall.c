@@ -22,6 +22,16 @@ _Noreturn void kernel_dump() {
   idle();
 }
 
+#include "cpu.h"
+void show_guest_ip() {
+  if (current_cpu != NULL) {
+    CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
+    kern_printf("Guest ip : %x\n", env->segs[R_CS].base + env->eip);
+  } else {
+    kern_printf("current_cpu is NULL\n");
+  }
+}
+
 _Noreturn void __kern_assert_fail(const char *expr, const char *file, int line,
                                   const char *func) {
   kern_printf("Assertion failed: %s (%s: %s: %d)\n", expr, file, func, line);
@@ -54,6 +64,7 @@ long kernel_syscall(long arg0, long arg1, long arg2, long arg3, long arg4,
   case SYS_exit_group:
   case SYS_exit:
     kern_printf("!!! bmbt never call exit !!!\n");
+    show_guest_ip();
     kernel_dump();
     break;
   case SYS_brk:
