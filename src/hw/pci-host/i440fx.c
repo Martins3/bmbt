@@ -26,7 +26,7 @@
  * I440FX chipset data sheet.
  * https://wiki.qemu.org/File:29054901.pdf
  */
-#include <env/device.h>
+#include <environment/device.h>
 #include <exec/memory.h>
 #include <exec/ram_addr.h>
 #include <hw/i386/pc.h>

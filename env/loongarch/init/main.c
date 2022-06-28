@@ -3,8 +3,8 @@
 #include <asm/irq.h>
 #include <asm/page.h>
 #include <asm/time.h>
-#include <env/cpu.h>
-#include <env/device.h>
+#include <environment/cpu.h>
+#include <environment/device.h>
 #include <linux/cpu.h>
 #include <linux/irqflags.h>
 #include <linux/pci-ecam.h>

@@ -10,7 +10,7 @@
 #include "../../include/sysemu/reset.h"
 #include "../../include/sysemu/tcg.h"
 #include <capstone/capstone.h>
-#include <env/memory.h>
+#include <environment/memory.h>
 #include <hw/i386/ioapic.h>
 #include <hw/timer/i8254.h>
 

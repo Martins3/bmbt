@@ -6,7 +6,7 @@
 #include <asm/ptrace.h>
 #include <asm/time.h>
 #include <assert.h>
-#include <env/timer.h>
+#include <environment/timer.h>
 #include <exec/helper-proto.h>
 #include <limits.h>
 #include <linux/irqflags.h>

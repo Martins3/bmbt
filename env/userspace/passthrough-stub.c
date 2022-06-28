@@ -1,7 +1,7 @@
 #include <assert.h>
-#include <env/cpu.h>
-#include <env/device.h>
-#include <env/memory.h>
+#include <environment/cpu.h>
+#include <environment/device.h>
+#include <environment/memory.h>
 #include <inttypes.h>
 #include <qemu/units.h>
 #include <sys/mman.h>

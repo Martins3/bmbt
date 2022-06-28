@@ -1,7 +1,7 @@
 #include <asm/addrspace.h>
 #include <asm/mach-la64/boot_param.h>
 #include <assert.h>
-#include <env/memory.h>
+#include <environment/memory.h>
 #include <exec/hwaddr.h>
 #include <exec/ram_addr.h>
 #include <linux/pfn.h>
