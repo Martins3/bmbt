@@ -59,15 +59,18 @@
     - 原来通过 `cpu_interrupt_handler` 全局变量赋值的设计过于鬼畜和充满误导性，让其直接调用 `tcg_handle_interrupt`
 33. `run_on_cpu`
     - `run_on_cpu` 需要需要等待到 vCPU 将 hook 指向完成之后才会继续，其用户在 BMBT 模式下都消失了，这个函数直接被移除掉了
-    - 条件变量的逻辑不能简单的修改为: 前面 boardcast 后面接受的模式, 所以讲牵连的 qemu_work_cond 也需要被一并被删除掉的
+    - 条件变量的逻辑不能简单的修改为: 前面 boardcast 后面接受的模式, 所以讲牵连的 `qemu_work_cond` 也需要被一并被删除掉的
 34. iotlb
-    - QEMU 本身存在 subpage 这让将 IO 访问也放到 TLB 中，但是现在 subpage 机制取消掉了，所以无法继续使用 TOTLB 机制了
-    - 删除 `memory_region_section_get_iotlb`
-    - 删除 `iotlb_to_section`
-    - 向 iotlb 中本来装入的是 physical section number, 现在装入的是 magic
-    - 原本 io 的 CPUTLBEntry::addend 装入的是 0，现在需要装入 paddr
-    - `io_readx` 和 `io_writex` 从 CPUTLBEntry::addend 装入的 paddr 重新 `address_space_translate`
-    - 在 `address_space_translate_for_iotlb` 中，如果是 ram，那么返回一个 `iotlb_mr` 就可以了
+    - QEMU 本身存在 subpage 这让将 IO 访问也放到 TLB 中，这样如果 TLB 命中的时候无需重新查询一次
+    - 但是 subpage 机制会让 BMBT 难以简化 memory model ，所以将 iotlb 机制删除掉
+      - 删除 `memory_region_section_get_iotlb`
+      - 删除 `iotlb_to_section`
+    - 理解 iotlb 的关键是 `io_readx` / `io_writex` 和 `tlb_set_page_with_attrs`
+    - softtlb 一个项中可以存储两个信息，在 `tlb_set_page_with_attrs` 中被叫做 `iotlb` 和 `addend`
+      - 向 `iotlb` 中低`TARGET_PAGE_BITS` 本来装入的是 physical section number，剩下的部分装入的是 `xlat`, 从而可以无需 memory region 查询，直接找到目标 memory region 和在 memory region 中的偏移，现在装入的是 magic
+      - 原本 io 的 `CPUTLBEntry::addend` 装入的是 0，现在需要装入 paddr，从而在 `io_readx` / `io_writex` 中计算出来真正的 hwaddr
+    - 因为 QEMU 的 softtlb 机制在执行的时候，如果命中的空间是 io，其总是会进入到慢路径，在 `io_readx` / `io_writex` 重新调用 `address_space_translate` 确定 mr
+      - 在 `address_space_translate_for_iotlb` 中，如果不是 ram，那么返回一个 `__iotlb_mr`, `__iotlb_mr` 只是为了减少对于 `tlb_set_page_with_attrs` 的修改而已
 35. QemuEvent `QEMUTimerList::timers_done_ev`
     - `qemu_clock_enable` 中需要 `timerlist_run_timers` 执行完成才可以可以返回，表示 timerlist 确实结束了呀
 36. `qemu_cpu_is_self`
@@ -77,7 +80,7 @@
       - tlb flush 发生在 vCPU thread 的，比如 helper, 所以无需考虑
       - interrupt 因为 vapic 的移除，可以简化掉
 37. `timerlist_notify`
-    - 如果添加的 timer 当前的 soonest 的 timer 还要早，那么需要尽快执行一下 qemu_clock_run_timers
+    - 如果添加的 timer 当前的 soonest 的 timer 还要早，那么需要尽快执行一下 `qemu_clock_run_timers`
     - [ ] 在 bare metal 状态下实现，这个问题需要重新思考
 39. `verify_BQL_held`
     - 我们认为 `vm_clock_seqlock` `vm_clock_lock` 这两个 lock 在 bmbt 中总是会 vCPU thread 已经持有了 BQL 或者在 signal handler 中调用
