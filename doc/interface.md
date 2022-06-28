@@ -160,3 +160,5 @@
     - `pci_bus::busnum` 最后的作用体现在 `pci_loongson_map_bus` 中
 67. apci
     - 因为没有支持 ACPI，和硬件相关的配置都是硬编码的，会使用 [ACPI] 将这些位置标注出来
+68. `serial_ioport_pass_write`
+    - 因为龙芯的串口和通用的串口不同，当 Guest 设置串口频率的时候，不能直接进行直通，而需要进行调整一下

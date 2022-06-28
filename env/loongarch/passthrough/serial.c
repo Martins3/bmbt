@@ -26,6 +26,7 @@ static uint64_t serial_ioport_pass_read(void *opaque, hwaddr addr,
   return readb(LS_ISA_SERIAL_IO_BASE + addr);
 }
 
+// [interface 68]
 static void serial_ioport_pass_write(void *opaque, hwaddr addr, uint64_t val,
                                      unsigned size) {
   assert(size == 1);
