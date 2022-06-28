@@ -2,6 +2,7 @@
 #include <asm/regdef.h>
 #include <asm/asm.h>
 #include <linux/stack.h>
+#include <linux/const.h>
 #include <linux/linkage.h>
 .section .text
 

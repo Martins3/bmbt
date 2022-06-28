@@ -1,3 +1,4 @@
+#include <asm/addrspace.h>
 #include <asm/mach-la64/boot_param.h>
 #include <assert.h>
 #include <env/memory.h>

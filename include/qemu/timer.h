@@ -8,6 +8,10 @@
 #include <time.h>
 #include <uglib.h>
 
+#ifdef ENV_KERNEL
+#include <asm/loongarchregs.h> // for drdtime
+#endif
+
 #define NANOSECONDS_PER_SECOND 1000000000LL
 
 /* timers */

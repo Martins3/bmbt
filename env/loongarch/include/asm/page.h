@@ -1,7 +1,7 @@
 #ifndef PAGE_H_WY7U6KLT
 #define PAGE_H_WY7U6KLT
 
-#include <asm/loongarchregs.h>
+#include <autoconf.h>
 #include <linux/const.h>
 
 #ifdef CONFIG_PAGE_SIZE_4KB
