@@ -20,8 +20,6 @@ setup_src:
 		echo "$(KERNEL_PATH) not found, try to install one"; \
 		tar -xvf linux.tar.xz -C $(KERNEL_PATH) --strip-components 1; \
 	fi
-	# skip "set_video" because we didn't implemented the devices
-	sed -i 's/set_video/\/\/ skip this /' $(KERNEL_PATH)/arch/x86/boot/main.c
 
 minimal_config:
 	# copy modified kconfig
@@ -32,7 +30,6 @@ minimal_config:
 def_config:
 	if [[ ! -f $(KERNEL_PATH)/.config ]]; then \
 		make -C $(KERNEL_PATH) i386_defconfig; \
-                # TMP_TODO find a better way to add debug info config to guest kernel \
 	        sed -i 's/# CONFIG_DEBUG_INFO is not set/CONFIG_DEBUG_INFO=y\n# CONFIG_DEBUG_INFO_REDUCED is not set\n# CONFIG_DEBUG_INFO_SPLIT is not set\n# CONFIG_DEBUG_INFO_DWARF4 is not set\n# CONFIG_GDB_SCRIPTS is not set/' $(KERNEL_PATH)/.config; \
 	fi
 

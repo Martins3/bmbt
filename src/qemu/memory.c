@@ -95,12 +95,7 @@ static inline bool mr_match(const MemoryRegion *mr, hwaddr offset) {
 
 static void unimplemented_io(AddressSpaceDispatch *dispatch, hwaddr offset) {
   printf("unimplemented memory access in [%s : %lx]\n", dispatch->name, offset);
-  if (current_cpu != NULL) {
-    CPUX86State *env = ((CPUX86State *)current_cpu->env_ptr);
-    printf("guest ip : %x\n", env->segs[R_CS].base + env->eip);
-  } else {
-    printf("current_cpu is NULL\n");
-  }
+  exit(1);
 }
 
 // [BMBT_OPTIMIZE 0]
@@ -166,6 +161,46 @@ static inline MemoryRegion *isa_bios_access(hwaddr offset, hwaddr *xlat,
 
 static MemoryRegion low_vga;
 
+uint64_t dummy_vga_mem_read(void *opaque, hwaddr addr, unsigned size) {
+  return -1ULL;
+}
+
+void dummy_vga_mem_write(void *opaque, hwaddr addr, uint64_t data,
+                         unsigned size) {
+  return;
+}
+
+const MemoryRegionOps vga_mem_ops = {
+    .read = dummy_vga_mem_read,
+    .write = dummy_vga_mem_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .impl =
+        {
+            .min_access_size = 1,
+            .max_access_size = 1,
+        },
+};
+
+void init_dummy_vga() {
+  memory_region_init_io(&low_vga, &vga_mem_ops, NULL, "vga-lowmem", 0x20000);
+  QEMU_BUILD_BUG_ON(0x20000 != SMRAM_C_END - SMRAM_C_BASE);
+  /* can't call mmio_add_memory_region(SMRAM_C_BASE, &low_vga), because the
+   * low_vga will overlap with normal memory */
+  low_vga.offset = SMRAM_C_BASE;
+
+  /**
+   * 00000000000003b4-00000000000003b5 (prio 0, i/o): vga
+   * 00000000000003ba-00000000000003ba (prio 0, i/o): vga
+   * 00000000000003c0-00000000000003cf (prio 0, i/o): vga
+   * 00000000000003d4-00000000000003d5 (prio 0, i/o): vga
+   * 00000000000003da-00000000000003da (prio 0, i/o): vga
+   */
+  MemoryRegion *vga_port = g_new0(MemoryRegion, 1);
+  memory_region_init_io(vga_port, &vga_mem_ops, NULL, "vga_port",
+                        0x3da - 0x3b4);
+  io_add_memory_region(0x3b4, vga_port);
+}
+
 #ifdef MR_CACHE
 MemoryRegion *cache1 = NULL;
 MemoryRegion *cache2 = NULL;
@@ -204,11 +239,6 @@ static MemoryRegion *mem_mr_look_up(struct AddressSpace *as, hwaddr offset,
     if (as->smm && !smram_enable && smram_region_enable) {
       mr = &low_vga;
     }
-  }
-
-  if (mr == &low_vga) {
-    unimplemented_io(as->dispatch, offset);
-    exit(0);
   }
 
   if (mr == NULL) {
@@ -354,23 +384,16 @@ MemoryRegion *address_space_translate_for_iotlb(CPUState *cpu, int asidx,
                                                 hwaddr *plen, MemTxAttrs attrs,
                                                 int *prot) {
   // [interface 34]
-  RAMBlock *block;
-  bool is_ram = false;
-  RAMBLOCK_FOREACH(block) {
-    if (addr >= block->mr->offset &&
-        addr < block->mr->offset + block->max_length) {
-      is_ram = true;
-      break;
-    }
-  }
-  if (!is_ram) {
+  AddressSpace *as = cpu->cpu_ases[asidx].as;
+  MemoryRegion *mr = as->mr_look_up(as, addr, xlat, plen);
+  if (mr->ram) {
+    return mr;
+  } else {
     // memory reion look up take up in io_readx and io_writex
     // plen and xlat is unused
     *plen = TARGET_PAGE_SIZE;
     return &__iotlb_mr;
   }
-  AddressSpace *as = cpu->cpu_ases[asidx].as;
-  return as->mr_look_up(as, addr, xlat, plen);
 }
 
 // is_write and attrs are used for iommu
@@ -1019,5 +1042,6 @@ void memory_map_init() {
   address_space_smm_memory.smm = true;
 
   ram_init();
+  init_dummy_vga();
   unassigned_io_setup();
 }
