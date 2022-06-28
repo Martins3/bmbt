@@ -30,10 +30,7 @@ static struct pci_bus __pci_bus;
 #define pci_unlock_config(f) raw_spin_unlock_irqrestore(&pci_lock, f)
 #endif
 
-// TMP_TODO 将 bdf & 0xff 的装换为 macro 吧
-// TMP_TODO 2 似乎这个检查会触发错误，不知道为什么?
-/* if (cpu_has_hypervisor)   */
-/*   assert(bus->number == 0); */
+#define devfn(bdf) (bdf & 0xff)
 
 #define PCI_OP_READ(size, type, len)                                           \
   int pci_bus_read_config_##size(u16 bdf, int pos, type *value) {              \
@@ -45,7 +42,7 @@ static struct pci_bus __pci_bus;
     if (PCI_##size##_BAD)                                                      \
       return PCIBIOS_BAD_REGISTER_NUMBER;                                      \
     pci_lock_config(flags);                                                    \
-    res = bus->ops->read(bus, bdf & 0xff, pos, len, &data);                    \
+    res = bus->ops->read(bus, devfn(bdf), pos, len, &data);                    \
     *value = (type)data;                                                       \
     pci_unlock_config(flags);                                                  \
     return res;                                                                \
@@ -60,7 +57,7 @@ static struct pci_bus __pci_bus;
     if (PCI_##size##_BAD)                                                      \
       return PCIBIOS_BAD_REGISTER_NUMBER;                                      \
     pci_lock_config(flags);                                                    \
-    res = bus->ops->write(bus, bdf & 0xff, pos, len, value);                   \
+    res = bus->ops->write(bus, devfn(bdf), pos, len, value);                   \
     pci_unlock_config(flags);                                                  \
     return res;                                                                \
   }

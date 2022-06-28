@@ -155,3 +155,6 @@
     - 被删除了，其作用是在 `ext_set_irq_affinity` 中确定最后 CPU 指向谁，但是现在只有一个 CPU
 65. `eiointc_domain_init`
     - 这里是手动 enable 两个 memory node ，测试了一下，感觉这两句话并没有什么作用
+66. `__pci_bus`
+    - 简单地分析内核的代码，实际上每一个 PCI bus 的属性是可以不同的，但是目前测试发现 PCI bus 的属性总是相同的
+    - `pci_bus::busnum` 最后的作用体现在 `pci_loongson_map_bus` 中
