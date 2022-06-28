@@ -1,10 +1,9 @@
 #ifndef CPUMASK_H_QTH9015G
 #define CPUMASK_H_QTH9015G
 
-// TMP_TODO we will fix the weird header problem
-#include "../../../include/qemu/bitmap.h"
 #include <autoconf.h>
 #include <linux/threads.h>
+#include <qemu/bitmap.h>
 
 typedef struct cpumask {
   DECLARE_BITMAP(bits, NR_CPUS);
