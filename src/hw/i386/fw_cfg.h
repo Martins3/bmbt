@@ -8,7 +8,7 @@
 
 #ifndef HW_I386_FW_CFG_H
 #define HW_I386_FW_CFG_H
-#include "../../../include/hw/nvram/fw_cfg.h"
+#include <hw/nvram/fw_cfg.h>
 
 #define FW_CFG_ACPI_TABLES (FW_CFG_ARCH_LOCAL + 0)
 #define FW_CFG_SMBIOS_ENTRIES (FW_CFG_ARCH_LOCAL + 1)

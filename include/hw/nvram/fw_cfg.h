@@ -1,11 +1,11 @@
 #ifndef FW_CFG_H
 #define FW_CFG_H
-#include "../../exec/hwaddr.h"
-#include "../../exec/memory.h"
-#include "../../hw/boards.h"
-#include "../../standard-headers/linux/qemu_fw_cfg.h"
-#include "../../sysemu/dma.h"
-#include "../../sysemu/sysemu.h"
+#include <exec/hwaddr.h>
+#include <exec/memory.h>
+#include <hw/boards.h>
+#include <standard-headers/linux/qemu_fw_cfg.h>
+#include <sysemu/dma.h>
+#include <sysemu/sysemu.h>
 #include <unistd.h>
 
 #define TYPE_FW_CFG "fw_cfg"

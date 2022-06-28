@@ -1,15 +1,15 @@
 #ifndef CPU_H_5RAXENPS
 #define CPU_H_5RAXENPS
 
-#include "../../exec/hwaddr.h"
-#include "../../exec/memattrs.h"
-#include "../../exec/memory.h"
-#include "../../qemu/atomic.h"
-#include "../../qemu/bitmap.h"
-#include "../../qemu/queue.h"
-#include "../../qemu/thread.h"
+#include <exec/hwaddr.h>
+#include <exec/memattrs.h>
+#include <exec/memory.h>
 #include <inttypes.h> // for VADDR_PRIx
+#include <qemu/atomic.h>
+#include <qemu/bitmap.h>
 #include <qemu/osdep.h>
+#include <qemu/queue.h>
+#include <qemu/thread.h>
 #include <setjmp.h>
 
 /**

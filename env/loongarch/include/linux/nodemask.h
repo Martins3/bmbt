@@ -1,7 +1,7 @@
 #ifndef NODEMASK_H_HBVICV0E
 #define NODEMASK_H_HBVICV0E
 
-#include "../../../include/qemu/bitmap.h"
+#include <qemu/bitmap.h>
 #include <linux/numa.h>
 
 typedef struct {

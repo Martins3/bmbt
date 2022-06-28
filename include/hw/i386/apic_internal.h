@@ -20,9 +20,9 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>
  */
 #include "cpu.h"
-#include "../../exec/hwaddr.h"
-#include "../../qemu/timer.h"
-#include "../pci/msi.h"
+#include <exec/hwaddr.h>
+#include <hw/pci/msi.h>
+#include <qemu/timer.h>
 
 /* APIC Local Vector Table */
 #define APIC_LVT_TIMER 0

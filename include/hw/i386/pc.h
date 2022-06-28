@@ -1,16 +1,16 @@
 #ifndef PC_H_0VFJYDT2
 #define PC_H_0VFJYDT2
 
-#include "../../exec/hwaddr.h"
-#include "../../hw/hotplug.h"
-#include "../../qemu/notify.h"
-#include "../../sysemu/numa.h"
-#include "../irq.h"
-#include "../isa/isa.h"
-#include "ioapic.h"
-#include "x86.h"
+#include <exec/hwaddr.h>
+#include <hw/hotplug.h>
+#include <hw/i386/ioapic.h>
+#include <hw/i386/x86.h>
+#include <hw/irq.h>
+#include <hw/isa/isa.h>
 #include <hw/pci/pci.h>
 #include <hw/rtc/mc146818rtc.h>
+#include <qemu/notify.h>
+#include <sysemu/numa.h>
 
 /* Global System Interrupts */
 

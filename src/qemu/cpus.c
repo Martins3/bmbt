@@ -1,10 +1,10 @@
-#include "../../include/exec/cpu-all.h"
-#include "../../include/hw/boards.h"
-#include "../../include/qemu/main-loop.h"
-#include "../../include/qemu/rcu.h"
 #include "../i386/LATX/include/latx-config.h"
 #include "../tcg/tcg.h"
 #include <env/cpu.h>
+#include <exec/cpu-all.h>
+#include <hw/boards.h>
+#include <qemu/main-loop.h>
+#include <qemu/rcu.h>
 #include <qemu/seqloch.h>
 #include <qemu/timer.h>
 
