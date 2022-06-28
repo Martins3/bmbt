@@ -310,6 +310,7 @@ void pci_device_reset(PCIDevice *dev) {
  * have been reset qdev_reset_all-ed already.
  */
 static PCIBus __pci_bus;
+// [interface 66]
 void pcibus_reset() {
   PCIBus *bus = &__pci_bus;
   int i;

@@ -32,8 +32,7 @@
 #define X86_MSI_ADDR_BASE_LO 0xfee0100c
 #define X86_MSI_ENTRY_DATA_FLAG 0x4100
 
-// TMP_TODO move to somewhere suitable
-// arch/x86/boot/early_serial_console.c
+// defined in arch/x86/boot/early_serial_console.c
 #define DLAB 0x80
 
 #define TXR 0 /*  Transmit register (WRITE) */
