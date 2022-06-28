@@ -53,7 +53,7 @@ void pci_config_pass_write(uint32_t addr, uint32_t val, int l) {
    * There's no need to create BMBT_PCIExpressDevice for nonexistent devices.
    */
   if (!ranges_overlap(config_addr, l, 0, PCI_BASE_ADDRESS_0)) {
-    int idx = add_PCIe_devices(get_bdf(addr));
+    int idx = add_pcie_devices(get_bdf(addr));
 
     val = msi_translate(addr, val, true);
 
@@ -76,7 +76,7 @@ uint32_t pci_config_pass_read(uint32_t addr, int l) {
 
   if (!ranges_overlap(config_addr, l, 0, PCI_BASE_ADDRESS_0)) {
     bool unused;
-    int idx = add_PCIe_devices(get_bdf(addr));
+    int idx = add_pcie_devices(get_bdf(addr));
     u32 val = pci_config_read(addr, l);
 
     val = pcie_bridge_window_translate(idx, addr, l, val, false);

@@ -65,6 +65,7 @@ int bdf_to_idx(u16 bdf) {
   return idx;
 }
 
+// yes, this function is almost identical with src/hw/pci/pci.c:pci_bar
 static u32 bmbt_pci_bar(BMBT_PCIExpressDevice *pci, int region_num) {
   if (region_num != PCI_ROM_SLOT) {
     return PCI_BASE_ADDRESS_0 + region_num * 4;
@@ -153,9 +154,8 @@ static void pci_bios_check_devices(BMBT_PCIExpressDevice *pci) {
   }
 }
 
-// TMP_TODO 将这个函数名从 add_PCIe_devices 修改为 add_pcie_devices
 /* reference seabios/src/hw/pcidevice.c:pci_probe_devices */
-int add_PCIe_devices(u16 bdf) {
+int add_pcie_devices(u16 bdf) {
   u32 classrev;
   BMBT_PCIExpressDevice *pci;
   int idx = try_bdf_to_idx(bdf);
@@ -169,10 +169,15 @@ int add_PCIe_devices(u16 bdf) {
   pci_bus_read_config_dword(bdf, PCI_CLASS_REVISION, &classrev);
   pci->class = classrev >> 16;
   pci_bus_read_config_byte(bdf, PCI_HEADER_TYPE, &(pci->header_type));
-  printf("[huxueshi:%s:%d] bdf=%x type=%d\n", __FUNCTION__, __LINE__, pci->bdf,
-         is_pci_bridge(idx));
 
-  // TMP_TODO 应该对于 header type 做点假设才可以的啊
+#ifndef RELEASE_VERSION
+  // if assert failed, it means we have misunderstood the PCI_HEADER_TYPE and
+  // PCI_CLASS_REVISION
+  if (pci->header_type == PCI_HEADER_TYPE_BRIDGE)
+    assert(is_pci_bridge(idx));
+  if (!(pci->header_type == PCI_HEADER_TYPE_BRIDGE))
+    assert(!is_pci_bridge(idx));
+#endif
 
   pci_bios_check_devices(pci);
 
@@ -187,7 +192,6 @@ static bool is_bar_access(BMBT_PCIExpressDevice *pci, int l,
     return false;
   }
 
-  // TMP_TODO 使用 is_pci_bridge 来替代一下
   if (pci->class == PCI_CLASS_BRIDGE_PCI) {
     return ranges_overlap(config_addr, l, PCI_BASE_ADDRESS_0, 8) ||
            ranges_overlap(config_addr, l, PCI_ROM_ADDRESS1, 4);
@@ -287,7 +291,7 @@ u32 pcie_bridge_window_translate(int idx, uint32_t addr, int l, u32 val,
 
 u32 pcie_bar_translate(uint32_t addr, int l, u32 val, bool is_write,
                        bool *msix_table_updated) {
-  int idx = add_PCIe_devices(get_bdf(addr));
+  int idx = add_pcie_devices(get_bdf(addr));
   u32 config_addr = get_config_addr(addr);
   BMBT_PCIExpressDevice *pci = get_pcie_dev(idx);
   *msix_table_updated = false;

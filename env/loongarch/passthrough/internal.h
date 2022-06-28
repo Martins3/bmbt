@@ -30,7 +30,7 @@ typedef struct {
   BAR bar[PCI_NUM_REGIONS];
 } BMBT_PCIExpressDevice;
 
-int add_PCIe_devices(u16 bdf);
+int add_pcie_devices(u16 bdf);
 int msix_table_overlapped(hwaddr addr, unsigned size);
 int get_msix_table_entry_offset(hwaddr addr, int idx);
 u32 pcie_bar_translate(uint32_t addr, int l, u32 val, bool is_write,
