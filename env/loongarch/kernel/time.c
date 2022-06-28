@@ -18,11 +18,11 @@ static int constant_set_state_oneshot() {
   return 0;
 }
 
-// TMP_TODO 是不是，可以是
 int constant_timer_next_event(unsigned long delta) {
   unsigned long timer_config;
   delta = delta / NS_PER_CYCLE;
   delta &= CSR_TCFG_VAL;
+  // if delta == 0, the loongarch timer may not trigger the interrupt
   if (delta == 0) {
     delta = 10 << CSR_TCFG_VAL_SHIFT;
   }
