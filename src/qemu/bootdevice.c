@@ -73,7 +73,7 @@ static char *get_boot_device_path(DeviceState *dev, bool ignore_suffixes,
                                   const char *suffix) {
   // char *d;
   char *devpath = NULL, *s = NULL, *bootpath;
-  bmbt_check(dev == NULL);
+  assert(dev == NULL);
 
   if (dev) {
 #ifdef BMBT

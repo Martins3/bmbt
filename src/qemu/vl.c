@@ -178,7 +178,7 @@ static PCMachineClass __pcmc;
 static bool machine_inited = false;
 
 MachineState *qdev_get_machine() {
-  bmbt_check(machine_inited);
+  assert(machine_inited);
   return MACHINE(&__pcms);
 }
 
@@ -302,7 +302,7 @@ void qemu_init() {
 
   configure_rtc();
 
-  bmbt_check(first_cpu == NULL);
+  assert(first_cpu == NULL);
 
   qemu_init_cpu_loop();
   qemu_mutex_lock_iothread();

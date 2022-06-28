@@ -173,7 +173,7 @@ static void pc_init1(MachineState *machine, const char *host_type,
     pcms->vmport = xen_enabled() ? ON_OFF_AUTO_OFF : ON_OFF_AUTO_ON;
   }
 
-  bmbt_check(pcms->vmport == ON_OFF_AUTO_ON);
+  assert(pcms->vmport == ON_OFF_AUTO_ON);
 
   /* init basic PC hardware */
   pc_basic_device_init(isa_bus, x86ms->gsi, &rtc_state, true,

@@ -97,7 +97,7 @@ static inline void cpu_physical_memory_set_dirty_flag(ram_addr_t addr,
 
   RCU_READ_LOCK_GUARD();
 
-  bmbt_check(client == DIRTY_MEMORY_CODE);
+  assert(client == DIRTY_MEMORY_CODE);
   blocks = qatomic_rcu_read(&ram_list.dirty_memory[client]);
 
   set_bit_atomic(offset, blocks->blocks[idx]);
@@ -117,7 +117,7 @@ static inline bool cpu_physical_memory_get_dirty(ram_addr_t start,
   page = start >> TARGET_PAGE_BITS;
 
   WITH_RCU_READ_LOCK_GUARD() {
-    bmbt_check(client == DIRTY_MEMORY_CODE);
+    assert(client == DIRTY_MEMORY_CODE);
     blocks = qatomic_rcu_read(&ram_list.dirty_memory[client]);
 
     idx = page / DIRTY_MEMORY_BLOCK_SIZE;
@@ -260,7 +260,7 @@ static inline uint8_t
 cpu_physical_memory_range_includes_clean(ram_addr_t start, ram_addr_t length,
                                          uint8_t mask) {
   uint8_t ret = 0;
-  bmbt_check((mask & (1 << DIRTY_MEMORY_CODE)) == (1 << DIRTY_MEMORY_CODE));
+  assert((mask & (1 << DIRTY_MEMORY_CODE)) == (1 << DIRTY_MEMORY_CODE));
 
 #ifdef BMBT
   if (mask & (1 << DIRTY_MEMORY_VGA) &&

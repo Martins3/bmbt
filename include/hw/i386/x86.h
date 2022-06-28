@@ -53,13 +53,13 @@ typedef struct {
 } X86MachineState;
 
 static inline X86MachineClass *X86_MACHINE_GET_CLASS(X86MachineState *x86ms) {
-  bmbt_check(x86ms->x86mc != NULL);
+  assert(x86ms->x86mc != NULL);
   return x86ms->x86mc;
 }
 
 static inline void X86_MACHINE_SET_CLASS(X86MachineState *x86ms,
                                          X86MachineClass *x86mc) {
-  bmbt_check(x86mc != NULL);
+  assert(x86mc != NULL);
   x86ms->x86mc = x86mc;
 }
 

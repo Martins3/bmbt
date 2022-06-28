@@ -416,8 +416,8 @@ void qemu_init_vcpu(CPUState *cpu) {
   cpu->nr_threads = ms->smp.threads;
   cpu->stopped = true;
 
-  bmbt_check(cpu->nr_cores == 1);
-  bmbt_check(cpu->nr_threads == 1);
+  assert(cpu->nr_cores == 1);
+  assert(cpu->nr_threads == 1);
 
 #ifdef BMBT
   cpu->random_seed = qemu_guest_random_seed_thread_part1();

@@ -732,7 +732,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
   } else {
     /* I/O does not; force the host address to NULL. */
     // [interface 34]
-    bmbt_check(is_iotlb_mr(mr));
+    assert(is_iotlb_mr(mr));
     addend = paddr;
   }
 
@@ -753,7 +753,7 @@ void tlb_set_page_with_attrs(CPUState *cpu, target_ulong vaddr, hwaddr paddr,
   } else {
     // [interface 34]
     /* I/O or ROMD */
-    bmbt_check(is_iotlb_mr(mr));
+    assert(is_iotlb_mr(mr));
     iotlb = IOTLB_MAGIC;
     /*
      * Writes to romd devices must go through MMIO to enable write.
@@ -897,7 +897,7 @@ static void tlb_fill(CPUState *cpu, target_ulong addr, int size,
 static void iotlb_check(CPUArchState *env, CPUIOTLBEntry *iotlbentry,
                         target_ulong vaddr) {
   target_ulong vaddr_page = vaddr & TARGET_PAGE_MASK;
-  bmbt_check(iotlbentry->addr + vaddr_page == IOTLB_MAGIC);
+  assert(iotlbentry->addr + vaddr_page == IOTLB_MAGIC);
   // CPUState *cpu = env_cpu(env);
   MemTxAttrs cur_attrs = cpu_get_mem_attrs(env);
   if (cur_attrs.secure != iotlbentry->attrs.secure) {

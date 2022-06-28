@@ -415,7 +415,7 @@ static size_t tcg_n_regions(void) {
 #if !defined(CONFIG_USER_ONLY)
   MachineState *ms = qdev_get_machine();
   unsigned int max_cpus = ms->smp.max_cpus;
-  bmbt_check(max_cpus == 1);
+  assert(max_cpus == 1);
 #endif
   if (max_cpus == 1 || !qemu_tcg_mttcg_enabled()) {
     return 1;

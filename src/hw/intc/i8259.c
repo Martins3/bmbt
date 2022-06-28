@@ -333,7 +333,7 @@ void pic_realize(PICCommonState *s) {
   qdev_init_gpio_out(&s->gpio, s->int_out, ARRAY_SIZE(s->int_out));
   qdev_init_gpio_in(&s->gpio, pic_set_irq, s, 8);
 
-  bmbt_check(pc->parent_realize == pic_common_realize);
+  assert(pc->parent_realize == pic_common_realize);
   pc->parent_realize(s);
 }
 
@@ -347,7 +347,7 @@ qemu_irq *i8259_init(qemu_irq parent_irq) {
   isadev = i8259_init_chip(TYPE_I8259, true);
 
   qdev_connect_gpio_out(&isadev->gpio, 0, parent_irq);
-  bmbt_check(parent_irq == isadev->int_out[0]);
+  assert(parent_irq == isadev->int_out[0]);
   for (i = 0; i < 8; i++) {
     irq_set[i] = qdev_get_gpio_in(&isadev->gpio, i);
   }
