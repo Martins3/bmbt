@@ -1,8 +1,8 @@
-#include "../../../include/exec/hwaddr.h"
-#include "../../../include/hw/irq.h"
-#include "../../../include/hw/isa/i8259_internal.h"
-#include "../../../include/hw/isa/isa.h"
-#include "../../../include/qemu/log.h"
+#include <exec/hwaddr.h>
+#include <hw/irq.h>
+#include <hw/isa/i8259_internal.h>
+#include <hw/isa/isa.h>
+#include <qemu/log.h>
 
 #define TYPE_I8259 "isa-i8259"
 PICCommonState *isa_pic;

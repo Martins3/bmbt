@@ -1,11 +1,11 @@
-#include "../../../include/hw/nvram/fw_cfg.h"
-#include "../../../include/hw/i386/pc.h"
-#include "../../../include/qemu/bitops.h"
-#include "../../../include/qemu/cutils.h"
-#include "../../../include/qemu/error-report.h"
-#include "../../../include/sysemu/reset.h"
 #include <assert.h>
+#include <hw/i386/pc.h>
+#include <hw/nvram/fw_cfg.h>
+#include <qemu/bitops.h>
+#include <qemu/cutils.h>
+#include <qemu/error-report.h>
 #include <string.h>
+#include <sysemu/reset.h>
 #include <uglib.h>
 
 #define FW_CFG_FILE_SLOTS_DFLT 0x20
