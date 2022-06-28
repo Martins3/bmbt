@@ -1277,12 +1277,11 @@ void pci_default_write_config(PCIDevice *d, uint32_t addr, uint32_t val_in,
     pci_update_mappings(d);
 
   if (range_covers_byte(addr, l, PCI_COMMAND)) {
-    // TMP_TODO serial problem
-    /* printf("%s %s memory mappings\n", */
-    /*        pci_get_word(d->config + PCI_COMMAND) & PCI_COMMAND_MASTER */
-    /*            ? "enable" */
-    /*            : "disable", */
-    /*        d->type); */
+    printf("%s %s memory mappings\n",
+           pci_get_word(d->config + PCI_COMMAND) & PCI_COMMAND_MASTER
+               ? "enable"
+               : "disable",
+           d->type);
     pci_update_irq_disabled(d, was_irq_disabled);
 #ifdef BMBT
     memory_region_set_enabled(&d->bus_master_enable_region,
