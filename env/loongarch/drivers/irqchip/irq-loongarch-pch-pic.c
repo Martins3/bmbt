@@ -107,7 +107,7 @@ static void pch_pic_set_type_edge_high(struct pch_pic *priv, int hwirq) {
   pch_pic_bitclr(priv, PCH_PIC_POL, hwirq);
 }
 
-// TMP_TODO : 虽然没有 ACPI，但是将这种配置应该全部收集起来的了
+// [ACPI]
 static struct pch_pic priv = {
     .base = (void *)TO_UNCAC(0x10000000),
     .model = PCH_IRQ_ROUTE_EXT,
@@ -116,7 +116,6 @@ static struct pch_pic priv = {
 #define IRQ_IOAPIC_SERIAL 2
 void serial_handler(int hwirq);
 
-// TMP_TODO 这个地方修改一下的好看点?
 int pch_pic_init() {
   pch_pic_reset(&priv);
   set_pch_pci_action_handler(IRQ_IOAPIC_SERIAL, serial_handler);

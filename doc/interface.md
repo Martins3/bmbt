@@ -158,3 +158,5 @@
 66. `__pci_bus`
     - 简单地分析内核的代码，实际上每一个 PCI bus 的属性是可以不同的，但是目前测试发现 PCI bus 的属性总是相同的
     - `pci_bus::busnum` 最后的作用体现在 `pci_loongson_map_bus` 中
+67. apci
+    - 因为没有支持 ACPI，和硬件相关的配置都是硬编码的，会使用 [ACPI] 将这些位置标注出来

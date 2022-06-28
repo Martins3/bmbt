@@ -33,7 +33,6 @@ struct liointc_handler_data {
   u32 parent_int_map;
 };
 
-// TMP_TODO 增加一个 interface 描述这个东西的实现
 struct bmbt_gc {
   void __iomem *reg_base;
   void *private;
@@ -48,23 +47,13 @@ struct liointc_priv {
 struct bmbt_gc __bmbt_gc;
 struct liointc_priv __liointc_priv;
 
-static int gg;
-static int kk;
-void dump_interrupt() {
-  printf("[huxueshi:%s:%d] gg=%d kk=%d\n", __FUNCTION__, __LINE__, gg, kk);
-}
-
-void shutup_uart();
-
 void irq_gc_unmask_enable_reg() {
   struct bmbt_gc *gc = &__bmbt_gc;
-  // TMP_TODO
   writel(0xffffffff, gc->reg_base + LIOINTC_REG_INTC_ENABLE);
 }
 
 void irq_gc_mask_disable_reg() {
   struct bmbt_gc *gc = &__bmbt_gc;
-  // TMP_TODO 0xffffffff to more accurate mask
   writel(0xffffffff, gc->reg_base + LIOINTC_REG_INTC_DISABLE);
 }
 
@@ -83,9 +72,9 @@ static void liointc_chained_handle_irq(int irq) {
   int cpuid = cpu_logical_map(smp_processor_id());
   assert(cpuid == 0);
 
-  // TMP_TODO : how to handle this ?
-  /* chained_irq_enter(chip, desc); */
-  kk++;
+#ifdef BMBT
+  chained_irq_enter(chip, desc);
+#endif
 
   pending = readl(gc->reg_base + LIOINTC_REG_INTC_STATUS(cpuid));
 
@@ -103,7 +92,6 @@ static void liointc_chained_handle_irq(int irq) {
     /* printf("[huxueshi:%s:%d] %x\n", __FUNCTION__, __LINE__, isr); */
     /* shutup_uart(); */
     /* generic_handle_irq(irq_find_mapping(gc->domain, bit)); */
-    gg++;
     pending &= ~BIT(bit);
   }
 
@@ -112,8 +100,9 @@ static void liointc_chained_handle_irq(int irq) {
   writel(0xffffffff, gc->reg_base + LIOINTC_REG_INTC_STATUS(cpuid));
   irq_gc_unmask_enable_reg();
 
-  // TMP_TODO
-  /* chained_irq_exit(chip, desc); */
+#ifdef BMBT
+  chained_irq_exit(chip, desc);
+#endif
 }
 
 /* Route */
@@ -189,14 +178,12 @@ int liointc_init(struct resource *res, int parent_irq_num, u32 *parent_irq,
                                      &priv->handler[i]);
 #else
     assert(parent_irq[i] == LOONGSON_LINTC_IRQ);
-    // TMP_TODO 重新 review 一下为什么是 EXCCODE_IP0，而不是 LOONGSON_LINTC_IRQ
     set_vi_handler(EXCCODE_IP0, liointc_chained_handle_irq);
 #endif
   }
 
   writel(0xffffffff, base + LIOINTC_REG_INTC_ENABLE);
 
-  // TMP_TODO 和 pch_pic_init 统一一下
   set_liointc_action_handler(LIOINTC_UART_IRQ, serial_handler);
   return 0;
 }
