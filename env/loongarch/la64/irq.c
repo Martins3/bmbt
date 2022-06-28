@@ -132,7 +132,6 @@ void static pch_pic_domains_init(void) {
     }
 #endif
 
-    // TMP_TODO 我不能理解为什么这个东西不会报错啊
     pch_pic_init(irq_handle, pch_pic_addr(i), PCH_PIC_SIZE,
                  get_irq_route_model(), irq_cfg->irq_base);
   }
@@ -223,8 +222,10 @@ static void liointc_domain_init(void) {
 }
 
 static void irqchip_init_default(void) {
-  /* loongarch_cpu_irq_init(); */
-  // TMP_TODO 标记一下 cpu_has_hypervisor
+#ifdef BMBT
+  loongarch_cpu_irq_init();
+#endif
+  // liointc is need by serial
   if (!cpu_has_hypervisor) {
     liointc_domain_init();
   }
@@ -233,11 +234,14 @@ static void irqchip_init_default(void) {
   eiointc_domain_init();
   pch_msi_domain_init(msi_irqbase, 256 - msi_irqbase);
 #endif
-  // TMP_TODO 标记一下 cpu_has_hypervisor
+  // serial interrupt is managed by pch pic in QEMU, but is by liointc in bare
+  // metal
   if (cpu_has_hypervisor) {
     pch_pic_domains_init();
   }
-  /* pch_lpc_domain_init(); */
+#ifdef BMBT
+  pch_lpc_domain_init();
+#endif
 }
 
 void setup_IRQ(void) {

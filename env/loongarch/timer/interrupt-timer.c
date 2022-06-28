@@ -28,10 +28,10 @@ static void timer_handler(int irq) {
    * will inject timer interrupt again. */
   write_csr_tintclear(CSR_TINTCLR_TI);
   x++;
+#ifndef RELEASE_VERSION
   if (x % 5000 == 1000) {
-    /* dump_extioi_state(); */
   }
-  /* irq_gc_unmask_enable_reg(); */
+#endif
 }
 
 void setup_timer(TimerHandler handler) {

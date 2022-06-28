@@ -68,10 +68,6 @@ void uart_putc(char c) {
 #define UART_LSR_DR 0x01             /* Receiver data ready */
 #define UART_LSR_BRK_ERROR_BITS 0x1E /* BI, FE, PE, OE bits */
 
-void shutup_uart(){
-    writeb(0x0, LS_ISA_SERIAL_IO_BASE + UART_IER);
-}
-
 void dump_uart_state() {
   u8 ier = readb(LS_ISA_SERIAL_IO_BASE + UART_IER);
   printf("[huxueshi:%s:%d] 0x%x\n", __FUNCTION__, __LINE__, ier);
