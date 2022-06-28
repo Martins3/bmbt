@@ -1,7 +1,7 @@
 #ifndef RAM_ADDR_H_ACNMERX5
 #define RAM_ADDR_H_ACNMERX5
 #include <assert.h>
-#include <env/memory.h>
+#include <environment/memory.h>
 #include <exec/cpu-all.h>
 #include <exec/cpu-common.h>
 #include <exec/cpu-para.h>

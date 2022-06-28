@@ -4,7 +4,7 @@
 #include <asm/setup.h>
 #include <asm/time.h>
 #include <assert.h>
-#include <env/timer.h>
+#include <environment/timer.h>
 #include <hw/core/cpu.h>
 #include <linux/irqflags.h>
 #include <stdio.h>

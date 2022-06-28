@@ -22,7 +22,7 @@
 #include "hw/pci/pci.h"
 #include "hw/pci/pci_bus.h"
 #include "qemu/osdep.h"
-#include <env/device.h>
+#include <environment/device.h>
 
 /* debug PCI */
 //#define DEBUG_PCI

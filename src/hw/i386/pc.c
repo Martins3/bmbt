@@ -1,8 +1,8 @@
 #include "acpi-build.h"
 #include "cpu.h"
 #include "e820_memory_layout.h"
-#include <env/device.h>
-#include <env/memory.h>
+#include <environment/device.h>
+#include <environment/memory.h>
 #include <exec/cpu-all.h>
 #include <exec/hwaddr.h>
 #include <exec/ram_addr.h>

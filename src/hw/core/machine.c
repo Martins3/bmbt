@@ -1,4 +1,4 @@
-#include <env/cpu.h>
+#include <environment/cpu.h>
 #include <hw/boards.h>
 #include <qemu/units.h>
 #include <sysemu/numa.h>

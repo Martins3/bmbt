@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <env/timer.h>
+#include <environment/timer.h>
 #include <hw/core/cpu.h>
 #include <qemu/main-loop.h>
 #include <stdbool.h>
