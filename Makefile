@@ -4,6 +4,8 @@ include make/env.mk
 bmbt := $(BUILD_DIR)/bmbt.bin
 GCC_LFLAGS := $(GCOV_LFLAGS) $(GLIB_LIB) -lrt -lm
 I386_FLAGS = -I$(BASE_DIR)/src/target/i386/LATX/include -I$(BASE_DIR)/src/target/i386 -I./src
+HEADER_FLAGS = $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include $(I386_FLAGS)
+CFLAGS += $(HEADER_FLAGS)
 
 # @todo it's so ugly to define two options out of the gcc option --coverage
 # https://gcc.gnu.org/onlinedocs/gcc-9.3.0/gcc/Instrumentation-Options.html
@@ -95,12 +97,14 @@ env/loongarch/include/generated/asm-offset.h: env/loongarch/asm-offset.c env/loo
 	@@echo "GENERATE asm-offset.h"
 	@mkdir -p env/loongarch/include/generated
 	@mkdir -p $(BUILD_DIR)
-	@gcc -Ienv/loongarch/include env/loongarch/asm-offset.c -o $(BUILD_DIR)/asm-offset.out
+	@# The reason why HEADER_FLAGS is needed is that ccls will may show
+	@# phony errors because it ignore some header include path, see #350 for
+	@# more details
+	@gcc $(HEADER_FLAGS) -Ienv/loongarch/include env/loongarch/asm-offset.c -o $(BUILD_DIR)/asm-offset.out
 	@$(BUILD_DIR)/asm-offset.out
 
 asm-offset: env/loongarch/include/generated/asm-offset.h
 
-CFLAGS += $(GLIB_HEADER) $(CAPSTONE_HEADER) $(GCOV_CFLAGS) -I$(BASE_DIR)/include $(I386_FLAGS)
 $(BUILD_DIR)/%.o : %.c
 	@mkdir -p $(@D)
 	@gcc $(CFLAGS) $(EXTRA_FLAGS) -MMD -c $< -o $@
