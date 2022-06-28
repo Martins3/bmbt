@@ -170,10 +170,6 @@ long kernel_mmap(long arg0, long arg1, long arg2, long arg3, long arg4,
   kern_not_reach("mmap never failed !");
 }
 
-long alloc_pages(long pages) {
-  return kernel_mmap(0, pages << PAGE_SHIFT, 0, 0, -1, 0, 0);
-}
-
 static FreeMem *merge(FreeMem *left, FreeMem *node) {
   if (left->start + left->len == node->start) {
     left->len += node->len;

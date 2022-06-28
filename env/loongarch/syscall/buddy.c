@@ -17,6 +17,10 @@ struct buddy {
   uint8_t tree[1];
 };
 
+static long alloc_pages(long pages) {
+  return kernel_mmap(0, pages << PAGE_SHIFT, 0, 0, -1, 0, 0);
+}
+
 struct buddy *buddy_new(int level) {
   int size = 1 << level;
   int buddy_size = sizeof(struct buddy) + sizeof(uint8_t) * (size * 2 - 2);

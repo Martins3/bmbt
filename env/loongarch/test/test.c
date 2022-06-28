@@ -38,7 +38,7 @@ static void *mmap_pages(int x) {
   return p;
 }
 
-static AllocatedMem *alloc_pages(int num) {
+static AllocatedMem *linked_list_alloc_pages(int num) {
   AllocatedMem *node = QLIST_FIRST(&free_nodes);
   if (node == NULL)
     return NULL;
@@ -73,7 +73,7 @@ TEST test_mmap(void) {
   init_pools();
 
   for (int i = 0; i < NODE_NUM; ++i) {
-    alloc_pages(rand() % MAX_SIZE);
+    linked_list_alloc_pages(rand() % MAX_SIZE);
     if (i % 7 == 1) {
       free_pages();
     }
@@ -409,7 +409,7 @@ TEST test_buddy() {
 }
 
 SUITE(env_test) {
-  RUN_TEST(test_buddy);
+  /* RUN_TEST(test_buddy); */
   /* RUN_TEST(test_serial_irq); */
   /* RUN_TEST(test_bit_ops); */
   /* RUN_TEST(test_range_api); */
