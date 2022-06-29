@@ -1,8 +1,8 @@
 #ifndef NODEMASK_H_HBVICV0E
 #define NODEMASK_H_HBVICV0E
 
-#include <qemu/bitmap.h>
 #include <linux/numa.h>
+#include <qemu/bitmap.h>
 
 typedef struct {
   DECLARE_BITMAP(bits, MAX_NUMNODES);
@@ -13,8 +13,11 @@ typedef struct {
 
 #define node_set(node, dst) __node_set((node), &(dst))
 
-// TMP_TODO 丢失掉 volatile 会出现问题吗?
-// volatile 的指针指向的位置还有 volatile 的属性吗?
+/**
+ * NOTE: this function originally copied from Linux kernel, and the modifier
+ * volatile is removed. I think it doesn't matter and more investigation is
+ * needed.
+ */
 static inline __attribute__((always_inline)) void __node_set(int node,
                                                              nodemask_t *dstp) {
   set_bit(node, dstp->bits);
