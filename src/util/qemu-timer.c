@@ -432,19 +432,22 @@ int64_t timerlistgroup_deadline_ns(QEMUTimerListGroup *tlg) {
 
 static void timer_interrupt_handler() {
   // qemu_log("timer interrupt comming\n");
-  int64_t timeout_ns = -1;
+  int64_t timeout_ns;
+  while (true) {
+    qemu_clock_run_all_timers();
 
-  qemu_clock_run_all_timers();
+    timeout_ns =
+        qemu_soonest_timeout(-1, timerlistgroup_deadline_ns(&main_loop_tlg));
 
-  timeout_ns = qemu_soonest_timeout(timeout_ns,
-                                    timerlistgroup_deadline_ns(&main_loop_tlg));
-  if (timeout_ns == -1) {
-    // if this functions called, which means interrupt triggered. The interrupt
-    // is schedule by the time out timer event.
-    error_report("no timer to fire\n");
+    if (timeout_ns == -1) {
+      // if this functions called, which means interrupt triggered. The
+      // interrupt is schedule by the time out timer event.
+      error_report("no timer to fire\n");
+    }
+
+    if (timeout_ns != 0)
+      break;
   }
-
-  // TMP_TODO 如果 timeout_ns == 0 直接重复运行一次，不科学一点吗 ?
   soonest_interrupt_ns(timeout_ns);
 }
 
