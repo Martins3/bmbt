@@ -10,7 +10,6 @@
 #define MAKE_64BIT_MASK(shift, length) (((~0ULL) >> (64 - (length))) << (shift))
 
 #define BITS_PER_BYTE CHAR_BIT
-// TMP_TODO 重新考虑一下这个问题，要不要 reference env 中东西
 #ifdef ENV_KERNEL
 #include <autoconf.h>
 #define BITS_PER_LONG _LOONGARCH_SZLONG
