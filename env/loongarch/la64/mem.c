@@ -32,7 +32,7 @@ static PhysicalRamDesc *alloc_ram_desc(RamRange range) {
   return &ram_pool[idx];
 }
 
-RamRange kernel_image_range;
+RamRange bmbt_image_range;
 RamRange guest_range = {
     .start = 0,
     .end = 0xe0000000, // 3.5G
@@ -115,14 +115,14 @@ overlap_with_guest_ram(PhysicalRamDesc *ram_desc) {
 }
 
 static PhysicalRamDesc *overlap_with_kernel_iamge(PhysicalRamDesc *ram_desc) {
-  if (is_overlap(ram_desc->range, kernel_image_range)) {
-    check_cover(ram_desc->range, kernel_image_range);
+  if (is_overlap(ram_desc->range, bmbt_image_range)) {
+    check_cover(ram_desc->range, bmbt_image_range);
 
     /* ram.start --- image.start --- image.end --- ram.end */
     RamRange ram = ram_desc->range;
     ram_desc->range.start = ram.start;
-    ram_desc->range.end = kernel_image_range.start;
-    RamRange range = {.start = kernel_image_range.end, .end = ram.end};
+    ram_desc->range.end = bmbt_image_range.start;
+    RamRange range = {.start = bmbt_image_range.end, .end = ram.end};
     return alloc_ram_desc(range);
   }
   return NULL;
@@ -170,8 +170,8 @@ static void reserve_memory() {
 void init_ram_range() {
   extern char __bss_stop[];
   extern char __text_start[];
-  kernel_image_range.start = TO_PHYS(PFN_ALIGN((u64)__text_start));
-  kernel_image_range.end = TO_PHYS(PFN_ALIGN((u64)__bss_stop));
+  bmbt_image_range.start = TO_PHYS(PFN_ALIGN((u64)__text_start));
+  bmbt_image_range.end = TO_PHYS(PFN_ALIGN((u64)__bss_stop));
 
   QTAILQ_INIT(&guest_ram_list);
   QTAILQ_INIT(&host_ram_list);
@@ -180,7 +180,7 @@ void init_ram_range() {
 extern bool memory_ready;
 
 /*
- * 1. all memory in range (0 ~ 3.5G) belows. As for 3.5G, see
+ * 1. all memory in range (0 ~ 3.5G). As for why it's 3.5G, see QEMU's
  *    hw/i386/pc_piix.c:pc_init1
  * 2. 32bit guest unable to access ram above 4G
  * 3. bmbt is put to 4G, so make sure the memory is not ram memory hole
