@@ -3,7 +3,7 @@
     1. what's [`git rebase`](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase)
     2. [how to use it](https://stackoverflow.com/questions/16358418/how-to-avoid-merge-commit-hell-on-github-bitbucket)
 
-## how to collaborate
+## 关于代码的设计想法
 1. 新手更加应该参与到 review
 2. 如何让 reviewer 愉快的 review 你的代码[^1]
 3. 一个优雅的 commit[^5] 应该是什么样子的

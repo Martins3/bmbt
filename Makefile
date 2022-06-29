@@ -192,7 +192,6 @@ gdb: all
 s: all
 	$(RUN_IN_QEMU) -S -s;
 
-# @todo move this config
 USB_DIR=/media/loongson/a8160021-7f79-4f1f-ac3d-6b9946f485f7
 usb: all
 	if [[ ! -d $(USB_DIR) ]];then \
