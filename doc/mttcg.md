@@ -64,6 +64,9 @@ void tcg_register_thread(void) {
 4. 这个物理内存分配器无法支持多核
   - 一个最简单的方法给每一个 CPU 物理内存一个分配池，类似 percpu 的那种
 5. `atomic_common.c.inc`
+6. `set_extioi_action_handler`
+  - 这个存在一个临时的 hacking ，在裸机状态中，不要执行 `ext_set_irq_affinity` ，其根本原因是什么，现在并没有理解清楚
+  - 虽然不去调查也是可以维持生活的，但是在实现多核版本的时候，这些问题无法逃躲的。
 
 ## 中断对于多核的挑战
 - 中断处理函数访问的内容需要上锁的

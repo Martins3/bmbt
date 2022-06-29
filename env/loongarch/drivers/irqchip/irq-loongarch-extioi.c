@@ -328,7 +328,12 @@ void dump_extioi_state() {
 
 void set_extioi_action_handler(int hwirq, irq_action action) {
   extioi_actions[hwirq] = action;
-  // TMP_TODO 这个新增的 cpu_has_hypervisor 需要理解一下
+  /**
+   * [BMBT_MTTCG 6]
+   * I don't why the following ext_set_irq_affinity make bare metal mode's
+   * interrupt work abnormally. If the implement multicore version, the root
+   * cause of the problem needs to be carefully analyzed
+   */
   if (cpu_has_hypervisor)
     ext_set_irq_affinity(hwirq);
 }
