@@ -106,8 +106,8 @@ static MemoryRegion *memory_region_look_up(AddressSpaceDispatch *dispatch,
     MemoryRegion *mr = dispatch->segments[i];
     assert(mr != NULL);
     if (mr_match(mr, offset)) {
-      printf("visit in [%s] with offset=[%lx], mr.name: %s\n", dispatch->name,
-             offset, mr->name);
+      // printf("visit in [%s] with offset=[%lx], mr.name: %s\n",
+      // dispatch->name, offset, mr->name);
       return mr;
     }
   }
@@ -985,11 +985,11 @@ static void ram_init() {
                  PAM_BIOS_SIZE);
 
   assert(SMRAM_C_BASE + SMRAM_C_SIZE +
-                 PAM_EXPAN_SIZE * (PAM_EXPAN_NUM + PAM_EXBIOS_NUM) ==
-             PAM_BIOS_BASE);
+             PAM_EXPAN_SIZE * (PAM_EXPAN_NUM + PAM_EXBIOS_NUM) ==
+         PAM_BIOS_BASE);
   assert(ram_list.blocks[PAM_BIOS_INDEX].mr.offset +
-                 ram_list.blocks[PAM_BIOS_INDEX].mr.size ==
-             X86_BIOS_MEM_SIZE);
+             ram_list.blocks[PAM_BIOS_INDEX].mr.size ==
+         X86_BIOS_MEM_SIZE);
 
   init_ram_block("pc.ram", PC_RAM_INDEX, false, X86_BIOS_MEM_SIZE,
                  first_pc_ram.end - X86_BIOS_MEM_SIZE);
@@ -1003,7 +1003,6 @@ static void ram_init() {
   init_ram_block("pc.bios", PC_BIOS_INDEX, true,
                  4 * GiB - CONFIG_GUEST_BIOS_SIZE, CONFIG_GUEST_BIOS_SIZE);
 
-  uint8_t *bios_offset;
   for (int i = 0; i < RAM_BLOCK_NUM; ++i) {
     RAMBlock *block = &ram_list.blocks[i].block;
     MemoryRegion *mr = &ram_list.blocks[i].mr;
@@ -1011,9 +1010,6 @@ static void ram_init() {
     block->offset = mr->offset;
     block->max_length = mr->size;
     block->host = host + block->offset;
-    if (i == 16) {
-      bios_offset = block->host;
-    }
   }
 
   x86_bios_rom_init();

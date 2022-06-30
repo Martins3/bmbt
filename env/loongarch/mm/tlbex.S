@@ -108,9 +108,9 @@ SYM_FUNC_START(handle_tlb_load)
 csrwr   t0, LOONGARCH_CSR_KS0
 csrwr   t1, LOONGARCH_CSR_KS1
 
-// make t0 0x9000000000de4000
+// make t0 0x9000000008c24000
 or      t0, zero, zero
-lu12i.w t0, 0xde4000>>12
+lu12i.w t0, 0x8c24000>>12
 lu52i.d t0, t0, 0x9000000000000000>>52
 
 csrrd   t1, LOONGARCH_CSR_BADV
@@ -118,7 +118,7 @@ st.d    t1, t0, (BADV_INDEX*8)
 csrrd   t1, LOONGARCH_CSR_ERA
 st.d    t1, t0, (ERA_INDEX*8)
 
-lu12i.w t1, 0xde8000>>12
+lu12i.w t1, 0x8c28000>>12
 lu52i.d t1, t1, 0x9000000000000000>>52
 csrwr   t1, LOONGARCH_CSR_ERA
 
@@ -131,9 +131,9 @@ SYM_FUNC_START(handle_tlb_store)
 csrwr   t0, LOONGARCH_CSR_KS0
 csrwr   t1, LOONGARCH_CSR_KS1
 
-// make t0 0x9000000000de4000
+// make t0 0x9000000008c24000
 or      t0, zero, zero
-lu12i.w t0, 0xde4000>>12
+lu12i.w t0, 0x8c24000>>12
 lu52i.d t0, t0, 0x9000000000000000>>52
 
 csrrd   t1, LOONGARCH_CSR_BADV
@@ -141,7 +141,7 @@ st.d    t1, t0, (BADV_INDEX*8)
 csrrd   t1, LOONGARCH_CSR_ERA
 st.d    t1, t0, (ERA_INDEX*8)
 
-lu12i.w t1, 0xde8000>>12
+lu12i.w t1, 0x8c28000>>12
 lu52i.d t1, t1, 0x9000000000000000>>52
 csrwr   t1, LOONGARCH_CSR_ERA
 
@@ -154,9 +154,9 @@ SYM_FUNC_START(handle_tlb_modify)
 csrwr   t0, LOONGARCH_CSR_KS0
 csrwr   t1, LOONGARCH_CSR_KS1
 
-// make t0 0x9000000000de4000
+// make t0 0x90000000008c24000
 or      t0, zero, zero
-lu12i.w t0, 0xde4000>>12
+lu12i.w t0, 0x8c24000>>12
 lu52i.d t0, t0, 0x9000000000000000>>52
 
 csrrd   t1, LOONGARCH_CSR_BADV
@@ -164,7 +164,7 @@ st.d    t1, t0, (BADV_INDEX*8)
 csrrd   t1, LOONGARCH_CSR_ERA
 st.d    t1, t0, (ERA_INDEX*8)
 
-lu12i.w t1, 0xde8000>>12
+lu12i.w t1, 0x8c28000>>12
 lu52i.d t1, t1, 0x9000000000000000>>52
 csrwr   t1, LOONGARCH_CSR_ERA
 
@@ -180,7 +180,7 @@ csrwr   t1, LOONGARCH_CSR_KS1
 csrwr   t2, LOONGARCH_CSR_KS2
 
 or      t0, zero, zero
-lu12i.w t0, 0xde4000>>12
+lu12i.w t0, 0x8c24000>>12
 lu52i.d t0, t0, 0x9000000000000000>>52
 
 ldptr.d t1, t0, (TRAP_CODE_INDEX*8)

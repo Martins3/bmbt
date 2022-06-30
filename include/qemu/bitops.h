@@ -23,30 +23,6 @@
 #define BIT_MASK(nr) (1UL << ((nr) % BITS_PER_LONG))
 
 /**
- * set_bit - Set a bit in memory
- * @nr: the bit to set
- * @addr: the address to start counting from
- */
-static inline void set_bit(long nr, unsigned long *addr) {
-  unsigned long mask = BIT_MASK(nr);
-  unsigned long *p = addr + BIT_WORD(nr);
-
-  *p |= mask;
-}
-
-/**
- * clear_bit - Clears a bit in memory
- * @nr: Bit to clear
- * @addr: Address to start counting from
- */
-static inline void clear_bit(long nr, unsigned long *addr) {
-  unsigned long mask = BIT_MASK(nr);
-  unsigned long *p = addr + BIT_WORD(nr);
-
-  *p &= ~mask;
-}
-
-/**
  * test_bit - Determine whether a bit is set
  * @nr: bit number to test
  * @addr: Address to start counting from

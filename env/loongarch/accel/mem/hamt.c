@@ -836,7 +836,7 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
     addend = 0;
 #endif
     // [interface 34]
-    bmbt_check(is_iotlb_mr(mr));
+    assert(is_iotlb_mr(mr));
     addend = paddr;
   }
 
@@ -857,7 +857,7 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
   } else {
     // [interface 34]
     /* I/O or ROMD */
-    bmbt_check(is_iotlb_mr(mr));
+    assert(is_iotlb_mr(mr));
     // iotlb = IOTLB_MAGIC;
     iotlb = 0x43;
     /*
@@ -1266,11 +1266,11 @@ static void build_tlb_invalid_trampoline(void) {
   /*
    * load $t0 with DATA_STORAGE_ADDRESS
    *    or $t0, zero, zero
-   *    lu12i.w $t0, 0xde4000>>12
+   *    lu12i.w $t0, 0x8c24000>>12
    *    lu52i.d $t0, t0, 0x9000000000000000>>52
    */
   p[i++] = 0x0015000c;
-  p[i++] = 0x1401bc8c;
+  p[i++] = 0x1411848c;
   p[i++] = 0x0324018c;
   /*
    * save all but $t0 and $sp
@@ -1349,7 +1349,7 @@ static void build_tlb_invalid_trampoline(void) {
   /*
    * use exception to restore regs & resume execution
    *     or      $t0, zero, zero
-   *     lu12i.w $t0, 0xde4000>>12
+   *     lu12i.w $t0, 0x8c24000>>12
    *     lu52i.d $t0, t0, 0x9000000000000000>>52
    *     ori     $t0, $t0, 0xfd0
    *     addi.d  $t1, $zero, 0x3
@@ -1357,7 +1357,7 @@ static void build_tlb_invalid_trampoline(void) {
    *     break 0
    */
   p[i++] = 0x0015000c;
-  p[i++] = 0x1401bc8c;
+  p[i++] = 0x1411848c;
   p[i++] = 0x0324018c;
   p[i++] = 0x03bf418c;
   p[i++] = 0x02c00c0d;
@@ -1376,8 +1376,8 @@ void hamt_init() {
   int i;
   // data_storage and code_storage have allocated in
   // fw_init_memory.
-  data_storage = 0x9000000000de4000;
-  code_storage = 0x9000000000de8000;
+  data_storage = 0x9000000008c24000;
+  code_storage = 0x9000000008c28000;
 #if 0
   data_storage = (uint64_t)mmap((void *)DATA_STORAGE_ADDRESS, 4096, PROT_RWX,
                                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
