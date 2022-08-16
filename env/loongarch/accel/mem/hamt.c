@@ -17,6 +17,7 @@
 #include "../../../include/qemu/compiler.h"
 #include "../../../include/qemu/host-utils.h"
 #include "../../../include/qemu/osdep.h"
+#include "../../../include/qemu/timer.h"
 #include "../../../include/qemu/xxhash.h"
 #include "../../../libc/src/bits/loongarch/regdef.h"
 #include "../../../src/target//i386/svm.h"
@@ -27,6 +28,8 @@
 #include "accel/hamt_misc.h"
 #include "accel/internal.h"
 #include "asm/loongarchregs.h"
+#include <exec/cpu-ldst.h>
+#include <exec/cputlb.h>
 
 bool hamt_enabled = false;
 
@@ -646,13 +649,13 @@ static void hamt_store_helper(CPUArchState *env, target_ulong addr,
     }
 
     /* Handle watchpoints.  */
-    //        if (unlikely(tlb_addr & TLB_WATCHPOINT)) {
-    //            /* On watchpoint hit, this will longjmp out.  */
-    //		      pr_info("watchpoint");
-    //            cpu_check_watchpoint(env_cpu(env), addr, size,
-    //                                 iotlbentry->attrs, BP_MEM_WRITE,
-    //                                 retaddr);
-    //        }
+    // if (unlikely(tlb_addr & TLB_WATCHPOINT)) {
+    //     /* On watchpoint hit, this will longjmp out.  */
+    //   pr_info("watchpoint");
+    //     cpu_check_watchpoint(env_cpu(env), addr, size,
+    //                          iotlbentry->attrs, BP_MEM_WRITE,
+    //                          retaddr);
+    // }
 
     need_swap = size > 1 && (tlb_addr & TLB_BSWAP);
 
@@ -690,7 +693,6 @@ static void hamt_store_helper(CPUArchState *env, target_ulong addr,
     if (unlikely(need_swap)) {
       // pr_info("need swap");
     } else {
-
       hamt_set_tlb(addr + mapping_base_address, haddr, prot, true);
     }
     return;
@@ -734,12 +736,12 @@ static void hamt_load_helper(CPUArchState *env, target_ulong addr,
     }
 
     /* Handle watchpoints.  */
-    //        if (unlikely(tlb_addr & TLB_WATCHPOINT)) {
-    //            /* On watchpoint hit, this will longjmp out.  */
-    //		      pr_info("watchpoint");
-    //            cpu_check_watchpoint(env_cpu(env), addr, size,
-    //                                 iotlbentry->attrs, BP_MEM_READ, retaddr);
-    //        }
+    // if (unlikely(tlb_addr & TLB_WATCHPOINT)) {
+    //     /* On watchpoint hit, this will longjmp out.  */
+    //   pr_info("watchpoint");
+    //     cpu_check_watchpoint(env_cpu(env), addr, size,
+    //                          iotlbentry->attrs, BP_MEM_READ, retaddr);
+    // }
 
     need_swap = size > 1 && (tlb_addr & TLB_BSWAP);
 
@@ -786,11 +788,14 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
                                       bool is_write, uint32_t *epc) {
 
   CPUArchState *env = cpu->env_ptr;
+  CPUTLB *tlb = env_tlb(env);
+  CPUTLBDesc *desc = &tlb->d[mmu_idx];
+  unsigned int index;
   target_ulong address;
   MemoryRegion *mr;
   target_ulong write_address;
   uintptr_t addend;
-  CPUTLBEntry tn;
+  CPUTLBEntry *te, tn;
   hwaddr iotlb, xlat, sz, paddr_page;
   target_ulong vaddr_page;
   int asidx = cpu_asidx_from_attrs(cpu, attrs);
@@ -832,9 +837,6 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
     addend = (uintptr_t)memory_region_get_ram_ptr(mr) + xlat;
   } else {
     /* I/O does not; force the host address to NULL. */
-#ifdef HAMT
-    addend = 0;
-#endif
     // [interface 34]
     assert(is_iotlb_mr(mr));
     addend = paddr;
@@ -870,6 +872,53 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
       address = write_address;
     }
   }
+  index = tlb_index(env, mmu_idx, vaddr_page);
+  te = tlb_entry(env, mmu_idx, vaddr_page);
+
+  /*
+   * Hold the TLB lock for the rest of the function. We could acquire/release
+   * the lock several times in the function, but it is faster to amortize the
+   * acquisition cost by acquiring it just once. Note that this leads to
+   * a longer critical section, but this is not a concern since the TLB lock
+   * is unlikely to be contended.
+   */
+  qemu_spin_lock(&tlb->c.lock);
+
+  /* Note that the tlb is no longer clean.  */
+  tlb->c.dirty |= 1 << mmu_idx;
+
+  /* Make sure there's no cached translation for the new page.  */
+  tlb_flush_vtlb_page_locked(env, mmu_idx, vaddr_page);
+
+  /*
+   * Only evict the old entry to the victim tlb if it's for a
+   * different page; otherwise just overwrite the stale data.
+   */
+  if (!tlb_hit_page_anyprot(te, vaddr_page) && !tlb_entry_is_empty(te)) {
+    unsigned vidx = desc->vindex++ % CPU_VTLB_SIZE;
+    CPUTLBEntry *tv = &desc->vtable[vidx];
+
+    /* Evict the old entry into the victim tlb.  */
+    copy_tlb_helper_locked(tv, te);
+    desc->viotlb[vidx] = desc->iotlb[index];
+    tlb_n_used_entries_dec(env, mmu_idx);
+  }
+
+  /* refill the tlb */
+  /*
+   * At this point iotlb contains a physical section number in the lower
+   * TARGET_PAGE_BITS, and either
+   *  + the ram_addr_t of the page base of the target RAM (RAM)
+   *  + the offset within section->mr of the page base (I/O, ROMD)
+   * We subtract the vaddr_page (which is page aligned and thus won't
+   * disturb the low bits) to give an offset which can be added to the
+   * (non-page-aligned) vaddr of the eventual memory access to get
+   * the MemoryRegion offset for the access. Note that the vaddr we
+   * subtract here is that of the page base, and not the same as the
+   * vaddr we add back in io_readx()/io_writex()/get_page_addr_code().
+   */
+  desc->iotlb[index].addr = iotlb - vaddr_page;
+  desc->iotlb[index].attrs = attrs;
 
   iotlbentry.addr = iotlb - vaddr_page;
   iotlbentry.attrs = attrs;
@@ -897,6 +946,10 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
       tn.addr_write |= TLB_INVALID_MASK;
     }
   }
+
+  copy_tlb_helper_locked(te, &tn);
+  tlb_n_used_entries_inc(env, mmu_idx);
+  qemu_spin_unlock(&tlb->c.lock);
 
   if (is_write) {
     hamt_store_helper(env, hamt_badvaddr - mapping_base_address,

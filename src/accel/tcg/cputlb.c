@@ -6,6 +6,7 @@
 #include <exec/cpu-common.h>
 #include <exec/cpu-defs.h>
 #include <exec/cpu-ldst.h>
+#include <exec/cputlb.h>
 #include <exec/exec-all.h>
 #include <exec/memop.h>
 #include <exec/memory.h>
@@ -218,13 +219,21 @@ static inline void tlb_table_flush_by_mmuidx(CPUArchState *env, int mmu_idx) {
 #endif
 }
 
+#ifdef HAMT
+inline void tlb_n_used_entries_inc(CPUArchState *env, uintptr_t mmu_idx) {
+#else
 static inline void tlb_n_used_entries_inc(CPUArchState *env,
                                           uintptr_t mmu_idx) {
+#endif
   env_tlb(env)->d[mmu_idx].n_used_entries++;
 }
 
+#ifdef HAMT
+inline void tlb_n_used_entries_dec(CPUArchState *env, uintptr_t mmu_idx) {
+#else
 static inline void tlb_n_used_entries_dec(CPUArchState *env,
                                           uintptr_t mmu_idx) {
+#endif
   env_tlb(env)->d[mmu_idx].n_used_entries--;
 }
 
@@ -368,8 +377,12 @@ void tlb_flush_all_cpus_synced(CPUState *src_cpu) {
   tlb_flush_by_mmuidx_all_cpus_synced(src_cpu, ALL_MMUIDX_BITS);
 }
 
+#ifdef HAMT
+inline bool tlb_hit_page_anyprot(CPUTLBEntry *tlb_entry, target_ulong page) {
+#else
 static inline bool tlb_hit_page_anyprot(CPUTLBEntry *tlb_entry,
                                         target_ulong page) {
+#endif
   return tlb_hit_page(tlb_entry->addr_read, page) ||
          tlb_hit_page(tlb_addr_write(tlb_entry), page) ||
          tlb_hit_page(tlb_entry->addr_code, page);
@@ -379,7 +392,11 @@ static inline bool tlb_hit_page_anyprot(CPUTLBEntry *tlb_entry,
  * tlb_entry_is_empty - return true if the entry is not in use
  * @te: pointer to CPUTLBEntry
  */
+#ifdef HAMT
+inline bool tlb_entry_is_empty(const CPUTLBEntry *te) {
+#else
 static inline bool tlb_entry_is_empty(const CPUTLBEntry *te) {
+#endif
   return te->addr_read == -1 && te->addr_write == -1 && te->addr_code == -1;
 }
 
@@ -395,8 +412,13 @@ static inline bool tlb_flush_entry_locked(CPUTLBEntry *tlb_entry,
 }
 
 /* Called with tlb_c.lock held */
+#ifdef HAMT
+inline void tlb_flush_vtlb_page_locked(CPUArchState *env, int mmu_idx,
+                                       target_ulong page) {
+#else
 static inline void tlb_flush_vtlb_page_locked(CPUArchState *env, int mmu_idx,
                                               target_ulong page) {
+#endif
   CPUTLBDesc *d = &env_tlb(env)->d[mmu_idx];
   int k;
 
@@ -591,8 +613,12 @@ static void tlb_reset_dirty_range_locked(CPUState *cpu, CPUTLBEntry *tlb_entry,
  * Called with tlb_c.lock held.
  * Called only from the vCPU context, i.e. the TLB's owner thread.
  */
+#ifdef HAMT
+inline void copy_tlb_helper_locked(CPUTLBEntry *d, const CPUTLBEntry *s) {
+#else
 static inline void copy_tlb_helper_locked(CPUTLBEntry *d,
                                           const CPUTLBEntry *s) {
+#endif
   *d = *s;
 }
 
