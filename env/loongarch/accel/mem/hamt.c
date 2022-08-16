@@ -1266,11 +1266,11 @@ static void build_tlb_invalid_trampoline(void) {
   /*
    * load $t0 with DATA_STORAGE_ADDRESS
    *    or $t0, zero, zero
-   *    lu12i.w $t0, 0x8c24000>>12
-   *    lu52i.d $t0, t0, 0x9000000000000000>>52
+   *    li.d    t0, 0x90000000bfc40000
    */
   p[i++] = 0x0015000c;
-  p[i++] = 0x1411848c;
+  p[i++] = 0x157f880c;
+  p[i++] = 0x1600000c;
   p[i++] = 0x0324018c;
   /*
    * save all but $t0 and $sp
@@ -1349,15 +1349,15 @@ static void build_tlb_invalid_trampoline(void) {
   /*
    * use exception to restore regs & resume execution
    *     or      $t0, zero, zero
-   *     lu12i.w $t0, 0x8c24000>>12
-   *     lu52i.d $t0, t0, 0x9000000000000000>>52
+   *     li.d    t0, 0x90000000bfc40000
    *     ori     $t0, $t0, 0xfd0
    *     addi.d  $t1, $zero, 0x3
    *     st.d    $t1, $t0, 0x0
    *     break 0
    */
   p[i++] = 0x0015000c;
-  p[i++] = 0x1411848c;
+  p[i++] = 0x157f880c;
+  p[i++] = 0x1600000c;
   p[i++] = 0x0324018c;
   p[i++] = 0x03bf418c;
   p[i++] = 0x02c00c0d;
@@ -1376,8 +1376,8 @@ void hamt_init() {
   int i;
   // data_storage and code_storage have allocated in
   // fw_init_memory.
-  data_storage = 0x9000000008c24000;
-  code_storage = 0x9000000008c28000;
+  data_storage = 0x90000000bfc40000;
+  code_storage = 0x90000000bfc44000;
 #if 0
   data_storage = (uint64_t)mmap((void *)DATA_STORAGE_ADDRESS, 4096, PROT_RWX,
                                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);

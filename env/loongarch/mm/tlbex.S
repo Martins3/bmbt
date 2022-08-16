@@ -110,16 +110,18 @@ csrwr   t1, LOONGARCH_CSR_KS1
 
 // make t0 0x9000000008c24000
 or      t0, zero, zero
-lu12i.w t0, 0x8c24000>>12
-lu52i.d t0, t0, 0x9000000000000000>>52
+// lu12i.w t0, 0x8c24000>>12
+// lu52i.d t0, t0, 0x9000000000000000>>52
+li.d    t0, 0x90000000bfc40000
 
 csrrd   t1, LOONGARCH_CSR_BADV
 st.d    t1, t0, (BADV_INDEX*8)
 csrrd   t1, LOONGARCH_CSR_ERA
 st.d    t1, t0, (ERA_INDEX*8)
 
-lu12i.w t1, 0x8c28000>>12
-lu52i.d t1, t1, 0x9000000000000000>>52
+// lu12i.w t1, 0x8c28000>>12
+// lu52i.d t1, t1, 0x9000000000000000>>52
+li.d    t1, 0x90000000bfc44000
 csrwr   t1, LOONGARCH_CSR_ERA
 
 csrrd   t1, LOONGARCH_CSR_KS1
@@ -133,16 +135,18 @@ csrwr   t1, LOONGARCH_CSR_KS1
 
 // make t0 0x9000000008c24000
 or      t0, zero, zero
-lu12i.w t0, 0x8c24000>>12
-lu52i.d t0, t0, 0x9000000000000000>>52
+// lu12i.w t0, 0x8c24000>>12
+// lu52i.d t0, t0, 0x9000000000000000>>52
+li.d    t0, 0x90000000bfc40000
 
 csrrd   t1, LOONGARCH_CSR_BADV
 st.d    t1, t0, (BADV_INDEX*8)
 csrrd   t1, LOONGARCH_CSR_ERA
 st.d    t1, t0, (ERA_INDEX*8)
 
-lu12i.w t1, 0x8c28000>>12
-lu52i.d t1, t1, 0x9000000000000000>>52
+// lu12i.w t1, 0x8c28000>>12
+// lu52i.d t1, t1, 0x9000000000000000>>52
+li.d    t1, 0x90000000bfc44000
 csrwr   t1, LOONGARCH_CSR_ERA
 
 csrrd   t1, LOONGARCH_CSR_KS1
@@ -156,16 +160,18 @@ csrwr   t1, LOONGARCH_CSR_KS1
 
 // make t0 0x90000000008c24000
 or      t0, zero, zero
-lu12i.w t0, 0x8c24000>>12
-lu52i.d t0, t0, 0x9000000000000000>>52
+// lu12i.w t0, 0x8c24000>>12
+// lu52i.d t0, t0, 0x9000000000000000>>52
+li.d    t0, 0x90000000bfc40000
 
 csrrd   t1, LOONGARCH_CSR_BADV
 st.d    t1, t0, (BADV_INDEX*8)
 csrrd   t1, LOONGARCH_CSR_ERA
 st.d    t1, t0, (ERA_INDEX*8)
 
-lu12i.w t1, 0x8c28000>>12
-lu52i.d t1, t1, 0x9000000000000000>>52
+// lu12i.w t1, 0x8c28000>>12
+// lu52i.d t1, t1, 0x9000000000000000>>52
+li.d    t1, 0x90000000bfc44000
 csrwr   t1, LOONGARCH_CSR_ERA
 
 csrrd   t1, LOONGARCH_CSR_KS1
@@ -180,8 +186,9 @@ csrwr   t1, LOONGARCH_CSR_KS1
 csrwr   t2, LOONGARCH_CSR_KS2
 
 or      t0, zero, zero
-lu12i.w t0, 0x8c24000>>12
-lu52i.d t0, t0, 0x9000000000000000>>52
+// lu12i.w t0, 0x8c24000>>12
+// lu52i.d t0, t0, 0x9000000000000000>>52
+li.d    t0, 0x90000000bfc40000
 
 ldptr.d t1, t0, (TRAP_CODE_INDEX*8)
 
