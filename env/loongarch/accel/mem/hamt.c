@@ -390,19 +390,20 @@ static inline void set_attr(int r, int w, int x, uint64_t *addr) {
 }
 
 static inline void enable_pg(void) {
-  __asm__ __volatile__("ori $t0, $zero, %0\n\t"
-                       "csrwr $t0, %1\n\t"
+  __asm__ __volatile__("li.d $t1, 0xffffffff \n\t"
+                       "ori $t0, $zero, %0\n\t"
+                       "csrxchg $t1, $t0, %1\n\t"
                        :
                        : "i"(CSR_CRMD_PG), "i"(LOONGARCH_CSR_CRMD)
-                       : "$t0");
+                       : "$t0", "$t1");
 }
 
 static inline void disable_pg(void) {
   __asm__ __volatile__("ori $t0, $zero, %0\n\t"
-                       "csrwr $t0, %1\n\t"
+                       "csrxchg $zero, $t0, %1 \n\t"
                        :
-                       : "i"(CSR_CRMD_DA), "i"(LOONGARCH_CSR_CRMD)
-                       : "$t0");
+                       : "i"(CSR_CRMD_PG), "i"(LOONGARCH_CSR_CRMD)
+                       : "$t0", "$t1");
 }
 
 /*
@@ -638,6 +639,9 @@ static void hamt_store_helper(CPUArchState *env, target_ulong addr,
   if (addr & ((1 << a_bits) - 1)) {
     // pr_info("handle cpu specific unaligned behaviour");
   }
+
+  u64 ecfg = read_csr_ecfg();
+  assert(ecfg == 0x71fff);
 
   /* Handle anything that isn't just a straight memory access.  */
   if (unlikely(tlb_addr & ~TARGET_PAGE_MASK)) {
