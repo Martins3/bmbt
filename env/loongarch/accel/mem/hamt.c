@@ -820,13 +820,17 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
   assert(sz >= TARGET_PAGE_SIZE);
 
   address = vaddr_page;
+#ifndef RELEASE_VERSION
   if (size < TARGET_PAGE_SIZE) {
     /* Repeat the MMU check and TLB fill on every access.  */
+    g_assert_not_reached();
     address |= TLB_INVALID_MASK;
   }
   if (attrs.byte_swap) {
+    g_assert_not_reached();
     address |= TLB_BSWAP;
   }
+#endif
 
   is_ram = memory_region_is_ram(mr);
   // is_romd = memory_region_is_romd(mr);
@@ -940,8 +944,8 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
   if (prot & PAGE_WRITE) {
     tn.addr_write = write_address;
     // FIX
-    if (write_address & TLB_NOTDIRTY)
-      prot &= ~PAGE_WRITE;
+    // if (write_address & TLB_NOTDIRTY)
+    // prot &= ~PAGE_WRITE;
     if (prot & PAGE_WRITE_INV) {
       tn.addr_write |= TLB_INVALID_MASK;
     }
