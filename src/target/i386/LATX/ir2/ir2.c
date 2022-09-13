@@ -76,6 +76,17 @@ static const char *ir2_name(int value)
 
         "gr2scr",
         "scr2gr",
+
+        "tlbrd",
+        "tlbwr",
+        "tlbfill",
+        "tlbclr",
+        "tlbflush",
+        "tlbsrch",
+        "invtlb",
+        "csrrd",
+        "csrwr",
+
         "clo.w",
         "clz.w",
         "cto.w",
@@ -3176,8 +3187,6 @@ static const char *ir2_name(int value)
     "XVSLLWIL_QU_DU",
 
     /* privileged state instructions */
-    "CSRRD",
-    "CSRWR",
     "CSRXCHG",
     "GCSRRD",
     "GCSRWR",
@@ -3195,7 +3204,6 @@ static const char *ir2_name(int value)
     "IOCSRWR_D",
     "TLBINV",
     "GTLBINV",
-    "TLBFLUSH",
     "GTLBFLUSH",
     "TLBP",
     "GTLBP",
@@ -3203,7 +3211,6 @@ static const char *ir2_name(int value)
     "GTLBR",
     "TLBWI",
     "GTLBWI",
-    "TLBWR",
     "GTLBWR",
     "ERET",
     "DERET",
