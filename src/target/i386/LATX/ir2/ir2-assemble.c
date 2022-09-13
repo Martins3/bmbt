@@ -195,6 +195,13 @@ void latxs_ir2_op_check_imm(IR2_OPND *opnd, GM_OPERAND_TYPE opnd_type)
         lsassertm(int32_in_int13(imm), "IR2 check imm fail OPD_I13\n");
         break;
 
+    case OPD_CSR:
+        lassertm(uint32_in_uint14(imm), "OPD_CSR wrong imm range.\n");
+        break;
+    case OPD_U0_4:
+        lassertm(uint32_in_uint5(imm), "OPD_U0_4 wrong imm range.\n");
+        break;
+
     default:
         lsassertm(0, "IR2 check imm unsupported type %d\n", opnd_type);
         break;

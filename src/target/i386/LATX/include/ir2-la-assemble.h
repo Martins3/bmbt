@@ -72,6 +72,7 @@ typedef enum {
     OPD_XD,
     OPD_XJ,
     OPD_XK,
+    OPD_U0_4,
 } GM_OPERAND_TYPE;
 
 typedef struct pair {
@@ -166,6 +167,7 @@ GM_OPERAND_PLACE_RELATION bit_field_table[] = {
     {OPD_XD, {0,4}, {-1,-1}},
     {OPD_XJ, {5,9}, {-1,-1}},
     {OPD_XK, {10,14}, {-1,-1}},
+    {OPD_U0_4, {0,4}, {-1,-1}},
 };
 /* there are some errors in vector instruction */
 GM_LA_OPCODE_FORMAT lisa_format_table[] = {
@@ -195,6 +197,19 @@ GM_LA_OPCODE_FORMAT lisa_format_table[] = {
     {LISA_DSUBIU, 0x0, {OPD_INVALID}},
     {LISA_GR2SCR, 0x00000800, {OPD_SD, OPD_RJ}},
     {LISA_SCR2GR, 0x00000C00, {OPD_RD, OPD_SJ}},
+
+    {LISA_TLBRD, 0x06482c00, {}},
+    {LISA_TLBWR, 0x06483000, {}},
+    {LISA_TLBFILL, 0x06483400, {}},
+    {LISA_TLBCLR, 0x06482000, {}},
+    {LISA_TLBFLUSH, 0x06482400, {}},
+    {LISA_TLBSRCH, 0x06482800, {}},
+    {LISA_INVTLB, 0x06498000, {OPD_RJ, OPD_RK, OPD_U0_4}},
+    // 0x04 14(csr) 00000 5(rd)
+    {LISA_CSRRD, 0x04000000, {OPD_RD, OPD_CSR}},
+    // 0x04 14(csr) 00001 5(rd)
+    {LISA_CSRWR, 0x04000020, {OPD_RD, OPD_CSR}},
+
     {LISA_CLO_W, 0x00001000, {OPD_RD, OPD_RJ}},
     {LISA_CLZ_W, 0x00001400, {OPD_RD, OPD_RJ}},
     {LISA_CTO_W, 0x00001800, {OPD_RD, OPD_RJ}},
@@ -2798,7 +2813,7 @@ GM_LA_OPERAND_PLACE_TYPE ir2_type_check_table[] = {
     { OPD_CONDF   , IR2_OPND_IMMH },
     { OPD_CONDH   , IR2_OPND_IMMH },
     { OPD_CONDL   , IR2_OPND_IMMH },
-    { OPD_CSR     , IR2_OPND_INV  },
+    { OPD_CSR     , IR2_OPND_IMMH },
     { OPD_FA      , IR2_OPND_FPR  },
     { OPD_FCSRH   , IR2_OPND_FCSR },
     { OPD_FCSRL   , IR2_OPND_FCSR },
@@ -2859,6 +2874,7 @@ GM_LA_OPERAND_PLACE_TYPE ir2_type_check_table[] = {
     { OPD_XD      , IR2_OPND_FPR  },
     { OPD_XJ      , IR2_OPND_FPR  },
     { OPD_XK      , IR2_OPND_FPR  },
+    { OPD_U0_4    , IR2_OPND_IMMH },
 };
 
 #endif

@@ -91,6 +91,17 @@ typedef enum {
     /* LA insns */
     LISA_GR2SCR,
     LISA_SCR2GR,
+
+    LISA_TLBRD,
+    LISA_TLBWR,
+    LISA_TLBFILL,
+    LISA_TLBCLR,
+    LISA_TLBFLUSH,
+    LISA_TLBSRCH,
+    LISA_INVTLB,
+    LISA_CSRRD,
+    LISA_CSRWR,
+
     LISA_CLO_W,
     LISA_CLZ_W,
     LISA_CTO_W,
@@ -3192,8 +3203,6 @@ typedef enum {
     LISA_XVSLLWIL_QU_DU,
 
     /* privileged state instructions */
-    LISA_CSRRD,
-    LISA_CSRWR,
     LISA_CSRXCHG,
     LISA_GCSRRD,
     LISA_GCSRWR,
@@ -3211,7 +3220,6 @@ typedef enum {
     LISA_IOCSRWR_D,
     LISA_TLBINV,
     LISA_GTLBINV,
-    LISA_TLBFLUSH,
     LISA_GTLBFLUSH,
     LISA_TLBP,
     LISA_GTLBP,
@@ -3219,7 +3227,6 @@ typedef enum {
     LISA_GTLBR,
     LISA_TLBWI,
     LISA_GTLBWI,
-    LISA_TLBWR,
     LISA_GTLBWR,
     LISA_ERET,
     LISA_DERET,

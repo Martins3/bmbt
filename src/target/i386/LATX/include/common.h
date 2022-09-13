@@ -109,6 +109,7 @@ typedef int8_t EXBits;
 #define uint32_in_uint7(x)      uint32_in_uintn(x, 7)
 #define uint32_in_uint8(x)      uint32_in_uintn(x, 8)
 #define uint32_in_uint12(x)     uint32_in_uintn(x, 12)
+#define uint32_in_uint14(x)     uint32_in_uintn(x, 14)
 
 #ifndef N64
 #define N64
