@@ -12,7 +12,7 @@ void set_operand_into_instruction(GM_OPERAND_TYPE operand_type,
 uint32 ir2_assemble(IR2_INST *ir2){
     GM_LA_OPCODE_FORMAT format = lisa_format_table[ir2->_opcode - LISA_INVALID];
     assert(format.type == ir2->_opcode);
-    
+
     uint32_t ins = format.opcode;
     for (int i = 0; i < 4; i++) {
         GM_OPERAND_TYPE opnd_type = format.opnd[i];
@@ -196,10 +196,10 @@ void latxs_ir2_op_check_imm(IR2_OPND *opnd, GM_OPERAND_TYPE opnd_type)
         break;
 
     case OPD_CSR:
-        lassertm(uint32_in_uint14(imm), "OPD_CSR wrong imm range.\n");
+        lsassertm(uint32_in_uint14(imm), "OPD_CSR wrong imm range.\n");
         break;
     case OPD_U0_4:
-        lassertm(uint32_in_uint5(imm), "OPD_U0_4 wrong imm range.\n");
+        lsassertm(uint32_in_uint5(imm), "OPD_U0_4 wrong imm range.\n");
         break;
 
     default:
