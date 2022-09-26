@@ -414,6 +414,20 @@ bool latxs_tr_ir2_generate(TranslationBlock *tb)
         }
 #endif
 
+        /*
+        if (tb->pc == 0x804d49f) {
+        if (pir1->info->address >= 0x804d45d &&
+            pir1->info->address <= 0x804d4da) {
+           option_dump_host = 1;
+           option_dump_ir1 = 1;
+           option_dump_ir2 = 1;
+
+           printf("HAMT: pc: 0x%lx\n", pir1->info->address);
+           latxs_tr_gen_call_to_helper2_cfg((ADDR)helper_tlb,
+               pir1->info->address, all_helper_cfg);
+        }
+        */
+
         bool translation_success = ir1_translate(pir1);
 
         (void)translation_success; /* to avoid warning  */

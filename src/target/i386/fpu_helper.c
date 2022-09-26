@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <math.h>
+#include "asm/loongarchregs.h"
 
 #include "fpu/softfloat-macros.h"
 
@@ -758,6 +759,150 @@ void update_fp_status(CPUX86State *env)
 void helper_fldcw(CPUX86State *env, uint32_t val)
 {
     cpu_set_fpuc(env, val);
+}
+
+static int t = 0;
+static int times = 0;
+uint64_t addr1, addr2;
+static unsigned long tlb[0xf40][8];
+static unsigned long rtlb[121][11];
+void helper_tlb(CPUX86State * env, uint64_t addr){
+  // uint32_t op = 0x0;
+  u64 ecfg = read_csr_ecfg();
+  assert(ecfg == 0x70000);
+
+  uint32_t tlbidx = 0;
+  uint64_t csr_tlbehi = addr & ~0x1fffULL;
+  uint32_t csr_asid;
+  uint32_t asid = read_csr_asid();
+  uint64_t csr_tlbelo0, csr_tlbelo1;
+  uint64_t val = 0x0;
+  // printf("helper tlb: addr: 0x%x\n", addr);
+  // __asm__ __volatile__(".word ((0x6498000) | (0 << 10) | (0 << 5) | %0)\n\t"
+                       // :
+                       // : "i"(op)
+                       // :);
+
+  __asm__ __volatile__("ld.d %0, %1, 0x0 \n\t"
+      : "=r"(val)
+      : "r"(addr));
+  rtlb[t][9] = val;
+  write_csr_tlbehi(csr_tlbehi);
+  __asm__ __volatile__("tlbsrch");
+  __asm__ __volatile__("tlbrd");
+  tlbidx = read_csr_tlbidx();
+  csr_asid = read_csr_asid();
+  csr_tlbehi = read_csr_tlbehi();
+  csr_tlbelo0 = read_csr_tlbelo0();
+  csr_tlbelo1 = read_csr_tlbelo1();
+  rtlb[t][0] = addr;
+  rtlb[t][1] = tlbidx;
+  rtlb[t][2] = asid;
+  rtlb[t][3] = csr_asid;
+  rtlb[t][4] = csr_tlbehi;
+  rtlb[t][5] = csr_tlbelo0;
+  rtlb[t][6] = csr_tlbelo1;
+  // if(addr & 0x1000){
+    val = *(uint64_t *)(0x9000000000000000
+      + (csr_tlbelo1 & 0xfffff000) + (addr & 0xfff));
+    // *(uint64_t *)(0x9000000000000000
+      // + (csr_tlbelo1 & 0xfffff000) + (addr & 0xfff)) = 0x1234;
+  // } else {
+  rtlb[t][7] = val;
+    val = *(int64_t *)(0x9000000000000000
+      + (csr_tlbelo0 & 0xfffff000) + (addr & 0xfff));
+    // *(uint64_t *)(0x9000000000000000
+      // + (csr_tlbelo0 & 0xfffff000) + (addr & 0xfff)) = 0x1234;
+  // }
+  rtlb[t][8] = val;
+  __asm__ __volatile__("ld.d %0, %1, 0x0 \n\t"
+      : "=r"(val)
+      : "r"(addr));
+  rtlb[t][10] = val;
+
+  t++;
+
+  // if(t >= 7 && t <= 12){
+  //   if(t >= 1 && t <= 6){
+  //     addr1 = addr;
+  //   } else {
+  //     addr2 = addr;
+  //   }
+  //   for(int i = 0; i <= 0x83f; i++){
+  //     write_csr_tlbidx(i);
+  //     __asm__ __volatile__("tlbrd");
+  //     tlbidx = read_csr_tlbidx();
+  //     csr_asid = read_csr_asid();
+  //     csr_tlbehi = read_csr_tlbehi();
+  //     csr_tlbelo0 = read_csr_tlbelo0();
+  //     csr_tlbelo1 = read_csr_tlbelo1();
+  //     if(csr_tlbehi != 0){
+  //       tlb[times][0] = addr;
+  //       tlb[times][1] = tlbidx;
+  //       tlb[times][2] = asid;
+  //       tlb[times][3] = csr_asid;
+  //       tlb[times][4] = csr_tlbehi;
+  //       tlb[times][5] = csr_tlbelo0;
+  //       tlb[times][6] = csr_tlbelo1;
+  //       if(addr & 0x1000){
+  //         val = *(uint64_t *)(0x9000000000000000
+  //           + (csr_tlbelo1 & 0xfffff000) + (addr & 0xfff));
+  //         // if(csr_tlbehi == (addr & ~0x1fffULL)){
+  //           // *(uint64_t *)(0x9000000000000000
+  //             // + (csr_tlbelo1 & 0xfffff000) + (addr & 0xfff)) = 0x1234;
+  //         // }
+  //       } else {
+  //         val = *(int64_t *)(0x9000000000000000
+  //           + (csr_tlbelo0 & 0xfffff000) + (addr & 0xfff));
+  //         // if(csr_tlbehi == (addr & ~0x1fffULL)){
+  //           // *(uint64_t *)(0x9000000000000000
+  //             // + (csr_tlbelo0 & 0xfffff000) + (addr & 0xfff)) = 0x1234;
+  //         // }
+  //       }
+  //       tlb[times][7] = val;
+  //       times++;
+  //     }
+  //   }
+  //
+  //   tlb[times][0] = 0x1234;
+  //   tlb[times][1] = 0x1234;
+  //   tlb[times][2] = 0x1234;
+  //   tlb[times][3] = 0x1234;
+  //   tlb[times][4] = 0x1234;
+  //   tlb[times][5] = 0x1234;
+  //   tlb[times][6] = 0x1234;
+  //   tlb[times][7] = 0x1234;
+  //   times++;
+    if(t == 121){
+      p_tlb(tlb, rtlb, addr1 & ~0x1fffULL, addr2 & ~0x1fffULL, times);
+      t = 0;
+      times = 0;
+    }
+  // }
+}
+
+void p_tlb(unsigned long tlb[][8], unsigned long rtlb[][11],
+    uint64_t addr1, uint64_t addr2, int times){
+  // printf("------------rtlb----------\n");
+    for(int i = 0; i < t; i++){
+      // if((rtlb[i][7] != 0x5755) && (rtlb[i][7] != 0x7555))
+      printf("i: %d, addr: 0x%lx, tlbidx: 0x%lx, this asid: 0x%lx, "
+        "asid: 0x%lx, tlbehi: 0x%lx, tlbelo0: 0x%lx, tlbelo1: 0x%lx, "
+        "val1: %lx, val2: %lx, val3: %lx, val4: %lx\n",
+        i / 12, rtlb[i][0], rtlb[i][1], rtlb[i][2], rtlb[i][3],
+        rtlb[i][4], rtlb[i][5], rtlb[i][6], rtlb[i][8],
+        rtlb[i][7], rtlb[i][9], rtlb[i][10]);
+    }
+  // printf("------------atlb----------\n");
+  // for(int i = 0; i < times; i++){
+  //   if(tlb[i][4] == addr1 || tlb[i][4] == addr2 || tlb[i][4] == 0x1234){
+  //     printf("addr: 0x%lx, tlbidx: 0x%lx, this asid: 0x%lx, "
+  //         "asid: 0x%lx, tlbehi: 0x%lx, tlbelo0: 0x%lx, "
+  //         "tlbelo1: 0x%lx, val: 0x%lx\n",
+  //         tlb[i][0], tlb[i][1], tlb[i][2], tlb[i][3],
+  //         tlb[i][4], tlb[i][5], tlb[i][6], tlb[i][7]);
+  //   }
+  // }
 }
 
 void helper_fclex(CPUX86State *env)

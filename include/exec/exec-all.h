@@ -145,6 +145,9 @@ typedef struct TranslationBlock {
 void restore_state_to_opc(CPUArchState *env, TranslationBlock *tb,
                           target_ulong *data);
 
+void p_tlb(unsigned long tlb[][8], unsigned long rtlb[][11],
+    uint64_t addr1, uint64_t addr2, int times);
+
 extern bool parallel_cpus;
 
 /* current cflags for hashing/comparison */

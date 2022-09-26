@@ -1,4 +1,5 @@
 #include "common.h"
+#include "asm/loongarchregs.h"
 #include "cpu.h"
 #include "lsenv.h"
 #include "reg-alloc.h"
@@ -713,21 +714,77 @@ void tr_gen_softmmu_slow_path(void)
     td->in_gen_slow_path = 0;
 }
 
+int begin = 0;
 void gen_ldst_softmmu_helper(
         IR2_OPCODE op,
         IR2_OPND *opnd_gpr,
         IR2_OPND *opnd_mem,
         int save_temp)
 {
+  TRANSLATION_DATA *td = lsenv->tr_data;
     if (is_ldst_realized_by_softmmu(op)) {
 #ifdef HAMT
         IR2_OPND base = latxs_ir2_opnd_mem_get_base(opnd_mem);
         int offset  = latxs_ir2_opnd_mem_get_offset(opnd_mem);
         // map guest to 4 - 7G
         IR2_OPND reg1 = latxs_ra_alloc_itemp();
+        // IR2_OPND *zero = &latxs_zero_ir2_opnd;
+        // latxs_append_ir2_opnd3(LISA_AND, &reg1, &reg1, zero);
         latxs_load_imm64(&reg1, 0x100000000);
         latxs_append_ir2_opnd3(LISA_ADD_D, &reg1, &reg1, &base);
+        // latxs_append_ir2_opnd3(LISA_ADD_D, &reg2, &reg1, zero);
+        // latxs_append_ir2_opnd1i(LISA_CSRWR, &reg2, LOONGARCH_CSR_TLBEHI);
+        // latxs_append_ir2_opnd0(LISA_TLBSRCH);
+        // latxs_append_ir2_opnd1i(LISA_CSRRD, &reg2, LOONGARCH_CSR_TLBIDX);
+        // latxs_append_ir2_opnd0(LISA_TLBRD);
+        // latxs_append_ir2_opnd1i(LISA_CSRRD, &reg3, LOONGARCH_CSR_TLBELO0);
+        // latxs_append_ir2_opnd1i(LISA_CSRRD, &reg3, LOONGARCH_CSR_TLBELO1);
+
+        // st_d  $r0, $s0, offfset
+        // st_d  $r1, $s0, offfset + 8
+        // st_d  $r2, $s0, offfset + 16
+        // st_d  $r3, $s0, offfset ...
+        //
+        // jirl helper
+
+        // if (td->curr_ir1_inst->info->address == 0x804d4af
+        //     || td->curr_ir1_inst->info->address == 0x804d4ba
+        //     || td->curr_ir1_inst->info->address == 0x804d4c8) {
+        //   begin = 1;
+        //   for(int i = 0; i < 32; ++i) {
+        //       IR2_OPND reg = ir2_opnd_new(IR2_OPND_GPR, i);
+        //       latxs_append_ir2_opnd2i(LISA_ST_D, &reg, &latxs_env_ir2_opnd,
+        //           lsenv_offset_of_mips_regs(lsenv, i));
+        //   }
+
+        //   latxs_load_imm64(&reg1, 0x70000);
+        //   latxs_append_ir2_opnd1i(LISA_CSRWR, &reg1, LOONGARCH_CSR_ECFG);
+        //   latxs_append_ir2_opnd3(LISA_AND, &reg1, &reg1, zero);
+        //   latxs_load_imm64(&reg1, 0x100000000);
+        //   latxs_append_ir2_opnd3(LISA_ADD_D, &reg1, &reg1, &base);
+
+        //   latxs_append_ir2_opnd2_(lisa_mov, &latxs_arg1_ir2_opnd, &reg1);
+        //   latxs_tr_gen_call_to_helper((ADDR)helper_tlb);
+
+        //   for(int i = 0; i < 32; ++i) {
+        //       IR2_OPND reg = ir2_opnd_new(IR2_OPND_GPR, i);
+        //       latxs_append_ir2_opnd2i(LISA_LD_D, &reg, &latxs_env_ir2_opnd,
+        //           lsenv_offset_of_mips_regs(lsenv, i));
+        //   }
+        // }
+
         latxs_append_ir2_opnd2i(op, opnd_gpr, &reg1, offset);
+
+        // if (td->curr_ir1_inst->info->address == 0x804d4af
+        //     || td->curr_ir1_inst->info->address == 0x804d4ba
+        //     || td->curr_ir1_inst->info->address == 0x804d4c8) {
+        //   latxs_append_ir2_opnd2_(lisa_mov, &latxs_arg1_ir2_opnd, &reg1);
+        //   latxs_tr_gen_call_to_helper((ADDR)helper_tlb);
+        //   latxs_append_ir2_opnd3(LISA_AND, &reg1, &reg1, zero);
+        //   latxs_load_imm64(&reg1, 0x71fff);
+        //   latxs_append_ir2_opnd1i(LISA_CSRWR, &reg1, LOONGARCH_CSR_ECFG);
+        // }
+
         latxs_ra_free_temp(&reg1);
 #else
         __gen_ldst_softmmu_helper_native(op, opnd_gpr, opnd_mem, save_temp);
