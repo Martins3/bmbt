@@ -250,11 +250,6 @@ void hamt_set_context(uint64_t new_cr3) {
         uint16_t new_asid_value = allocate_new_asid_value();
         dest_pgtable_head->asid = FORM_NEW_ASID(asid_version, new_asid_value);
       } else {
-        /*
-         * i think this will not execute, so i add a assert here to comfirm my
-         * suppose
-         */
-        g_assert_not_reached();
         dest_pgtable_head->asid = FORM_NEW_ASID(
             asid_version, GET_ASID_VALUE(dest_pgtable_head->asid));
       }
@@ -948,8 +943,8 @@ static void hamt_process_addr_mapping(CPUState *cpu, uint64_t hamt_badvaddr,
   if (prot & PAGE_WRITE) {
     tn.addr_write = write_address;
     // FIX
-    // if (write_address & TLB_NOTDIRTY)
-    // prot &= ~PAGE_WRITE;
+    if (write_address & TLB_NOTDIRTY)
+      prot &= ~PAGE_WRITE;
     if (prot & PAGE_WRITE_INV) {
       tn.addr_write |= TLB_INVALID_MASK;
     }
