@@ -10,7 +10,18 @@
 #define DIRECT_MAPPING(x) (x + 0x9800000000000000)
 #define REVDIRECT_MAPPING(x) (x - 0x9800000000000000)
 
-#define INVTLB_CURRENT_GFALSE 0x3
+enum invtlb_ops {
+  /* invalidate all tlb*/
+  INVTLB_ALL = 0x0,
+  /* invalidate current tlb */
+  INVTLB_CURRENT_ALL = 0x1,
+  /* invalidate all global=1 entries in current tlb */
+  INVTLB_CURRENT_GTRUE = 0x2,
+  /* invalidate all global=0 entries in current tlb */
+  INVTLB_CURRENT_GFALSE = 0x3,
+  /* invalidate global=0 and matched asid lines in current tlb */
+  INVTLB_GFALSE_AND_ASID = 0x4,
+};
 
 #define PROT_RWX (PROT_READ | PROT_WRITE | PROT_EXEC)
 
