@@ -170,6 +170,10 @@ static uint16_t find_first_unused_asid_value(void) {
   return (uint16_t)first;
 }
 
+static inline void invtlb() {
+  __asm__ __volatile__("invtlb 0x0, $zero, $zero \n\t");
+}
+
 /*
  * invtlb op info addr
  * (0x1 << 26) | (0x24 << 20) | (0x13 << 15) |
@@ -259,6 +263,7 @@ void hamt_set_context(uint64_t new_cr3) {
     dest_pgtable_head = insert_new_pgtable_node(new_cr3, new_asid_value);
   }
 
+  // invtlb();
   asid_value = GET_ASID_VALUE(dest_pgtable_head->asid);
   write_csr_asid(asid_value & 0x3ff);
 }
