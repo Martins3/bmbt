@@ -662,7 +662,7 @@ void latxs_options_init(void)
     option_tb_link = 1;
     option_by_hand = 1;
     option_staticcs = 1;
-    option_lsfpu = 1;
+    option_lsfpu = 0;
 
     option_intb_link = 0;
     option_njc = 0;

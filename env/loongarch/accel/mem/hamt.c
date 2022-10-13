@@ -301,8 +301,8 @@ static inline int is_write_inst(uint32_t *epc) {
   case OPC_ST_D:
     return 1;
   default: {
-    printf("inst: %x", *epc);
-    printf("invalid opc in is_write_inst");
+    printf("inst: %x\n", *epc);
+    printf("invalid opc in is_write_inst\n");
   }
   }
 
@@ -979,36 +979,39 @@ static void save_into_mem(CPUX86State *env) {
     reg_pos += 2;
   }
 
-  __asm__ __volatile__("x86mftop   $t1\n\r"
-                       "andi       $t1,  $t1, 0x7\n\r"
-                       "st.w       $t1,  %0,  1280\n\r"
-                       "x86clrtm\n\r"
-                       "fst.d      $fa0, %0,  1296\n\r"
-                       "fst.d      $fa1, %0,  1312\n\r"
-                       "fst.d      $fa2, %0,  1328\n\r"
-                       "fst.d      $fa3, %0,  1344\n\r"
-                       "fst.d      $fa4, %0,  1360\n\r"
-                       "fst.d      $fa5, %0,  1376\n\r"
-                       "fst.d      $fa6, %0,  1392\n\r"
-                       "fst.d      $fa7, %0,  1408\n\r"
-                       "vst        $vr16,%0,  0\n\r"
-                       "vst        $vr17,%0,  64\n\r"
-                       "vst        $vr18,%0,  128\n\r"
-                       "vst        $vr19,%0,  192\n\r"
-                       "vst        $vr20,%0,  256\n\r"
-                       "vst        $vr21,%0,  320\n\r"
-                       "vst        $vr22,%0,  384\n\r"
-                       "vst        $vr23,%0,  448\n\r"
-                       "st.d       $a6,  %0,  528\n\r"
-                       "ld.d       $t0,  $sp, 128\n\r"
-                       "movgr2fcsr $r0,  $t0\n\r"
-                       "x86mfflag  $t0,  63\n\r"
-                       "st.w       $t0,  %0,  972\n\r"
-                       "ori        $t0,  $zero,0x1\n\r"
-                       "st.w       $t0,  %0,  980\n\r"
-                       :
-                       : "r"(env)
-                       : "memory", "t1", "t0");
+  __asm__ __volatile__(
+      /*
+      "x86mftop   $t1\n\r"
+      "andi       $t1,  $t1, 0x7\n\r"
+      "st.w       $t1,  %0,  1280\n\r"
+      "x86clrtm\n\r"
+      */
+      "fst.d      $fa0, %0,  1296\n\r"
+      "fst.d      $fa1, %0,  1312\n\r"
+      "fst.d      $fa2, %0,  1328\n\r"
+      "fst.d      $fa3, %0,  1344\n\r"
+      "fst.d      $fa4, %0,  1360\n\r"
+      "fst.d      $fa5, %0,  1376\n\r"
+      "fst.d      $fa6, %0,  1392\n\r"
+      "fst.d      $fa7, %0,  1408\n\r"
+      "vst        $vr16,%0,  0\n\r"
+      "vst        $vr17,%0,  64\n\r"
+      "vst        $vr18,%0,  128\n\r"
+      "vst        $vr19,%0,  192\n\r"
+      "vst        $vr20,%0,  256\n\r"
+      "vst        $vr21,%0,  320\n\r"
+      "vst        $vr22,%0,  384\n\r"
+      "vst        $vr23,%0,  448\n\r"
+      // "st.d       $a6,  %0,  528\n\r"
+      "ld.d       $t0,  $sp, 128\n\r"
+      "movgr2fcsr $r0,  $t0\n\r"
+      "x86mfflag  $t0,  63\n\r"
+      "st.w       $t0,  %0,  972\n\r"
+      "ori        $t0,  $zero,0x1\n\r"
+      "st.w       $t0,  %0,  980\n\r"
+      :
+      : "r"(env)
+      : "memory", "t1", "t0");
 }
 
 void hamt_exception_handler(uint64_t hamt_badvaddr, CPUX86State *env,

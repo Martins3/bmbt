@@ -721,7 +721,7 @@ void gen_ldst_softmmu_helper(
         IR2_OPND *opnd_mem,
         int save_temp)
 {
-  TRANSLATION_DATA *td = lsenv->tr_data;
+    // TRANSLATION_DATA *td = lsenv->tr_data;
     if (is_ldst_realized_by_softmmu(op)) {
 #ifdef HAMT
         IR2_OPND base = latxs_ir2_opnd_mem_get_base(opnd_mem);
@@ -773,6 +773,11 @@ void gen_ldst_softmmu_helper(
         //   }
         // }
 
+        if (!option_lsfpu) {
+            latxs_tr_gen_save_curr_top();
+        } else {
+            lsassertm(0, "HAMT does not support LSFPU\n");
+        }
         latxs_append_ir2_opnd2i(op, opnd_gpr, &reg1, offset);
 
         // if (td->curr_ir1_inst->info->address == 0x804d4af
