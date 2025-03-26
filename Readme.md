@@ -203,4 +203,10 @@ menuentry 'USB Test' --class loongnix_desktop_20 --class gnu-linux --class gnu -
 ## 调试
 参考 [开发者手册](./doc/debug.md)
 
+## LAT
+https://github.com/lat-opensource/lat
+
+## 文档
+https://github.com/Martins3/bmbt-doc
+
 [^1]: https://unix.stackexchange.com/questions/340844/how-to-enable-diffie-hellman-group1-sha1-key-exchange-on-debian-8-0
