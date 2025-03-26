@@ -207,6 +207,6 @@ menuentry 'USB Test' --class loongnix_desktop_20 --class gnu-linux --class gnu -
 https://github.com/lat-opensource/lat
 
 ## 文档
-https://github.com/Martins3/bmbt-doc
+https://github.com/Martins3/Bare-Metal-Binary-Translator
 
 [^1]: https://unix.stackexchange.com/questions/340844/how-to-enable-diffie-hellman-group1-sha1-key-exchange-on-debian-8-0
